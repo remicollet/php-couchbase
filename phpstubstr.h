@@ -390,7 +390,10 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "\n" \
 "        $retval = NULL;\n" \
 "        if ($sertype == COUCHBASE_VAL_IS_STRING) {\n" \
-"            $retval = $data;\n" \
+"            $retval = json_decode($data, $options['jsonassoc']);\n" \
+"            if ($retval == NULL) {\n" \
+"                $retval = $data;\n" \
+"            }\n" \
 "        } else if ($sertype == COUCHBASE_VAL_IS_LONG) {\n" \
 "            $retval = intval($data);\n" \
 "        } else if ($sertype == COUCHBASE_VAL_IS_DOUBLE) {\n" \

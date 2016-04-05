@@ -156,7 +156,10 @@ function couchbase_basic_decoder_v1($bytes, $flags, $datatype, $options) {
 
         $retval = NULL;
         if ($sertype == COUCHBASE_VAL_IS_STRING) {
-            $retval = $data;
+            $retval = json_decode($data, $options['jsonassoc']);
+            if ($retval == NULL) {
+                $retval = $data;
+            }
         } else if ($sertype == COUCHBASE_VAL_IS_LONG) {
             $retval = intval($data);
         } else if ($sertype == COUCHBASE_VAL_IS_DOUBLE) {
