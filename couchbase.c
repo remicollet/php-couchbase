@@ -2,8 +2,13 @@
 #include "cas.h"
 #include "metadoc.h"
 #include "phpstubstr.h"
-#include "fastlz/fastlz.h"
 #include "zap.h"
+
+#ifdef HAVE_FASTLZ_H
+#include <fastlz.h>
+#else
+#include "fastlz/fastlz.h"
+#endif
 
 #if HAVE_ZLIB
 #include <zlib.h>
@@ -119,7 +124,6 @@ PHP_RSHUTDOWN_FUNCTION(couchbase)
 
 PHP_RINIT_FUNCTION(couchbase)
 {
-	
 	int stub_idx;
 	for (stub_idx = 0; stub_idx < sizeof(PCBC_PHP_CODESTR) / sizeof(pcbc_stub_data); ++stub_idx) {
 		pcbc_stub_data *this_stub = &PCBC_PHP_CODESTR[stub_idx];
@@ -268,4 +272,3 @@ zend_module_entry couchbase_module_entry = {
 #ifdef COMPILE_DL_COUCHBASE
 ZEND_GET_MODULE(couchbase)
 #endif
-

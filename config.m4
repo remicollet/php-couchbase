@@ -1,6 +1,9 @@
 PHP_ARG_WITH(couchbase, whether to enable Couchbase support,
 [ --with-couchbase   Include Couchbase support])
 
+PHP_ARG_WITH(system-fastlz, wheter to use system FastLZ bibrary,
+    [  --with-system-fastlz   Use system FastLZ bibrary], no, no)
+
 if test "$PHP_COUCHBASE" != "no"; then
   if test -r $PHP_COUCHBASE/include/libcouchbase/couchbase.h; then
     LIBCOUCHBASE_DIR=$PHP_COUCHBASE
@@ -21,27 +24,28 @@ if test "$PHP_COUCHBASE" != "no"; then
                  libcouchbase.a should be in <libcouchbase-dir>/lib)
   fi
   PHP_ADD_INCLUDE($LIBCOUCHBASE_DIR/include)
-  
+
   PHP_SUBST(COUCHBASE_SHARED_LIBADD)
-  PHP_ADD_LIBRARY_WITH_PATH(couchbase, $LIBCOUCHBASE_DIR/lib, 
+  PHP_ADD_LIBRARY_WITH_PATH(couchbase, $LIBCOUCHBASE_DIR/lib,
                COUCHBASE_SHARED_LIBADD)
 
   AC_DEFINE(HAVE_COUCHBASE, 1, [Whether you have Couchbase])
 
   ifdef([PHP_ADD_EXTENDION_DEP], [
 	PHP_ADD_EXTENSION_DEP(couchbase, json)
-  ]) 
+  ])
 
   PHP_SUBST(COUCHBASE_SHARED_LIBADD)
-  PHP_NEW_EXTENSION(couchbase, \
-	bucket.c \
-	cas.c \
-	cluster.c \
-	couchbase.c \
-	exception.c \
-	metadoc.c \
-	opcookie.c \
-	transcoding.c \
-	fastlz/fastlz.c \
-  , $ext_shared)
+
+  COUCHBASE_FILES="bucket.c cas.c cluster.c couchbase.c exception.c metadoc.c opcookie.c transcoding.c"
+
+  if test "$PHP_SYSTEM_FASTLZ" != "no"; then
+    AC_CHECK_HEADERS([fastlz.h])
+    PHP_CHECK_LIBRARY(fastlz, fastlz_compress,
+      [PHP_ADD_LIBRARY(fastlz, 1, COUCHBASE_SHARED_LIBADD)],
+      [AC_MSG_ERROR(FastLZ library not found)])
+  else
+    COUCHBASE_FILES="${COUCHBASE_FILES} fastlz/fastlz.c"
+  fi
+  PHP_NEW_EXTENSION(couchbase, ${COUCHBASE_FILES}, $ext_shared)
 fi
