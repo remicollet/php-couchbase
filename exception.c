@@ -31,10 +31,10 @@ void make_pcbc_exception(zapval *ex, const char *message, long code TSRMLS_DC) {
 
 void make_lcb_exception(zapval *ex, long code, const char *msg TSRMLS_DC) {
     if (msg) {
-        return make_exception(ex, cb_exception_ce, msg, code TSRMLS_CC);
+        make_exception(ex, cb_exception_ce, msg, code TSRMLS_CC);
     } else {
         const char *str = lcb_strerror(NULL, (lcb_error_t)code);
-        return make_exception(ex, cb_exception_ce, str, code TSRMLS_CC);
+        make_exception(ex, cb_exception_ce, str, code TSRMLS_CC);
     }
 }
 
