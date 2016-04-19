@@ -46,7 +46,7 @@ if test "$PHP_COUCHBASE" != "no"; then
       [AC_MSG_ERROR(FastLZ library not found)])
   else
     COUCHBASE_FILES="${COUCHBASE_FILES} fastlz/fastlz.c"
-    PHP_ADD_BUILD_DIR($ext_builddir/fastlz, 1)
   fi
   PHP_NEW_EXTENSION(couchbase, ${COUCHBASE_FILES}, $ext_shared)
+  PHP_ADD_BUILD_DIR($ext_builddir/fastlz, 1)
 fi
