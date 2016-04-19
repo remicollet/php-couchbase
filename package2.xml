@@ -16,56 +16,65 @@
         <name>Brett Lawson</name>
         <user>brett19</user>
         <email>brett@couchbase.com</email>
+        <active>no</active>
+    </lead>
+    <lead>
+        <name>Sergey Avseyev</name>
+        <user>avsej</user>
+        <email>sergey@couchbase.com</email>
         <active>yes</active>
     </lead>
-    <date>2015-11-04</date>
+    <date>2016-04-19</date>
     <version>
-        <release>2.1.0</release>
-        <api>2.1.0</api>
+        <release>2.2.0beta1</release>
+        <api>2.2.0</api>
     </version>
     <stability>
-        <release>stable</release>
-        <api>stable</api>
+        <release>beta</release>
+        <api>beta</api>
     </stability>
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        This is a minor update to the PHP 2.1 SDK.
-    
+        This is a major update to the PHP 2.2 SDK.
+
         Changes:
-        * PCBC-356: Added support for N1QL prepared statements.
-        * PCBC-363: Fix issue related to passing invalid ID arguments.
-        * PCBC-366: Correct issue with legacy transcoder compression.
+        * PCBC-360: refactoring to support PHP 7
+        * PCBC-376: reentrant transcoders
+        * PCBC-369: allow to use system fastlz
+        * PCBC-373: ensure view query values are properly url encoded
         * Various minor changes
     </notes>
     <contents>
         <dir name="/">
             <file role="doc" name="LICENSE"/>
-            <file role="doc" name="fastlz/LICENSE.txt"/>
             <file role="doc" name="README.md"/>
-            <file role="src" name="config.m4"/>
-            <file role="src" name="config.w32"/>
+            <file role="doc" name="fastlz/LICENSE.txt"/>
             <file role="src" name="bucket.c"/>
             <file role="src" name="bucket.h"/>
             <file role="src" name="cas.c"/>
             <file role="src" name="cas.h"/>
             <file role="src" name="cluster.c"/>
             <file role="src" name="cluster.h"/>
+            <file role="src" name="config.m4"/>
+            <file role="src" name="config.w32"/>
             <file role="src" name="couchbase.c"/>
             <file role="src" name="couchbase.h"/>
             <file role="src" name="datainfo.h"/>
             <file role="src" name="exception.c"/>
             <file role="src" name="exception.h"/>
+            <file role="src" name="fastlz/fastlz.c"/>
+            <file role="src" name="fastlz/fastlz.h"/>
             <file role="src" name="metadoc.c"/>
             <file role="src" name="metadoc.h"/>
             <file role="src" name="paramparser.h"/>
             <file role="src" name="php_couchbase.h"/>
-            <file role="src" name="zap.h"/>
-            <file role="src" name="transcoding.c"/>
-            <file role="src" name="transcoding.h"/>
             <file role="src" name="phpstubstr.h"/>
-            <file role="src" name="fastlz/fastlz.h"/>
-            <file role="src" name="fastlz/fastlz.c"/>
+            <file role="src" name="transcoding.c"/>
+            <file role="src" name="transcoding.c"/>
+            <file role="src" name="opcookie.h"/>
+            <file role="src" name="opcookie.h"/>
+            <file role="src" name="zap.h"/>
         </dir>
     </contents>
     <dependencies>
@@ -88,6 +97,26 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2015-11-04</date>
+            <version>
+                <release>2.1.0</release>
+                <api>2.1.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <notes>
+                This is a minor update to the PHP 2.1 SDK.
+
+                Changes:
+                * PCBC-356: Added support for N1QL prepared statements.
+                * PCBC-363: Fix issue related to passing invalid ID arguments.
+                * PCBC-366: Correct issue with legacy transcoder compression.
+                * Various minor changes
+            </notes>
+        </release>
         <release>
             <date>2014-04-28</date>
             <version>
@@ -328,7 +357,7 @@
             </stability>
             <notes>
                 This is a minor update to the PHP SDK.
-            
+
                 Changes:
                 * PCBC-356: Added support for N1QL prepared statements.
                 * PCBC-363: Fix issue related to passing invalid ID arguments.
