@@ -22,7 +22,7 @@
 #define PCBC_CHECK_ZVAL_CAS(v, m) \
     _PCBC_CHECK_ZVAL(v, IS_RESOURCE, m)
 #define PCBC_CHECK_ZVAL_BOOL(v, m) \
-    if (v && zap_zval_is_bool(v)) { \
+    if (v && !zap_zval_is_bool(v)) {      \
         throw_pcbc_exception(m, LCB_EINVAL); \
         RETURN_NULL(); \
     }
@@ -501,7 +501,7 @@ PHP_METHOD(Bucket, __construct)
 	struct lcb_create_st create_options;
 	char *connkey = NULL;
 	pcbc_lcb *conn_iter, *conn;
-	
+
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|zzz",
 			&zdsn, &zname, &zpassword) == FAILURE) {
 		RETURN_NULL();
@@ -540,7 +540,7 @@ PHP_METHOD(Bucket, __construct)
 		if (Z_TYPE_P(zpassword) == IS_STRING) {
 			password = estrndup(Z_STRVAL_P(zpassword), Z_STRLEN_P(zpassword));
 		} else {
-			throw_pcbc_exception("Expected bucket password as string", LCB_EINVAL); 
+			throw_pcbc_exception("Expected bucket password as string", LCB_EINVAL);
 			if (dsn) efree(dsn);
 			if (name) efree(name);
 			RETURN_NULL();
