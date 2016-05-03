@@ -19,8 +19,6 @@
     _PCBC_CHECK_ZVAL(v, IS_STRING, m)
 #define PCBC_CHECK_ZVAL_LONG(v, m) \
     _PCBC_CHECK_ZVAL(v, IS_LONG, m)
-#define PCBC_CHECK_ZVAL_CAS(v, m) \
-    _PCBC_CHECK_ZVAL(v, IS_RESOURCE, m)
 #define PCBC_CHECK_ZVAL_BOOL(v, m) \
     if (v && !zap_zval_is_bool(v)) {      \
         throw_pcbc_exception(m, LCB_EINVAL); \
@@ -106,7 +104,7 @@ static void get_callback(lcb_t instance, const void *cookie, lcb_error_t error,
             result->bytes, resp->v.v0.bytes, resp->v.v0.nbytes);
     zapval_alloc_long(result->flags,resp->v.v0.flags);
     zapval_alloc_long(result->datatype, resp->v.v0.datatype);
-    alloc_cas(result->cas, resp->v.v0.cas TSRMLS_CC);
+    cas_encode(&result->cas, resp->v.v0.cas TSRMLS_CC);
 
     opcookie_push((opcookie*)cookie, &result->header);
 }
@@ -215,7 +213,7 @@ static void store_callback(lcb_t instance, const void *cookie,
     result->header.err = error;
     zapval_alloc_stringl(
             result->key, resp->v.v0.key, resp->v.v0.nkey);
-    alloc_cas(result->cas, resp->v.v0.cas TSRMLS_CC);
+    cas_encode(&result->cas, resp->v.v0.cas TSRMLS_CC);
 
     opcookie_push((opcookie*)cookie, &result->header);
 }
@@ -228,7 +226,7 @@ static void remove_callback(lcb_t instance, const void *cookie,
     result->header.err = error;
     zapval_alloc_stringl(
             result->key, resp->v.v0.key, resp->v.v0.nkey);
-    alloc_cas(result->cas, resp->v.v0.cas TSRMLS_CC);
+    cas_encode(&result->cas, resp->v.v0.cas TSRMLS_CC);
 
     opcookie_push((opcookie*)cookie, &result->header);
 }
@@ -241,7 +239,7 @@ static void touch_callback(lcb_t instance, const void *cookie,
     result->header.err = error;
     zapval_alloc_stringl(
             result->key, resp->v.v0.key, resp->v.v0.nkey);
-    alloc_cas(result->cas, resp->v.v0.cas TSRMLS_CC);
+    cas_encode(&result->cas, resp->v.v0.cas TSRMLS_CC);
 
     opcookie_push((opcookie*)cookie, &result->header);
 }
@@ -296,7 +294,7 @@ static void arithmetic_callback(lcb_t instance, const void *cookie,
     zapval_alloc_stringl(
             result->key, resp->v.v0.key, resp->v.v0.nkey);
     zapval_alloc_long(result->value, resp->v.v0.value);
-    alloc_cas(result->cas, resp->v.v0.cas TSRMLS_CC);
+    cas_encode(&result->cas, resp->v.v0.cas TSRMLS_CC);
 
     opcookie_push((opcookie*)cookie, &result->header);
 }
@@ -816,7 +814,7 @@ PHP_METHOD(Bucket, replace)
 	memset(cmd, 0, sizeof(lcb_store_cmd_t) * num_cmds);
 
 	for (ii = 0; pcbc_pp_next(&pp_state); ++ii) {
-		PCBC_CHECK_ZVAL_CAS(zcas, "cas must be a CAS resource");
+		PCBC_CHECK_ZVAL_STRING(zcas, "cas must be a string");
 		PCBC_CHECK_ZVAL_LONG(zexpiry, "expiry must be an integer");
 		PCBC_CHECK_ZVAL_LONG(zflags, "flags must be an integer");
 		PCBC_CHECK_ZVAL_STRING(zgroupid, "groupid must be a string");
@@ -830,7 +828,7 @@ PHP_METHOD(Bucket, replace)
 				&cmd[ii].v.v0.flags, &cmd[ii].v.v0.datatype TSRMLS_CC);
 
 		if (zcas) {
-			cmd[ii].v.v0.cas = cas_retrieve(zcas TSRMLS_CC);
+			cmd[ii].v.v0.cas = cas_decode(zcas TSRMLS_CC);
 		}
 		if (zexpiry) {
 			cmd[ii].v.v0.exptime = Z_LVAL_P(zexpiry);
@@ -897,7 +895,7 @@ PHP_METHOD(Bucket, append)
 	memset(cmd, 0, sizeof(lcb_store_cmd_t) * num_cmds);
 
 	for (ii = 0; pcbc_pp_next(&pp_state); ++ii) {
-		PCBC_CHECK_ZVAL_CAS(zcas, "cas must be a CAS resource");
+		PCBC_CHECK_ZVAL_STRING(zcas, "cas must be a string");
 		PCBC_CHECK_ZVAL_STRING(zgroupid, "groupid must be a string");
 
 		cmd[ii].version = 0;
@@ -909,7 +907,7 @@ PHP_METHOD(Bucket, append)
 				&cmd[ii].v.v0.flags, &cmd[ii].v.v0.datatype TSRMLS_CC);
 
 		if (zcas) {
-			cmd[ii].v.v0.cas = cas_retrieve(zcas TSRMLS_CC);
+			cmd[ii].v.v0.cas = cas_decode(zcas TSRMLS_CC);
 		}
 		if (zgroupid) {
 			cmd[ii].v.v0.hashkey = Z_STRVAL_P(zgroupid);
@@ -974,7 +972,7 @@ PHP_METHOD(Bucket, prepend)
 	memset(cmd, 0, sizeof(lcb_store_cmd_t) * num_cmds);
 
 	for (ii = 0; pcbc_pp_next(&pp_state); ++ii) {
-		PCBC_CHECK_ZVAL_CAS(zcas, "cas must be a CAS resource");
+		PCBC_CHECK_ZVAL_STRING(zcas, "cas must be a string");
 		PCBC_CHECK_ZVAL_STRING(zgroupid, "groupid must be a string");
 
 		cmd[ii].version = 0;
@@ -986,7 +984,7 @@ PHP_METHOD(Bucket, prepend)
 				&cmd[ii].v.v0.flags, &cmd[ii].v.v0.datatype TSRMLS_CC);
 
 		if (zcas) {
-			cmd[ii].v.v0.cas = cas_retrieve(zcas TSRMLS_CC);
+			cmd[ii].v.v0.cas = cas_decode(zcas TSRMLS_CC);
 		}
 		if (zgroupid) {
 			cmd[ii].v.v0.hashkey = Z_STRVAL_P(zgroupid);
@@ -1050,7 +1048,7 @@ PHP_METHOD(Bucket, remove)
 	memset(cmd, 0, sizeof(lcb_remove_cmd_t) * num_cmds);
 
 	for (ii = 0; pcbc_pp_next(&pp_state); ++ii) {
-		PCBC_CHECK_ZVAL_CAS(zcas, "cas must be a CAS resource");
+		PCBC_CHECK_ZVAL_STRING(zcas, "cas must be a string");
 		PCBC_CHECK_ZVAL_STRING(zgroupid, "groupid must be a string");
 
 		cmd[ii].version = 0;
@@ -1058,7 +1056,7 @@ PHP_METHOD(Bucket, remove)
 		cmd[ii].v.v0.nkey = id.len;
 
 		if (zcas) {
-			cmd[ii].v.v0.cas = cas_retrieve(zcas TSRMLS_CC);
+			cmd[ii].v.v0.cas = cas_decode(zcas TSRMLS_CC);
 		}
 		if (zgroupid) {
 			cmd[ii].v.v0.hashkey = Z_STRVAL_P(zgroupid);
@@ -1323,14 +1321,14 @@ PHP_METHOD(Bucket, unlock)
 	memset(cmd, 0, sizeof(lcb_unlock_cmd_t) * num_cmds);
 
 	for (ii = 0; pcbc_pp_next(&pp_state); ++ii) {
-		PCBC_CHECK_ZVAL_CAS(zcas, "cas must be a CAS resource");
+		PCBC_CHECK_ZVAL_STRING(zcas, "cas must be a string");
 		PCBC_CHECK_ZVAL_STRING(zgroupid, "groupid must be a string");
 
 		cmd[ii].version = 0;
 		cmd[ii].v.v0.key = id.str;
 		cmd[ii].v.v0.nkey = id.len;
 		if (zcas) {
-			cmd[ii].v.v0.cas = cas_retrieve(zcas TSRMLS_CC);
+			cmd[ii].v.v0.cas = cas_decode(zcas TSRMLS_CC);
 		}
 		if (zgroupid) {
 			cmd[ii].v.v0.hashkey = Z_STRVAL_P(zgroupid);
@@ -1461,7 +1459,7 @@ PHP_METHOD(Bucket, durability)
     memset(cmd, 0, sizeof(lcb_durability_cmd_t) * num_cmds);
 
     for (ii = 0; pcbc_pp_next(&pp_state); ++ii) {
-        PCBC_CHECK_ZVAL_CAS(zcas, "cas must be a CAS resource");
+        PCBC_CHECK_ZVAL_STRING(zcas, "cas must be a string");
         PCBC_CHECK_ZVAL_STRING(zgroupid, "groupid must be a string");
         PCBC_CHECK_ZVAL_LONG(zpersist, "persist_to must be an integer");
         PCBC_CHECK_ZVAL_LONG(zreplica, "replicate_to must be an integer");
@@ -1470,7 +1468,7 @@ PHP_METHOD(Bucket, durability)
         cmd[ii].v.v0.key = id.str;
         cmd[ii].v.v0.nkey = id.len;
         if (zcas) {
-            cmd[ii].v.v0.cas = cas_retrieve(zcas TSRMLS_CC);
+            cmd[ii].v.v0.cas = cas_decode(zcas TSRMLS_CC);
         }
         if (zgroupid) {
             cmd[ii].v.v0.hashkey = Z_STRVAL_P(zgroupid);

@@ -34,3 +34,4 @@ docs/
 /config.nice.bat
 /configure.bat
 /configure.js
+/*.out

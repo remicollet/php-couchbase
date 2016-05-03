@@ -37,7 +37,6 @@ PHP_MINIT_FUNCTION(couchbase)
 	ZEND_INIT_MODULE_GLOBALS(couchbase, php_extname_init_globals, NULL);
 
 	couchbase_init_exceptions(INIT_FUNC_ARGS_PASSTHRU);
-	couchbase_init_cas(INIT_FUNC_ARGS_PASSTHRU);
 	couchbase_init_metadoc(INIT_FUNC_ARGS_PASSTHRU);
 	couchbase_init_cluster(INIT_FUNC_ARGS_PASSTHRU);
 	couchbase_init_bucket(INIT_FUNC_ARGS_PASSTHRU);

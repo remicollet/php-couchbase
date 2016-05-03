@@ -5,11 +5,7 @@
 #include <libcouchbase/couchbase.h>
 #include "zap.h"
 
-void couchbase_init_cas(INIT_FUNC_ARGS);
-lcb_cas_t cas_retrieve(zval * zcas TSRMLS_DC);
-void cas_create(zapval *casout, lcb_cas_t value TSRMLS_DC);
-
-#define alloc_cas(z, v) \
-    cas_create(&z, v)
+lcb_cas_t cas_decode(zval * zcas TSRMLS_DC);
+void cas_encode(zapval *casout, lcb_cas_t value TSRMLS_DC);
 
 #endif // CAS_H_
