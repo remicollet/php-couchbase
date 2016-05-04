@@ -250,7 +250,7 @@ class BucketTest extends CouchbaseTestCase {
             $b->getAndLock($key, 1);
         }, 'CouchbaseException', COUCHBASE_TMPFAIL);
     }
-    
+
     /**
      * @test
      * Test big upserts
@@ -269,7 +269,7 @@ class BucketTest extends CouchbaseTestCase {
 
         return $key;
     }
-    
+
     /**
      * @test
      * Test upsert with no key specified
@@ -292,7 +292,7 @@ class BucketTest extends CouchbaseTestCase {
         global $recursive_transcoder_bucket;
         global $recursive_transcoder_key2;
         global $recursive_transcoder_key3;
-        
+
         $h = new CouchbaseCluster($this->testDsn);
         $b = $h->openBucket();
 
@@ -311,17 +311,17 @@ class BucketTest extends CouchbaseTestCase {
         // Upsert key1, transcoder should set key2
         $res = $b->upsert($key1, 'key1');
         $this->assertValidMetaDoc($res, 'cas');
-        
+
         // Check key1 was upserted
         $res = $b->get($key1);
         $this->assertValidMetaDoc($res, 'cas');
         $this->assertEquals($res->value, 'key1');
-        
+
         // Check key2 was upserted, trasncoder should set key3
         $res = $b->get($key2);
         $this->assertValidMetaDoc($res, 'cas');
         $this->assertEquals($res->value, 'key2');
-        
+
         // Check key3 was upserted
         $res = $b->get($key3);
         $this->assertValidMetaDoc($res, 'cas');
@@ -337,9 +337,9 @@ class BucketTest extends CouchbaseTestCase {
     function testOptionVals() {
         $h = new CouchbaseCluster($this->testDsn);
         $b = $h->openBucket();
-        
+
         $checkVal = 243;
-        
+
         $b->operationTimeout = $checkVal;
         $b->viewTimeout = $checkVal;
         $b->durabilityInterval = $checkVal;
@@ -349,7 +349,7 @@ class BucketTest extends CouchbaseTestCase {
         $b->configDelay = $checkVal;
         $b->configNodeTimeout = $checkVal;
         $b->htconfigIdleTimeout = $checkVal;
-        
+
         $this->assertEquals($b->operationTimeout, $checkVal);
         $this->assertEquals($b->viewTimeout, $checkVal);
         $this->assertEquals($b->durabilityInterval, $checkVal);
@@ -360,7 +360,7 @@ class BucketTest extends CouchbaseTestCase {
         $this->assertEquals($b->configNodeTimeout, $checkVal);
         $this->assertEquals($b->htconfigIdleTimeout, $checkVal);
     }
-    
+
     /**
      * @test
      * Test all option values to make sure they save/load
@@ -371,14 +371,14 @@ class BucketTest extends CouchbaseTestCase {
         $this->markTestSkipped(
               'Configuration cache is not currently behaving.'
             );
-            
+
         $key = $this->makeKey('ccache');
-    
+
         $h = new CouchbaseCluster(
             $this->testDsn . '?config_cache=./test.cache');
         $b = $h->openBucket();
         $b->upsert($key, 'yes');
-        
+
         $h2 = new CouchbaseCluster(
             $this->testDsn . '?config_cache=./test.cache');
         $b2 = $h2->openBucket();
@@ -388,6 +388,313 @@ class BucketTest extends CouchbaseTestCase {
         $this->assertEquals($res->value, 'yes');
     }
 
+    /**
+     * @test
+     * @depends testConnect
+     */
+    function testLookupIn($b) {
+        $key = $this->makeKey('lookup_in');
+        $b->upsert($key, array('path1' => 'value1'));
+
+        $result = $b->retrieveIn($key, 'path1');
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals('value1', $result->value[0]['value']);
+        $this->assertEquals(COUCHBASE_SUCCESS, $result->value[0]['code']);
+        $this->assertNotEmpty($result->cas);
+
+        # Try when path is not found
+        $result = $b->retrieveIn($key, 'path2');
+        $this->assertInstanceOf('CouchbaseException', $result->error);
+        $this->assertEquals(COUCHBASE_SUBDOC_MULTI_FAILURE, $result->error->getCode());
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(null, $result->value[0]['value']);
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_ENOENT, $result->value[0]['code']);
+
+        # Try when there is a mismatch
+        $result = $b->retrieveIn($key, 'path1[0]');
+        $this->assertInstanceOf('CouchbaseException', $result->error);
+        $this->assertEquals(COUCHBASE_SUBDOC_MULTI_FAILURE, $result->error->getCode());
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(null, $result->value[0]['value']);
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_MISMATCH, $result->value[0]['code']);
+
+        # Try existence
+        $result = $b->lookupIn($key)->exists('path1')->execute();
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(COUCHBASE_SUCCESS, $result->value[0]['code']);
+
+        # Not found
+        $result = $b->lookupIn($key)->exists('p')->execute();
+        $this->assertInstanceOf('CouchbaseException', $result->error);
+        $this->assertEquals(COUCHBASE_SUBDOC_MULTI_FAILURE, $result->error->getCode());
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_ENOENT, $result->value[0]['code']);
+
+
+        # Insert a non-JSON document
+        $key = $this->makeKey('lookup_in_nonjson');
+        $b->upsert($key, 'value');
+
+        $result = $b->lookupIn($key)->exists('path')->execute();
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(COUCHBASE_SUBDOC_DOC_NOTJSON, $result->value[0]['code']);
+
+        # Try on non-existing document. Should fail
+        $key = $this->makeKey('lookup_in_with_missing_key');
+        $result = $b->lookupIn($key)->exists('path')->execute();
+        $this->assertEquals(0, count($result->value));
+        $this->assertInstanceOf('CouchbaseException', $result->error);
+        $this->assertEquals(COUCHBASE_KEY_ENOENT, $result->error->getCode());
+    }
+
+    /**
+     * @test
+     * @expectedException CouchbaseException
+     * @expectedExceptionMessageRegExp /EMPTY_PATH/
+     * @depends testConnect
+     */
+    function testLookupInWithEmptyPath($b) {
+        $key = $this->makeKey('lookup_in_with_empty_path');
+        $b->upsert($key, array('path1' => 'value1'));
+
+        $result = $b->lookupIn($key)->exists('')->execute();
+    }
+
+    /**
+     * @test
+     * @depends testConnect
+     */
+    function testMutateIn($b) {
+        $key = $this->makeKey('mutate_in');
+        $b->upsert($key, new stdClass());
+
+        $result = $b->mutateIn($key)->upsert('newDict', array('hello'))->execute();
+        $this->assertNull($result->error);
+        $result = $b->retrieveIn($key, 'newDict');
+        $this->assertEquals(array('hello'), $result->value[0]['value']);
+
+        # Does not create deep path without create_parents
+        $result = $b->mutateIn($key)->upsert('path.with.missing.parents', 'value')->execute();
+        $this->assertEquals(COUCHBASE_SUBDOC_MULTI_FAILURE, $result->error->getCode());
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_ENOENT, $result->value[0]['code']);
+
+        # Creates deep path without create_parents
+        $result = $b->mutateIn($key)->upsert('path.with.missing.parents', 'value', true)->execute();
+        $this->assertNull($result->error);
+        $result = $b->retrieveIn($key, 'path.with.missing.parents');
+        $this->assertEquals('value', $result->value[0]['value']);
+
+        $this->assertNotEmpty($result->cas);
+        $cas = $result->cas;
+
+        $result = $b->mutateIn($key, $cas . 'X')->upsert('newDict', 'withWrongCAS')->execute();
+        $this->assertEquals(COUCHBASE_KEY_EEXISTS, $result->error->getCode());
+        $this->assertEquals(0, count($result->value));
+        # once again with correct CAS
+        $result = $b->mutateIn($key, $cas)->upsert('newDict', 'withCorrectCAS')->execute();
+        $this->assertNull($result->error);
+        $result = $b->retrieveIn($key, 'newDict');
+        $this->assertEquals('withCorrectCAS', $result->value[0]['value']);
+
+        # insert into existing path should fail
+        $result = $b->mutateIn($key)->insert('newDict', array('foo' => 42))->execute();
+        $this->assertEquals(COUCHBASE_SUBDOC_MULTI_FAILURE, $result->error->getCode());
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_EEXISTS, $result->value[0]['code']);
+
+        # insert into new path should succeed
+        $result = $b->mutateIn($key)->insert('anotherDict', array('foo' => 42))->execute();
+        $this->assertNull($result->error);
+        $result = $b->retrieveIn($key, 'anotherDict');
+        $this->assertEquals(array('foo' => 42), $result->value[0]['value']);
+
+        # replace of existing path should not fail
+        $result = $b->mutateIn($key)->replace('newDict', array(42 => 'foo'))->execute();
+        $this->assertNull($result->error);
+        $result = $b->retrieveIn($key, 'newDict');
+        $this->assertEquals(array(42 => 'foo'), $result->value[0]['value']);
+
+        # replace of missing path should not fail
+        $result = $b->mutateIn($key)->replace('missingDict', array(42 => 'foo'))->execute();
+        $this->assertEquals(COUCHBASE_SUBDOC_MULTI_FAILURE, $result->error->getCode());
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_ENOENT, $result->value[0]['code']);
+
+        $result = $b->mutateIn($key)->upsert('empty', '')->execute();
+        $this->assertNull($result->error);
+        $result = $b->retrieveIn($key, 'empty');
+        $this->assertEquals('', $result->value[0]['value']);
+
+        $result = $b->mutateIn($key)->upsert('null', null)->execute();
+        $this->assertNull($result->error);
+        $result = $b->retrieveIn($key, 'null');
+        $this->assertEquals(null, $result->value[0]['value']);
+
+        $result = $b->mutateIn($key)->upsert('array', array(1, 2, 3))->execute();
+        $this->assertNull($result->error);
+
+        $result = $b->mutateIn($key)->upsert('array.newKey', 'newVal')->execute();
+        $this->assertEquals(COUCHBASE_SUBDOC_MULTI_FAILURE, $result->error->getCode());
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_MISMATCH, $result->value[0]['code']);
+
+        $result = $b->mutateIn($key)->upsert('array[0]', 'newVal')->execute();
+        $this->assertEquals(COUCHBASE_SUBDOC_MULTI_FAILURE, $result->error->getCode());
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_EINVAL, $result->value[0]['code']);
+
+        $result = $b->mutateIn($key)->upsert('array[3].bleh', 'newVal')->execute();
+        $this->assertEquals(COUCHBASE_SUBDOC_MULTI_FAILURE, $result->error->getCode());
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_ENOENT, $result->value[0]['code']);
+    }
+
+    /**
+     * @test
+     * @expectedException CouchbaseException
+     * @expectedExceptionMessageRegExp /EMPTY_PATH/
+     * @depends testConnect
+     */
+    function testMutationInWithEmptyPath($b) {
+        $key = $this->makeKey('lookup_in_with_empty_path');
+        $b->upsert($key, array('path1' => 'value1'));
+
+        $result = $b->mutateIn($key)->upsert('', 'value')->execute();
+    }
+
+    /**
+     * @test
+     * @depends testConnect
+     */
+    function testCounterIn($b) {
+        $key = $this->makeKey('mutate_in');
+        $b->upsert($key, new stdClass());
+
+        $result = $b->mutateIn($key)->counter('counter', 100)->execute();
+        $this->assertNull($result->error);
+        $this->assertNotEmpty($result->cas);
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(100, $result->value[0]['value']);
+
+        $result = $b->mutateIn($key)->upsert('not_a_counter', 'foobar')->execute();
+        $this->assertNull($result->error);
+
+        $result = $b->mutateIn($key)->counter('not_a_counter', 100)->execute();
+        $this->assertEquals(COUCHBASE_SUBDOC_MULTI_FAILURE, $result->error->getCode());
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_MISMATCH, $result->value[0]['code']);
+
+        $result = $b->mutateIn($key)->counter('path.to.new.counter', 100)->execute();
+        $this->assertEquals(COUCHBASE_SUBDOC_MULTI_FAILURE, $result->error->getCode());
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_ENOENT, $result->value[0]['code']);
+
+        $result = $b->mutateIn($key)->counter('path.to.new.counter', 100, true)->execute();
+        $this->assertNull($result->error);
+        $this->assertNotEmpty($result->cas);
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(100, $result->value[0]['value']);
+
+        $result = $b->mutateIn($key)->counter('counter', -25)->execute();
+        $this->assertNull($result->error);
+        $this->assertNotEmpty($result->cas);
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(75, $result->value[0]['value']);
+
+        $result = $b->mutateIn($key)->counter('counter', 0)->execute();
+        $this->assertEquals(COUCHBASE_SUBDOC_MULTI_FAILURE, $result->error->getCode());
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(COUCHBASE_SUBDOC_BAD_DELTA, $result->value[0]['code']);
+    }
+
+    /**
+     * @test
+     * @depends testConnect
+     */
+    function testMultiLookupIn($b) {
+        $key = $this->makeKey('multi_lookup_in');
+        $b->upsert($key, array(
+            'field1' => 'value1',
+            'field2' => 'value2',
+            'array' =>  array(1, 2, 3),
+            'boolean' => false,
+        ));
+
+        $result = $b->lookupIn($key)
+                ->get('field1')
+                ->exists('field2')
+                ->exists('field3')
+                ->execute();
+
+        $this->assertEquals(COUCHBASE_SUBDOC_MULTI_FAILURE, $result->error->getCode());
+        $this->assertEquals(3, count($result->value));
+
+        $this->assertEquals(COUCHBASE_SUCCESS, $result->value[0]['code']);
+        $this->assertEquals('value1', $result->value[0]['value']);
+
+        $this->assertEquals(COUCHBASE_SUCCESS, $result->value[1]['code']);
+        $this->assertEquals(null, $result->value[1]['value']);
+
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_ENOENT, $result->value[2]['code']);
+        $this->assertEquals(null, $result->value[2]['value']);
+    }
+
+    /**
+     * @test
+     * @depends testConnect
+     */
+    function testMultiMutateIn($b) {
+        $key = $this->makeKey('multi_mutate_in');
+        $b->upsert($key, array(
+            'field1' => 'value1',
+            'field2' => 'value2',
+            'array' =>  array(1, 2, 3),
+        ));
+
+        $result = $b->mutateIn($key)
+                ->replace('field1', array('foo' => 'bar'))
+                ->remove('array')
+                ->replace('missing', "hello world")
+                ->execute();
+
+        $this->assertEquals(COUCHBASE_SUBDOC_MULTI_FAILURE, $result->error->getCode());
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_ENOENT, $result->value[2]['code']);
+    }
+
+    /**
+     * @test
+     * @depends testConnect
+     */
+    function testMultiValue($b) {
+        $key = $this->makeKey('multi_value');
+        $b->upsert($key, array('array' => array()));
+
+        $result = $b->mutateIn($key)->arrayAppend('array', true)->execute();
+        $this->assertNull($result->error);
+
+        $result = $b->retrieveIn($key, 'array');
+        $this->assertNull($result->error);
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(array(true), $result->value[0]['value']);
+
+        $result = $b->mutateIn($key)->arrayAppendAll('array', array(1, 2, 3))->execute();
+        $this->assertNull($result->error);
+
+        $result = $b->retrieveIn($key, 'array');
+        $this->assertNull($result->error);
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(array(true, 1, 2, 3), $result->value[0]['value']);
+
+        $result = $b->mutateIn($key)->arrayPrepend('array', array(42))->execute();
+        $this->assertNull($result->error);
+
+        $result = $b->retrieveIn($key, 'array');
+        $this->assertNull($result->error);
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(array(array(42), true, 1, 2, 3), $result->value[0]['value']);
+    }
 }
 
 function recursive_transcoder_encoder($value) {

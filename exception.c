@@ -29,11 +29,21 @@ void make_pcbc_exception(zapval *ex, const char *message, long code TSRMLS_DC) {
     make_exception(ex, cb_exception_ce, message, code TSRMLS_CC);
 }
 
+
+static const char *cb_strerror(lcb_error_t error)
+{
+    #define X(c, v, t, s) if (error == c) { return #c ": " s; }
+    LCB_XERR(X)
+    #undef X
+
+    return lcb_strerror(NULL, error);
+}
+
 void make_lcb_exception(zapval *ex, long code, const char *msg TSRMLS_DC) {
     if (msg) {
         make_exception(ex, cb_exception_ce, msg, code TSRMLS_CC);
     } else {
-        const char *str = lcb_strerror(NULL, (lcb_error_t)code);
+        const char *str = cb_strerror((lcb_error_t)code);
         make_exception(ex, cb_exception_ce, str, code TSRMLS_CC);
     }
 }

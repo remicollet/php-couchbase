@@ -1,5 +1,6 @@
 #include "couchbase.h"
 #include "ext/standard/php_var.h"
+#include "ext/json/php_json.h"
 #include "exception.h"
 #include "datainfo.h"
 #include "paramparser.h"
@@ -7,6 +8,7 @@
 #include "bucket.h"
 #include "cas.h"
 #include "metadoc.h"
+#include "docfrag.h"
 #include "transcoding.h"
 #include "opcookie.h"
 
@@ -24,6 +26,8 @@
         throw_pcbc_exception(m, LCB_EINVAL); \
         RETURN_NULL(); \
     }
+#define PCBC_CHECK_ZVAL_ARRAY(v, m) \
+    _PCBC_CHECK_ZVAL(v, IS_ARRAY, m)
 
 #define PHP_THISOBJ() zap_fetch_this(bucket_object)
 
@@ -485,6 +489,92 @@ static lcb_error_t proc_http_results(bucket_object *bucket, zval *return_value,
     return err;
 }
 
+typedef struct {
+    opcookie_res header;
+    zapval value;
+    zapval cas;
+} opcookie_subdoc_res;
+
+static void subdoc_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb) {
+    opcookie_subdoc_res *result = ecalloc(1, sizeof(opcookie_subdoc_res));
+    const lcb_RESPSUBDOC *resp = (const lcb_RESPSUBDOC *)rb;
+    lcb_SDENTRY cur;
+    HashTable *results;
+    size_t vii = 0, oix = 0;
+    zapval kvalue, kcode;
+    TSRMLS_FETCH();
+
+    zapval_alloc_stringl(kvalue, "value", sizeof("value") - 1);
+    zapval_alloc_stringl(kcode, "code", sizeof("code") - 1);
+
+    result->header.err = rb->rc;
+    if (rb->rc == LCB_SUCCESS || rb->rc == LCB_SUBDOC_MULTI_FAILURE) {
+        cas_encode(&result->cas, rb->cas TSRMLS_CC);
+    }
+    zapval_alloc_array(result->value);
+    results = zapval_arrval(result->value);
+    while (lcb_sdresult_next(resp, &cur, &vii)) {
+        zapval key, value, result, code;
+        HashTable *hvalue;
+        size_t index = oix++;
+        int ntmp, i;
+        char *tmp;
+
+        if (cbtype == LCB_CALLBACK_SDMUTATE) {
+            index = cur.index;
+        }
+        if (cur.nvalue > 0) {
+            ntmp = cur.nvalue + 1;
+            tmp = emalloc(ntmp);
+            memcpy(tmp, cur.value, cur.nvalue);
+            tmp[ntmp - 1] = 0;
+            zapval_alloc(result);
+            php_json_decode(zapval_zvalptr(result), tmp, ntmp - 1, 1, PHP_JSON_PARSER_DEFAULT_DEPTH);
+            efree(tmp);
+        } else {
+            zapval_alloc_null(result);
+        }
+        zapval_alloc_array(value);
+        hvalue = zapval_arrval(value);
+
+        array_set_zval_key(hvalue, zapval_zvalptr(kvalue), zapval_zvalptr(result));
+        zapval_alloc_long(code, cur.status);
+        array_set_zval_key(hvalue, zapval_zvalptr(kcode), zapval_zvalptr(code));
+
+        zapval_alloc_long(key, index);
+        array_set_zval_key(results, zapval_zvalptr(key), zapval_zvalptr(value));
+    }
+
+    opcookie_push((opcookie*)rb->cookie, &result->header);
+}
+
+static lcb_error_t proc_subdoc_results(bucket_object *bucket, zval *return_value,
+                                       opcookie *cookie TSRMLS_DC)
+{
+    opcookie_subdoc_res *res;
+    lcb_error_t err = LCB_SUCCESS;
+
+    FOREACH_OPCOOKIE_RES(opcookie_subdoc_res, res, cookie) {
+        if (res->header.err == LCB_SUCCESS) {
+            pcbc_make_docfrag(return_value, &res->value, &res->cas TSRMLS_CC);
+        } else {
+            pcbc_make_docfrag_error(return_value, res->header.err,
+                                    res->header.err == LCB_SUBDOC_MULTI_FAILURE ? &res->value : NULL
+                                    TSRMLS_CC);
+        }
+    }
+
+    FOREACH_OPCOOKIE_RES(opcookie_subdoc_res, res, cookie) {
+        zapval_destroy(res->value);
+        if (!zap_zval_is_undef(zapval_zvalptr(res->cas))) {
+            zapval_destroy(res->cas);
+        }
+    }
+
+    return err;
+}
+
+
 PHP_METHOD(Bucket, __construct)
 {
 	bucket_object *data = PHP_THISOBJ();
@@ -586,6 +676,9 @@ PHP_METHOD(Bucket, __construct)
 		lcb_set_touch_callback(instance, touch_callback);
 		lcb_set_http_complete_callback(instance, http_complete_callback);
 		lcb_set_durability_callback(instance, durability_callback);
+
+                lcb_install_callback3(instance, LCB_CALLBACK_SDLOOKUP, subdoc_callback);
+                lcb_install_callback3(instance, LCB_CALLBACK_SDMUTATE, subdoc_callback);
 
 		err = lcb_connect(instance);
 		if (err != LCB_SUCCESS) {
@@ -1552,6 +1645,141 @@ PHP_METHOD(Bucket, n1ql_request)
     }
 }
 
+typedef struct {
+    int nspecs;
+    lcb_SDSPEC *specs;
+    smart_str *bufs;
+} pcbc_sd_params;
+
+static int extract_specs(zapval *pDest, void *argument TSRMLS_DC)
+{
+    pcbc_sd_params *params = (pcbc_sd_params *)argument;
+    lcb_SDSPEC *spec;
+    HashTable *hparams;
+    zval *zparam;
+    int remove_brackets = 0;
+
+    if (!pDest || !zap_zval_is_array(zapval_zvalptr(*pDest))) {
+        return ZEND_HASH_APPLY_KEEP;
+    }
+    hparams = zapval_arrval(*pDest);
+
+    spec = params->specs + params->nspecs;
+
+    zparam = zap_hash_str_find_s(hparams, "opcode");
+    if (!zparam) {
+        return ZEND_HASH_APPLY_KEEP;
+    }
+    spec->sdcmd = Z_LVAL_P(zparam);
+
+    switch (spec->sdcmd) {
+    case LCB_SDCMD_ARRAY_ADD_FIRST:
+    case LCB_SDCMD_ARRAY_ADD_LAST:
+    case LCB_SDCMD_ARRAY_INSERT:
+        zparam = zap_hash_str_find_s(hparams, "removeBrackets");
+        remove_brackets = zparam && zap_zval_boolval(zparam);
+    }
+
+    zparam = zap_hash_str_find_s(hparams, "createParents");
+    if (zparam && zap_zval_boolval(zparam)) {
+        spec->options |= LCB_SDSPEC_F_MKINTERMEDIATES;
+    }
+
+    zparam = zap_hash_str_find_s(hparams, "path");
+    if (zparam) {
+        LCB_SDSPEC_SET_PATH(spec, Z_STRVAL_P(zparam), Z_STRLEN_P(zparam));
+    }
+
+    zparam = zap_hash_str_find_s(hparams, "value");
+    if (zparam) {
+        char *p;
+        int n;
+        smart_str *buf = params->bufs + params->nspecs;
+        php_json_encode(buf, zparam, 0 TSRMLS_CC);
+#if PHP_VERSION_ID >= 70000
+        p = zap_zstr_val(buf->s);
+        n = zap_zstr_len(buf->s);
+#else
+        p = buf->c;
+        n = buf->len;
+#endif
+        if (remove_brackets) {
+            for (; isspace(*p) && n; n--, p++) {
+            }
+            for (; n && isspace(p[n-1]); n--) {
+            }
+            if (n < 3 || p[0] != '[' || p[n-1] != ']') {
+                php_error_docref(NULL TSRMLS_CC, E_WARNING, "multivalue operation expects non-empty array");
+                return ZEND_HASH_APPLY_KEEP;
+            }
+            p++;
+            n -= 2;
+        }
+        LCB_SDSPEC_SET_VALUE(spec, p, n);
+    }
+    params->nspecs++;
+
+    return ZEND_HASH_APPLY_KEEP;
+}
+
+PHP_METHOD(Bucket, subdoc_request)
+{
+    bucket_object *data = PHP_THISOBJ();
+    lcb_CMDSUBDOC cmd = { 0 };
+    opcookie *cookie;
+    zval *zid, *zcommands, *zcmd, *zcas;
+    lcb_error_t err;
+    int nspecs, i;
+    pcbc_sd_params params = {0};
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zzz",
+                              &zid, &zcommands, &zcas) == FAILURE) {
+        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+        RETURN_NULL();
+    }
+
+    PCBC_CHECK_ZVAL_STRING(zid, "key must be a string");
+    PCBC_CHECK_ZVAL_ARRAY(zcommands, "commands must be an array");
+    if (!zap_zval_is_null(zcas)) {
+        PCBC_CHECK_ZVAL_STRING(zcas, "commands must be an string");
+        cmd.cas = cas_decode(zcas TSRMLS_CC);
+    }
+    LCB_CMD_SET_KEY(&cmd, Z_STRVAL_P(zid), Z_STRLEN_P(zid));
+
+    nspecs = zend_hash_num_elements(Z_ARRVAL_P(zcommands));
+    params.nspecs = 0;
+    params.specs = emalloc(sizeof(lcb_SDSPEC) * nspecs);
+    memset(params.specs, 0, sizeof(lcb_SDSPEC) * nspecs);
+    params.bufs = emalloc(sizeof(smart_str) * nspecs);
+    memset(params.bufs, 0, sizeof(smart_str) * nspecs);
+
+    zend_hash_apply_with_argument(Z_ARRVAL_P(zcommands), (apply_func_arg_t) extract_specs, &params TSRMLS_CC);
+    cmd.specs = params.specs;
+    cmd.nspecs = params.nspecs;
+
+    cookie = opcookie_init();
+
+    // Execute query
+    err = lcb_subdoc3(data->conn->lcb, cookie, &cmd);
+
+    if (err == LCB_SUCCESS) {
+        lcb_wait(data->conn->lcb);
+
+        err = proc_subdoc_results(data, return_value, cookie TSRMLS_CC);
+    }
+
+    opcookie_destroy(cookie);
+    efree(params.specs);
+    for (i = 0; i < nspecs; ++i) {
+        smart_str_free(params.bufs + i);
+    }
+    efree(params.bufs);
+
+    if (err != LCB_SUCCESS) {
+        throw_lcb_exception(err);
+    }
+}
+
 PHP_METHOD(Bucket, http_request)
 {
 	bucket_object *data = PHP_THISOBJ();
@@ -1628,7 +1856,6 @@ PHP_METHOD(Bucket, http_request)
     }
 }
 
-
 PHP_METHOD(Bucket, setTranscoder)
 {
 	bucket_object *data = PHP_THISOBJ();
@@ -1694,6 +1921,7 @@ zend_function_entry bucket_methods[] = {
 	PHP_ME(Bucket,  unlock,          NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(Bucket,  n1ql_request,    NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(Bucket,  http_request,    NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Bucket,  subdoc_request,  NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(Bucket,  durability,      NULL, ZEND_ACC_PUBLIC)
 
 	PHP_ME(Bucket,  setTranscoder,   NULL, ZEND_ACC_PUBLIC)

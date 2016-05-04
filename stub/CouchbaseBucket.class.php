@@ -146,7 +146,7 @@ class CouchbaseBucket {
         return $this->_endure($ids, $options,
             $this->me->replace($ids, $val, $options));
     }
-    
+
     /**
      * Appends content to a document.
      *
@@ -159,7 +159,7 @@ class CouchbaseBucket {
         return $this->_endure($ids, $options,
             $this->me->append($ids, $val, $options));
     }
-    
+
     /**
      * Prepends content to a document.
      *
@@ -292,7 +292,7 @@ class CouchbaseBucket {
         }
         return $out;
     }
-    
+
     /**
      * Performs a N1QL query.
      *
@@ -311,7 +311,7 @@ class CouchbaseBucket {
         }
         $dataStr = json_encode($data, true);
         $dataOut = $this->me->n1ql_request($dataStr, $queryObj->adhoc);
-        
+
         $meta = json_decode($dataOut['meta'], true);
         if (isset($meta['errors']) && count($meta['errors']) > 0) {
             $err = $meta['errors'][0];
@@ -319,14 +319,14 @@ class CouchbaseBucket {
             $ex->qCode = $err['code'];
             throw $ex;
         }
-        
+
         $rows = array();
         foreach ($dataOut['results'] as $row) {
             $rows[] = json_decode($row, $json_asarray);
         }
         return $rows;
     }
-    
+
     /**
      * Performs a query (either ViewQuery or N1qlQuery).
      *
@@ -344,6 +344,58 @@ class CouchbaseBucket {
             throw new CouchbaseException(
                 'Passed object must be of type ViewQuery or N1qlQuery');
         }
+    }
+
+    /**
+     * Creates a CouchbaseLookupInBuilder object with which you can then use method-chaining
+     * to populate them with lookup operations and then later execute.
+     *
+     * @param string $id
+     * @return CouchbaseLookupInBuilder
+     */
+    public function lookupIn($id) {
+        return new CouchbaseLookupInBuilder($this, $id);
+    }
+
+    /**
+     * Shortcut to alternative to constructing a builder for getting multiple
+     * paths in the document.
+     *
+     * @param string $id
+     * @param string ...$keys
+     */
+    public function retrieveIn($id) {
+        $builder = new CouchbaseLookupInBuilder($this, $id);
+        $args = func_get_args();
+        for ($i = 1; $i < func_num_args(); $i++) {
+            $builder->get($args[$i]);
+        }
+        return $builder->execute();
+    }
+
+    /**
+     * Creates a CouchbaseMutateInBuilder object with which you can then use method-chaining
+     * to populate them with mutation operations and then later execute.
+     *
+     * @param string $id
+     * @param string $cas
+     * @return CouchbaseMutateInBuilder
+     */
+    public function mutateIn($id, $cas = null) {
+        return new CouchbaseMutateInBuilder($this, $id, $cas);
+    }
+
+    /**
+     * Function, which performs subdocument calls
+     *
+     * @internal
+     *
+     * @param string $id
+     * @param array $commands list of commands from builder
+     * @param string $cas CAS value for mutations
+     */
+    public function _subdoc($id, $commands, $cas = null) {
+        return $this->me->subdoc_request($id, $commands, $cas);
     }
 
     /**
@@ -410,7 +462,7 @@ class CouchbaseBucket {
                 'persist_to' => $options['persist_to'],
                 'replicate_to' => $options['replicate_to']
             ));
-            
+
             return $res;
         }
     }

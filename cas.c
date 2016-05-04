@@ -6,17 +6,18 @@
 #define PCBC_CAS_DIGITS "0123456789abcdefghijklmnopqrstuvwxyz"
 #define PCBC_CAS_BASE   36
 
-lcb_cas_t cas_decode(zval *zcas TSRMLS_DC) {
+lcb_cas_t cas_decode(zval *zcasp TSRMLS_DC) {
     char *str, c;
     int i;
     lcb_cas_t cas = 0;
+    zapval zcas = zapval_from_zvalptr(zcasp);
 
-    if (!zapval_is_string(*zcas)) {
+    if (!zapval_is_string(zcas)) {
         return 0;
     }
 
-    str = zapval_strval_p(zcas);
-    for (i = zapval_strlen_p(zcas); i > 0; i--) {
+    str = zapval_strval_p(&zcas);
+    for (i = zapval_strlen_p(&zcas); i > 0; i--) {
         c = *str++;
 
         if (c >= '0' && c <= '9') {

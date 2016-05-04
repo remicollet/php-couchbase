@@ -37,7 +37,7 @@ if test "$PHP_COUCHBASE" != "no"; then
 
   PHP_SUBST(COUCHBASE_SHARED_LIBADD)
 
-  COUCHBASE_FILES="bucket.c cas.c cluster.c couchbase.c exception.c metadoc.c opcookie.c transcoding.c"
+  COUCHBASE_FILES="bucket.c cas.c cluster.c couchbase.c exception.c metadoc.c docfrag.c opcookie.c transcoding.c"
 
   if test "$PHP_SYSTEM_FASTLZ" != "no"; then
     AC_CHECK_HEADERS([fastlz.h])

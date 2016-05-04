@@ -18,6 +18,8 @@ add_file "CouchbaseCluster.class.php"
 add_file "CouchbaseClusterManager.class.php"
 add_file "CouchbaseBucket.class.php"
 add_file "CouchbaseBucketManager.class.php"
+add_file "CouchbaseMutateInBuilder.class.php"
+add_file "CouchbaseLookupInBuilder.class.php"
 
 echo "};" >> phpstubstr.h
 echo "Generated phpstubstr.h"

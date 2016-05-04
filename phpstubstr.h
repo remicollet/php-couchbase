@@ -1215,7 +1215,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "        return $this->_endure($ids, $options,\n" \
 "            $this->me->replace($ids, $val, $options));\n" \
 "    }\n" \
-"    \n" \
+"\n" \
 "    /**\n" \
 "     * Appends content to a document.\n" \
 "     *\n" \
@@ -1228,7 +1228,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "        return $this->_endure($ids, $options,\n" \
 "            $this->me->append($ids, $val, $options));\n" \
 "    }\n" \
-"    \n" \
+"\n" \
 "    /**\n" \
 "     * Prepends content to a document.\n" \
 "     *\n" \
@@ -1361,7 +1361,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "        }\n" \
 "        return $out;\n" \
 "    }\n" \
-"    \n" \
+"\n" \
 "    /**\n" \
 "     * Performs a N1QL query.\n" \
 "     *\n" \
@@ -1380,7 +1380,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "        }\n" \
 "        $dataStr = json_encode($data, true);\n" \
 "        $dataOut = $this->me->n1ql_request($dataStr, $queryObj->adhoc);\n" \
-"        \n" \
+"\n" \
 "        $meta = json_decode($dataOut['meta'], true);\n" \
 "        if (isset($meta['errors']) && count($meta['errors']) > 0) {\n" \
 "            $err = $meta['errors'][0];\n" \
@@ -1388,14 +1388,14 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "            $ex->qCode = $err['code'];\n" \
 "            throw $ex;\n" \
 "        }\n" \
-"        \n" \
+"\n" \
 "        $rows = array();\n" \
 "        foreach ($dataOut['results'] as $row) {\n" \
 "            $rows[] = json_decode($row, $json_asarray);\n" \
 "        }\n" \
 "        return $rows;\n" \
 "    }\n" \
-"    \n" \
+"\n" \
 "    /**\n" \
 "     * Performs a query (either ViewQuery or N1qlQuery).\n" \
 "     *\n" \
@@ -1413,6 +1413,58 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "            throw new CouchbaseException(\n" \
 "                'Passed object must be of type ViewQuery or N1qlQuery');\n" \
 "        }\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Creates a CouchbaseLookupInBuilder object with which you can then use method-chaining\n" \
+"     * to populate them with lookup operations and then later execute.\n" \
+"     *\n" \
+"     * @param string $id\n" \
+"     * @return CouchbaseLookupInBuilder\n" \
+"     */\n" \
+"    public function lookupIn($id) {\n" \
+"        return new CouchbaseLookupInBuilder($this, $id);\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Shortcut to alternative to constructing a builder for getting multiple\n" \
+"     * paths in the document.\n" \
+"     *\n" \
+"     * @param string $id\n" \
+"     * @param string ...$keys\n" \
+"     */\n" \
+"    public function retrieveIn($id) {\n" \
+"        $builder = new CouchbaseLookupInBuilder($this, $id);\n" \
+"        $args = func_get_args();\n" \
+"        for ($i = 1; $i < func_num_args(); $i++) {\n" \
+"            $builder->get($args[$i]);\n" \
+"        }\n" \
+"        return $builder->execute();\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Creates a CouchbaseMutateInBuilder object with which you can then use method-chaining\n" \
+"     * to populate them with mutation operations and then later execute.\n" \
+"     *\n" \
+"     * @param string $id\n" \
+"     * @param string $cas\n" \
+"     * @return CouchbaseMutateInBuilder\n" \
+"     */\n" \
+"    public function mutateIn($id, $cas = null) {\n" \
+"        return new CouchbaseMutateInBuilder($this, $id, $cas);\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Function, which performs subdocument calls\n" \
+"     *\n" \
+"     * @internal\n" \
+"     *\n" \
+"     * @param string $id\n" \
+"     * @param array $commands list of commands from builder\n" \
+"     * @param string $cas CAS value for mutations\n" \
+"     */\n" \
+"    public function _subdoc($id, $commands, $cas = null) {\n" \
+"        return $this->me->subdoc_request($id, $commands, $cas);\n" \
 "    }\n" \
 "\n" \
 "    /**\n" \
@@ -1479,7 +1531,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "                'persist_to' => $options['persist_to'],\n" \
 "                'replicate_to' => $options['replicate_to']\n" \
 "            ));\n" \
-"            \n" \
+"\n" \
 "            return $res;\n" \
 "        }\n" \
 "    }\n" \
@@ -1699,5 +1751,336 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "        return json_decode($res, true);\n" \
 "    }\n" \
 "} \n" \
+""},
+{"[CouchbaseNative]/CouchbaseMutateInBuilder.class.php","\n" \
+"/**\n" \
+" * File for the CouchbaseMutateInBuilder class.\n" \
+" *\n" \
+" * @author Sergey Avseyev <sergey.avseyev@gmail.com>\n" \
+" */\n" \
+"\n" \
+"/**\n" \
+" * Represents a builder for subdocument mutation command.\n" \
+" *\n" \
+" * Note: This class must be constructed by calling the mutateIn()\n" \
+" * method of the CouchbaseBucket class.\n" \
+" *\n" \
+" * @property integer $id\n" \
+" *\n" \
+" * @package Couchbase\n" \
+" *\n" \
+" * @see CouchbaseBucket::mutateIn()\n" \
+" */\n" \
+"class CouchbaseMutateInBuilder {\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     *\n" \
+"     * Unique identifier for the document\n" \
+"     */\n" \
+"    public $id;\n" \
+"\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     *\n" \
+"     * Unique and opaque value which identifies current state\n" \
+"     * of the document and regenerated on mutation. Useful to\n" \
+"     * control integrity of the document.\n" \
+"     */\n" \
+"    public $cas;\n" \
+"\n" \
+"    /**\n" \
+"     * @var array\n" \
+"     *\n" \
+"     * List of chained commands\n" \
+"     */\n" \
+"    private $commands = array();\n" \
+"\n" \
+"    private $bucket;\n" \
+"\n" \
+"    public function __construct($bucket, $id, $cas) {\n" \
+"        $this->bucket = $bucket;\n" \
+"        $this->id = $id;\n" \
+"        $this->cas = $cas;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Inserts an element into a JSON document at a given path.\n" \
+"     *\n" \
+"     * @param string $path A string (N1QL syntax) used to specify a location within the document\n" \
+"     * @param string $value An array value, scalar or any other valid JSON item.\n" \
+"     * @param boolean $createParents If true, the parent will be added to the document.\n" \
+"     */\n" \
+"    public function insert($path, $value, $createParents = false) {\n" \
+"        $this->commands[] = array(\n" \
+"            'opcode' => COUCHBASE_SDCMD_DICT_ADD,\n" \
+"            'path' => $path,\n" \
+"            'value' => $value,\n" \
+"            'createParents' => $createParents,\n" \
+"        );\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Inserts or updates an element within or into a JSON document at a given path.\n" \
+"     *\n" \
+"     * @param string $path A string (N1QL syntax) used to specify a location within the document\n" \
+"     * @param string $value An array value, scalar or any other valid JSON item.\n" \
+"     * @param boolean $createParents If true, the parent will be added to the document.\n" \
+"     */\n" \
+"    public function upsert($path, $value, $createParents = false) {\n" \
+"        $this->commands[] = array(\n" \
+"            'opcode' => COUCHBASE_SDCMD_DICT_UPSERT,\n" \
+"            'path' => $path,\n" \
+"            'value' => $value,\n" \
+"            'createParents' => $createParents,\n" \
+"        );\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Replaces an element or value within a JSON document at a given path.\n" \
+"     *\n" \
+"     * @param string $path A string (N1QL syntax) used to specify a location within the document\n" \
+"     * @param string $value An array value, scalar or any other valid JSON item.\n" \
+"     */\n" \
+"    public function replace($path, $value) {\n" \
+"        $this->commands[] = array(\n" \
+"            'opcode' => COUCHBASE_SDCMD_REPLACE,\n" \
+"            'path' => $path,\n" \
+"            'value' => $value,\n" \
+"        );\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Removes an element or value from a JSON document at a given path.\n" \
+"     *\n" \
+"     * @param string $path A string (N1QL syntax) used to specify a location within the document\n" \
+"     */\n" \
+"    public function remove($path) {\n" \
+"        $this->commands[] = array(\n" \
+"            'opcode' => COUCHBASE_SDCMD_REMOVE,\n" \
+"            'path' => $path,\n" \
+"        );\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Add a value to the beginning of an array at given path of a JSON document\n" \
+"     *\n" \
+"     * @param string $path A string (N1QL syntax) used to specify a location within the document\n" \
+"     * @param mixed $value An array value, scalar or any other valid JSON item.\n" \
+"     * @param boolean $createParents If true, the parent will be added to the document.\n" \
+"     */\n" \
+"    public function arrayPrepend($path, $value, $createParents = false) {\n" \
+"        $this->commands[] = array(\n" \
+"            'opcode' => COUCHBASE_SDCMD_ARRAY_ADD_FIRST,\n" \
+"            'path' => $path,\n" \
+"            'value' => $value,\n" \
+"            'createParents' => $createParents,\n" \
+"        );\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Add a value to the end of an array at given path of a JSON document\n" \
+"     *\n" \
+"     * @param string $path A string (N1QL syntax) used to specify a location within the document\n" \
+"     * @param mixed $value An array value, scalar or any other valid JSON item.\n" \
+"     * @param boolean $createParents If true, the parent will be added to the document.\n" \
+"     */\n" \
+"    public function arrayAppend($path, $value, $createParents = false) {\n" \
+"        $this->commands[] = array(\n" \
+"            'opcode' => COUCHBASE_SDCMD_ARRAY_ADD_LAST,\n" \
+"            'path' => $path,\n" \
+"            'value' => $value,\n" \
+"            'createParents' => $createParents,\n" \
+"        );\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Insert a value at given path of an array in a JSON document\n" \
+"     *\n" \
+"     * @param string $path A string (N1QL syntax) used to specify a location within the document\n" \
+"     * @param mixed $value An array value, scalar or any other valid JSON item.\n" \
+"     */\n" \
+"    public function arrayInsert($path, $value) {\n" \
+"        $this->commands[] = array(\n" \
+"            'opcode' => COUCHBASE_SDCMD_ARRAY_INSERT,\n" \
+"            'path' => $path,\n" \
+"            'value' => $value,\n" \
+"        );\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Add all values to the beginning of an array at given path of a JSON document\n" \
+"     *\n" \
+"     * @param string $path A string (N1QL syntax) used to specify a location within the document\n" \
+"     * @param array $values An array of array values, scalars or any other valid JSON items.\n" \
+"     * @param boolean $createParents If true, the parent will be added to the document.\n" \
+"     */\n" \
+"    public function arrayPrependAll($path, $values, $createParents = false) {\n" \
+"        $this->commands[] = array(\n" \
+"            'opcode' => COUCHBASE_SDCMD_ARRAY_ADD_FIRST,\n" \
+"            'path' => $path,\n" \
+"            'value' => $values,\n" \
+"            'createParents' => $createParents,\n" \
+"            'removeBrackets' => true,\n" \
+"        );\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Add all values to the end of an array at given path of a JSON document\n" \
+"     *\n" \
+"     * @param string $path A string (N1QL syntax) used to specify a location within the document\n" \
+"     * @param array $values An array of array values, scalars or any other valid JSON items.\n" \
+"     * @param boolean $createParents If true, the parent will be added to the document.\n" \
+"     */\n" \
+"    public function arrayAppendAll($path, $values, $createParents = false) {\n" \
+"        $this->commands[] = array(\n" \
+"            'opcode' => COUCHBASE_SDCMD_ARRAY_ADD_LAST,\n" \
+"            'path' => $path,\n" \
+"            'value' => $values,\n" \
+"            'createParents' => $createParents,\n" \
+"            'removeBrackets' => true,\n" \
+"        );\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Insert a value at given path of an array in a JSON document\n" \
+"     *\n" \
+"     * @param string $path A string (N1QL syntax) used to specify a location within the document\n" \
+"     * @param array $values An array of array values, scalars or any other valid JSON items.\n" \
+"     */\n" \
+"    public function arrayInsertAll($path, $values) {\n" \
+"        $this->commands[] = array(\n" \
+"            'opcode' => COUCHBASE_SDCMD_ARRAY_INSERT,\n" \
+"            'path' => $path,\n" \
+"            'value' => $values,\n" \
+"            'removeBrackets' => true,\n" \
+"        );\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Add a value to an array at given path of a JSON document if it does not exist yet\n" \
+"     *\n" \
+"     * @param string $path A string (N1QL syntax) used to specify a location within the document\n" \
+"     * @param string $value An array value, scalar or any other valid JSON item.\n" \
+"     * @param boolean $createParents If true, the parent will be added to the document.\n" \
+"     */\n" \
+"    public function arrayAddUnique($path, $value, $createParents = false) {\n" \
+"        $this->commands[] = array(\n" \
+"            'opcode' => COUCHBASE_SDCMD_ARRAY_ADD_UNIQUE,\n" \
+"            'path' => $path,\n" \
+"            'value' => $value,\n" \
+"            'createParents' => $createParents,\n" \
+"        );\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Perform and arithmetic operation on a numeric value in a JSON document at given path\n" \
+"     *\n" \
+"     * @param string $path A string (N1QL syntax) used to specify a location within the document\n" \
+"     * @param string $delta The value to increment or decrement the original value by\n" \
+"     * @param boolean $createParents If true, the parent will be added to the document.\n" \
+"     */\n" \
+"    public function counter($path, $delta, $createParents = false) {\n" \
+"        $this->commands[] = array(\n" \
+"            'opcode' => COUCHBASE_SDCMD_COUNTER,\n" \
+"            'path' => $path,\n" \
+"            'value' => $delta,\n" \
+"            'createParents' => $createParents,\n" \
+"        );\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function execute() {\n" \
+"        if (empty($this->commands)) {\n" \
+"            throw new CouchbaseException(\"There is should be at least command requested.\");\n" \
+"        }\n" \
+"        return $this->bucket->_subdoc($this->id, $this->commands, $this->cas);\n" \
+"    }\n" \
+"}\n" \
+""},
+{"[CouchbaseNative]/CouchbaseLookupInBuilder.class.php","\n" \
+"/**\n" \
+" * File for the CouchbaseLookupInBuilder class.\n" \
+" *\n" \
+" * @author Sergey Avseyev <sergey.avseyev@gmail.com>\n" \
+" */\n" \
+"\n" \
+"/**\n" \
+" * Represents a builder for subdocument lookup command.\n" \
+" *\n" \
+" * Note: This class must be constructed by calling the lookupIn()\n" \
+" * method of the CouchbaseBucket class.\n" \
+" *\n" \
+" * @property integer $id\n" \
+" *\n" \
+" * @package Couchbase\n" \
+" *\n" \
+" * @see CouchbaseBucket::lookupIn()\n" \
+" */\n" \
+"class CouchbaseLookupInBuilder {\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     *\n" \
+"     * Unique identifier for the document\n" \
+"     */\n" \
+"    public $id;\n" \
+"\n" \
+"    /**\n" \
+"     * @var array\n" \
+"     *\n" \
+"     * List of chained commands\n" \
+"     */\n" \
+"    private $commands = array();\n" \
+"\n" \
+"    private $bucket;\n" \
+"\n" \
+"    public function __construct($bucket, $id) {\n" \
+"        $this->bucket = $bucket;\n" \
+"        $this->id = $id;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Gets the value at a specified N1QL path.\n" \
+"     *\n" \
+"     * @param string $path A string (N1QL syntax) used to specify a location within the document\n" \
+"     */\n" \
+"    public function get($path) {\n" \
+"        $this->commands[] = array(\n" \
+"            'opcode' => COUCHBASE_SDCMD_GET,\n" \
+"            'path' => $path,\n" \
+"        );\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Checks for the existence of a given N1QL path.\n" \
+"     *\n" \
+"     * @param string $path A string (N1QL syntax) used to specify a location within the document\n" \
+"     */\n" \
+"    public function exists($path) {\n" \
+"        $this->commands[] = array(\n" \
+"            'opcode' => COUCHBASE_SDCMD_EXISTS,\n" \
+"            'path' => $path,\n" \
+"        );\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function execute() {\n" \
+"        if (empty($this->commands)) {\n" \
+"            throw new CouchbaseException(\"There is should be at least command requested.\");\n" \
+"        }\n" \
+"        return $this->bucket->_subdoc($this->id, $this->commands);\n" \
+"    }\n" \
+"}\n" \
 ""},
 };

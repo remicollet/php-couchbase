@@ -1,11 +1,21 @@
 /**
- * Zend Abstractions for Php
+ * Zend Abstractions for PHP
  */
 
 #ifndef ZAP_H_
 #define ZAP_H_
 
 #include <php.h>
+
+#if PHP_VERSION_ID >= 70000
+#include <zend_smart_str.h>
+#else
+#include <ext/standard/php_smart_str.h>
+#endif
+
+#ifndef PHP_JSON_PARSER_DEFAULT_DEPTH
+#define PHP_JSON_PARSER_DEFAULT_DEPTH 512
+#endif
 
 typedef struct _zap_class_entry {
 #if PHP_VERSION_ID >= 70000
@@ -174,6 +184,8 @@ typedef zval zapval;
 #define zap_zval_res_p(v, ptr, type) \
     ZVAL_RES(v, zend_register_resource(ptr, type))
 
+#define zap_zval_is_null(v) \
+    (Z_TYPE_P(v) == IS_NULL)
 #define zap_zval_is_undef(v) \
     (Z_TYPE_P(v) == IS_UNDEF)
 #define zap_zval_is_bool(v) \
@@ -222,6 +234,9 @@ typedef zval zapval;
 #define zapval_strval_p(v) Z_STRVAL_P(v)
 #define zapval_lval_p(v) Z_LVAL_P(v)
 
+#define zap_zstr_val(v) ZSTR_VAL(v)
+#define zap_zstr_len(v) ZSTR_LEN(v)
+
 #define zap_throw_exception_object(o) zend_throw_exception_object(&o TSRMLS_CC)
 
 // int param_count, zapval *args
@@ -237,6 +252,8 @@ typedef zval zapval;
     zend_hash_next_index_insert(ht, hv)
 #define zap_hash_str_find(ht, k, nk) \
     zend_hash_str_find(ht, k, nk)
+#define zap_hash_str_find_s(ht, k) \
+    zend_hash_str_find(ht, k, sizeof(k) - 1)
 #define zap_hash_index_find(ht, i) \
     zend_hash_index_find(ht, i)
 #define zap_hash_get_current_data_ex(ht, pos) \
@@ -290,6 +307,8 @@ typedef zval* zapval;
 
 #define zap_zval_is_undef(v) \
     (v == NULL)
+#define zap_zval_is_null(v) \
+    (Z_TYPE_P(v) == IS_NULL)
 #define zap_zval_is_bool(v) \
     (Z_TYPE_P(v) == IS_BOOL)
 #define zap_zval_is_array(v) \
@@ -393,6 +412,8 @@ static inline zval * _zap_hash_str_find(HashTable *ht, char *key, size_t len) {
 }
 #define zap_hash_str_find(ht, k, nk) \
     _zap_hash_str_find(ht, k, nk)
+#define zap_hash_str_find_s(ht, k) \
+    zap_hash_str_find(ht, k, sizeof(k) - 1)
 
 static inline zapval * _zap_hash_index_find(HashTable *ht, ulong i) {
     zval **result;
