@@ -89,7 +89,7 @@ PHP_MINIT_FUNCTION(couchbase)
             ap_php_snprintf(buf, sizeof(buf), "COUCHBASE_%s", #name + 4); \
             zend_register_long_constant(buf, PCBC_CONST_LENGTH(buf), value, \
                                         CONST_CS | CONST_PERSISTENT,    \
-                                        module_number);                 \
+                                        module_number TSRMLS_CC);      \
         }
 
         LCB_XERR(X)
