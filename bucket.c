@@ -529,7 +529,7 @@ static void subdoc_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb) 
             memcpy(tmp, cur.value, cur.nvalue);
             tmp[ntmp - 1] = 0;
             zapval_alloc(result);
-            php_json_decode(zapval_zvalptr(result), tmp, ntmp - 1, 1, PHP_JSON_PARSER_DEFAULT_DEPTH);
+            php_json_decode(zapval_zvalptr(result), tmp, ntmp - 1, 1, PHP_JSON_PARSER_DEFAULT_DEPTH TSRMLS_CC);
             efree(tmp);
         } else {
             zapval_alloc_null(result);
