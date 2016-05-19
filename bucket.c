@@ -501,21 +501,15 @@ static void subdoc_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb) 
     lcb_SDENTRY cur;
     HashTable *results;
     size_t vii = 0, oix = 0;
-    zapval kvalue, kcode;
     TSRMLS_FETCH();
-
-    zapval_alloc_stringl(kvalue, "value", sizeof("value") - 1);
-    zapval_alloc_stringl(kcode, "code", sizeof("code") - 1);
 
     result->header.err = rb->rc;
     if (rb->rc == LCB_SUCCESS || rb->rc == LCB_SUBDOC_MULTI_FAILURE) {
         cas_encode(&result->cas, rb->cas TSRMLS_CC);
     }
     zapval_alloc_array(result->value);
-    results = zapval_arrval(result->value);
     while (lcb_sdresult_next(resp, &cur, &vii)) {
-        zapval key, value, result, code;
-        HashTable *hvalue;
+        zapval value, res, code;
         size_t index = oix++;
         int ntmp, i;
         char *tmp;
@@ -528,21 +522,20 @@ static void subdoc_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb) 
             tmp = emalloc(ntmp);
             memcpy(tmp, cur.value, cur.nvalue);
             tmp[ntmp - 1] = 0;
-            zapval_alloc(result);
-            php_json_decode(zapval_zvalptr(result), tmp, ntmp - 1, 1, PHP_JSON_PARSER_DEFAULT_DEPTH TSRMLS_CC);
+            zapval_alloc(res);
+            php_json_decode(zapval_zvalptr(res), tmp, ntmp - 1, 1, PHP_JSON_PARSER_DEFAULT_DEPTH TSRMLS_CC);
             efree(tmp);
         } else {
-            zapval_alloc_null(result);
+            zapval_alloc_null(res);
         }
         zapval_alloc_array(value);
-        hvalue = zapval_arrval(value);
 
-        array_set_zval_key(hvalue, zapval_zvalptr(kvalue), zapval_zvalptr(result));
+        zapval_add_assoc_zval_ex(value, "value", res);
+
         zapval_alloc_long(code, cur.status);
-        array_set_zval_key(hvalue, zapval_zvalptr(kcode), zapval_zvalptr(code));
+        zapval_add_assoc_zval_ex(value, "code", code);
 
-        zapval_alloc_long(key, index);
-        array_set_zval_key(results, zapval_zvalptr(key), zapval_zvalptr(value));
+        add_index_zval(zapval_zvalptr(result->value), index, zapval_zvalptr(value));
     }
 
     opcookie_push((opcookie*)rb->cookie, &result->header);

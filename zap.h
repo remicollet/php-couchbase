@@ -498,4 +498,11 @@ static void zap_object_properties_init(zend_object *obj, zend_class_entry* type)
 #define zap_zend_exception_get_default() zend_exception_get_default()
 #endif
 
+
+#if PHP_VERSION_ID >= 70000
+#define zapval_add_assoc_zval_ex(ary, key, val) add_assoc_zval_ex(&ary, key, sizeof(key)-1, &val)
+#else
+#define zapval_add_assoc_zval_ex(ary, key, val) add_assoc_zval_ex(ary, key, sizeof(key), val)
+#endif
+
 #endif // ZAP_H_
