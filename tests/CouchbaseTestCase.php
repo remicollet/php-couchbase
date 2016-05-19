@@ -8,7 +8,7 @@ class CouchbaseTestCase extends PHPUnit_Framework_TestCase {
     public function __construct() {
         $this->testDsn = getenv('CPDSN');
         if ($this->testDsn === FALSE) {
-            $this->testDsn = 'http://localhost:8091/default';
+            $this->testDsn = 'couchbase://localhost/default';
         }
         
         $this->testBucket = getenv('CPBUCKET');

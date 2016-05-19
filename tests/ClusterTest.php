@@ -16,7 +16,7 @@ class ClusterTest extends CouchbaseTestCase {
      * @expectedException CouchbaseException
      */
     function testBadHost() {
-        $h = new CouchbaseCluster('http://999.99.99.99:8091');
+        $h = new CouchbaseCluster('couchbase://999.99.99.99');
         $h->openBucket('default');
     }
 
