@@ -41,7 +41,7 @@ class CouchbaseCluster {
      *
      * @throws CouchbaseException
      */
-    public function __construct($connstr = 'http://127.0.0.1/', $username = '', $password = '') {
+    public function __construct($connstr = 'couchbase://127.0.0.1/', $username = '', $password = '') {
         $this->_dsn = cbdsn_parse($connstr);
     }
 

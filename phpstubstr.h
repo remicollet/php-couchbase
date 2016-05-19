@@ -2287,7 +2287,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     *\n" \
 "     * @throws CouchbaseException\n" \
 "     */\n" \
-"    public function __construct($connstr = 'http://127.0.0.1/', $username = '', $password = '') {\n" \
+"    public function __construct($connstr = 'couchbase://127.0.0.1/', $username = '', $password = '') {\n" \
 "        $this->_dsn = cbdsn_parse($connstr);\n" \
 "    }\n" \
 "\n" \
