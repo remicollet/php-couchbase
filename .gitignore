@@ -35,3 +35,4 @@ docs/
 /configure.bat
 /configure.js
 /*.out
+*.swp
