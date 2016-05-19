@@ -156,7 +156,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "\n" \
 "        preg_match_all(\"/([^=]*)=([^&?]*)[&?]?/\", $parts[7], $kvs, PREG_SET_ORDER);\n" \
 "        foreach($kvs as $kv) {\n" \
-"            $out['options'][urldecode($kv[1])] = urldecode($kv[2]);\n" \
+"            array_push($out['options'], array(urldecode($kv[1]), urldecode($kv[2])));\n" \
 "        }\n" \
 "    }\n" \
 "\n" \
@@ -206,14 +206,14 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "\n" \
 "    if ($dsnObj['options']) {\n" \
 "        $isFirstOption = true;\n" \
-"        foreach($dsnObj['options'] as $k => $v) {\n" \
+"        foreach($dsnObj['options'] as $kvpair) {\n" \
 "            if ($isFirstOption) {\n" \
 "                $dsn .= '?';\n" \
 "                $isFirstOption = false;\n" \
 "            } else {\n" \
 "                $dsn .= '&';\n" \
 "            }\n" \
-"            $dsn .= urlencode($k) . '=' . urlencode($v);\n" \
+"            $dsn .= urlencode($kvpair[0]) . '=' . urlencode($kvpair[1]);\n" \
 "        }\n" \
 "    }\n" \
 "\n" \

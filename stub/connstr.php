@@ -118,7 +118,7 @@ function _cbdsn_parse($dsn) {
 
         preg_match_all("/([^=]*)=([^&?]*)[&?]?/", $parts[7], $kvs, PREG_SET_ORDER);
         foreach($kvs as $kv) {
-            $out['options'][urldecode($kv[1])] = urldecode($kv[2]);
+            array_push($out['options'], array(urldecode($kv[1]), urldecode($kv[2])));
         }
     }
 
@@ -168,14 +168,14 @@ function _cbdsn_stringify($dsnObj) {
 
     if ($dsnObj['options']) {
         $isFirstOption = true;
-        foreach($dsnObj['options'] as $k => $v) {
+        foreach($dsnObj['options'] as $kvpair) {
             if ($isFirstOption) {
                 $dsn .= '?';
                 $isFirstOption = false;
             } else {
                 $dsn .= '&';
             }
-            $dsn .= urlencode($k) . '=' . urlencode($v);
+            $dsn .= urlencode($kvpair[0]) . '=' . urlencode($kvpair[1]);
         }
     }
 
