@@ -1,5 +1,5 @@
 PHP_ARG_WITH(couchbase, whether to enable Couchbase support,
-[ --with-couchbase   Include Couchbase support])
+[  --with-couchbase   Include Couchbase support])
 
 PHP_ARG_WITH(system-fastlz, wheter to use system FastLZ bibrary,
     [  --with-system-fastlz   Use system FastLZ bibrary], no, no)
@@ -37,7 +37,7 @@ if test "$PHP_COUCHBASE" != "no"; then
 
   PHP_SUBST(COUCHBASE_SHARED_LIBADD)
 
-  COUCHBASE_FILES="bucket.c cas.c cluster.c couchbase.c exception.c metadoc.c docfrag.c opcookie.c transcoding.c"
+  COUCHBASE_FILES="bucket.c cas.c cluster.c couchbase.c docfrag.c exception.c get.c unlock.c metadoc.c opcookie.c paramparser.c transcoding.c touch.c remove.c subdoc.c store.c n1ql.c http.c counter.c durability.c"
 
   if test "$PHP_SYSTEM_FASTLZ" != "no"; then
     AC_CHECK_HEADERS([fastlz.h])
