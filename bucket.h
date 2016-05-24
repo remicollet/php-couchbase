@@ -105,4 +105,9 @@ PHP_METHOD(Bucket, n1ql_request);
 
 PHP_METHOD(Bucket, durability);
 void durability_callback(lcb_t instance, const void *cookie, lcb_error_t error, const lcb_durability_resp_t *resp);
+
+PHP_METHOD(Bucket, n1ix_list);
+PHP_METHOD(Bucket, n1ix_create);
+PHP_METHOD(Bucket, n1ix_drop);
+
 #endif // BUCKET_H_

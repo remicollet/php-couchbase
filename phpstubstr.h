@@ -1724,6 +1724,69 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "    }\n" \
 "\n" \
 "    /**\n" \
+"     * List all N1QL indexes that are registered for the current bucket.\n" \
+"     */\n" \
+"    public function listN1qlIndexes() {\n" \
+"        return $this->_me->n1ix_list();\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Create a primary N1QL index.\n" \
+"     *\n" \
+"     * @param string $customName the custom name for the primary index.\n" \
+"     * @param boolean $ignoreIfExist if a primary index already exists, an exception will be thrown unless this is set\n" \
+"     *                               to true.\n" \
+"     * @param boolean $defer true to defer building of the index until buildN1qlDeferredIndexes()}is called (or a direct\n" \
+"     *                       call to the corresponding query service API).\n" \
+"     */\n" \
+"    public function createN1qlPrimaryIndex($customName = '', $ignoreIfExist = false, $defer = true) {\n" \
+"        return $this->_me->n1ix_create($customName, '', '', $ignoreIfExist, $defer, true);\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Create a secondary index for the current bucket.\n" \
+"     *\n" \
+"     * @param string $indexName the name of the index.\n" \
+"     * @param array $fields the JSON fields to index.\n" \
+"     * @param string $whereClause the WHERE clause of the index.\n" \
+"     * @param boolean $ignoreIfExist if a secondary index already exists with that name, an exception will be thrown\n" \
+"     *                               unless this is set to true.\n" \
+"     * @param boolean $defer true to defer building of the index until buildN1qlDeferredIndexes() is called (or a direct\n" \
+"     *                       call to the corresponding query service API).\n" \
+"     */\n" \
+"    public function createN1qlIndex($indexName, $fields, $whereClause = '', $ignoreIfExist = false, $defer = true) {\n" \
+"        $fields = join(',', array_map(function($f) {\n" \
+"            if ($f[0] == '`' && $f[strlen($f)-1] == '`') {\n" \
+"                return $f;\n" \
+"            }\n" \
+"            return \"`$f`\";\n" \
+"        }, $fields));\n" \
+"        return $this->_me->n1ix_create($indexName, $fields, $whereClause, $ignoreIfExist, $defer, false);\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Drop the given primary index associated with the current bucket.\n" \
+"     *\n" \
+"     * @param string $customName the custom name of the primary index or empty string for default.\n" \
+"     * @param boolean $ignoreIfNotExist if true, attempting to drop on a bucket without any primary index won't cause an\n" \
+"     *                                  exception to be propagated.\n" \
+"     */\n" \
+"    public function dropN1qlPrimaryIndex($customName = '', $ignoreIfNotExist = false) {\n" \
+"        return $this->_me->n1ix_drop($customName, $ignoreIfNotExist, true);\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Drop the given secondary index associated with the current bucket.\n" \
+"     *\n" \
+"     * @param string $indexName the name of the index.\n" \
+"     * @param boolean $ignoreIfNotExist if true, attempting to drop on a bucket without any primary index won't cause an\n" \
+"     *                                  exception to be propagated.\n" \
+"     */\n" \
+"    public function dropN1qlIndex($indexName, $ignoreIfNotExist = false) {\n" \
+"        return $this->_me->n1ix_drop($indexName, $ignoreIfNotExist, false);\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
 "     * Flushes this bucket (clears all data).\n" \
 "     *\n" \
 "     * @return mixed\n" \
@@ -1750,7 +1813,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "        $res = $this->_me->http_request(2, 1, $path, NULL, 2);\n" \
 "        return json_decode($res, true);\n" \
 "    }\n" \
-"} \n" \
+"}\n" \
 ""},
 {"[CouchbaseNative]/CouchbaseMutateInBuilder.class.php","\n" \
 "/**\n" \

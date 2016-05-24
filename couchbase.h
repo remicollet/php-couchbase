@@ -21,6 +21,7 @@
 #include <libcouchbase/api3.h>
 #include <libcouchbase/views.h>
 #include <libcouchbase/n1ql.h>
+#include <libcouchbase/ixmgmt.h>
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -40,6 +41,7 @@ enum pcbc_constants {
 
 typedef struct pcbc_lcb {
 	char *key;
+	char *bucket;
 	lcb_t lcb;
 	void *next;
 } pcbc_lcb;

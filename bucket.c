@@ -168,11 +168,11 @@ PHP_METHOD(Bucket, __construct)
         err = lcb_create(&instance, &create_options);
 
         if (dsn) efree(dsn);
-        if (name) efree(name);
         if (password) efree(password);
 
         if (err != LCB_SUCCESS) {
             efree(connkey);
+            efree(name);
             throw_lcb_exception(err);
             RETURN_NULL();
         }
@@ -194,6 +194,7 @@ PHP_METHOD(Bucket, __construct)
         err = lcb_connect(instance);
         if (err != LCB_SUCCESS) {
             efree(connkey);
+            efree(name);
             lcb_destroy(instance);
             throw_lcb_exception(err);
             RETURN_NULL();
@@ -205,12 +206,15 @@ PHP_METHOD(Bucket, __construct)
         err = lcb_get_bootstrap_status(instance);
         if (err != LCB_SUCCESS) {
             efree(connkey);
+            efree(name);
             lcb_destroy(instance);
             throw_lcb_exception(err);
             RETURN_NULL();
         }
 
         conn = pemalloc(sizeof(pcbc_lcb), 1);
+        conn->bucket = pestrdup(name, 1);
+        efree(name);
         conn->key = pestrdup(connkey, 1);
         conn->lcb = instance;
         conn->next = NULL;
@@ -301,6 +305,9 @@ zend_function_entry bucket_methods[] = {
     PHP_ME(Bucket,  http_request,    NULL, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket,  subdoc_request,  NULL, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket,  durability,      NULL, ZEND_ACC_PUBLIC)
+    PHP_ME(Bucket,  n1ix_list,       NULL, ZEND_ACC_PUBLIC)
+    PHP_ME(Bucket,  n1ix_create,     NULL, ZEND_ACC_PUBLIC)
+    PHP_ME(Bucket,  n1ix_drop,       NULL, ZEND_ACC_PUBLIC)
 
     PHP_ME(Bucket,  setTranscoder,   NULL, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket,  setOption,       NULL, ZEND_ACC_PUBLIC)
@@ -324,6 +331,7 @@ void couchbase_shutdown_bucket(SHUTDOWN_FUNC_ARGS) {
         next = cur->next;
         lcb_destroy(cur->lcb);
         free(cur->key);
+        free(cur->bucket);
         free(cur);
     }
     PCBCG(first_bconn) = NULL;

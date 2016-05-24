@@ -57,6 +57,7 @@ PHP_MINIT_FUNCTION(couchbase)
 	couchbase_init_exceptions(INIT_FUNC_ARGS_PASSTHRU);
 	couchbase_init_metadoc(INIT_FUNC_ARGS_PASSTHRU);
 	couchbase_init_docfrag(INIT_FUNC_ARGS_PASSTHRU);
+	couchbase_init_n1ix_spec(INIT_FUNC_ARGS_PASSTHRU);
 	couchbase_init_cluster(INIT_FUNC_ARGS_PASSTHRU);
 	couchbase_init_bucket(INIT_FUNC_ARGS_PASSTHRU);
 
@@ -91,6 +92,10 @@ PHP_MINIT_FUNCTION(couchbase)
 	PCBC_REGISTER_LCBCONST(CNTL_HTCONFIG_IDLE_TIMEOUT);
 
 	PCBC_LONG_CONSTANT("VALUE_F_JSON", LCB_VALUE_F_JSON);
+
+        PCBC_REGISTER_LCBCONST(N1XSPEC_T_DEFAULT);
+        PCBC_REGISTER_LCBCONST(N1XSPEC_T_GSI);
+        PCBC_REGISTER_LCBCONST(N1XSPEC_T_VIEW);
 
     {
         char buf[128];

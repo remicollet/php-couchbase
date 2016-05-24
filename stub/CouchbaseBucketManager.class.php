@@ -115,6 +115,69 @@ class CouchbaseBucketManager {
     }
 
     /**
+     * List all N1QL indexes that are registered for the current bucket.
+     */
+    public function listN1qlIndexes() {
+        return $this->_me->n1ix_list();
+    }
+
+    /**
+     * Create a primary N1QL index.
+     *
+     * @param string $customName the custom name for the primary index.
+     * @param boolean $ignoreIfExist if a primary index already exists, an exception will be thrown unless this is set
+     *                               to true.
+     * @param boolean $defer true to defer building of the index until buildN1qlDeferredIndexes()}is called (or a direct
+     *                       call to the corresponding query service API).
+     */
+    public function createN1qlPrimaryIndex($customName = '', $ignoreIfExist = false, $defer = true) {
+        return $this->_me->n1ix_create($customName, '', '', $ignoreIfExist, $defer, true);
+    }
+
+    /**
+     * Create a secondary index for the current bucket.
+     *
+     * @param string $indexName the name of the index.
+     * @param array $fields the JSON fields to index.
+     * @param string $whereClause the WHERE clause of the index.
+     * @param boolean $ignoreIfExist if a secondary index already exists with that name, an exception will be thrown
+     *                               unless this is set to true.
+     * @param boolean $defer true to defer building of the index until buildN1qlDeferredIndexes() is called (or a direct
+     *                       call to the corresponding query service API).
+     */
+    public function createN1qlIndex($indexName, $fields, $whereClause = '', $ignoreIfExist = false, $defer = true) {
+        $fields = join(',', array_map(function($f) {
+            if ($f[0] == '`' && $f[strlen($f)-1] == '`') {
+                return $f;
+            }
+            return "`$f`";
+        }, $fields));
+        return $this->_me->n1ix_create($indexName, $fields, $whereClause, $ignoreIfExist, $defer, false);
+    }
+
+    /**
+     * Drop the given primary index associated with the current bucket.
+     *
+     * @param string $customName the custom name of the primary index or empty string for default.
+     * @param boolean $ignoreIfNotExist if true, attempting to drop on a bucket without any primary index won't cause an
+     *                                  exception to be propagated.
+     */
+    public function dropN1qlPrimaryIndex($customName = '', $ignoreIfNotExist = false) {
+        return $this->_me->n1ix_drop($customName, $ignoreIfNotExist, true);
+    }
+
+    /**
+     * Drop the given secondary index associated with the current bucket.
+     *
+     * @param string $indexName the name of the index.
+     * @param boolean $ignoreIfNotExist if true, attempting to drop on a bucket without any primary index won't cause an
+     *                                  exception to be propagated.
+     */
+    public function dropN1qlIndex($indexName, $ignoreIfNotExist = false) {
+        return $this->_me->n1ix_drop($indexName, $ignoreIfNotExist, false);
+    }
+
+    /**
      * Flushes this bucket (clears all data).
      *
      * @return mixed
@@ -141,4 +204,4 @@ class CouchbaseBucketManager {
         $res = $this->_me->http_request(2, 1, $path, NULL, 2);
         return json_decode($res, true);
     }
-} 
+}
