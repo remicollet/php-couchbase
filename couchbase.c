@@ -18,6 +18,7 @@
 #include "cas.h"
 #include "metadoc.h"
 #include "docfrag.h"
+#include "n1ix_spec.h"
 #include "phpstubstr.h"
 #include "zap.h"
 #include "ext/standard/info.h"

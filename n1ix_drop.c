@@ -34,6 +34,13 @@ static void n1ix_drop_callback(lcb_t instance, int cbtype, const lcb_RESPN1XMGMT
     TSRMLS_FETCH();
 
     result->header.err = resp->rc;
+    if (result->header.err == LCB_QUERY_ERROR) {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING,
+                         "failed to drop index. %d: %.*s",
+                         (int)resp->inner->htresp->htstatus,
+                         (int)resp->inner->nrow,
+                         (char *)resp->inner->row);
+    }
 
     opcookie_push((opcookie*)resp->cookie, &result->header);
 }

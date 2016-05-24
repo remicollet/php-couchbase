@@ -30,7 +30,7 @@
 
 zap_class_entry bucket_class;
 zend_class_entry *bucket_ce;
-const char *pcbc_client_string = "PCBC/"PHP_COUCHBASE_VERSION;
+char *pcbc_client_string = "PCBC/"PHP_COUCHBASE_VERSION;
 
 zap_FREEOBJ_FUNC(bucket_free_storage)
 {

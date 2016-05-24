@@ -1,16 +1,32 @@
 ARG_WITH("couchbase", "Couchbase support", "no");
 
 if (PHP_COUCHBASE != "no") {
-    couchbase_source = 
-	    "bucket.c " +
-		"cas.c " +
-	    "cluster.c " +
-		"couchbase.c " + 
-		"exception.c " +
-		"metadoc.c " +
-		"opcookie.c " +
-		"transcoding.c ";
-	
+    couchbase_source =
+        "bucket.c " +
+        "cas.c " +
+        "cluster.c " +
+        "couchbase.c " +
+        "counter.c " +
+        "docfrag.c " +
+        "durability.c " +
+        "exception.c " +
+        "get.c " +
+        "http.c " +
+        "metadoc.c " +
+        "n1ix_create.c " +
+        "n1ix_drop.c " +
+        "n1ix_list.c " +
+        "n1ix_spec.c " +
+        "n1ql.c " +
+        "opcookie.c " +
+        "paramparser.c " +
+        "remove.c " +
+        "store.c " +
+        "subdoc.c " +
+        "touch.c " +
+        "transcoding.c " +
+        "unlock.c ";
+
 	if (CHECK_LIB("libcouchbase.lib", "couchbase", PHP_COUCHBASE) &&
 			CHECK_HEADER_ADD_INCLUDE("libcouchbase\\couchbase.h", "CFLAGS_COUCHBASE", PHP_COUCHBASE+"\\include;"+PHP_PHP_BUILD+"\\include\\libcouchbase")){
 		EXTENSION("couchbase", couchbase_source);
