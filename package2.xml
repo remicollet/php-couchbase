@@ -24,9 +24,9 @@
         <email>sergey@couchbase.com</email>
         <active>yes</active>
     </lead>
-    <date>2016-04-19</date>
+    <date>2016-05-25</date>
     <version>
-        <release>2.2.0beta2</release>
+        <release>2.2.0beta3</release>
         <api>2.2.0</api>
     </version>
     <stability>
@@ -36,10 +36,20 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        This is a minor update to the PHP 2.2.0 Beta SDK.
+        This is third beta release of 2.2.0 SDK. It includes more features
+        to support upcoming Couchbase Server release, stability fixes and
+        smaller improvements.
 
-        It includes fixes in package manifest and build script.
+        Changes:
+        * PCBC-379: Support for Subdocument API
+        * PCBC-385: Support for Index Management
+        * PCBC-394: Expose CAS as a bytestring
+        * PCBC-392: Client announce its version in the server logs
+        * PCBC-397: Additive connection string options are not clobbered anymore
+        * PCBC-395: Type checks properly enforced for booleans
+        * Various minor changes
     </notes>
+
     <contents>
         <dir name="/">
             <file role="doc" name="LICENSE"/>
@@ -55,20 +65,38 @@
             <file role="src" name="config.w32"/>
             <file role="src" name="couchbase.c"/>
             <file role="src" name="couchbase.h"/>
+            <file role="src" name="counter.c"/>
             <file role="src" name="datainfo.h"/>
+            <file role="src" name="docfrag.c"/>
+            <file role="src" name="docfrag.h"/>
+            <file role="src" name="durability.c"/>
             <file role="src" name="exception.c"/>
             <file role="src" name="exception.h"/>
             <file role="src" name="fastlz/fastlz.c"/>
             <file role="src" name="fastlz/fastlz.h"/>
+            <file role="src" name="get.c"/>
+            <file role="src" name="http.c"/>
             <file role="src" name="metadoc.c"/>
             <file role="src" name="metadoc.h"/>
+            <file role="src" name="n1ix_create.c"/>
+            <file role="src" name="n1ix_drop.c"/>
+            <file role="src" name="n1ix_list.c"/>
+            <file role="src" name="n1ix_spec.c"/>
+            <file role="src" name="n1ix_spec.h"/>
+            <file role="src" name="n1ql.c"/>
             <file role="src" name="opcookie.c"/>
             <file role="src" name="opcookie.h"/>
+            <file role="src" name="paramparser.c"/>
             <file role="src" name="paramparser.h"/>
             <file role="src" name="php_couchbase.h"/>
             <file role="src" name="phpstubstr.h"/>
+            <file role="src" name="remove.c"/>
+            <file role="src" name="store.c"/>
+            <file role="src" name="subdoc.c"/>
+            <file role="src" name="touch.c"/>
             <file role="src" name="transcoding.c"/>
             <file role="src" name="transcoding.h"/>
+            <file role="src" name="unlock.c"/>
             <file role="src" name="zap.h"/>
         </dir>
     </contents>
@@ -92,6 +120,24 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2016-04-19</date>
+            <version>
+                <release>2.2.0beta2</release>
+                <api>2.2.0</api>
+            </version>
+            <stability>
+                <release>beta</release>
+                <api>beta</api>
+            </stability>
+            <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
+            </license>
+            <notes>
+                This is a minor update to the PHP 2.2.0 Beta SDK.
+
+                It includes fixes in package manifest and build script.
+            </notes>
+        </release>
         <release>
             <date>2016-04-19</date>
             <version>
