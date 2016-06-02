@@ -4,9 +4,13 @@ echo "typedef struct { const char * filename; const char * data; } pcbc_stub_dat
 echo "pcbc_stub_data PCBC_PHP_CODESTR[] = {" >> phpstubstr.h
 
 add_file () {
-  echo "{\"[CouchbaseNative]/$1\",\"\\n\" \\" >> phpstubstr.h
+  cat <<EOF >> phpstubstr.h
+{"[CouchbaseNative]/$1","\n" \\
+EOF
   tail -n+2 "stub/$1" | sed 's/\\/\\\\/g' | sed 's/\"/\\\"/g' | sed 's/^\(.*\)$/\"\1\\n\" \\/' >> phpstubstr.h
-  echo "\"\"}," >> phpstubstr.h
+  cat <<EOF >> phpstubstr.h
+""},
+EOF
 }
 
 add_file "constants.php"

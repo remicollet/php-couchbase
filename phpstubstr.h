@@ -1146,6 +1146,16 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "    }\n" \
 "\n" \
 "    /**\n" \
+"     * Returns bucket name\n" \
+"     *\n" \
+"     * @return string name of the bucket\n" \
+"     */\n" \
+"    public function getName()\n" \
+"    {\n" \
+"        return $this->name;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
 "     * Returns an instance of a CouchbaseBucketManager for performing management\n" \
 "     * operations against a bucket.\n" \
 "     *\n" \

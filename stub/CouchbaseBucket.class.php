@@ -77,6 +77,16 @@ class CouchbaseBucket {
     }
 
     /**
+     * Returns bucket name
+     *
+     * @return string name of the bucket
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
      * Returns an instance of a CouchbaseBucketManager for performing management
      * operations against a bucket.
      *
