@@ -18,7 +18,6 @@
 #include "ext/standard/php_var.h"
 #include "ext/json/php_json.h"
 #include "exception.h"
-#include "datainfo.h"
 #include "paramparser.h"
 #include "zap.h"
 #include "bucket.h"
