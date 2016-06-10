@@ -1749,7 +1749,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     * @param boolean $defer true to defer building of the index until buildN1qlDeferredIndexes()}is called (or a direct\n" \
 "     *                       call to the corresponding query service API).\n" \
 "     */\n" \
-"    public function createN1qlPrimaryIndex($customName = '', $ignoreIfExist = false, $defer = true) {\n" \
+"    public function createN1qlPrimaryIndex($customName = '', $ignoreIfExist = false, $defer = false) {\n" \
 "        return $this->_me->n1ix_create($customName, '', '', $ignoreIfExist, $defer, true);\n" \
 "    }\n" \
 "\n" \
@@ -1764,7 +1764,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     * @param boolean $defer true to defer building of the index until buildN1qlDeferredIndexes() is called (or a direct\n" \
 "     *                       call to the corresponding query service API).\n" \
 "     */\n" \
-"    public function createN1qlIndex($indexName, $fields, $whereClause = '', $ignoreIfExist = false, $defer = true) {\n" \
+"    public function createN1qlIndex($indexName, $fields, $whereClause = '', $ignoreIfExist = false, $defer = false) {\n" \
 "        $fields = join(',', array_map(function($f) {\n" \
 "            if ($f[0] == '`' && $f[strlen($f)-1] == '`') {\n" \
 "                return $f;\n" \

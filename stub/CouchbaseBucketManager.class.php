@@ -130,7 +130,7 @@ class CouchbaseBucketManager {
      * @param boolean $defer true to defer building of the index until buildN1qlDeferredIndexes()}is called (or a direct
      *                       call to the corresponding query service API).
      */
-    public function createN1qlPrimaryIndex($customName = '', $ignoreIfExist = false, $defer = true) {
+    public function createN1qlPrimaryIndex($customName = '', $ignoreIfExist = false, $defer = false) {
         return $this->_me->n1ix_create($customName, '', '', $ignoreIfExist, $defer, true);
     }
 
@@ -145,7 +145,7 @@ class CouchbaseBucketManager {
      * @param boolean $defer true to defer building of the index until buildN1qlDeferredIndexes() is called (or a direct
      *                       call to the corresponding query service API).
      */
-    public function createN1qlIndex($indexName, $fields, $whereClause = '', $ignoreIfExist = false, $defer = true) {
+    public function createN1qlIndex($indexName, $fields, $whereClause = '', $ignoreIfExist = false, $defer = false) {
         $fields = join(',', array_map(function($f) {
             if ($f[0] == '`' && $f[strlen($f)-1] == '`') {
                 return $f;
