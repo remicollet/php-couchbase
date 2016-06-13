@@ -1035,7 +1035,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     * @return mixed\n" \
 "     */\n" \
 "    public function removeBucket($name) {\n" \
-"        $path = \"/pools/default/buckets/\" + $name;\n" \
+"        $path = \"/pools/default/buckets/\" . $name;\n" \
 "        $res = $this->_me->http_request(2, 4, $path, NULL, 2);\n" \
 "        return json_decode($res, true);\n" \
 "    }\n" \

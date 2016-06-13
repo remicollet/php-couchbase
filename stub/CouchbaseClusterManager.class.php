@@ -74,7 +74,7 @@ class CouchbaseClusterManager {
      * @return mixed
      */
     public function removeBucket($name) {
-        $path = "/pools/default/buckets/" + $name;
+        $path = "/pools/default/buckets/" . $name;
         $res = $this->_me->http_request(2, 4, $path, NULL, 2);
         return json_decode($res, true);
     }
