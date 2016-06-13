@@ -1014,25 +1014,17 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     * @return mixed\n" \
 "     */\n" \
 "    public function createBucket($name, $opts = array()) {\n" \
-"        $myOpts = array(\n" \
+"        $defaults = array(\n" \
 "            'name' => $name,\n" \
 "            'authType' => 'sasl',\n" \
 "            'bucketType' => 'couchbase',\n" \
 "            'ramQuotaMB' => 100,\n" \
 "            'replicaNumber' => 1\n" \
 "        );\n" \
-"        foreach($opts as $k => $v) {\n" \
-"            $myOpts[$k] = $v;\n" \
-"        }\n" \
 "\n" \
 "        $path = \"/pools/default/buckets\";\n" \
-"        $args = array();\n" \
-"        foreach ($opts as $option => $value) {\n" \
-"            array_push($args, $option . '=' . $value);\n" \
-"        }\n" \
-"        $path .= '?' . implode('&', $args);\n" \
-"\n" \
-"        $res = $this->_me->http_request(2, 2, $path, NULL, 2);\n" \
+"        $body = http_build_query(array_merge($defaults, $opts));\n" \
+"        $res = $this->_me->http_request(2, 2, $path, $body, 2);\n" \
 "        return json_decode($res, true);\n" \
 "    }\n" \
 "\n" \
@@ -1065,7 +1057,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "        $res = $this->_me->http_request(2, 1, $path, NULL, 2);\n" \
 "        return json_decode($res, true);\n" \
 "    }\n" \
-"} \n" \
+"}\n" \
 ""},
 {"[CouchbaseNative]/CouchbaseBucket.class.php","\n" \
 "/**\n" \

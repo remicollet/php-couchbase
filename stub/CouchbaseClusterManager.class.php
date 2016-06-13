@@ -53,25 +53,17 @@ class CouchbaseClusterManager {
      * @return mixed
      */
     public function createBucket($name, $opts = array()) {
-        $myOpts = array(
+        $defaults = array(
             'name' => $name,
             'authType' => 'sasl',
             'bucketType' => 'couchbase',
             'ramQuotaMB' => 100,
             'replicaNumber' => 1
         );
-        foreach($opts as $k => $v) {
-            $myOpts[$k] = $v;
-        }
 
         $path = "/pools/default/buckets";
-        $args = array();
-        foreach ($opts as $option => $value) {
-            array_push($args, $option . '=' . $value);
-        }
-        $path .= '?' . implode('&', $args);
-
-        $res = $this->_me->http_request(2, 2, $path, NULL, 2);
+        $body = http_build_query(array_merge($defaults, $opts));
+        $res = $this->_me->http_request(2, 2, $path, $body, 2);
         return json_decode($res, true);
     }
 
@@ -104,4 +96,4 @@ class CouchbaseClusterManager {
         $res = $this->_me->http_request(2, 1, $path, NULL, 2);
         return json_decode($res, true);
     }
-} 
+}
