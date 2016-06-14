@@ -125,8 +125,6 @@ PHP_METHOD(Bucket, insert)
         if (zgroupid) {
             LCB_KREQ_SIMPLE(&cmd._hashkey, Z_STRVAL_P(zgroupid), Z_STRLEN_P(zgroupid));
         }
-        // Flags ignored for this op, enforced by libcouchbase
-        cmd.flags = 0;
 
         err = lcb_store3(data->conn->lcb, cookie, &cmd);
         efree(bytes);
