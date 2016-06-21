@@ -102,6 +102,7 @@ PHP_METHOD(Bucket, prepend);
 void store_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
 
 PHP_METHOD(Bucket, n1ql_request);
+PHP_METHOD(Bucket, fts_request);
 
 PHP_METHOD(Bucket, durability);
 void durability_callback(lcb_t instance, const void *cookie, lcb_error_t error, const lcb_durability_resp_t *resp);

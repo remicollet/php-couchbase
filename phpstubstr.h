@@ -879,6 +879,1314 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "    }\n" \
 "}\n" \
 ""},
+{"[CouchbaseNative]/CouchbaseSearchQuery.class.php","\n" \
+"/**\n" \
+" * File for the CouchbaseN1qlQuery class.\n" \
+" */\n" \
+"\n" \
+"/**\n" \
+" * Represents a Full Text Search query to be executed against a Couchbase bucket.\n" \
+" *\n" \
+" * @package Couchbase\n" \
+" */\n" \
+"class CouchbaseSearchQuery {\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $indexName;\n" \
+"\n" \
+"    /**\n" \
+"     * @var CouchbaseAbstractSearchQuery\n" \
+"     */\n" \
+"    private $queryPart;\n" \
+"\n" \
+"    /**\n" \
+"     * @var integer\n" \
+"     */\n" \
+"    private $limit;\n" \
+"\n" \
+"    /**\n" \
+"     * @var integer\n" \
+"     */\n" \
+"    private $skip;\n" \
+"\n" \
+"    /**\n" \
+"     * @var boolean\n" \
+"     */\n" \
+"    private $explain;\n" \
+"\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $highlightStyle;\n" \
+"\n" \
+"    /**\n" \
+"     * @var array\n" \
+"     */\n" \
+"    private $highlightFields;\n" \
+"\n" \
+"    /**\n" \
+"     * @var integer\n" \
+"     */\n" \
+"    private $serverSideTimeout;\n" \
+"\n" \
+"    /**\n" \
+"     * @var array\n" \
+"     */\n" \
+"    private $fields;\n" \
+"\n" \
+"    /**\n" \
+"     * @var array\n" \
+"     */\n" \
+"    private $facets = array();\n" \
+"\n" \
+"    public function __construct($indexName, $queryPart) {\n" \
+"        $this->indexName = $indexName;\n" \
+"        $this->queryPart = $queryPart;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Add a limit to the query on the number of hits it can return.\n" \
+"     *\n" \
+"     * @param integer $limit the maximum number of hits to return.\n" \
+"     * @return $this\n" \
+"     */\n" \
+"    public function limit($limit) {\n" \
+"        $this->limit = $limit;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Set the number of hits to skip (eg. for pagination).\n" \
+"     *\n" \
+"     * @param integer $skip the number of results to skip.\n" \
+"     * @return $this\n" \
+"     */\n" \
+"    public function skip($skip) {\n" \
+"        $this->skip = $skip;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Activates or deactivates the explanation of each result hit in the response, according to the parameter.\n" \
+"     *\n" \
+"     * @param boolean $explain should the response include an explanation of each hit (true) or not (false)?\n" \
+"     * @return $this\n" \
+"     */\n" \
+"    public function explain($explain) {\n" \
+"        $this->explain = $explain;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Configures the highlighting of matches in the response.\n" \
+"     *\n" \
+"     * This drives the inclusion of the fragments in each CouchbaseSearchQueryRow hit.\n" \
+"     *\n" \
+"     * Note that to be highlighted, the fields must be stored in the FTS index.\n" \
+"     *\n" \
+"     * @param string $style the style to apply ('ascii', 'html' or null).\n" \
+"     * @param array $fields the optional fields on which to highlight. If none, all fields where there is a match are highlighted.\n" \
+"     * @return $this\n" \
+"     */\n" \
+"    public function highlight($style, $fields = array()) {\n" \
+"        if ($style != 'ascii' && $style != 'html') {\n" \
+"            $this->highlightStyle = null;\n" \
+"            $this->highlightFields = null;\n" \
+"        } else {\n" \
+"            $this->highlightStyle = $style;\n" \
+"            if (count($fields) > 0) {\n" \
+"                $this->highlightFields = $fields;\n" \
+"            }\n" \
+"        }\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Configures the list of fields for which the whole value should be included in the response. If empty, no field\n" \
+"     * values are included.\n" \
+"     *\n" \
+"     * This drives the inclusion of the CouchbaseSearchQueryRow#fields() in each CouchbaseSearchQueryRow hit.\n" \
+"     *\n" \
+"     * Note that to be included, the fields must be stored in the FTS index.\n" \
+"     *\n" \
+"     * @param array fields\n" \
+"     * @return $this\n" \
+"     */\n" \
+"    public function fields($fields = null) {\n" \
+"        if ($fields) {\n" \
+"            $this->fields = $fields;\n" \
+"        }\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Sets the server side timeout.\n" \
+"     *\n" \
+"     * @param $timeout the server side timeout in milliseconds to apply.\n" \
+"     * @return $this\n" \
+"     */\n" \
+"    public function serverSideTimeout($timeout) {\n" \
+"        $this->serverSideTimeout = $timeout;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Adds one search facet to the query.\n" \
+"     *\n" \
+"     * This is an additive operation (the given facets are added to any facet previously requested),\n" \
+"     * but if an existing facet has the same name it will be replaced.\n" \
+"     *\n" \
+"     * This drives the inclusion of the  facets in the CouchbaseSearchQueryResult.\n" \
+"     *\n" \
+"     * Note that to be faceted, a field's value must be stored in the FTS index.\n" \
+"     *\n" \
+"     * @param string $facetName the name of the facet to add (or replace if one already exists with same name).\n" \
+"     * @param CouchbaseSearchFacet $facet the facet to add.\n" \
+"     *\n" \
+"     * @return $this\n" \
+"     */\n" \
+"    public function addFacet($facetName, $facet) {\n" \
+"        if (facet != null && facetName != null) {\n" \
+"            $this->facets[$facetName] = $facet;\n" \
+"        }\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Clears all previously added CouchbaseSearchFacet\n" \
+"     *\n" \
+"     * @return $this\n" \
+"     */\n" \
+"    public function clearFacets() {\n" \
+"        $this->facets = array();\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function export() {\n" \
+"        $result = array('indexName' => $this->indexName);\n" \
+"        $this->injectParams($result);\n" \
+"\n" \
+"        $result['query'] = array();\n" \
+"        $this->queryPart->injectParamsAndBoost($result['query']);\n" \
+"        return $result;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        if ($this->limit !== null && $this->limit >= 0) {\n" \
+"            $input['size'] = $this->limit;\n" \
+"        }\n" \
+"        if ($this->skip !== null && $this->skip >= 0) {\n" \
+"            $input['from'] = $this->skip;\n" \
+"        }\n" \
+"        if ($this->explain !== null) {\n" \
+"            $input['explain'] = $this->explain;\n" \
+"        }\n" \
+"        if ($this->highlightStyle !== null) {\n" \
+"            $input['highlight'] = array('style' => $this->highlightStyle);\n" \
+"            if (count($this->highlightFields) > 0) {\n" \
+"                $input['highlight']['fields'] = $this->highlightFields;\n" \
+"            }\n" \
+"        }\n" \
+"        if (count($this->fields) > 0) {\n" \
+"            $input['fields'] = $this->fields;\n" \
+"        }\n" \
+"        if (count($this->facets) > 0) {\n" \
+"            $facets = array();\n" \
+"            foreach ($this->facets as $key => $value) {\n" \
+"                $facets[$key] = array();\n" \
+"                $value->injectParams($facets[$key]);\n" \
+"            }\n" \
+"            $input['facets'] = $facets;\n" \
+"        }\n" \
+"\n" \
+"        $control = array();\n" \
+"        //check need for timeout\n" \
+"        if($this->serverSideTimeout !== null) {\n" \
+"            $control['timeout'] = $this->serverSideTimeout;\n" \
+"        }\n" \
+"        //if any control was set, inject it\n" \
+"        if (count($control) > 0) {\n" \
+"            $input['ctl'] = $control;\n" \
+"        }\n" \
+"    }\n" \
+"\n" \
+"    /* ===============================\n" \
+"     * Factory methods for FTS queries\n" \
+"     * =============================== */\n" \
+"\n" \
+"    /**\n" \
+"     * Prepare a CouchbaseStringSearchQuery body.\n" \
+"     *\n" \
+"     * @param string $query\n" \
+"     */\n" \
+"    public static function string($query) {\n" \
+"        return new CouchbaseStringSearchQuery($query);\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Prepare a CouchbaseMatchSearchQuery body.\n" \
+"     *\n" \
+"     * @param string $match\n" \
+"     */\n" \
+"    public static function match($match) {\n" \
+"        return new CouchbaseMatchSearchQuery($match);\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Prepare a CouchbaseMatchPhraseSearchQuery body.\n" \
+"     *\n" \
+"     * @param string $matchPhrase\n" \
+"     */\n" \
+"    public static function matchPhrase($matchPhrase) {\n" \
+"        return new CouchbaseMatchPhraseSearchQuery($matchPhrase);\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Prepare a CouchbasePrefixSearchQuery body.\n" \
+"     *\n" \
+"     * @param string $prefix\n" \
+"     */\n" \
+"    public static function prefix($prefix) {\n" \
+"        return new CouchbasePrefixSearchQuery($prefix);\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Prepare a CouchbaseRegexpSearchQuery body.\n" \
+"     *\n" \
+"     * @param string $regexp\n" \
+"     */\n" \
+"    public static function regexp($regexp) {\n" \
+"        return new CouchbaseRegexpSearchQuery($regexp);\n" \
+"    }\n" \
+"\n" \
+"    /** Prepare a CouchbaseNumericRangeSearchQuery body. */\n" \
+"    public static function numericRange() {\n" \
+"        return new CouchbaseNumericRangeSearchQuery();\n" \
+"    }\n" \
+"\n" \
+"    /** Prepare a CouchbaseDateRangeSearchQuery body. */\n" \
+"    public static function dateRange() {\n" \
+"        return new CouchbaseDateRangeSearchQuery();\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Prepare a CouchbaseDisjunctionSearchQuery body.\n" \
+"     *\n" \
+"     * @param array $queries array of CouchbaseAbstractSearchQuery\n" \
+"     */\n" \
+"    public static function disjuncts($queries = array()) {\n" \
+"        return new CouchbaseDisjunctionSearchQuery($queries);\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Prepare a CouchbaseConjunctionSearchQuery body.\n" \
+"     *\n" \
+"     * @param array $queries array of CouchbaseAbstractSearchQuery\n" \
+"     */\n" \
+"    public static function conjuncts($queries = array()) {\n" \
+"        return new CouchbaseConjunctionSearchQuery($queries);\n" \
+"    }\n" \
+"\n" \
+"    /** Prepare a CouchbaseBooleanSearchQuery body. */\n" \
+"    public static function booleans() {\n" \
+"        return new CouchbaseBooleanSearchQuery();\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Prepare a CouchbaseWildcardSearchQuery body.\n" \
+"     *\n" \
+"     * @param string $wildcard\n" \
+"     */\n" \
+"    public static function wildcard($wildcard) {\n" \
+"        return new CouchbaseWildcardSearchQuery($wildcard);\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Prepare a CouchbaseDocIdSearchQuery body.\n" \
+"     *\n" \
+"     * @param array $docIds array of strings\n" \
+"     */\n" \
+"    public static function docId($docIds = array()) {\n" \
+"        return new CouchbaseDocIdSearchQuery($docIds);\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Prepare a CouchbaseBooleanFieldSearchQuery body.\n" \
+"     *\n" \
+"     * @param boolean $value\n" \
+"     */\n" \
+"    public static function booleanField($value) {\n" \
+"        return new CouchbaseBooleanFieldSearchQuery($value);\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Prepare a CouchbaseTermSearchQuery body.\n" \
+"     *\n" \
+"     * @param string $term\n" \
+"     */\n" \
+"    public static function term($term) {\n" \
+"        return new CouchbaseTermSearchQuery($term);\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Prepare a CouchbasePhraseSearchQuery body.\n" \
+"     *\n" \
+"     * @param array $terms array of strings\n" \
+"     */\n" \
+"    public static function phrase($terms) {\n" \
+"        return new CouchbasePhraseSearchQuery($terms);\n" \
+"    }\n" \
+"\n" \
+"    /** Prepare a CouchbaseMatchAllSearchQuery body. */\n" \
+"    public static function matchAll() {\n" \
+"        return new CouchbaseMatchAllSearchQuery();\n" \
+"    }\n" \
+"\n" \
+"    /** Prepare a CouchbaseMatchNoneSearchQuery body. */\n" \
+"    public static function matchNone() {\n" \
+"        return new CouchbaseMatchNoneSearchQuery();\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"/**\n" \
+" * A base class for all FTS query classes. Exposes the common FTS query parameters.\n" \
+" * In order to instantiate various flavors of queries, look at concrete classes or\n" \
+" * static factory methods in CouchbaseSearchQuery.\n" \
+" */\n" \
+"abstract class CouchbaseAbstractSearchQuery {\n" \
+"    /**\n" \
+"     * @var double\n" \
+"     */\n" \
+"    private $boost;\n" \
+"\n" \
+"    protected function __construct() {\n" \
+"        $this->boost = null;\n" \
+"    }\n" \
+"\n" \
+"    public function boost($boost) {\n" \
+"        $this->boost = $boost;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParamsAndBoost(&$input) {\n" \
+"        if ($this->boost !== null) {\n" \
+"            $input['boost'] = $this->boost;\n" \
+"        }\n" \
+"        $this->injectParams($input);\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"/**\n" \
+" * A FTS query that performs a search according to the \"string query\" syntax.\n" \
+" */\n" \
+"class CouchbaseStringSearchQuery extends CouchbaseAbstractSearchQuery {\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $query;\n" \
+"\n" \
+"    public function __construct($query) {\n" \
+"        $this->query = $query;\n" \
+"    }\n" \
+"\n" \
+"    public function boost($boost) {\n" \
+"        parent::boost($boost);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        $input['query'] = $this->query;\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"/**\n" \
+" * A FTS query that matches a given term, applying further processing to it\n" \
+" * like analyzers, stemming and even #fuzziness(int).\n" \
+" */\n" \
+"class CouchbaseMatchSearchQuery extends CouchbaseAbstractSearchQuery {\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $match;\n" \
+"\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $field;\n" \
+"\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $analyzer;\n" \
+"\n" \
+"    /**\n" \
+"     * @var integer\n" \
+"     */\n" \
+"    private $prefixLength;\n" \
+"\n" \
+"    /**\n" \
+"     * @var integer\n" \
+"     */\n" \
+"    private $fuzziness;\n" \
+"\n" \
+"    public function __construct($match) {\n" \
+"        $this->match = $match;\n" \
+"    }\n" \
+"\n" \
+"    public function boost($boost) {\n" \
+"        parent::boost($boost);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function field($field) {\n" \
+"        $this->field = $field;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function analyzer($analyzer) {\n" \
+"        $this->analyzer = $analyzer;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function prefixLength($prefixLength) {\n" \
+"        $this->prefixLength = $prefixLength;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function fuzziness($fuzziness) {\n" \
+"        $this->fuzziness = $fuzziness;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        $input['match'] = $this->match;\n" \
+"        if ($this->field !== null) {\n" \
+"            $input['field'] = $this->field;\n" \
+"        }\n" \
+"        if ($this->analyzer !== null) {\n" \
+"            $input['analyzer'] = $this->analyzer;\n" \
+"        }\n" \
+"        if ($this->prefixLength !== null) {\n" \
+"            $input['prefix_length'] = $this->prefixLength;\n" \
+"        }\n" \
+"        if ($this->fuzziness !== null) {\n" \
+"            $input['fuzziness'] = $this->fuzziness;\n" \
+"        }\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"/**\n" \
+" * A FTS query that matches terms (without further analysis). Usually for debugging purposes.\n" \
+" * Prefer using CouchbaseMatchSearchQuery.\n" \
+" */\n" \
+"class CouchbaseTermSearchQuery extends CouchbaseAbstractSearchQuery {\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $term;\n" \
+"\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $field;\n" \
+"\n" \
+"    /**\n" \
+"     * @var integer\n" \
+"     */\n" \
+"    private $prefixLength;\n" \
+"\n" \
+"    /**\n" \
+"     * @var integer\n" \
+"     */\n" \
+"    private $fuzziness;\n" \
+"\n" \
+"    public function __construct($term) {\n" \
+"        $this->term = $term;\n" \
+"    }\n" \
+"\n" \
+"    public function boost($boost) {\n" \
+"        parent::boost($boost);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function field($field) {\n" \
+"        $this->field = $field;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function prefixLength($prefixLength) {\n" \
+"        $this->prefixLength = $prefixLength;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function fuzziness($fuzziness) {\n" \
+"        $this->fuzziness = $fuzziness;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        $input['term'] = $this->term;\n" \
+"        if ($field != null) {\n" \
+"            $input['field'] = $this->field;\n" \
+"        }\n" \
+"        if ($fuzziness > 0) {\n" \
+"            $input['fuzziness'] = $this->fuzziness;\n" \
+"            if (prefixLength > 0) {\n" \
+"                $input['prefix_length'] = $this->prefixLength;\n" \
+"            }\n" \
+"        }\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"/**\n" \
+" * A FTS query that matches several terms (a \"phrase\") as is. The order of the terms mater and no\n" \
+" * further processing is applied to them, so they must appear in the index exactly as provided.\n" \
+" * Usually for debugging purposes. Prefer CouchbaseMatchPhraseSearchQuery.\n" \
+" */\n" \
+"class CouchbasePhraseSearchQuery extends CouchbaseAbstractSearchQuery {\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $terms;\n" \
+"\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $field;\n" \
+"\n" \
+"    public function __construct($terms = array()) {\n" \
+"        $this->terms = $terms;\n" \
+"    }\n" \
+"\n" \
+"    public function boost($boost) {\n" \
+"        parent::boost($boost);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function field($field) {\n" \
+"        $this->field = $field;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        if (count($this->terms) < 1) {\n" \
+"            throw new InvalidArgumentException(\"Phrase query must at least have one term\");\n" \
+"        }\n" \
+"        $input['terms'] = $this->terms;\n" \
+"\n" \
+"        if ($this->field !== null) {\n" \
+"            $input['field'] = $this->field;\n" \
+"        }\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"/**\n" \
+" * A FTS query that matches several given terms (a \"phrase\"), applying further processing\n" \
+" * like analyzers to them.\n" \
+" */\n" \
+"class CouchbaseMatchPhraseSearchQuery extends CouchbaseAbstractSearchQuery {\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $matchPhrase;\n" \
+"\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $field;\n" \
+"\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $analyzer;\n" \
+"\n" \
+"    public function __construct($matchPhrase) {\n" \
+"        $this->matchPhrase = $matchPhrase;\n" \
+"    }\n" \
+"\n" \
+"    public function boost($boost) {\n" \
+"        parent::boost($boost);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function field($field) {\n" \
+"        $this->field = $field;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function analyzer($analyzer) {\n" \
+"        $this->analyzer = $analyzer;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        $input['match_phrase'] = $this->matchPhrase;\n" \
+"        if ($this->field !== null) {\n" \
+"            $input['field'] = $this->field;\n" \
+"        }\n" \
+"        if ($this->analyzer !== null) {\n" \
+"            $input['analyzer'] = $this->analyzer;\n" \
+"        }\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"/**\n" \
+" * A FTS query that allows for simple matching on a given prefix.\n" \
+" */\n" \
+"class CouchbasePrefixSearchQuery extends CouchbaseAbstractSearchQuery {\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $prefix;\n" \
+"\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $field;\n" \
+"\n" \
+"    public function __construct($prefix) {\n" \
+"        $this->prefix = $prefix;\n" \
+"    }\n" \
+"\n" \
+"    public function boost($boost) {\n" \
+"        parent::boost($boost);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function field($field) {\n" \
+"        $this->field = $field;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        $input['prefix'] = $this->prefix;\n" \
+"        if ($this->field !== null) {\n" \
+"            $input['field'] = $this->field;\n" \
+"        }\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"/**\n" \
+" * A FTS query that allows for simple matching of regular expressions.\n" \
+" */\n" \
+"class CouchbaseRegexpSearchQuery extends CouchbaseAbstractSearchQuery {\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $regexp;\n" \
+"\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $field;\n" \
+"\n" \
+"    public function __construct($regexp) {\n" \
+"        $this->regexp = $regexp;\n" \
+"    }\n" \
+"\n" \
+"    public function boost($boost) {\n" \
+"        parent::boost($boost);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function field($field) {\n" \
+"        $this->field = $field;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        $input['regexp'] = $this->regexp;\n" \
+"        if ($this->field !== null) {\n" \
+"            $input['field'] = $this->field;\n" \
+"        }\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"/**\n" \
+" * An FTS query that allows for simple matching using wildcard characters (* and ?).\n" \
+" */\n" \
+"class CouchbaseWildcardSearchQuery extends CouchbaseAbstractSearchQuery {\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $wildcard;\n" \
+"\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $field;\n" \
+"\n" \
+"    public function __construct($wildcard) {\n" \
+"        $this->wildcard = $wildcard;\n" \
+"    }\n" \
+"\n" \
+"    public function boost($boost) {\n" \
+"        parent::boost($boost);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function field($field) {\n" \
+"        $this->field = $field;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        $input['wildcard'] = $this->wildcard;\n" \
+"        if ($this->field !== null) {\n" \
+"            $input['field'] = $this->field;\n" \
+"        }\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"/**\n" \
+" * A FTS query that queries fields explicitly indexed as boolean.\n" \
+" */\n" \
+"class CouchbaseBooleanFieldSearchQuery extends CouchbaseAbstractSearchQuery {\n" \
+"    /**\n" \
+"     * @var boolean\n" \
+"     */\n" \
+"    private $value;\n" \
+"\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $field;\n" \
+"\n" \
+"    public function __construct($value) {\n" \
+"        $this->value = $value;\n" \
+"    }\n" \
+"\n" \
+"    public function boost($boost) {\n" \
+"        parent::boost($boost);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function field($field) {\n" \
+"        $this->field = $field;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        $input['bool'] = $this->value;\n" \
+"        if ($this->field !== null) {\n" \
+"            $input['field'] = $this->field;\n" \
+"        }\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"/**\n" \
+" * A FTS query that matches on Couchbase document IDs. Useful to restrict the search space to a list of keys\n" \
+" * (by using this in a compound query).\n" \
+" */\n" \
+"class CouchbaseDocIdSearchQuery extends CouchbaseAbstractSearchQuery {\n" \
+"    /**\n" \
+"     * @var array\n" \
+"     */\n" \
+"    private $docIds;\n" \
+"\n" \
+"    public function __construct($docIds = array()) {\n" \
+"        $this->docIds = $docIds;\n" \
+"    }\n" \
+"\n" \
+"    public function boost($boost) {\n" \
+"        parent::boost($boost);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function docIds($docIds) {\n" \
+"        foreach ($docIds as $docId) {\n" \
+"            array_push($this->docIds, $field);\n" \
+"        }\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        if (count($this->docIds) < 1) {\n" \
+"            throw new InvalidArgumentException(\"DocID query needs at least one document ID\");\n" \
+"        }\n" \
+"\n" \
+"        $input['ids'] = $this->docIds;\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"/**\n" \
+" * A FTS query that matches all indexed documents (usually for debugging purposes).\n" \
+" */\n" \
+"class CouchbaseMatchAllSearchQuery extends CouchbaseAbstractSearchQuery {\n" \
+"    public function boost($boost) {\n" \
+"        parent::boost($boost);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        $input['match_all'] = null;\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"/**\n" \
+" * A FTS query that matches 0 document (usually for debugging purposes).\n" \
+" */\n" \
+"class CouchbaseMatchNoneSearchQuery extends CouchbaseAbstractSearchQuery {\n" \
+"    public function boost($boost) {\n" \
+"        parent::boost($boost);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        $input['match_none'] = null;\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"/**\n" \
+" * A FTS query that matches documents on a range of values. At least one bound is required, and the\n" \
+" * inclusiveness of each bound can be configured.\n" \
+" */\n" \
+"class CouchbaseNumericRangeSearchQuery extends CouchbaseAbstractSearchQuery {\n" \
+"    /**\n" \
+"     * @var float\n" \
+"     */\n" \
+"    private $min;\n" \
+"\n" \
+"    /**\n" \
+"     * @var float\n" \
+"     */\n" \
+"    private $max;\n" \
+"\n" \
+"    /**\n" \
+"     * @var boolean\n" \
+"     */\n" \
+"    private $inclusiveMin;\n" \
+"\n" \
+"    /**\n" \
+"     * @var boolean\n" \
+"     */\n" \
+"    private $inclusiveMax;\n" \
+"\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $field;\n" \
+"\n" \
+"    public function boost($boost) {\n" \
+"        parent::boost($boost);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function field($field) {\n" \
+"        $this->field = $field;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function min($min, $inclusive = true) {\n" \
+"        $this->min = $min;\n" \
+"        $this->inclusiveMin = $inclusive;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function max($max, $inclusive = false) {\n" \
+"        $this->max = $max;\n" \
+"        $this->inclusiveMax = $inclusive;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        if ($this->min === null && $this->max === null) {\n" \
+"            throw new InvalidArgumentException(\"CouchbaseNumericRangeQuery needs at least one of min or max\");\n" \
+"        }\n" \
+"        if ($this->min !== null) {\n" \
+"            $input['min'] = $this->min;\n" \
+"            if ($this->inclusiveMin !== null) {\n" \
+"                $input['inclusive_min'] = $this->inclusiveMin;\n" \
+"            }\n" \
+"        }\n" \
+"        if ($this->max !== null) {\n" \
+"            $input['max'] = $this->max;\n" \
+"            if ($this->inclusiveMax !== null) {\n" \
+"                $input['inclusive_max'] = $this->inclusiveMax;\n" \
+"            }\n" \
+"        }\n" \
+"        if ($this->field !== null) {\n" \
+"            $input['field'] = $this->field;\n" \
+"        }\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"/**\n" \
+" * A FTS query that matches documents on a range of dates. At least one bound is required, and the parser\n" \
+" * to use for the date (in string form) can be customized (see #dateTimeParser(string)).\n" \
+" */\n" \
+"class CouchbaseDateRangeSearchQuery extends CouchbaseAbstractSearchQuery {\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $start;\n" \
+"\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $end;\n" \
+"\n" \
+"    /**\n" \
+"     * @var boolean\n" \
+"     */\n" \
+"    private $inclusiveStart;\n" \
+"\n" \
+"    /**\n" \
+"     * @var boolean\n" \
+"     */\n" \
+"    private $inclusiveEnd;\n" \
+"\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $dateTimeParser;\n" \
+"\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $field;\n" \
+"\n" \
+"    public function boost($boost) {\n" \
+"        parent::boost($boost);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function field($field) {\n" \
+"        $this->field = $field;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function start($start, $inclusive = true) {\n" \
+"        $this->start = $start;\n" \
+"        $this->inclusiveStart = $inclusive;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function end($end, $inclusive = false) {\n" \
+"        $this->end = $end;\n" \
+"        $this->inclusiveEnd = $inclusive;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * The name of the date/time parser to use to interpret #start(string) and #end(string).\n" \
+"     */\n" \
+"    public function dateTimeParser($parser) {\n" \
+"        $this->dateTimeParser = $parser;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        if ($this->start === null && $this->end === null) {\n" \
+"            throw new InvalidArgumentException(\"CouchbaseDateRangeQuery needs at least one of start or end\");\n" \
+"        }\n" \
+"        if ($this->start !== null) {\n" \
+"            $input['start'] = $this->start;\n" \
+"            if ($this->inclusiveStart !== null) {\n" \
+"                $input['inclusive_start'] = $this->inclusiveStart;\n" \
+"            }\n" \
+"        }\n" \
+"        if ($this->end !== null) {\n" \
+"            $input['end'] = $this->end;\n" \
+"            if ($this->inclusiveEnd !== null) {\n" \
+"                $input['inclusive_end'] = $this->inclusiveEnd;\n" \
+"            }\n" \
+"        }\n" \
+"        if ($this->dateTimeParser != null) {\n" \
+"            $input['datetime_parser'] = $this->dateTimeParser;\n" \
+"        }\n" \
+"        if ($this->field !== null) {\n" \
+"            $input['field'] = $this->field;\n" \
+"        }\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"/**\n" \
+" * Base class for FTS queries that are composite, compounding several other CouchbaseAbstractSearchQuery.\n" \
+" */\n" \
+"abstract class CouchbaseAbstractCompoundSearchQuery extends CouchbaseAbstractSearchQuery {\n" \
+"    /**\n" \
+"     * @var array\n" \
+"     */\n" \
+"    protected $childQueries;\n" \
+"\n" \
+"    protected function __construct($childQueries) {\n" \
+"        $this->childQueries = $childQueries;\n" \
+"    }\n" \
+"\n" \
+"    protected function addAll($queries) {\n" \
+"        foreach ($queries as $query) {\n" \
+"            array_push($this->childQueries, $query);\n" \
+"        }\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"/**\n" \
+" * A compound FTS query that performs a logical OR between all its sub-queries (disjunction).\n" \
+" * It requires that a minimum of the queries match. The minimum is configurable via #min(int) (default 1).\n" \
+" */\n" \
+"class CouchbaseDisjunctionSearchQuery extends CouchbaseAbstractCompoundSearchQuery {\n" \
+"    /**\n" \
+"     * @var int\n" \
+"     */\n" \
+"    private $min;\n" \
+"\n" \
+"    public function __construct($queries = array()) {\n" \
+"        parent::__construct($queries);\n" \
+"    }\n" \
+"\n" \
+"    public function boost($boost) {\n" \
+"        parent::boost($boost);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function min($min) {\n" \
+"        $this->min = $min;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function either($queries) {\n" \
+"        $this->addAll($queries);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        if (count($this->childQueries) < 1) {\n" \
+"            throw new InvalidArgumentException(\"Compound query has no child query\");\n" \
+"        }\n" \
+"        if (count($this->childQueries) < $this->min) {\n" \
+"            throw new InvalidArgumentException(\"Disjunction query as fewer children than the configured minimum \" + $this->min);\n" \
+"        }\n" \
+"\n" \
+"        if ($this->min > 0) {\n" \
+"            $input['min'] = $this->min;\n" \
+"        }\n" \
+"\n" \
+"        $disjuncts = array();\n" \
+"        foreach ($this->childQueries as $childQuery) {\n" \
+"            $child = array();\n" \
+"            $childQuery->injectParamsAndBoost($child);\n" \
+"            array_push($disjuncts, $child);\n" \
+"        }\n" \
+"        $input['disjuncts'] = $disjuncts;\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"/**\n" \
+" * A compound FTS query that performs a logical AND between all its sub-queries (conjunction).\n" \
+" */\n" \
+"class CouchbaseConjunctionSearchQuery extends CouchbaseAbstractCompoundSearchQuery {\n" \
+"    public function __construct($queries = array()) {\n" \
+"       parent::__construct($queries);\n" \
+"    }\n" \
+"\n" \
+"    public function boost($boost) {\n" \
+"        parent::boost($boost);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function every($queries) {\n" \
+"        $this->addAll($queries);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        if (count($this->childQueries) < 1) {\n" \
+"            throw new InvalidArgumentException(\"Compound query has no child query\");\n" \
+"        }\n" \
+"\n" \
+"        $conjuncts = array();\n" \
+"        foreach ($this->childQueries as $childQuery) {\n" \
+"            $child = array();\n" \
+"            $childQuery->injectParamsAndBoost($child);\n" \
+"            array_push($conjuncts, $child);\n" \
+"        }\n" \
+"        $input['conjuncts'] = $conjuncts;\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"/**\n" \
+" * A compound FTS query that allows various combinations of sub-queries.\n" \
+" */\n" \
+"class CouchbaseBooleanSearchQuery extends CouchbaseAbstractSearchQuery {\n" \
+"    /**\n" \
+"     * @var CouchbaseConjunctionSearchQuery\n" \
+"     */\n" \
+"    private $must;\n" \
+"\n" \
+"    /**\n" \
+"     * @var CouchbaseDisjunctionSearchQuery\n" \
+"     */\n" \
+"    private $mustNot;\n" \
+"\n" \
+"    /**\n" \
+"     * @var CouchbaseDisjunctionSearchQuery\n" \
+"     */\n" \
+"    private $should;\n" \
+"\n" \
+"    public function __construct() {\n" \
+"        $this->must = new CouchbaseConjunctionSearchQuery();\n" \
+"        $this->mustNot = new CouchbaseDisjunctionSearchQuery();\n" \
+"        $this->should = new CouchbaseDisjunctionSearchQuery();\n" \
+"    }\n" \
+"\n" \
+"    public function boost($boost) {\n" \
+"        parent::boost($boost);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function shouldMin($minForShould) {\n" \
+"        $this->should->min($minForShould);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function must($mustQueries) {\n" \
+"        $this->must->every($mustQueries);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function mustNot($mustNotQueries) {\n" \
+"        $this->mustNot->either($mustNotQueries);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function should($shouldQueries) {\n" \
+"        $this->should->either($shouldQueries);\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        $mustIsEmpty = must === null || count($this->must->childQueries()) < 1;\n" \
+"        $mustNotIsEmpty = mustNot === null || count($this->mustNot->childQueries()) < 1;\n" \
+"        $shouldIsEmpty = should === null || count($this->should->childQueries()) < 1;\n" \
+"\n" \
+"        if ($mustIsEmpty && $mustNotIsEmpty && $shouldIsEmpty) {\n" \
+"            throw new InvalidArgumentException(\"Boolean query needs at least one of must, mustNot and should\");\n" \
+"        }\n" \
+"\n" \
+"        if (!$mustIsEmpty) {\n" \
+"            $child = array();\n" \
+"            $this->must->injectParamsAndBoost($child);\n" \
+"            $input['must'] = $child;\n" \
+"        }\n" \
+"\n" \
+"        if (!$mustNotIsEmpty) {\n" \
+"            $child = array();\n" \
+"            $this->mustNot->injectParamsAndBoost($child);\n" \
+"            $input['must_not'] = $child;\n" \
+"        }\n" \
+"\n" \
+"        if (!$shouldIsEmpty) {\n" \
+"            $child = array();\n" \
+"            $this->should->injectParamsAndBoost($child);\n" \
+"            $input['should'] = $child;\n" \
+"        }\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"abstract class CouchbaseSearchFacet {\n" \
+"    /**\n" \
+"     * @var string\n" \
+"     */\n" \
+"    private $field;\n" \
+"\n" \
+"    /**\n" \
+"     * @var integer\n" \
+"     */\n" \
+"    private $limit;\n" \
+"\n" \
+"    protected function __construct($field, $limit) {\n" \
+"        $this->field = $field;\n" \
+"        $this->limit = $limit;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        $input['size'] = $this->limit;\n" \
+"        $input['field'] = $this->field;\n" \
+"    }\n" \
+"\n" \
+"    public static function term($field, $limit) {\n" \
+"        return new CouchbaseTermSearchFacet($field, $limit);\n" \
+"    }\n" \
+"\n" \
+"    public static function numeric($field, $limit) {\n" \
+"        return new CouchbaseNumericSearchFacet($field, $limit);\n" \
+"    }\n" \
+"\n" \
+"    public static function dataRange($field, $limit) {\n" \
+"        return new CouchbaseDateRangeSearchFacet($field, $limit);\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"class CouchbaseTermSearchFacet extends CouchbaseSearchFacet {\n" \
+"    public function __construct($field, $limit) {\n" \
+"        parent::__construct($field, $limit);\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"class CouchbaseDateRangeSearchFacet extends CouchbaseSearchFacet {\n" \
+"    /**\n" \
+"     * @var array\n" \
+"     */\n" \
+"    private $dateRanges;\n" \
+"\n" \
+"    public function __construct($field, $limit) {\n" \
+"        parent::__construct($field, $limit);\n" \
+"        $this->dateRanges = array();\n" \
+"    }\n" \
+"\n" \
+"    public function addRange($rangeName, $start, $end) {\n" \
+"        $range = array();\n" \
+"        if ($start) {\n" \
+"            $range['start'];\n" \
+"        }\n" \
+"        if ($end) {\n" \
+"            $range['end'];\n" \
+"        }\n" \
+"        $this->dateRanges[$rangeName] = $range;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        parent::injectParams($input);\n" \
+"        foreach ($this->dateRanges as $name => $value) {\n" \
+"            $input['date_ranges'][$name] = $value;\n" \
+"        }\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"class CouchbaseNumericRangeSearchFacet extends CouchbaseSearchFacet {\n" \
+"    /**\n" \
+"     * @var array\n" \
+"     */\n" \
+"    private $numericRanges;\n" \
+"\n" \
+"    public function __construct($field, $limit) {\n" \
+"        parent::__construct($field, $limit);\n" \
+"        $this->numericRanges = array();\n" \
+"    }\n" \
+"\n" \
+"    public function addRange($rangeName, $min, $max) {\n" \
+"        $range = array();\n" \
+"        if ($min) {\n" \
+"            $range['min'];\n" \
+"        }\n" \
+"        if ($max) {\n" \
+"            $range['max'];\n" \
+"        }\n" \
+"        $this->numericRanges[$rangeName] = $range;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
+"    public function injectParams(&$input) {\n" \
+"        parent::injectParams($input);\n" \
+"        foreach ($this->numericRanges as $name => $value) {\n" \
+"            $input['numeric_ranges'][$name] = $value;\n" \
+"        }\n" \
+"    }\n" \
+"}\n" \
+""},
 {"[CouchbaseNative]/CouchbaseCluster.class.php","\n" \
 "/**\n" \
 " * File for the CouchbaseCluster class.\n" \
@@ -1398,6 +2706,22 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "        return $rows;\n" \
 "    }\n" \
 "\n" \
+"    public function _search($queryObj, $json_asarray) {\n" \
+"        $dataIn = json_encode($queryObj->export());\n" \
+"        $dataOut = $this->me->fts_request($dataIn);\n" \
+"\n" \
+"        $meta = json_decode($dataOut['meta'], true);\n" \
+"        if (isset($meta['errors']) && count($meta['errors']) > 0) {\n" \
+"            throw new CouchbaseException(json_encode($meta['errors']));\n" \
+"        }\n" \
+"\n" \
+"        $rows = array();\n" \
+"        foreach ($dataOut['results'] as $row) {\n" \
+"            $rows[] = json_decode($row, $json_asarray);\n" \
+"        }\n" \
+"        return $rows;\n" \
+"    }\n" \
+"\n" \
 "    /**\n" \
 "     * Performs a query (either ViewQuery or N1qlQuery).\n" \
 "     *\n" \
@@ -1411,9 +2735,11 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "            return $this->_view($query, $json_asarray);\n" \
 "        } else if ($query instanceof CouchbaseN1qlQuery) {\n" \
 "            return $this->_n1ql($query, $params, $json_asarray);\n" \
+"        } else if ($query instanceof CouchbaseSearchQuery) {\n" \
+"            return $this->_search($query, $json_asarray);\n" \
 "        } else {\n" \
 "            throw new CouchbaseException(\n" \
-"                'Passed object must be of type ViewQuery or N1qlQuery');\n" \
+"                'Passed object must be of type ViewQuery, N1qlQuery or SearchQuery');\n" \
 "        }\n" \
 "    }\n" \
 "\n" \

@@ -4,6 +4,7 @@ if (PHP_COUCHBASE != "no") {
     couchbase_source =
         "bucket.c " +
         "cas.c " +
+        "cbft.c " +
         "cluster.c " +
         "couchbase.c " +
         "counter.c " +

@@ -303,6 +303,7 @@ zend_function_entry bucket_methods[] = {
     PHP_ME(Bucket,  unlock,          NULL, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket,  n1ql_request,    NULL, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket,  http_request,    NULL, ZEND_ACC_PUBLIC)
+    PHP_ME(Bucket,  fts_request,     NULL, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket,  subdoc_request,  NULL, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket,  durability,      NULL, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket,  n1ix_list,       NULL, ZEND_ACC_PUBLIC)
@@ -316,8 +317,7 @@ zend_function_entry bucket_methods[] = {
 };
 
 void couchbase_init_bucket(INIT_FUNC_ARGS) {
-    zap_init_class_entry(&bucket_class, "_CouchbaseBucket",
-            bucket_methods);
+    zap_init_class_entry(&bucket_class, "_CouchbaseBucket", bucket_methods);
     bucket_class.create_obj = bucket_create_handler;
     bucket_class.free_obj = bucket_free_storage;
     bucket_ce = zap_register_internal_class(&bucket_class, bucket_object);

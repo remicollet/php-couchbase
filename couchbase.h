@@ -21,6 +21,7 @@
 #include <libcouchbase/api3.h>
 #include <libcouchbase/views.h>
 #include <libcouchbase/n1ql.h>
+#include <libcouchbase/cbft.h>
 #include <libcouchbase/ixmgmt.h>
 #ifdef HAVE_CONFIG_H
 #include "config.h"

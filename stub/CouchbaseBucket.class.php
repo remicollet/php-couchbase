@@ -337,6 +337,22 @@ class CouchbaseBucket {
         return $rows;
     }
 
+    public function _search($queryObj, $json_asarray) {
+        $dataIn = json_encode($queryObj->export());
+        $dataOut = $this->me->fts_request($dataIn);
+
+        $meta = json_decode($dataOut['meta'], true);
+        if (isset($meta['errors']) && count($meta['errors']) > 0) {
+            throw new CouchbaseException(json_encode($meta['errors']));
+        }
+
+        $rows = array();
+        foreach ($dataOut['results'] as $row) {
+            $rows[] = json_decode($row, $json_asarray);
+        }
+        return $rows;
+    }
+
     /**
      * Performs a query (either ViewQuery or N1qlQuery).
      *
@@ -350,9 +366,11 @@ class CouchbaseBucket {
             return $this->_view($query, $json_asarray);
         } else if ($query instanceof CouchbaseN1qlQuery) {
             return $this->_n1ql($query, $params, $json_asarray);
+        } else if ($query instanceof CouchbaseSearchQuery) {
+            return $this->_search($query, $json_asarray);
         } else {
             throw new CouchbaseException(
-                'Passed object must be of type ViewQuery or N1qlQuery');
+                'Passed object must be of type ViewQuery, N1qlQuery or SearchQuery');
         }
     }
 
