@@ -34,19 +34,21 @@ void couchbase_init_docfrag(INIT_FUNC_ARGS) {
     zend_declare_property_null(docfrag_ce, "error", strlen("error"), ZEND_ACC_PUBLIC TSRMLS_CC);
     zend_declare_property_null(docfrag_ce, "cas", strlen("cas"), ZEND_ACC_PUBLIC TSRMLS_CC);
     zend_declare_property_null(docfrag_ce, "value", strlen("value"), ZEND_ACC_PUBLIC TSRMLS_CC);
+    zend_declare_property_null(docfrag_ce, "token", strlen("token"), ZEND_ACC_PUBLIC TSRMLS_CC);
 }
 
-int pcbc_make_docfrag(zval *doc, zapval *value, zapval *cas TSRMLS_DC)
+int pcbc_make_docfrag(zval *doc, zapval *value, zapval *cas, zapval *token TSRMLS_DC)
 {
     object_init_ex(doc, docfrag_ce);
 
     if (value) {
-        zend_update_property(docfrag_ce, doc,
-                             "value", sizeof("value") - 1, zapval_zvalptr_p(value) TSRMLS_CC);
+        zend_update_property(docfrag_ce, doc, "value", sizeof("value") - 1, zapval_zvalptr_p(value) TSRMLS_CC);
     }
     if (cas) {
-        zend_update_property(docfrag_ce, doc,
-                             "cas", sizeof("cas") - 1, zapval_zvalptr_p(cas) TSRMLS_CC);
+        zend_update_property(docfrag_ce, doc, "cas", sizeof("cas") - 1, zapval_zvalptr_p(cas) TSRMLS_CC);
+    }
+    if (token && zapval_zvalptr_p(token) && !zap_zval_is_null(zapval_zvalptr_p(token))) {
+        zend_update_property(docfrag_ce, doc, "token", sizeof("token") - 1, zapval_zvalptr_p(token) TSRMLS_CC);
     }
 
     return SUCCESS;

@@ -24,6 +24,7 @@
 #include "cas.h"
 #include "metadoc.h"
 #include "docfrag.h"
+#include "token.h"
 #include "transcoding.h"
 #include "opcookie.h"
 
@@ -31,11 +32,25 @@ void store_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
 {
     opcookie_store_res *result = ecalloc(1, sizeof(opcookie_store_res));
     const lcb_RESPSTORE *resp = (const lcb_RESPSTORE *)rb;
+    const lcb_MUTATION_TOKEN *mutinfo;
     TSRMLS_FETCH();
 
     result->header.err = resp->rc;
     zapval_alloc_stringl(result->key, resp->key, resp->nkey);
     cas_encode(&result->cas, resp->cas TSRMLS_CC);
+
+    mutinfo = lcb_resp_get_mutation_token(cbtype, rb);
+    if (mutinfo == NULL) {
+        zapval_alloc_null(result->token);
+    } else {
+        const char *bucketname;
+        zapval_alloc(result->token);
+        lcb_cntl(instance, LCB_CNTL_GET, LCB_CNTL_BUCKETNAME, &bucketname);
+        pcbc_make_token(zapval_zvalptr(result->token), bucketname,
+                        LCB_MUTATION_TOKEN_VB(mutinfo),
+                        LCB_MUTATION_TOKEN_ID(mutinfo),
+                        LCB_MUTATION_TOKEN_SEQ(mutinfo) TSRMLS_CC);
+    }
 
     opcookie_push((opcookie*)resp->cookie, &result->header);
 }
@@ -57,7 +72,7 @@ lcb_error_t proc_store_results(bucket_object *bucket, zval *return_value,
                     return_value, &res->key, is_mapped);
 
             if (res->header.err == LCB_SUCCESS) {
-                make_metadoc(doc, NULL, NULL, &res->cas TSRMLS_CC);
+                make_metadoc(doc, NULL, NULL, &res->cas, &res->token TSRMLS_CC);
             } else {
                 make_metadoc_error(doc, res->header.err TSRMLS_CC);
             }

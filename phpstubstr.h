@@ -848,6 +848,12 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "        return $this;\n" \
 "    }\n" \
 "\n" \
+"    public function consistentWith($mutationState) {\n" \
+"        $this->options['scan_consistency'] = 'at_plus';\n" \
+"        $this->options['scan_vectors'] = $mutationState->exportForN1ql();\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
 "    /**\n" \
 "     * Specify whether this query is a one-time query, or if it\n" \
 "     *   if it should be prepared.\n" \
@@ -868,7 +874,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "    public function toObject() {\n" \
 "        return $this->options;\n" \
 "    }\n" \
-"    \n" \
+"\n" \
 "    /**\n" \
 "     * Returns the string representation of this N1ql query (the statement).\n" \
 "     *\n" \
@@ -1063,6 +1069,11 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "        return $this;\n" \
 "    }\n" \
 "\n" \
+"    public function consistentWith($mutationState) {\n" \
+"        $this->mutationState = $mutationState;\n" \
+"        return $this;\n" \
+"    }\n" \
+"\n" \
 "    public function export() {\n" \
 "        $result = array('indexName' => $this->indexName);\n" \
 "        $this->injectParams($result);\n" \
@@ -1104,6 +1115,14 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "        //check need for timeout\n" \
 "        if($this->serverSideTimeout !== null) {\n" \
 "            $control['timeout'] = $this->serverSideTimeout;\n" \
+"        }\n" \
+"        if ($this->mutationState) {\n" \
+"            $control['consistency'] = array(\n" \
+"                'level' => 'at_plus',\n" \
+"                'vectors' => array(\n" \
+"                    $this->indexName => $this->mutationState->exportForSearch()\n" \
+"                )\n" \
+"            );\n" \
 "        }\n" \
 "        //if any control was set, inject it\n" \
 "        if (count($control) > 0) {\n" \
@@ -2932,6 +2951,63 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "            ' on line ' . $trace[0]['line'],\n" \
 "            E_USER_NOTICE);\n" \
 "        return null;\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"class CouchbaseMutationState {\n" \
+"    /**\n" \
+"     * @var array\n" \
+"     */\n" \
+"    private $tokens = array();\n" \
+"\n" \
+"    public static function from($source = array()) {\n" \
+"        $state = new CouchbaseMutationState();\n" \
+"        $state->add($source);\n" \
+"        return $state;\n" \
+"    }\n" \
+"\n" \
+"    public function add($source = array()) {\n" \
+"        if (count($source) < 1) {\n" \
+"            throw new InvalidArgumentException(\"At least one document or fragment must be provided\");\n" \
+"        }\n" \
+"        foreach ($source as $doc) {\n" \
+"            $this->addToken($doc->token);\n" \
+"        }\n" \
+"    }\n" \
+"\n" \
+"    public function exportForN1ql() {\n" \
+"        $result = array();\n" \
+"        foreach ($this->tokens as $token) {\n" \
+"            if (!array_key_exists($token->bucket, $this->tokens)) {\n" \
+"                $result[$token->bucket] = array();\n" \
+"            }\n" \
+"            $bucket = &$result[$token->bucket];\n" \
+"            $bucket[$token->vbucketID] = array($token->sequenceNumber, $token->vbucketUUID);\n" \
+"        }\n" \
+"        return $result;\n" \
+"    }\n" \
+"\n" \
+"    public function exportForSearch() {\n" \
+"        $result = array();\n" \
+"        foreach ($this->tokens as $token) {\n" \
+"            $tokenKey = $token->vbucketID . '/' . $token->vbucketUUID;\n" \
+"            $oldSeqno = $result[$tokenKey];\n" \
+"            if ($oldSeqno < $token->sequenceNumber) {\n" \
+"                $result[$tokenKey] = $token->sequenceNumber;\n" \
+"            }\n" \
+"        }\n" \
+"        return $result;\n" \
+"    }\n" \
+"\n" \
+"    private function addToken($newToken) {\n" \
+"        for ($i = 0; $i < count($this->tokens); $i++) {\n" \
+"            $token = $this->tokens[$i];\n" \
+"            if ($token->vbucketID == $newToken->vbucketID && $token->bucket == $newToken->bucket) {\n" \
+"                $this->tokens[$i] = $newToken;\n" \
+"                return;\n" \
+"            }\n" \
+"        }\n" \
+"        array_push($this->tokens, $newToken);\n" \
 "    }\n" \
 "}\n" \
 ""},

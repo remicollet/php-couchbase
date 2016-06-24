@@ -62,7 +62,7 @@ static lcb_error_t proc_durability_results(bucket_object *bucket, zval *return_v
                     return_value, &res->key, is_mapped);
 
             if (res->header.err == LCB_SUCCESS) {
-                make_metadoc(doc, NULL, NULL, NULL TSRMLS_CC);
+                make_metadoc(doc, NULL, NULL, NULL, NULL TSRMLS_CC);
             } else {
                 make_metadoc_error(doc, res->header.err TSRMLS_CC);
             }

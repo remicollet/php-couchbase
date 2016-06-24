@@ -25,6 +25,7 @@ if (PHP_COUCHBASE != "no") {
         "store.c " +
         "subdoc.c " +
         "touch.c " +
+        "token.c " +
         "transcoding.c " +
         "unlock.c ";
 

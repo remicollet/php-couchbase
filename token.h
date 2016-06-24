@@ -14,16 +14,15 @@
  *   limitations under the License.
  */
 
-#ifndef DOCFRAG_H_
-#define DOCFRAG_H_
+#ifndef TOKEN_H_
+#define TOKEN_H_
 
 #include <php.h>
 #include <libcouchbase/couchbase.h>
 #include "bucket.h"
 
-void couchbase_init_docfrag(INIT_FUNC_ARGS);
+void couchbase_init_token(INIT_FUNC_ARGS);
 
-int pcbc_make_docfrag(zval *doc, zapval *value, zapval *cas, zapval *token TSRMLS_DC);
-int pcbc_make_docfrag_error(zval *doc, lcb_error_t err, zapval *value TSRMLS_DC);
+int pcbc_make_token(zval *doc, const char *bucket, lcb_U16 vbucketID, lcb_U64 vbucketUUID, lcb_U64 seqno TSRMLS_DC);
 
-#endif // DOCFRAG_H_
+#endif // TOKEN_H_

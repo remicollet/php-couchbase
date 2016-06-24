@@ -74,6 +74,7 @@ typedef struct {
     opcookie_res header;
     zapval key;
     zapval cas;
+    zapval token;
 } opcookie_store_res;
 lcb_error_t proc_store_results(bucket_object *bucket, zval *return_value, opcookie *cookie, int is_mapped TSRMLS_DC);
 

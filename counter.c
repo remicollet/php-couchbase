@@ -24,6 +24,7 @@
 #include "cas.h"
 #include "metadoc.h"
 #include "docfrag.h"
+#include "token.h"
 #include "transcoding.h"
 #include "opcookie.h"
 
@@ -32,18 +33,33 @@ typedef struct {
     zapval key;
     zapval value;
     zapval cas;
+    zapval token;
 } opcookie_arithmetic_res;
 
 void counter_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
 {
     opcookie_arithmetic_res *result = ecalloc(1, sizeof(opcookie_arithmetic_res));
     const lcb_RESPCOUNTER *resp = (const lcb_RESPCOUNTER *)rb;
+    const lcb_MUTATION_TOKEN *mutinfo;
     TSRMLS_FETCH();
 
     result->header.err = resp->rc;
     zapval_alloc_stringl(result->key, resp->key, resp->nkey);
     zapval_alloc_long(result->value, resp->value);
     cas_encode(&result->cas, resp->cas TSRMLS_CC);
+
+    mutinfo = lcb_resp_get_mutation_token(cbtype, rb);
+    if (mutinfo == NULL) {
+        zapval_alloc_null(result->token);
+    } else {
+        const char *bucketname;
+        zapval_alloc(result->token);
+        lcb_cntl(instance, LCB_CNTL_GET, LCB_CNTL_BUCKETNAME, &bucketname);
+        pcbc_make_token(zapval_zvalptr(result->token), bucketname,
+                        LCB_MUTATION_TOKEN_VB(mutinfo),
+                        LCB_MUTATION_TOKEN_ID(mutinfo),
+                        LCB_MUTATION_TOKEN_SEQ(mutinfo) TSRMLS_CC);
+    }
 
     opcookie_push((opcookie*)rb->cookie, &result->header);
 }
@@ -65,7 +81,7 @@ static lcb_error_t proc_arithmetic_results(bucket_object *bucket, zval *return_v
                 return_value, &res->key, is_mapped);
 
             if (res->header.err == LCB_SUCCESS) {
-                make_metadoc(doc, &res->value, NULL, &res->cas TSRMLS_CC);
+                make_metadoc(doc, &res->value, NULL, &res->cas, &res->token TSRMLS_CC);
             } else {
                 make_metadoc_error(doc, res->header.err TSRMLS_CC);
             }

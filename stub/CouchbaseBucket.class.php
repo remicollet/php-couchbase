@@ -565,3 +565,60 @@ class CouchbaseBucket {
         return null;
     }
 }
+
+class CouchbaseMutationState {
+    /**
+     * @var array
+     */
+    private $tokens = array();
+
+    public static function from($source = array()) {
+        $state = new CouchbaseMutationState();
+        $state->add($source);
+        return $state;
+    }
+
+    public function add($source = array()) {
+        if (count($source) < 1) {
+            throw new InvalidArgumentException("At least one document or fragment must be provided");
+        }
+        foreach ($source as $doc) {
+            $this->addToken($doc->token);
+        }
+    }
+
+    public function exportForN1ql() {
+        $result = array();
+        foreach ($this->tokens as $token) {
+            if (!array_key_exists($token->bucket, $this->tokens)) {
+                $result[$token->bucket] = array();
+            }
+            $bucket = &$result[$token->bucket];
+            $bucket[$token->vbucketID] = array($token->sequenceNumber, $token->vbucketUUID);
+        }
+        return $result;
+    }
+
+    public function exportForSearch() {
+        $result = array();
+        foreach ($this->tokens as $token) {
+            $tokenKey = $token->vbucketID . '/' . $token->vbucketUUID;
+            $oldSeqno = $result[$tokenKey];
+            if ($oldSeqno < $token->sequenceNumber) {
+                $result[$tokenKey] = $token->sequenceNumber;
+            }
+        }
+        return $result;
+    }
+
+    private function addToken($newToken) {
+        for ($i = 0; $i < count($this->tokens); $i++) {
+            $token = $this->tokens[$i];
+            if ($token->vbucketID == $newToken->vbucketID && $token->bucket == $newToken->bucket) {
+                $this->tokens[$i] = $newToken;
+                return;
+            }
+        }
+        array_push($this->tokens, $newToken);
+    }
+}

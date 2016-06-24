@@ -73,7 +73,7 @@ static lcb_error_t proc_get_results(bucket_object *bucket, zval *return_value,
                 pcbc_decode_value(bucket,
                         &value, &res->bytes, &res->flags, &res->datatype TSRMLS_CC);
 
-                make_metadoc(doc, &value, &res->flags, &res->cas TSRMLS_CC);
+                make_metadoc(doc, &value, &res->flags, &res->cas, NULL TSRMLS_CC);
                 zapval_destroy(value);
             } else {
                 make_metadoc_error(doc, res->header.err TSRMLS_CC);

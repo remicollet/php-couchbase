@@ -182,6 +182,11 @@ class CouchbaseSearchQuery {
         return $this;
     }
 
+    public function consistentWith($mutationState) {
+        $this->mutationState = $mutationState;
+        return $this;
+    }
+
     public function export() {
         $result = array('indexName' => $this->indexName);
         $this->injectParams($result);
@@ -223,6 +228,14 @@ class CouchbaseSearchQuery {
         //check need for timeout
         if($this->serverSideTimeout !== null) {
             $control['timeout'] = $this->serverSideTimeout;
+        }
+        if ($this->mutationState) {
+            $control['consistency'] = array(
+                'level' => 'at_plus',
+                'vectors' => array(
+                    $this->indexName => $this->mutationState->exportForSearch()
+                )
+            );
         }
         //if any control was set, inject it
         if (count($control) > 0) {

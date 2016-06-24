@@ -18,6 +18,7 @@
 #include "cas.h"
 #include "metadoc.h"
 #include "docfrag.h"
+#include "token.h"
 #include "n1ix_spec.h"
 #include "phpstubstr.h"
 #include "zap.h"
@@ -61,6 +62,7 @@ PHP_MINIT_FUNCTION(couchbase)
 	couchbase_init_n1ix_spec(INIT_FUNC_ARGS_PASSTHRU);
 	couchbase_init_cluster(INIT_FUNC_ARGS_PASSTHRU);
 	couchbase_init_bucket(INIT_FUNC_ARGS_PASSTHRU);
+	couchbase_init_token(INIT_FUNC_ARGS_PASSTHRU);
 
 	PCBC_REGISTER_CONST(PERSISTTO_MASTER);
 	PCBC_REGISTER_CONST(PERSISTTO_ONE);

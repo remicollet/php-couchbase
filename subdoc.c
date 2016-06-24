@@ -24,6 +24,7 @@
 #include "cas.h"
 #include "metadoc.h"
 #include "docfrag.h"
+#include "token.h"
 #include "transcoding.h"
 #include "opcookie.h"
 
@@ -31,12 +32,14 @@ typedef struct {
     opcookie_res header;
     zapval value;
     zapval cas;
+    zapval token;
 } opcookie_subdoc_res;
 
 void subdoc_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
 {
     opcookie_subdoc_res *result = ecalloc(1, sizeof(opcookie_subdoc_res));
     const lcb_RESPSUBDOC *resp = (const lcb_RESPSUBDOC *)rb;
+    const lcb_MUTATION_TOKEN *mutinfo;
     lcb_SDENTRY cur;
     size_t vii = 0, oix = 0;
     TSRMLS_FETCH();
@@ -44,6 +47,18 @@ void subdoc_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
     result->header.err = rb->rc;
     if (rb->rc == LCB_SUCCESS || rb->rc == LCB_SUBDOC_MULTI_FAILURE) {
         cas_encode(&result->cas, rb->cas TSRMLS_CC);
+    }
+    mutinfo = lcb_resp_get_mutation_token(cbtype, rb);
+    if (mutinfo == NULL) {
+        zapval_alloc_null(result->token);
+    } else {
+        const char *bucketname;
+        zapval_alloc(result->token);
+        lcb_cntl(instance, LCB_CNTL_GET, LCB_CNTL_BUCKETNAME, &bucketname);
+        pcbc_make_token(zapval_zvalptr(result->token), bucketname,
+                        LCB_MUTATION_TOKEN_VB(mutinfo),
+                        LCB_MUTATION_TOKEN_ID(mutinfo),
+                        LCB_MUTATION_TOKEN_SEQ(mutinfo) TSRMLS_CC);
     }
     zapval_alloc_array(result->value);
     while (lcb_sdresult_next(resp, &cur, &vii)) {
@@ -87,7 +102,7 @@ static lcb_error_t proc_subdoc_results(bucket_object *bucket, zval *return_value
 
     FOREACH_OPCOOKIE_RES(opcookie_subdoc_res, res, cookie) {
         if (res->header.err == LCB_SUCCESS) {
-            pcbc_make_docfrag(return_value, &res->value, &res->cas TSRMLS_CC);
+            pcbc_make_docfrag(return_value, &res->value, &res->cas, &res->token TSRMLS_CC);
         } else {
             pcbc_make_docfrag_error(return_value, res->header.err,
                                     res->header.err == LCB_SUBDOC_MULTI_FAILURE ? &res->value : NULL

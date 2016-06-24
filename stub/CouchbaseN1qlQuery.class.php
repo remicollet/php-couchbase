@@ -51,6 +51,12 @@ class CouchbaseN1qlQuery {
         return $this;
     }
 
+    public function consistentWith($mutationState) {
+        $this->options['scan_consistency'] = 'at_plus';
+        $this->options['scan_vectors'] = $mutationState->exportForN1ql();
+        return $this;
+    }
+
     /**
      * Specify whether this query is a one-time query, or if it
      *   if it should be prepared.
@@ -71,7 +77,7 @@ class CouchbaseN1qlQuery {
     public function toObject() {
         return $this->options;
     }
-    
+
     /**
      * Returns the string representation of this N1ql query (the statement).
      *
