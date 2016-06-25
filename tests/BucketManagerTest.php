@@ -37,7 +37,7 @@ class BucketManagerTest extends CouchbaseTestCase {
      */
     function testBasicIndexLifecycle($m) {
         $name = $this->makeKey('user_name');
-        $m->createN1qlIndex($name, array('user.first_name', 'user.last_name'),
+        $m->createN1qlIndex($name, array('`user.first_name`', '`user.last_name`'),
                             '`state` = "active"', false, false);
 
         $indexes = $m->listN1qlIndexes();

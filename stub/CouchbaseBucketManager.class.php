@@ -146,13 +146,7 @@ class CouchbaseBucketManager {
      *                       call to the corresponding query service API).
      */
     public function createN1qlIndex($indexName, $fields, $whereClause = '', $ignoreIfExist = false, $defer = false) {
-        $fields = join(',', array_map(function($f) {
-            if ($f[0] == '`' && $f[strlen($f)-1] == '`') {
-                return $f;
-            }
-            return "`$f`";
-        }, $fields));
-        return $this->_me->n1ix_create($indexName, $fields, $whereClause, $ignoreIfExist, $defer, false);
+        return $this->_me->n1ix_create($indexName, json_encode($fields), $whereClause, $ignoreIfExist, $defer, false);
     }
 
     /**

@@ -3083,13 +3083,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     *                       call to the corresponding query service API).\n" \
 "     */\n" \
 "    public function createN1qlIndex($indexName, $fields, $whereClause = '', $ignoreIfExist = false, $defer = false) {\n" \
-"        $fields = join(',', array_map(function($f) {\n" \
-"            if ($f[0] == '`' && $f[strlen($f)-1] == '`') {\n" \
-"                return $f;\n" \
-"            }\n" \
-"            return \"`$f`\";\n" \
-"        }, $fields));\n" \
-"        return $this->_me->n1ix_create($indexName, $fields, $whereClause, $ignoreIfExist, $defer, false);\n" \
+"        return $this->_me->n1ix_create($indexName, json_encode($fields), $whereClause, $ignoreIfExist, $defer, false);\n" \
 "    }\n" \
 "\n" \
 "    /**\n" \
