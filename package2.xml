@@ -24,9 +24,9 @@
         <email>sergey@couchbase.com</email>
         <active>yes</active>
     </lead>
-    <date>2016-05-25</date>
+    <date>2016-06-29</date>
     <version>
-        <release>2.2.0beta3</release>
+        <release>2.2.0beta4</release>
         <api>2.2.0</api>
     </version>
     <stability>
@@ -36,18 +36,13 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        This is third beta release of 2.2.0 SDK. It includes more features
-        to support upcoming Couchbase Server release, stability fixes and
-        smaller improvements.
+        This is fourth beta release of 2.2.0 SDK. It includes more features
+        to support new Couchbase Server 4.5 release and bug fixes.
 
         Changes:
-        * PCBC-379: Support for Subdocument API
-        * PCBC-385: Support for Index Management
-        * PCBC-394: Expose CAS as a bytestring
-        * PCBC-392: Client announce its version in the server logs
-        * PCBC-397: Additive connection string options are not clobbered anymore
-        * PCBC-395: Type checks properly enforced for booleans
-        * Various minor changes
+        * PCBC-380: support AT_PLUS consistency
+        * PCBC-381: support for Full Text Search queries
+        * Various minor fixes and improvements
     </notes>
 
     <contents>
@@ -59,6 +54,7 @@
             <file role="src" name="bucket.h"/>
             <file role="src" name="cas.c"/>
             <file role="src" name="cas.h"/>
+            <file role="src" name="cbft.c"/>
             <file role="src" name="cluster.c"/>
             <file role="src" name="cluster.h"/>
             <file role="src" name="config.m4"/>
@@ -93,6 +89,8 @@
             <file role="src" name="remove.c"/>
             <file role="src" name="store.c"/>
             <file role="src" name="subdoc.c"/>
+            <file role="src" name="token.c"/>
+            <file role="src" name="token.h"/>
             <file role="src" name="touch.c"/>
             <file role="src" name="transcoding.c"/>
             <file role="src" name="transcoding.h"/>
@@ -120,6 +118,33 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2016-05-25</date>
+            <version>
+                <release>2.2.0beta3</release>
+                <api>2.2.0</api>
+            </version>
+            <stability>
+                <release>beta</release>
+                <api>beta</api>
+            </stability>
+            <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
+            </license>
+            <notes>
+                This is third beta release of 2.2.0 SDK. It includes more features
+                to support upcoming Couchbase Server release, stability fixes and
+                smaller improvements.
+
+                Changes:
+                * PCBC-379: Support for Subdocument API
+                * PCBC-385: Support for Index Management
+                * PCBC-394: Expose CAS as a bytestring
+                * PCBC-392: Client announce its version in the server logs
+                * PCBC-397: Additive connection string options are not clobbered anymore
+                * PCBC-395: Type checks properly enforced for booleans
+                * Various minor changes
+            </notes>
+        </release>
         <release>
             <date>2016-04-19</date>
             <version>
