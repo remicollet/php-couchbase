@@ -176,7 +176,7 @@ PHP_METHOD(Bucket, __construct)
             throw_lcb_exception(err);
             RETURN_NULL();
         }
-        lcb_cntl(instance, LCB_CNTL_SET, LCB_CNTL_CLIENT_STRING, &pcbc_client_string);
+        lcb_cntl(instance, LCB_CNTL_SET, LCB_CNTL_CLIENT_STRING, pcbc_client_string);
 
         lcb_install_callback3(instance, LCB_CALLBACK_GET, get_callback);
         lcb_install_callback3(instance, LCB_CALLBACK_UNLOCK, unlock_callback);
