@@ -181,6 +181,7 @@ PHP_METHOD(Bucket, __construct)
         lcb_install_callback3(instance, LCB_CALLBACK_GET, get_callback);
         lcb_install_callback3(instance, LCB_CALLBACK_UNLOCK, unlock_callback);
         lcb_install_callback3(instance, LCB_CALLBACK_STORE, store_callback);
+        lcb_install_callback3(instance, LCB_CALLBACK_STOREDUR, store_callback);
         lcb_install_callback3(instance, LCB_CALLBACK_REMOVE, remove_callback);
         lcb_install_callback3(instance, LCB_CALLBACK_TOUCH, touch_callback);
         lcb_install_callback3(instance, LCB_CALLBACK_COUNTER, counter_callback);

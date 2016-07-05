@@ -129,8 +129,7 @@ class CouchbaseBucket {
      * @return mixed
      */
     public function insert($ids, $val = NULL, $options = array()) {
-        return $this->_endure($ids, $options,
-            $this->me->insert($ids, $val, $options));
+        return $this->me->insert($ids, $val, $options);
     }
 
     /**
@@ -143,8 +142,7 @@ class CouchbaseBucket {
      * @return mixed
      */
     public function upsert($ids, $val = NULL, $options = array()) {
-        return $this->_endure($ids, $options,
-            $this->me->upsert($ids, $val, $options));
+        return $this->me->upsert($ids, $val, $options);
     }
 
     /**
@@ -156,8 +154,7 @@ class CouchbaseBucket {
      * @return mixed
      */
     public function replace($ids, $val = NULL, $options = array()) {
-        return $this->_endure($ids, $options,
-            $this->me->replace($ids, $val, $options));
+        return $this->me->replace($ids, $val, $options);
     }
 
     /**
@@ -169,8 +166,7 @@ class CouchbaseBucket {
      * @return mixed
      */
     public function append($ids, $val = NULL, $options = array()) {
-        return $this->_endure($ids, $options,
-            $this->me->append($ids, $val, $options));
+        return $this->me->append($ids, $val, $options);
     }
 
     /**
@@ -182,8 +178,7 @@ class CouchbaseBucket {
      * @return mixed
      */
     public function prepend($ids, $val = NULL, $options = array()) {
-        return $this->_endure($ids, $options,
-            $this->me->prepend($ids, $val, $options));
+        return $this->me->prepend($ids, $val, $options);
     }
 
     /**

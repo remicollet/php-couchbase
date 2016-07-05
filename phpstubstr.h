@@ -2564,8 +2564,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     * @return mixed\n" \
 "     */\n" \
 "    public function insert($ids, $val = NULL, $options = array()) {\n" \
-"        return $this->_endure($ids, $options,\n" \
-"            $this->me->insert($ids, $val, $options));\n" \
+"        return $this->me->insert($ids, $val, $options);\n" \
 "    }\n" \
 "\n" \
 "    /**\n" \
@@ -2578,8 +2577,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     * @return mixed\n" \
 "     */\n" \
 "    public function upsert($ids, $val = NULL, $options = array()) {\n" \
-"        return $this->_endure($ids, $options,\n" \
-"            $this->me->upsert($ids, $val, $options));\n" \
+"        return $this->me->upsert($ids, $val, $options);\n" \
 "    }\n" \
 "\n" \
 "    /**\n" \
@@ -2591,8 +2589,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     * @return mixed\n" \
 "     */\n" \
 "    public function replace($ids, $val = NULL, $options = array()) {\n" \
-"        return $this->_endure($ids, $options,\n" \
-"            $this->me->replace($ids, $val, $options));\n" \
+"        return $this->me->replace($ids, $val, $options);\n" \
 "    }\n" \
 "\n" \
 "    /**\n" \
@@ -2604,8 +2601,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     * @return mixed\n" \
 "     */\n" \
 "    public function append($ids, $val = NULL, $options = array()) {\n" \
-"        return $this->_endure($ids, $options,\n" \
-"            $this->me->append($ids, $val, $options));\n" \
+"        return $this->me->append($ids, $val, $options);\n" \
 "    }\n" \
 "\n" \
 "    /**\n" \
@@ -2617,8 +2613,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     * @return mixed\n" \
 "     */\n" \
 "    public function prepend($ids, $val = NULL, $options = array()) {\n" \
-"        return $this->_endure($ids, $options,\n" \
-"            $this->me->prepend($ids, $val, $options));\n" \
+"        return $this->me->prepend($ids, $val, $options);\n" \
 "    }\n" \
 "\n" \
 "    /**\n" \
