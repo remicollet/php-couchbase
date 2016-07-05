@@ -58,6 +58,8 @@ class CouchbaseBucket {
      */
     private $queryhosts = NULL;
 
+    private $authenticator;
+
     /**
      * Constructs a bucket connection.
      *
@@ -70,10 +72,11 @@ class CouchbaseBucket {
      *
      * @private
      */
-    public function __construct($connstr, $name, $password) {
+    public function __construct($connstr, $name, $password, $authenticator = null) {
         $this->me = new _CouchbaseBucket($connstr, $name, $password);
         $this->me->setTranscoder("couchbase_default_encoder", "couchbase_default_decoder");
         $this->name = $name;
+        $this->authenticator = $authenticator;
     }
 
     /**

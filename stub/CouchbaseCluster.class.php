@@ -27,6 +27,8 @@ class CouchbaseCluster {
      */
     private $_dsn;
 
+    private $authenticator;
+
     /**
      * Creates a connection to a cluster.
      *
@@ -43,6 +45,10 @@ class CouchbaseCluster {
         $this->_dsn = cbdsn_parse($connstr);
     }
 
+    public function authenticate($authenticator) {
+        $this->authenticator = $authenticator;
+    }
+
     /**
      * Constructs a connection to a bucket.
      *
@@ -57,8 +63,11 @@ class CouchbaseCluster {
     public function openBucket($name = 'default', $password = '') {
         $bucketDsn = cbdsn_normalize($this->_dsn);
         $bucketDsn['bucket'] = $name;
+        if (!$password && $this->authenticator) {
+            $password = $this->authenticator->getCredentials('bucket-kv', $name);
+        }
         $dsnStr = cbdsn_stringify($bucketDsn);
-        return new CouchbaseBucket($dsnStr, $name, $password);
+        return new CouchbaseBucket($dsnStr, $name, $password, $this->authenticator);
     }
 
     /**
@@ -68,12 +77,50 @@ class CouchbaseCluster {
      * @param $password The administration password.
      * @return CouchbaseClusterManager
      */
-    public function manager($username, $password) {
+    public function manager($username = '', $password = '') {
         if (!$this->_manager) {
+            if (!($username && $password) && $this->authenticator) {
+                $credentials = $this->authenticator->getCredentials('cluster-mgmt');
+                $username = $credentials[0];
+                $password = $credentials[1];
+            }
+            if (!($username && $password)) {
+                throw InvalidArgumentException('invalid credentials for cluster manager');
+            }
             $this->_manager = new CouchbaseClusterManager(
                 cbdsn_stringify($this->_dsn), $username, $password);
         }
         return $this->_manager;
     }
+}
 
+class CouchbaseAuthenticator {
+    private $adminUsername;
+    private $adminPassword;
+    private $buckets = array();
+
+    public function setBucketCredentials($bucketName, $password) {
+        $this->buckets[$bucketName] = $password;
+    }
+
+    public function setClusterCredentials($username, $password) {
+        $this->adminUsername = $username;
+        $this->adminPassword = $password;
+    }
+
+    public function getCredentials($context, $specific = null) {
+        switch ($context) {
+        case 'bucket-kv':
+            return $this->buckets[$specific];
+        case 'bucket-n1ql':
+            return $this->buckets[$specific];
+        case 'bucket-cbft':
+            return $this->buckets;
+        case 'cluster-n1ql':
+            return $this->buckets;
+        case 'cluster-mgmt':
+            return array($this->adminUsername, $this->adminPassword);
+        }
+        throw new InvalidArgumentException("unable to get '$context' credentials, specific: $specific");
+    }
 }

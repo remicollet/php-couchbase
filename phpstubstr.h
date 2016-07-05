@@ -2235,6 +2235,8 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     */\n" \
 "    private $_dsn;\n" \
 "\n" \
+"    private $authenticator;\n" \
+"\n" \
 "    /**\n" \
 "     * Creates a connection to a cluster.\n" \
 "     *\n" \
@@ -2251,6 +2253,10 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "        $this->_dsn = cbdsn_parse($connstr);\n" \
 "    }\n" \
 "\n" \
+"    public function authenticate($authenticator) {\n" \
+"        $this->authenticator = $authenticator;\n" \
+"    }\n" \
+"\n" \
 "    /**\n" \
 "     * Constructs a connection to a bucket.\n" \
 "     *\n" \
@@ -2265,8 +2271,11 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "    public function openBucket($name = 'default', $password = '') {\n" \
 "        $bucketDsn = cbdsn_normalize($this->_dsn);\n" \
 "        $bucketDsn['bucket'] = $name;\n" \
+"        if (!$password && $this->authenticator) {\n" \
+"            $password = $this->authenticator->getCredentials('bucket-kv', $name);\n" \
+"        }\n" \
 "        $dsnStr = cbdsn_stringify($bucketDsn);\n" \
-"        return new CouchbaseBucket($dsnStr, $name, $password);\n" \
+"        return new CouchbaseBucket($dsnStr, $name, $password, $this->authenticator);\n" \
 "    }\n" \
 "\n" \
 "    /**\n" \
@@ -2276,14 +2285,52 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     * @param $password The administration password.\n" \
 "     * @return CouchbaseClusterManager\n" \
 "     */\n" \
-"    public function manager($username, $password) {\n" \
+"    public function manager($username = '', $password = '') {\n" \
 "        if (!$this->_manager) {\n" \
+"            if (!($username && $password) && $this->authenticator) {\n" \
+"                $credentials = $this->authenticator->getCredentials('cluster-mgmt');\n" \
+"                $username = $credentials[0];\n" \
+"                $password = $credentials[1];\n" \
+"            }\n" \
+"            if (!($username && $password)) {\n" \
+"                throw InvalidArgumentException('invalid credentials for cluster manager');\n" \
+"            }\n" \
 "            $this->_manager = new CouchbaseClusterManager(\n" \
 "                cbdsn_stringify($this->_dsn), $username, $password);\n" \
 "        }\n" \
 "        return $this->_manager;\n" \
 "    }\n" \
+"}\n" \
 "\n" \
+"class CouchbaseAuthenticator {\n" \
+"    private $adminUsername;\n" \
+"    private $adminPassword;\n" \
+"    private $buckets = array();\n" \
+"\n" \
+"    public function setBucketCredentials($bucketName, $password) {\n" \
+"        $this->buckets[$bucketName] = $password;\n" \
+"    }\n" \
+"\n" \
+"    public function setClusterCredentials($username, $password) {\n" \
+"        $this->adminUsername = $username;\n" \
+"        $this->adminPassword = $password;\n" \
+"    }\n" \
+"\n" \
+"    public function getCredentials($context, $specific = null) {\n" \
+"        switch ($context) {\n" \
+"        case 'bucket-kv':\n" \
+"            return $this->buckets[$specific];\n" \
+"        case 'bucket-n1ql':\n" \
+"            return $this->buckets[$specific];\n" \
+"        case 'bucket-cbft':\n" \
+"            return $this->buckets;\n" \
+"        case 'cluster-n1ql':\n" \
+"            return $this->buckets;\n" \
+"        case 'cluster-mgmt':\n" \
+"            return array($this->adminUsername, $this->adminPassword);\n" \
+"        }\n" \
+"        throw new InvalidArgumentException(\"unable to get '$context' credentials, specific: $specific\");\n" \
+"    }\n" \
 "}\n" \
 ""},
 {"[CouchbaseNative]/CouchbaseClusterManager.class.php","\n" \
@@ -2446,6 +2493,8 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     */\n" \
 "    private $queryhosts = NULL;\n" \
 "\n" \
+"    private $authenticator;\n" \
+"\n" \
 "    /**\n" \
 "     * Constructs a bucket connection.\n" \
 "     *\n" \
@@ -2458,10 +2507,11 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     *\n" \
 "     * @private\n" \
 "     */\n" \
-"    public function __construct($connstr, $name, $password) {\n" \
+"    public function __construct($connstr, $name, $password, $authenticator = null) {\n" \
 "        $this->me = new _CouchbaseBucket($connstr, $name, $password);\n" \
 "        $this->me->setTranscoder(\"couchbase_default_encoder\", \"couchbase_default_decoder\");\n" \
 "        $this->name = $name;\n" \
+"        $this->authenticator = $authenticator;\n" \
 "    }\n" \
 "\n" \
 "    /**\n" \
