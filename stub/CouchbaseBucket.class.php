@@ -125,7 +125,7 @@ class CouchbaseBucket {
      *
      * @param string|array $ids
      * @param mixed $val
-     * @param array $options expiry,flags
+     * @param array $options expiry(integer), persist_to(integer), replicate_to(integer)
      * @return mixed
      */
     public function insert($ids, $val = NULL, $options = array()) {
@@ -138,7 +138,7 @@ class CouchbaseBucket {
      *
      * @param string|array $ids
      * @param mixed $val
-     * @param array $options expiry,flags
+     * @param array $options expiry(integer), persist_to(integer), replicate_to(integer)
      * @return mixed
      */
     public function upsert($ids, $val = NULL, $options = array()) {
@@ -150,7 +150,7 @@ class CouchbaseBucket {
      *
      * @param string|array $ids
      * @param mixed $val
-     * @param array $options cas,expiry,flags
+     * @param array $options cas(string), expiry(integer), persist_to(integer), replicate_to(integer)
      * @return mixed
      */
     public function replace($ids, $val = NULL, $options = array()) {
@@ -162,7 +162,7 @@ class CouchbaseBucket {
      *
      * @param string|array $ids
      * @param mixed $val
-     * @param array $options cas
+     * @param array $options cas(string), persist_to(integer), replicate_to(integer)
      * @return mixed
      */
     public function append($ids, $val = NULL, $options = array()) {
@@ -174,7 +174,7 @@ class CouchbaseBucket {
      *
      * @param string|array $ids
      * @param mixed $val
-     * @param array $options cas
+     * @param array $options cas(string), persist_to(integer), replicate_to(integer)
      * @return mixed
      */
     public function prepend($ids, $val = NULL, $options = array()) {
@@ -185,7 +185,7 @@ class CouchbaseBucket {
      * Deletes a document.
      *
      * @param string|array $ids
-     * @param array $options cas
+     * @param array $options cas(string), persist_to(integer), replicate_to(integer)
      * @return mixed
      */
     public function remove($ids, $options = array()) {
@@ -197,7 +197,7 @@ class CouchbaseBucket {
      * Retrieves a document.
      *
      * @param string|array $ids
-     * @param array $options lock
+     * @param array $options lock(integer), expiry(integer)
      * @return mixed
      */
     public function get($ids, $options = array()) {
@@ -234,7 +234,7 @@ class CouchbaseBucket {
      * Retrieves a document from a replica.
      *
      * @param string $id
-     * @param array $options
+     * @param array $options index(integer)
      * @return mixed
      */
     public function getFromReplica($id, $options = array()) {
@@ -258,7 +258,7 @@ class CouchbaseBucket {
      *
      * @param string|array $ids
      * @param integer $delta
-     * @param array $options initial,expiry
+     * @param array $options initial(integer), expiry(integer)
      * @return mixed
      */
     public function counter($ids, $delta, $options = array()) {
@@ -269,7 +269,7 @@ class CouchbaseBucket {
     /**
      * Unlocks a key previous locked with a call to get().
      * @param string|array $ids
-     * @param array $options cas
+     * @param array $options cas(string)
      * @return mixed
      */
     public function unlock($ids, $options = array()) {
