@@ -171,7 +171,7 @@ class CouchbaseSearchQuery {
      * @return $this
      */
     public function addFacet($facetName, $facet) {
-        if (facet != null && facetName != null) {
+        if ($facet != null && $facetName != null) {
             $this->facets[$facetName] = $facet;
         }
         return $this;

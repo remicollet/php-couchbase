@@ -1058,7 +1058,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     * @return $this\n" \
 "     */\n" \
 "    public function addFacet($facetName, $facet) {\n" \
-"        if (facet != null && facetName != null) {\n" \
+"        if ($facet != null && $facetName != null) {\n" \
 "            $this->facets[$facetName] = $facet;\n" \
 "        }\n" \
 "        return $this;\n" \
@@ -2784,11 +2784,23 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "            throw new CouchbaseException(json_encode($meta['errors']));\n" \
 "        }\n" \
 "\n" \
-"        $rows = array();\n" \
+"        $hits = array();\n" \
 "        foreach ($dataOut['results'] as $row) {\n" \
-"            $rows[] = json_decode($row, $json_asarray);\n" \
+"            $hits[] = json_decode($row, $json_asarray);\n" \
 "        }\n" \
-"        return $rows;\n" \
+"        $result = array(\n" \
+"            'hits' => $hits,\n" \
+"            'status' => $meta['status'],\n" \
+"            'metrics' => array(\n" \
+"                'total_hits' => $meta['total_hits'],\n" \
+"                'took' => $meta['took'],\n" \
+"                'max_score' => $meta['max_score']\n" \
+"            )\n" \
+"        );\n" \
+"        if (isset($meta['facets'])) {\n" \
+"            $result['facets'] = $meta['facets'];\n" \
+"        }\n" \
+"        return (object)$result;\n" \
 "    }\n" \
 "\n" \
 "    /**\n" \

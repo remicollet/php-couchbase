@@ -344,11 +344,23 @@ class CouchbaseBucket {
             throw new CouchbaseException(json_encode($meta['errors']));
         }
 
-        $rows = array();
+        $hits = array();
         foreach ($dataOut['results'] as $row) {
-            $rows[] = json_decode($row, $json_asarray);
+            $hits[] = json_decode($row, $json_asarray);
         }
-        return $rows;
+        $result = array(
+            'hits' => $hits,
+            'status' => $meta['status'],
+            'metrics' => array(
+                'total_hits' => $meta['total_hits'],
+                'took' => $meta['took'],
+                'max_score' => $meta['max_score']
+            )
+        );
+        if (isset($meta['facets'])) {
+            $result['facets'] = $meta['facets'];
+        }
+        return (object)$result;
     }
 
     /**
