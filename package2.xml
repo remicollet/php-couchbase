@@ -24,25 +24,27 @@
         <email>sergey@couchbase.com</email>
         <active>yes</active>
     </lead>
-    <date>2016-06-29</date>
+    <date>2016-07-06</date>
     <version>
-        <release>2.2.0beta4</release>
+        <release>2.2.0</release>
         <api>2.2.0</api>
     </version>
     <stability>
-        <release>beta</release>
-        <api>beta</api>
+        <release>stable</release>
+        <api>stable</api>
     </stability>
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        This is fourth beta release of 2.2.0 SDK. It includes more features
+        This is the GA release of the 2.2.0 SDK. It includes more features
         to support new Couchbase Server 4.5 release and bug fixes.
 
         Changes:
-        * PCBC-380: support AT_PLUS consistency
-        * PCBC-381: support for Full Text Search queries
-        * Various minor fixes and improvements
+        * PCBC-393: Support for enhanced durability
+        * PCBC-398: expose methods for parameterized N1QL queries
+        * PCBC-382: cluster level authentication
+        * Expose meta for N1QL and Search queries
+        * Documentation updates and bug fixes
     </notes>
 
     <contents>
@@ -118,6 +120,28 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2016-06-29</date>
+            <version>
+                <release>2.2.0beta4</release>
+                <api>2.2.0</api>
+            </version>
+            <stability>
+                <release>beta</release>
+                <api>beta</api>
+            </stability>
+            <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
+            </license>
+            <notes>
+                This is the fourth beta release of the 2.2.0 SDK. It includes more features
+                to support new Couchbase Server 4.5 release and bug fixes.
+
+                Changes:
+                * PCBC-380: support AT_PLUS consistency
+                * PCBC-381: support for Full Text Search queries
+                * Various minor fixes and improvements
+            </notes>
+        </release>
         <release>
             <date>2016-05-25</date>
             <version>
