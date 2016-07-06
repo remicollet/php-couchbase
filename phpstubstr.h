@@ -2772,7 +2772,12 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "        foreach ($dataOut['results'] as $row) {\n" \
 "            $rows[] = json_decode($row, $json_asarray);\n" \
 "        }\n" \
-"        return $rows;\n" \
+"        $result = array(\n" \
+"            'rows' => $rows,\n" \
+"            'status' => $meta['status'],\n" \
+"            'metrics' => $meta['metrics']\n" \
+"        );\n" \
+"        return (object)$result;\n" \
 "    }\n" \
 "\n" \
 "    public function _search($queryObj, $json_asarray) {\n" \

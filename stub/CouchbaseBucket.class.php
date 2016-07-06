@@ -332,7 +332,12 @@ class CouchbaseBucket {
         foreach ($dataOut['results'] as $row) {
             $rows[] = json_decode($row, $json_asarray);
         }
-        return $rows;
+        $result = array(
+            'rows' => $rows,
+            'status' => $meta['status'],
+            'metrics' => $meta['metrics']
+        );
+        return (object)$result;
     }
 
     public function _search($queryObj, $json_asarray) {
