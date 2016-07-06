@@ -937,6 +937,11 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "    private $serverSideTimeout;\n" \
 "\n" \
 "    /**\n" \
+"     * @var CouchbaseMutationState\n" \
+"     */\n" \
+"    private $mutationState;\n" \
+"\n" \
+"    /**\n" \
 "     * @var array\n" \
 "     */\n" \
 "    private $fields;\n" \

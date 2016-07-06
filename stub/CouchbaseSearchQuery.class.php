@@ -50,6 +50,11 @@ class CouchbaseSearchQuery {
     private $serverSideTimeout;
 
     /**
+     * @var CouchbaseMutationState
+     */
+    private $mutationState;
+
+    /**
      * @var array
      */
     private $fields;
