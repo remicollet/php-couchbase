@@ -32,6 +32,36 @@ class CouchbaseN1qlQuery {
     }
 
     /**
+     * Supply positional parameters for query.
+     *
+     * <code>
+     * $query = CouchbaseN1qlQuery::fromString('SELECT * FROM `travel-sample` WHERE city=$1 LIMIT $2');
+     * $query->positionalParams(array('New York', 3));
+     * </code>
+     *
+     * @param array $params
+     */
+    public function positionalParams($params) {
+        $this->options['args'] = $params;
+    }
+
+    /**
+     * Supply named parameters for query.
+     *
+     * <code>
+     * $query = CouchbaseN1qlQuery::fromString('SELECT * FROM `travel-sample` WHERE city=$city LIMIT $limit');
+     * $query->namedParams(array('city' => 'New York', 'limit' => 3));
+     * </code>
+     *
+     * @param array $params
+     */
+    public function namedParams($params) {
+        foreach ($params as $key => $value) {
+            $this->options['$' . $key] = $value;
+        }
+    }
+
+    /**
      * Specify the consistency level for this query.
      *
      * @param $consistency

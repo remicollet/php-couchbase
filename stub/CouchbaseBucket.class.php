@@ -304,19 +304,14 @@ class CouchbaseBucket {
     /**
      * Performs a N1QL query.
      *
-     * @param $dmlstring
+     * @param CouchbaseN1qlQuery $queryObj
      * @return mixed
      * @throws CouchbaseException
      *
      * @internal
      */
-    public function _n1ql($queryObj, $params, $json_asarray) {
+    public function _n1ql($queryObj, $json_asarray) {
         $data = $queryObj->options;
-        if (is_array($params)) {
-            foreach ($params as $key => $value) {
-                $data['$' . $key] = $value;
-            }
-        }
         $dataStr = json_encode($data, true);
         $dataOut = $this->me->n1ql_request($dataStr, $queryObj->adhoc);
 
@@ -375,12 +370,12 @@ class CouchbaseBucket {
      * @return mixed
      * @throws CouchbaseException
      */
-    public function query($query, $params = null, $json_asarray = false) {
+    public function query($query, $json_asarray = false) {
         if ($query instanceof _CouchbaseDefaultViewQuery ||
             $query instanceof _CouchbaseSpatialViewQuery) {
             return $this->_view($query, $json_asarray);
         } else if ($query instanceof CouchbaseN1qlQuery) {
-            return $this->_n1ql($query, $params, $json_asarray);
+            return $this->_n1ql($query, $json_asarray);
         } else if ($query instanceof CouchbaseSearchQuery) {
             return $this->_search($query, $json_asarray);
         } else {

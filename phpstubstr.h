@@ -829,6 +829,36 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "    }\n" \
 "\n" \
 "    /**\n" \
+"     * Supply positional parameters for query.\n" \
+"     *\n" \
+"     * <code>\n" \
+"     * $query = CouchbaseN1qlQuery::fromString('SELECT * FROM `travel-sample` WHERE city=$1 LIMIT $2');\n" \
+"     * $query->positionalParams(array('New York', 3));\n" \
+"     * </code>\n" \
+"     *\n" \
+"     * @param array $params\n" \
+"     */\n" \
+"    public function positionalParams($params) {\n" \
+"        $this->options['args'] = $params;\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
+"     * Supply named parameters for query.\n" \
+"     *\n" \
+"     * <code>\n" \
+"     * $query = CouchbaseN1qlQuery::fromString('SELECT * FROM `travel-sample` WHERE city=$city LIMIT $limit');\n" \
+"     * $query->namedParams(array('city' => 'New York', 'limit' => 3));\n" \
+"     * </code>\n" \
+"     *\n" \
+"     * @param array $params\n" \
+"     */\n" \
+"    public function namedParams($params) {\n" \
+"        foreach ($params as $key => $value) {\n" \
+"            $this->options['$' . $key] = $value;\n" \
+"        }\n" \
+"    }\n" \
+"\n" \
+"    /**\n" \
 "     * Specify the consistency level for this query.\n" \
 "     *\n" \
 "     * @param $consistency\n" \
@@ -2744,19 +2774,14 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "    /**\n" \
 "     * Performs a N1QL query.\n" \
 "     *\n" \
-"     * @param $dmlstring\n" \
+"     * @param CouchbaseN1qlQuery $queryObj\n" \
 "     * @return mixed\n" \
 "     * @throws CouchbaseException\n" \
 "     *\n" \
 "     * @internal\n" \
 "     */\n" \
-"    public function _n1ql($queryObj, $params, $json_asarray) {\n" \
+"    public function _n1ql($queryObj, $json_asarray) {\n" \
 "        $data = $queryObj->options;\n" \
-"        if (is_array($params)) {\n" \
-"            foreach ($params as $key => $value) {\n" \
-"                $data['$' . $key] = $value;\n" \
-"            }\n" \
-"        }\n" \
 "        $dataStr = json_encode($data, true);\n" \
 "        $dataOut = $this->me->n1ql_request($dataStr, $queryObj->adhoc);\n" \
 "\n" \
@@ -2815,12 +2840,12 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     * @return mixed\n" \
 "     * @throws CouchbaseException\n" \
 "     */\n" \
-"    public function query($query, $params = null, $json_asarray = false) {\n" \
+"    public function query($query, $json_asarray = false) {\n" \
 "        if ($query instanceof _CouchbaseDefaultViewQuery ||\n" \
 "            $query instanceof _CouchbaseSpatialViewQuery) {\n" \
 "            return $this->_view($query, $json_asarray);\n" \
 "        } else if ($query instanceof CouchbaseN1qlQuery) {\n" \
-"            return $this->_n1ql($query, $params, $json_asarray);\n" \
+"            return $this->_n1ql($query, $json_asarray);\n" \
 "        } else if ($query instanceof CouchbaseSearchQuery) {\n" \
 "            return $this->_search($query, $json_asarray);\n" \
 "        } else {\n" \
