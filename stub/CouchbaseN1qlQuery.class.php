@@ -43,6 +43,7 @@ class CouchbaseN1qlQuery {
      */
     public function positionalParams($params) {
         $this->options['args'] = $params;
+        return $this;
     }
 
     /**
@@ -59,6 +60,7 @@ class CouchbaseN1qlQuery {
         foreach ($params as $key => $value) {
             $this->options['$' . $key] = $value;
         }
+        return $this;
     }
 
     /**
@@ -97,6 +99,7 @@ class CouchbaseN1qlQuery {
      */
     public function adhoc($adhoc) {
         $this->adhoc = !!$adhoc;
+        return $this;
     }
 
     /**
