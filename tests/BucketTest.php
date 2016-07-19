@@ -113,6 +113,29 @@ class BucketTest extends CouchbaseTestCase {
 
     /**
      * @test
+     * Test multi upsert with the same keys
+     *
+     * @depends testConnect
+     */
+    function testMultiUpsertTheSameKey($b) {
+        $key = $this->makeKey('multiUpsert');
+        $keys = array($key, $key);
+
+        $res = $b->upsert(array(
+            $keys[0] => array('value'=>'joe'),
+            $keys[1] => array('value'=>'jack')
+        ));
+
+        $this->assertCount(1, $res);
+        $this->assertValidMetaDoc($res[$keys[0]], 'cas');
+        $this->assertValidMetaDoc($res[$keys[1]], 'cas');
+        $this->assertEquals($res[$keys[0]]->cas, $res[$keys[1]]->cas);
+
+        return $keys;
+    }
+
+    /**
+     * @test
      * Test multi get
      *
      * @depends testConnect

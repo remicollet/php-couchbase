@@ -262,6 +262,8 @@ typedef zval zapval;
 #define zap_call_user_function(o, f, r, np, p) \
     call_user_function(CG(function_table), o, &f, r, np, p TSRMLS_CC)
 
+#define zap_hash_str_update(ht, k, nk, hv) \
+    zend_hash_str_update(ht, k, nk, hv)
 #define zap_hash_str_add(ht, k, nk, hv) \
     zend_hash_str_add(ht, k, nk, hv)
 #define zap_hash_next_index_insert(ht, hv) \
@@ -399,6 +401,15 @@ static inline int _zap_get_parameters_array_ex(int param_count, zapval *args TSR
 
 #define zap_call_user_function(o, f, r, np, p) \
     call_user_function(CG(function_table), o, f, r, np, p TSRMLS_CC)
+
+static inline zval * _zap_hash_str_update(HashTable *ht, char *key, size_t len, zval *pData) {
+    if (zend_hash_update(ht, key, len + 1, (void*)&pData, sizeof(zval**), NULL) != SUCCESS) {
+        return NULL;
+    }
+    return pData;
+}
+#define zap_hash_str_update(ht, k, nk, hv) \
+    _zap_hash_str_update(ht, k, nk, hv)
 
 static inline zval * _zap_hash_str_add(HashTable *ht, char *key, size_t len, zval *pData) {
     if (zend_hash_add(ht, key, len + 1, (void*)&pData, sizeof(zval**), NULL) != SUCCESS) {

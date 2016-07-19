@@ -77,7 +77,7 @@ zval * bop_get_return_doc(zval *return_value, zapval *key, int is_mapped)
             memcpy(tmpstr, zapval_strval_p(key), key_len);
             tmpstr[key_len] = '\0';
 
-            doc = zap_hash_str_add(
+            doc = zap_hash_str_update(
                     htretval, tmpstr, key_len, zapval_zvalptr(new_doc));
         }
     }
