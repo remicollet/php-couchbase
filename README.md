@@ -13,7 +13,7 @@ Source - http://github.com/couchbaselabs/php-couchbase
 
 Bug Tracker - http://www.couchbase.com/issues/browse/PCBC
 
-Couchbase PHP Community - http://couchbase.com/communities/php
+Couchbase PHP Community - https://forums.couchbase.com/c/php-sdk
 
 
 ## Installing
@@ -42,15 +42,15 @@ Here is a simple example of instantiating a connection, setting a new document
 into the bucket and then retrieving its contents:
 
 ```php
-  $cluster = new CouchbaseCluster('192.168.7.26');
-  $db = $cluster->openBucket('default');
-  $db->upsert('testdoc', array('name'=>'Frank'));
-  $res = $db->get('testdoc');
-  var_dump($res->value);
-  // array(1) {
-  //   ["name"]=>
-  //   string(5) "Frank"
-  // }
+$cluster = new CouchbaseCluster('192.168.7.26');
+$db = $cluster->openBucket('default');
+$db->upsert('testdoc', array('name'=>'Frank'));
+$res = $db->get('testdoc');
+var_dump($res->value);
+// array(1) {
+//   ["name"]=>
+//   string(5) "Frank"
+// }
 ```
 
 ### Version Support
@@ -62,8 +62,8 @@ is posted at http://review.couchbase.org/#/c/58547/
 ## Documentation
 
 An extensive documentation is available on the Couchbase website.  Visit our
-[PHP Community](http://couchbase.com/communities/php) on
-the [Couchbase](http://couchbase.com) website for the documentation as well as
+[PHP Community](https://forums.couchbase.com/c/php-sdk) on
+the [Couchbase](http://developer.couchbase.com/documentation/server/current/sdk/php/start-using-sdk.html) website for the documentation as well as
 numerous examples and samples.
 
 
