@@ -3,6 +3,7 @@
 This library allows you to connect to a Couchbase cluster from PHP.
 It is a native PHP extension and uses the very fast libcouchbase library to
 handle communicating to the cluster over the Couchbase binary protocol.
+It supports 5.x and 7.0.x releases of PHP interpreter.
 
 [![Build Status](http://cbsdkbuilds.br19.com/buildStatus/icon?job=cb-php)](http://cbsdkbuilds.br19.com/job/cb-php/)
 
@@ -52,12 +53,6 @@ var_dump($res->value);
 //   string(5) "Frank"
 // }
 ```
-
-### Version Support
-
-As of March 2016, this extension supports PHP 5.x releases and is being ported
-to PHP 7.  Contributions toward that update are welcome!  The work in progress
-is posted at http://review.couchbase.org/#/c/58547/
 
 ## Documentation
 
