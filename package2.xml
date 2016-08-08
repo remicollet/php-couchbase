@@ -24,9 +24,9 @@
         <email>sergey@couchbase.com</email>
         <active>yes</active>
     </lead>
-    <date>2016-07-06</date>
+    <date>2016-08-08</date>
     <version>
-        <release>2.2.0</release>
+        <release>2.2.1</release>
         <api>2.2.0</api>
     </version>
     <stability>
@@ -36,14 +36,12 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        This is the GA release of the 2.2.0 SDK. It includes more features
-        to support new Couchbase Server 4.5 release and bug fixes.
+        This is the GA release of the 2.2.1 SDK. It is a maitenance release
+        with several fixes:
 
         Changes:
-        * PCBC-393: Support for enhanced durability
-        * PCBC-398: expose methods for parameterized N1QL queries
-        * PCBC-382: cluster level authentication
-        * Expose meta for N1QL and Search queries
+        * PCBC-416: fix segfault on multi-get for duplicated keys.
+        * PCBC-414: return $this from N1qlQuery methods
         * Documentation updates and bug fixes
     </notes>
 
@@ -120,6 +118,30 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2016-07-06</date>
+            <version>
+                <release>2.2.0</release>
+                <api>2.2.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
+            </license>
+            <notes>
+                This is the GA release of the 2.2.0 SDK. It includes more features
+                to support new Couchbase Server 4.5 release and bug fixes.
+
+                Changes:
+                * PCBC-393: Support for enhanced durability
+                * PCBC-398: expose methods for parameterized N1QL queries
+                * PCBC-382: cluster level authentication
+                * Expose meta for N1QL and Search queries
+                * Documentation updates and bug fixes
+            </notes>
+        </release>
         <release>
             <date>2016-06-29</date>
             <version>
