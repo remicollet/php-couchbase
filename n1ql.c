@@ -40,6 +40,13 @@ static void n1qlrow_callback(lcb_t instance, int ignoreme,
     TSRMLS_FETCH();
 
     result->header.err = resp->rc;
+    if (result->header.err != LCB_SUCCESS) {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING,
+                         "failed to perform N1QL query. %d: %.*s",
+                         (int)resp->htresp->htstatus,
+                         (int)resp->nrow,
+                         (char *)resp->row);
+    }
     result->rflags = resp->rflags;
     zapval_alloc_stringl(
             result->row, resp->row, resp->nrow);
