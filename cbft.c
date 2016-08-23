@@ -27,6 +27,8 @@
 #include "transcoding.h"
 #include "opcookie.h"
 
+#define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/cbft", __FILE__, __LINE__
+
 typedef struct {
     opcookie_res header;
     lcb_U16 rflags;
@@ -40,11 +42,8 @@ static void ftsrow_callback(lcb_t instance, int ignoreme, const lcb_RESPFTS *res
 
     result->header.err = resp->rc;
     if (result->header.err == LCB_HTTP_ERROR) {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING,
-                         "failed to search in index. %d: %.*s",
-                         (int)resp->htresp->htstatus,
-                         (int)resp->nrow,
-                         (char *)resp->row);
+        pcbc_log(LOGARGS(instance, ERROR), "Failed to search in index. %d: %.*s",
+                         (int)resp->htresp->htstatus, (int)resp->nrow, (char *)resp->row);
     }
     result->rflags = resp->rflags;
     zapval_alloc_stringl(result->row, resp->row, resp->nrow);

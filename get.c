@@ -26,6 +26,8 @@
 #include "docfrag.h"
 #include "transcoding.h"
 
+#define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/get", __FILE__, __LINE__
+
 typedef struct {
     opcookie_res header;
     zapval key;
@@ -141,7 +143,7 @@ PHP_METHOD(Bucket, get)
 
         nscheduled++;
     }
-    pcbc_assert_number_of_commands("get", nscheduled, ncmds);
+    pcbc_assert_number_of_commands(data->conn->lcb, "get", nscheduled, ncmds);
 
     if (nscheduled) {
         lcb_wait(data->conn->lcb);
@@ -205,7 +207,7 @@ PHP_METHOD(Bucket, getFromReplica)
         }
         nscheduled++;
     }
-    pcbc_assert_number_of_commands("get_from_replica", nscheduled, ncmds);
+    pcbc_assert_number_of_commands(data->conn->lcb, "get_from_replica", nscheduled, ncmds);
 
     if (nscheduled) {
         lcb_wait(data->conn->lcb);

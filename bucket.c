@@ -28,6 +28,9 @@
 #include "transcoding.h"
 #include "opcookie.h"
 
+extern struct pcbc_logger_st pcbc_logger;
+#define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/bucket", __FILE__, __LINE__
+
 zap_class_entry bucket_class;
 zend_class_entry *bucket_ce;
 char *pcbc_client_string = "PCBC/"PHP_COUCHBASE_VERSION;
@@ -176,6 +179,15 @@ PHP_METHOD(Bucket, __construct)
             throw_lcb_exception(err);
             RETURN_NULL();
         }
+        pcbc_log(LOGARGS(instance, INFO), "New lcb_t instance has been initialized");
+        err = lcb_cntl(instance, LCB_CNTL_SET, LCB_CNTL_LOGGER, &pcbc_logger);
+        if (err != LCB_SUCCESS) {
+            efree(connkey);
+            efree(name);
+            throw_lcb_exception(err);
+            RETURN_NULL();
+        }
+
         lcb_cntl(instance, LCB_CNTL_SET, LCB_CNTL_CLIENT_STRING, pcbc_client_string);
 
         lcb_install_callback3(instance, LCB_CALLBACK_GET, get_callback);
@@ -228,12 +240,14 @@ PHP_METHOD(Bucket, __construct)
             PCBCG(first_bconn) = conn;
             PCBCG(last_bconn) = conn;
         }
+        pcbc_log(LOGARGS(instance, INFO), "lcb_t instance has been connected");
     } else {
         if (dsn) efree(dsn);
         if (name) efree(name);
         if (password) efree(password);
 
         data->conn = conn_iter;
+        pcbc_log(LOGARGS(data->conn->lcb, INFO), "lcb_t instance has been fetched from cache");
     }
 
     efree(connkey);

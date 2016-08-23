@@ -23,6 +23,8 @@
 #include "bucket.h"
 #include "n1ix_spec.h"
 
+#define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/n1ix", __FILE__, __LINE__
+
 typedef struct {
     opcookie_res header;
     zapval *specs;
@@ -37,8 +39,7 @@ static void n1ix_list_callback(lcb_t instance, int cbtype, const lcb_RESPN1XMGMT
 
     result->header.err = resp->rc;
     if (result->header.err == LCB_QUERY_ERROR) {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING,
-                         "failed to list indexes. %d: %.*s",
+        pcbc_log(LOGARGS(instance, ERROR), "Failed to list indexes. %d: %.*s",
                          (int)resp->inner->htresp->htstatus,
                          (int)resp->inner->nrow,
                          (char *)resp->inner->row);

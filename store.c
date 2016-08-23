@@ -28,6 +28,8 @@
 #include "transcoding.h"
 #include "opcookie.h"
 
+#define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/store", __FILE__, __LINE__
+
 void store_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
 {
     opcookie_store_res *result = ecalloc(1, sizeof(opcookie_store_res));
@@ -54,9 +56,9 @@ void store_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
     if (cbtype == LCB_CALLBACK_STOREDUR) {
         const lcb_RESPSTOREDUR *resp = (lcb_RESPSTOREDUR *)rb;
         if (resp->rc != LCB_SUCCESS && resp->store_ok) {
-            php_error_docref(NULL TSRMLS_CC, E_WARNING,
-                             "Stored, but durability failed. Persisted(%u). Replicated(%u)",
-                             resp->dur_resp->npersisted, resp->dur_resp->nreplicated);
+            pcbc_log(LOGARGS(instance, WARN),
+                     "Stored, but durability failed. Persisted(%u). Replicated(%u)",
+                     resp->dur_resp->npersisted, resp->dur_resp->nreplicated);
         }
     }
 
@@ -134,7 +136,7 @@ PHP_METHOD(Bucket, insert)
 
         if (pcbc_encode_value(data, zvalue, &bytes, &nbytes,
                               &cmd.flags, &cmd.datatype TSRMLS_CC) != SUCCESS) {
-            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Failed to encode value for before storing");
+            pcbc_log(LOGARGS(data->conn->lcb, ERROR), "Failed to encode value for before storing");
             err = LCB_ERROR;
             break;
         }
@@ -167,7 +169,7 @@ PHP_METHOD(Bucket, insert)
         }
         nscheduled++;
     }
-    pcbc_assert_number_of_commands("insert", nscheduled, ncmds);
+    pcbc_assert_number_of_commands(data->conn->lcb, "insert", nscheduled, ncmds);
 
     if (nscheduled) {
         lcb_wait(data->conn->lcb);
@@ -224,7 +226,7 @@ PHP_METHOD(Bucket, upsert)
 
         if (pcbc_encode_value(data, zvalue, &bytes, &nbytes,
                               &cmd.flags, &cmd.datatype TSRMLS_CC) != SUCCESS) {
-            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Failed to encode value for before storing");
+            pcbc_log(LOGARGS(data->conn->lcb, ERROR), "Failed to encode value for before storing");
             err = LCB_ERROR;
             break;
         }
@@ -257,7 +259,7 @@ PHP_METHOD(Bucket, upsert)
         }
         nscheduled++;
     }
-    pcbc_assert_number_of_commands("upsert", nscheduled, ncmds);
+    pcbc_assert_number_of_commands(data->conn->lcb, "upsert", nscheduled, ncmds);
 
     if (nscheduled) {
         lcb_wait(data->conn->lcb);
@@ -315,7 +317,7 @@ PHP_METHOD(Bucket, replace)
 
         if (pcbc_encode_value(data, zvalue, &bytes, &nbytes,
                               &cmd.flags, &cmd.datatype TSRMLS_CC) != SUCCESS) {
-            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Failed to encode value for before storing");
+            pcbc_log(LOGARGS(data->conn->lcb, ERROR), "Failed to encode value for before storing");
             err = LCB_ERROR;
             break;
         }
@@ -351,7 +353,7 @@ PHP_METHOD(Bucket, replace)
         }
         nscheduled++;
     }
-    pcbc_assert_number_of_commands("replace", nscheduled, ncmds);
+    pcbc_assert_number_of_commands(data->conn->lcb, "replace", nscheduled, ncmds);
 
     if (nscheduled) {
         lcb_wait(data->conn->lcb);
@@ -406,7 +408,7 @@ PHP_METHOD(Bucket, append)
 
         if (pcbc_encode_value(data, zvalue, &bytes, &nbytes,
                               &cmd.flags, &cmd.datatype TSRMLS_CC) != SUCCESS) {
-            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Failed to encode value for before storing");
+            pcbc_log(LOGARGS(data->conn->lcb, ERROR), "Failed to encode value for before storing");
             err = LCB_ERROR;
             break;
         }
@@ -439,7 +441,7 @@ PHP_METHOD(Bucket, append)
         }
         nscheduled++;
     }
-    pcbc_assert_number_of_commands("append", nscheduled, ncmds);
+    pcbc_assert_number_of_commands(data->conn->lcb, "append", nscheduled, ncmds);
 
     if (nscheduled) {
         lcb_wait(data->conn->lcb);
@@ -494,7 +496,7 @@ PHP_METHOD(Bucket, prepend)
 
         if (pcbc_encode_value(data, zvalue, &bytes, &nbytes,
                               &cmd.flags, &cmd.datatype TSRMLS_CC) != SUCCESS) {
-            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Failed to encode value for before storing");
+            pcbc_log(LOGARGS(data->conn->lcb, ERROR), "Failed to encode value for before storing");
             err = LCB_ERROR;
             break;
         }
@@ -527,7 +529,7 @@ PHP_METHOD(Bucket, prepend)
         }
         nscheduled++;
     }
-    pcbc_assert_number_of_commands("prepend", nscheduled, ncmds);
+    pcbc_assert_number_of_commands(data->conn->lcb, "prepend", nscheduled, ncmds);
 
     if (nscheduled) {
         lcb_wait(data->conn->lcb);

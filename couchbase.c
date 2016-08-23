@@ -34,10 +34,52 @@
 #include <zlib.h>
 #endif
 
+#define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/ext", __FILE__, __LINE__
+
 typedef unsigned char uint8_t;
 typedef unsigned int uint32_t;
 
 ZEND_DECLARE_MODULE_GLOBALS(couchbase)
+
+extern struct pcbc_logger_st pcbc_logger;
+
+static PHP_INI_MH(OnUpdateLogLevel)
+{
+    const char *str_val =
+#if PHP_VERSION_ID >= 70000
+        ZSTR_VAL(new_value);
+#else
+        new_value;
+#endif
+    if (!new_value) {
+        pcbc_logger.minlevel = LCB_LOG_WARN;
+    } else if (!strcmp(new_value, "TRACE") || !strcmp(new_value, "TRAC")) {
+        pcbc_logger.minlevel = LCB_LOG_TRACE;
+    } else if (!strcmp(new_value, "DEBUG") || !strcmp(new_value, "DEBG")) {
+        pcbc_logger.minlevel = LCB_LOG_DEBUG;
+    } else if (!strcmp(new_value, "INFO")) {
+        pcbc_logger.minlevel = LCB_LOG_INFO;
+    } else if (!strcmp(new_value, "WARN")) {
+        pcbc_logger.minlevel = LCB_LOG_WARN;
+    } else if (!strcmp(new_value, "ERROR") || !strcmp(new_value, "EROR")) {
+        pcbc_logger.minlevel = LCB_LOG_ERROR;
+    } else if (!strcmp(new_value, "FATAL") || !strcmp(new_value, "FATL")) {
+        pcbc_logger.minlevel = LCB_LOG_FATAL;
+    } else {
+        return FAILURE;
+    }
+
+#if PHP_VERSION_ID >= 70000
+    return OnUpdateString(entry, new_value, mh_arg1, mh_arg2, mh_arg3, stage);
+#else
+    return OnUpdateString(entry, new_value, new_value_length, mh_arg1, mh_arg2, mh_arg3, stage TSRMLS_CC);
+#endif
+}
+
+PHP_INI_BEGIN()
+STD_PHP_INI_ENTRY(PCBC_INIENT_LOG_LEVEL, PCBC_INIDFL_LOG_LEVEL, PHP_INI_ALL,
+                  OnUpdateLogLevel, log_level, zend_couchbase_globals, couchbase_globals)
+PHP_INI_END()
 
 #define PCBC_LONG_CONSTANT(key, val) \
 	REGISTER_LONG_CONSTANT("COUCHBASE_"key, val, CONST_CS | CONST_PERSISTENT)
@@ -55,6 +97,7 @@ static void php_extname_init_globals(zend_couchbase_globals *couchbase_globals)
 PHP_MINIT_FUNCTION(couchbase)
 {
 	ZEND_INIT_MODULE_GLOBALS(couchbase, php_extname_init_globals, NULL);
+        REGISTER_INI_ENTRIES();
 
 	couchbase_init_exceptions(INIT_FUNC_ARGS_PASSTHRU);
 	couchbase_init_metadoc(INIT_FUNC_ARGS_PASSTHRU);
@@ -132,6 +175,7 @@ PHP_MINIT_FUNCTION(couchbase)
 PHP_MSHUTDOWN_FUNCTION(couchbase)
 {
 	couchbase_shutdown_bucket(SHUTDOWN_FUNC_ARGS_PASSTHRU);
+        UNREGISTER_INI_ENTRIES();
 
 	return SUCCESS;
 }
@@ -151,7 +195,7 @@ PHP_RINIT_FUNCTION(couchbase)
         pcbc_stub_data *this_stub = &PCBC_PHP_CODESTR[stub_idx];
         int retval = zend_eval_string((char*)this_stub->data, NULL, (char*)this_stub->filename TSRMLS_CC);
         if (retval != SUCCESS) {
-            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Failed to inject Couchbase stub: %s.", (char *)this_stub->filename);
+            pcbc_log(LOGARGS(ERROR), "Failed to inject Couchbase stub: %s.", (char *)this_stub->filename);
             return FAILURE;
         }
     }
@@ -273,6 +317,7 @@ static PHP_MINFO_FUNCTION(couchbase)
     php_info_print_table_row(2, "libcouchbase runtime version", buf);
     php_info_print_table_row(2, "libcouchbase headers version", LCB_VERSION_STRING " (git: " LCB_VERSION_CHANGESET ")");
     php_info_print_table_end();
+    DISPLAY_INI_ENTRIES();
 }
 
 static zend_function_entry couchbase_functions[] = {

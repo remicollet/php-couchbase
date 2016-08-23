@@ -28,6 +28,8 @@
 #include "transcoding.h"
 #include "opcookie.h"
 
+#define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/subdoc", __FILE__, __LINE__
+
 typedef struct {
     opcookie_res header;
     zapval value;
@@ -124,6 +126,7 @@ typedef struct {
     int nspecs;
     lcb_SDSPEC *specs;
     smart_str *bufs;
+    lcb_t instance;
 } pcbc_sd_params;
 
 static int extract_specs(zapval *pDest, void *argument TSRMLS_DC)
@@ -184,7 +187,7 @@ static int extract_specs(zapval *pDest, void *argument TSRMLS_DC)
             for (; n && isspace(p[n-1]); n--) {
             }
             if (n < 3 || p[0] != '[' || p[n-1] != ']') {
-                php_error_docref(NULL TSRMLS_CC, E_WARNING, "multivalue operation expects non-empty array");
+                pcbc_log(LOGARGS(params->instance, ERROR), "multivalue operation expects non-empty array");
                 return ZEND_HASH_APPLY_KEEP;
             }
             p++;
@@ -222,6 +225,7 @@ PHP_METHOD(Bucket, subdoc_request)
     LCB_CMD_SET_KEY(&cmd, Z_STRVAL_P(zid), Z_STRLEN_P(zid));
 
     nspecs = zend_hash_num_elements(Z_ARRVAL_P(zcommands));
+    params.instance = data->conn->lcb;
     params.nspecs = 0;
     params.specs = emalloc(sizeof(lcb_SDSPEC) * nspecs);
     memset(params.specs, 0, sizeof(lcb_SDSPEC) * nspecs);

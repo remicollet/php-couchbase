@@ -29,6 +29,7 @@
 #include <php.h>
 #include <zend_exceptions.h>
 #include "php_couchbase.h"
+#include "log.h"
 
 enum pcbc_constants {
 	PERSISTTO_ONE = 1,
@@ -51,6 +52,7 @@ ZEND_BEGIN_MODULE_GLOBALS(couchbase)
 	// Linked list of bucket connections
 	pcbc_lcb *first_bconn;
 	pcbc_lcb *last_bconn;
+	char *log_level;
 ZEND_END_MODULE_GLOBALS(couchbase)
 ZEND_EXTERN_MODULE_GLOBALS(couchbase)
 
@@ -65,5 +67,8 @@ void couchbase_init_cluster(INIT_FUNC_ARGS);
 void couchbase_init_bucket(INIT_FUNC_ARGS);
 
 void couchbase_shutdown_bucket(SHUTDOWN_FUNC_ARGS);
+
+#define PCBC_INIENT_LOG_LEVEL "couchbase.log_level"
+#define PCBC_INIDFL_LOG_LEVEL "WARN"
 
 #endif /* COUCHBASE_H_ */

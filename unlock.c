@@ -27,6 +27,8 @@
 #include "transcoding.h"
 #include "opcookie.h"
 
+#define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/unlock", __FILE__, __LINE__
+
 typedef struct {
     opcookie_res header;
     zapval key;
@@ -119,7 +121,7 @@ PHP_METHOD(Bucket, unlock)
         }
         nscheduled++;
     }
-    pcbc_assert_number_of_commands("unlock", nscheduled, ncmds);
+    pcbc_assert_number_of_commands(data->conn->lcb, "unlock", nscheduled, ncmds);
 
     if (nscheduled) {
         lcb_wait(data->conn->lcb);

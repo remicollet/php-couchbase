@@ -52,11 +52,11 @@ typedef struct bucket_object {
 
 #define PCBC_PHP_THISOBJ() zap_fetch_this(bucket_object)
 
-#define pcbc_assert_number_of_commands(cmd, nscheduled, ntotal)         \
+#define pcbc_assert_number_of_commands(lcb, cmd, nscheduled, ntotal)    \
     if (nscheduled != ntotal) {                                         \
-        php_error_docref(NULL TSRMLS_CC, E_WARNING,                     \
-                         "Failed to schedule %s commands (%d out of %d sent)", \
-                         cmd, nscheduled, ntotal);                      \
+        pcbc_log(LOGARGS(lcb, ERROR),                                   \
+                 "Failed to schedule %s commands (%d out of %d sent)",  \
+                 cmd, nscheduled, ntotal);                              \
     }
 
 zval* bop_get_return_doc(zval *return_value, zapval *key, int is_mapped);

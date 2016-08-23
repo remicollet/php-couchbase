@@ -13,6 +13,7 @@ if (PHP_COUCHBASE != "no") {
         "exception.c " +
         "get.c " +
         "http.c " +
+        "log.c " +
         "metadoc.c " +
         "n1ix_create.c " +
         "n1ix_drop.c " +

@@ -28,6 +28,8 @@
 #include "transcoding.h"
 #include "opcookie.h"
 
+#define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/counter", __FILE__, __LINE__
+
 typedef struct {
     opcookie_res header;
     zapval key;
@@ -147,7 +149,7 @@ PHP_METHOD(Bucket, counter)
         }
         nscheduled++;
     }
-    pcbc_assert_number_of_commands("counter", nscheduled, ncmds);
+    pcbc_assert_number_of_commands(data->conn->lcb, "counter", nscheduled, ncmds);
 
     if (nscheduled) {
         lcb_wait(data->conn->lcb);

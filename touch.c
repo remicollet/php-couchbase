@@ -27,6 +27,8 @@
 #include "transcoding.h"
 #include "opcookie.h"
 
+#define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/touch", __FILE__, __LINE__
+
 void touch_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
 {
     opcookie_store_res *result = ecalloc(1, sizeof(opcookie_store_res));
@@ -82,7 +84,7 @@ PHP_METHOD(Bucket, touch)
         }
         nscheduled++;
     }
-    pcbc_assert_number_of_commands("touch", nscheduled, ncmds);
+    pcbc_assert_number_of_commands(data->conn->lcb, "touch", nscheduled, ncmds);
 
     if (nscheduled) {
         lcb_wait(data->conn->lcb);
