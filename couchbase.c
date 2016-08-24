@@ -53,17 +53,17 @@ static PHP_INI_MH(OnUpdateLogLevel)
 #endif
     if (!new_value) {
         pcbc_logger.minlevel = LCB_LOG_WARN;
-    } else if (!strcmp(new_value, "TRACE") || !strcmp(new_value, "TRAC")) {
+    } else if (!strcmp(str_val, "TRACE") || !strcmp(str_val, "TRAC")) {
         pcbc_logger.minlevel = LCB_LOG_TRACE;
-    } else if (!strcmp(new_value, "DEBUG") || !strcmp(new_value, "DEBG")) {
+    } else if (!strcmp(str_val, "DEBUG") || !strcmp(str_val, "DEBG")) {
         pcbc_logger.minlevel = LCB_LOG_DEBUG;
-    } else if (!strcmp(new_value, "INFO")) {
+    } else if (!strcmp(str_val, "INFO")) {
         pcbc_logger.minlevel = LCB_LOG_INFO;
-    } else if (!strcmp(new_value, "WARN")) {
+    } else if (!strcmp(str_val, "WARN")) {
         pcbc_logger.minlevel = LCB_LOG_WARN;
-    } else if (!strcmp(new_value, "ERROR") || !strcmp(new_value, "EROR")) {
+    } else if (!strcmp(str_val, "ERROR") || !strcmp(str_val, "EROR")) {
         pcbc_logger.minlevel = LCB_LOG_ERROR;
-    } else if (!strcmp(new_value, "FATAL") || !strcmp(new_value, "FATL")) {
+    } else if (!strcmp(str_val, "FATAL") || !strcmp(str_val, "FATL")) {
         pcbc_logger.minlevel = LCB_LOG_FATAL;
     } else {
         return FAILURE;
@@ -99,6 +99,7 @@ PHP_MINIT_FUNCTION(couchbase)
 	ZEND_INIT_MODULE_GLOBALS(couchbase, php_extname_init_globals, NULL);
         REGISTER_INI_ENTRIES();
 
+        zapval_alloc_null(pcbc_logger.psr3_logger);
 	couchbase_init_exceptions(INIT_FUNC_ARGS_PASSTHRU);
 	couchbase_init_metadoc(INIT_FUNC_ARGS_PASSTHRU);
 	couchbase_init_docfrag(INIT_FUNC_ARGS_PASSTHRU);
@@ -200,6 +201,17 @@ PHP_RINIT_FUNCTION(couchbase)
         }
     }
     return SUCCESS;
+}
+
+PHP_FUNCTION(pcbc__internal_set_logger)
+{
+    zval *logger;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &logger) == FAILURE) {
+        RETURN_NULL();
+    }
+    zapval_destroy(pcbc_logger.psr3_logger);
+    zapval_alloc_zval(pcbc_logger.psr3_logger, logger, 1, 0);
 }
 
 PHP_FUNCTION(couchbase_zlib_compress)
@@ -325,6 +337,7 @@ static zend_function_entry couchbase_functions[] = {
     PHP_FE(couchbase_fastlz_decompress, NULL)
     PHP_FE(couchbase_zlib_compress, NULL)
     PHP_FE(couchbase_zlib_decompress, NULL)
+    PHP_FE(pcbc__internal_set_logger, NULL)
     {NULL, NULL, NULL}
 };
 

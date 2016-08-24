@@ -18,11 +18,12 @@
 #define LOG_H_
 
 #include <libcouchbase/couchbase.h>
-#include <php.h>
+#include "zap.h"
 
 struct pcbc_logger_st {
     struct lcb_logprocs_st base;
     int minlevel;
+    zapval psr3_logger;
 };
 
 void pcbc_log(int severity, lcb_t instance, const char *subsys,

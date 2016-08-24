@@ -17,8 +17,8 @@
 #include <libcouchbase/couchbase.h>
 #include <php.h>
 
-#include "zap.h"
 #include "log.h"
+#include "zap.h"
 
 static const char *level_to_string(int severity)
 {
@@ -40,6 +40,34 @@ static const char *level_to_string(int severity)
     }
 }
 
+static void level_to_psr3(int severity, zapval *result)
+{
+    switch (severity) {
+    case LCB_LOG_TRACE:
+        zapval_alloc_stringl(*result, "debug", strlen("debug"));
+        return;
+    case LCB_LOG_DEBUG:
+        zapval_alloc_stringl(*result, "debug", strlen("debug"));
+        return;
+    case LCB_LOG_INFO:
+        zapval_alloc_stringl(*result, "info", strlen("info"));
+        return;
+    case LCB_LOG_WARN:
+        zapval_alloc_stringl(*result, "warning", strlen("warning"));
+        return;
+    case LCB_LOG_ERROR:
+        zapval_alloc_stringl(*result, "error", strlen("error"));
+        return;
+    case LCB_LOG_FATAL:
+        zapval_alloc_stringl(*result, "emergency", strlen("emergency"));
+        return;
+    default:
+        return;
+    }
+}
+
+static void invoke_psr3_logger(int severity, const char *msg TSRMLS_DC);
+
 static void log_handler(struct lcb_logprocs_st *procs, unsigned int iid,
                         const char *subsys, int severity, const char *srcfile,
                         int srcline, const char *fmt, va_list ap)
@@ -57,7 +85,11 @@ static void log_handler(struct lcb_logprocs_st *procs, unsigned int iid,
     spprintf(&buf, 0, "[cb,%s] (%s L:%d I:%d) %s", level_to_string(severity),
              subsys, srcline, iid, msg);
     efree(msg);
-    php_log_err(buf TSRMLS_CC);
+    if (zap_zval_is_null(zapval_zvalptr(logger->psr3_logger))) {
+        php_log_err(buf TSRMLS_CC);
+    } else {
+        invoke_psr3_logger(severity, buf TSRMLS_CC);
+    }
     efree(buf);
 }
 
@@ -91,6 +123,35 @@ void pcbc_log(int severity, lcb_t instance, const char *subsys,
     }
     efree(msg);
 
-    php_log_err(buf TSRMLS_CC);
+    if (!zapval_zvalptr(pcbc_logger.psr3_logger) || zap_zval_is_null(zapval_zvalptr(pcbc_logger.psr3_logger))) {
+        php_log_err(buf TSRMLS_CC);
+    } else {
+        invoke_psr3_logger(severity, buf TSRMLS_CC);
+    }
     efree(buf);
+}
+
+zapval psr3_levels[LCB_LOG_MAX];
+zapval psr3_method_name;
+
+static void invoke_psr3_logger(int severity, const char *msg TSRMLS_DC)
+{
+    zapval message, rv;
+
+    zapval_alloc_stringl(message, msg, strlen(msg));
+    zapval_alloc_null(rv);
+
+    if (!zapval_zvalptr(psr3_method_name) || zap_zval_is_null(zapval_zvalptr(psr3_method_name))) {
+        zapval_alloc_stringl(psr3_method_name, "log", strlen("log"));
+    }
+    if (!zapval_zvalptr(psr3_levels[severity]) || zap_zval_is_null(zapval_zvalptr(psr3_levels[severity]))) {
+        level_to_psr3(severity, &psr3_levels[severity]);
+    }
+
+    {
+        zapval params[] = {psr3_levels[severity], message};
+        call_user_function(CG(function_table), &pcbc_logger.psr3_logger,
+                           zapval_zvalptr(psr3_method_name), zapval_zvalptr(rv),
+                           2, params TSRMLS_CC);
+    }
 }

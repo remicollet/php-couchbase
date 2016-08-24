@@ -30,6 +30,16 @@ class CouchbaseCluster {
     private $authenticator;
 
     /**
+     * Sets a logger instance for the extension.
+     *
+     * @param Psr\Log\LoggerInterface $logger PSR-3 compatible logger
+     */
+    public static function setLogger($logger)
+    {
+        pcbc__internal_set_logger($logger);
+    }
+
+    /**
      * Creates a connection to a cluster.
      *
      * Creates a CouchbaseCluster object and begins the bootstrapping
