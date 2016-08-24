@@ -5,9 +5,6 @@ It is a native PHP extension and uses the very fast libcouchbase library to
 handle communicating to the cluster over the Couchbase binary protocol.
 It supports 5.x and 7.0.x releases of PHP interpreter.
 
-[![Build Status](http://cbsdkbuilds.br19.com/buildStatus/icon?job=cb-php)](http://cbsdkbuilds.br19.com/job/cb-php/)
-
-
 ## Useful Links
 
 Source - http://github.com/couchbaselabs/php-couchbase
@@ -16,22 +13,37 @@ Bug Tracker - http://www.couchbase.com/issues/browse/PCBC
 
 Couchbase PHP Community - https://forums.couchbase.com/c/php-sdk
 
+Documentation - http://developer.couchbase.com/documentation/server/current/sdk/php/start-using-sdk.html
+
 
 ## Installing
 
-This iteration of the Couchbase PHP client is not currently available via
-PECL, and as such must be compiled manually in order to be used.  The extension
-will become available via PECL once it leaves the DP phase.  Until then, you may
-install by downloading a prebuilt binary of the DP available on couchbase.com
-for the Windows platform, or by checking out the repository and building
-it directly:
+Couchbase PHP client generally available through PECL: http://pecl.php.net/package/couchbase
 
 ```bash
-phpize
-./configure --enable-couchbase
-make && make install
+pecl install couchbase
 ```
 
+Additionally Windows builds available from [Release Notes and Archives][http://developer.couchbase.com/server/other-products/release-notes-archives/php-sdk] page.
+
+On MacOS platform, the library could be installed via Homebrew:
+
+```bash
+brew tap homebrew/homebrew-php
+brew install php70-couchbase # or other version instead of 70 (PHP 7.0)
+```
+
+If you are going to prepare patches, or just need to install the most recent
+version from git, make sure you have PHP development tools and headers
+installed, and run the following commands:
+
+```bash
+git clone git://github.com/couchbase/php-couchbase.git
+cd php-couchbase
+phpize
+./configure --with-couchbase
+make && make install
+```
 
 ## Introduction
 
@@ -65,10 +77,21 @@ numerous examples and samples.
 ## Source Control
 
 The source code is available at
-[https://github.com/couchbaselabs/php-couchbase](https://github.com/couchbaselabs/php-couchbase).
+[https://github.com/couchbase/php-couchbase](https://github.com/couchbase/php-couchbase).
 
 To execute our test suite, simply install and execute phpunit against your
-checked out source code.
+checked out source code. Tests assume that you have Couchbase Server with
+default bucket running on localhost (otherwise use environment variable
+`CPDSN`, `CPBUCKET`, `CPUSER`, `CPPASS`. E.g. `CPDSN=couchbase://192.168.1.42/
+CPBUCKET=travel-sample`).
+
+```bash
+curl -L https://phar.phpunit.de/phpunit.phar > ~/bin/phpunit
+chmod a+x ~/bin/phpunit
+# or just 'dnf install php-phpunit-PHPUnit' on Fedora 24+
+
+phpunit tests/
+```
 
 
 ## License
