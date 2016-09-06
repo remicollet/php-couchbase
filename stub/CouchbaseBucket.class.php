@@ -190,7 +190,7 @@ class CouchbaseBucket {
      */
     public function remove($ids, $options = array()) {
         return $this->_endure($ids, $options,
-            $this->me->remove($ids, $options));
+            $this->me->remove(is_array($ids) ? array_unique($ids) : $ids, $options));
     }
 
     /**
@@ -201,7 +201,7 @@ class CouchbaseBucket {
      * @return mixed
      */
     public function get($ids, $options = array()) {
-        return $this->me->get($ids, $options);
+        return $this->me->get(is_array($ids) ? array_unique($ids) : $ids, $options);
     }
 
     /**
@@ -273,7 +273,7 @@ class CouchbaseBucket {
      * @return mixed
      */
     public function unlock($ids, $options = array()) {
-        return $this->me->unlock($ids, $options);
+        return $this->me->unlock(is_array($ids) ? array_unique($ids) : $ids, $options);
     }
 
     /**

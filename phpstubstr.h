@@ -2278,7 +2278,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "    /**\n" \
 "     * Sets a logger instance for the extension.\n" \
 "     *\n" \
-"     * @param LoggerInterface $logger PSR-3 compatible logger\n" \
+"     * @param Psr\\Log\\LoggerInterface $logger PSR-3 compatible logger\n" \
 "     */\n" \
 "    public static function setLogger($logger)\n" \
 "    {\n" \
@@ -2673,7 +2673,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     */\n" \
 "    public function remove($ids, $options = array()) {\n" \
 "        return $this->_endure($ids, $options,\n" \
-"            $this->me->remove($ids, $options));\n" \
+"            $this->me->remove(is_array($ids) ? array_unique($ids) : $ids, $options));\n" \
 "    }\n" \
 "\n" \
 "    /**\n" \
@@ -2684,7 +2684,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     * @return mixed\n" \
 "     */\n" \
 "    public function get($ids, $options = array()) {\n" \
-"        return $this->me->get($ids, $options);\n" \
+"        return $this->me->get(is_array($ids) ? array_unique($ids) : $ids, $options);\n" \
 "    }\n" \
 "\n" \
 "    /**\n" \
@@ -2756,7 +2756,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "     * @return mixed\n" \
 "     */\n" \
 "    public function unlock($ids, $options = array()) {\n" \
-"        return $this->me->unlock($ids, $options);\n" \
+"        return $this->me->unlock(is_array($ids) ? array_unique($ids) : $ids, $options);\n" \
 "    }\n" \
 "\n" \
 "    /**\n" \
