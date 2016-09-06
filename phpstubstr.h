@@ -3201,6 +3201,10 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "    public function upsertDesignDocument($name, $data) {\n" \
 "        $path = '_design/' . $name;\n" \
 "        $res = $this->_me->http_request(1, 3, $path, json_encode($data), 1);\n" \
+"        $data = json_decode($res, true);\n" \
+"        if (isset($data['error'])) {\n" \
+"            throw new CouchbaseException($data['reason']);\n" \
+"        }\n" \
 "        return true;\n" \
 "    }\n" \
 "\n" \
