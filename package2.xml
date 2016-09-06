@@ -24,9 +24,9 @@
         <email>sergey@couchbase.com</email>
         <active>yes</active>
     </lead>
-    <date>2016-08-08</date>
+    <date>2016-09-06</date>
     <version>
-        <release>2.2.1</release>
+        <release>2.2.2</release>
         <api>2.2.0</api>
     </version>
     <stability>
@@ -36,12 +36,14 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        This is the GA release of the 2.2.1 SDK. It is a maitenance release
+        This is the GA release of the 2.2.2 SDK. It is a maitenance release
         with several fixes:
 
         Changes:
-        * PCBC-416: fix segfault on multi-get for duplicated keys.
-        * PCBC-414: return $this from N1qlQuery methods
+        * PCBC-410: consolidate libcouchbase and extension loggers, and expose them through PHP logger
+        * PCBC-409: bubble errors from server on view upsert
+        * PCBC-417: do not send duplicated requests for multi-get
+        * PCBC-423: report N1QL error details via logger
         * Documentation updates and bug fixes
     </notes>
 
@@ -96,6 +98,8 @@
             <file role="src" name="transcoding.h"/>
             <file role="src" name="unlock.c"/>
             <file role="src" name="zap.h"/>
+            <file role="src" name="log.c"/>
+            <file role="src" name="log.h"/>
         </dir>
     </contents>
     <dependencies>
@@ -118,6 +122,28 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2016-08-08</date>
+            <version>
+                <release>2.2.1</release>
+                <api>2.2.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
+            </license>
+            <notes>
+                This is the GA release of the 2.2.1 SDK. It is a maitenance release
+                with several fixes:
+
+                Changes:
+                * PCBC-416: fix segfault on multi-get for duplicated keys.
+                * PCBC-414: return $this from N1qlQuery methods
+                * Documentation updates and bug fixes
+            </notes>
+        </release>
         <release>
             <date>2016-07-06</date>
             <version>
