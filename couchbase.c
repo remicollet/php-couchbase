@@ -99,7 +99,6 @@ PHP_MINIT_FUNCTION(couchbase)
 	ZEND_INIT_MODULE_GLOBALS(couchbase, php_extname_init_globals, NULL);
         REGISTER_INI_ENTRIES();
 
-        zapval_alloc_null(pcbc_logger.psr3_logger);
 	couchbase_init_exceptions(INIT_FUNC_ARGS_PASSTHRU);
 	couchbase_init_metadoc(INIT_FUNC_ARGS_PASSTHRU);
 	couchbase_init_docfrag(INIT_FUNC_ARGS_PASSTHRU);
@@ -201,17 +200,6 @@ PHP_RINIT_FUNCTION(couchbase)
         }
     }
     return SUCCESS;
-}
-
-PHP_FUNCTION(pcbc__internal_set_logger)
-{
-    zval *logger;
-
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &logger) == FAILURE) {
-        RETURN_NULL();
-    }
-    zapval_destroy(pcbc_logger.psr3_logger);
-    zapval_alloc_zval(pcbc_logger.psr3_logger, logger, 1, 0);
 }
 
 PHP_FUNCTION(couchbase_zlib_compress)
@@ -337,7 +325,6 @@ static zend_function_entry couchbase_functions[] = {
     PHP_FE(couchbase_fastlz_decompress, NULL)
     PHP_FE(couchbase_zlib_compress, NULL)
     PHP_FE(couchbase_zlib_decompress, NULL)
-    PHP_FE(pcbc__internal_set_logger, NULL)
     {NULL, NULL, NULL}
 };
 

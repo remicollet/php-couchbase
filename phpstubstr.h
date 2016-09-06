@@ -2276,16 +2276,6 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "    private $authenticator;\n" \
 "\n" \
 "    /**\n" \
-"     * Sets a logger instance for the extension.\n" \
-"     *\n" \
-"     * @param Psr\\Log\\LoggerInterface $logger PSR-3 compatible logger\n" \
-"     */\n" \
-"    public static function setLogger($logger)\n" \
-"    {\n" \
-"        pcbc__internal_set_logger($logger);\n" \
-"    }\n" \
-"\n" \
-"    /**\n" \
 "     * Creates a connection to a cluster.\n" \
 "     *\n" \
 "     * Creates a CouchbaseCluster object and begins the bootstrapping\n" \
