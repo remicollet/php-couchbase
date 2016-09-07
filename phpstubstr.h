@@ -2331,7 +2331,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "                $password = $credentials[1];\n" \
 "            }\n" \
 "            if (!($username && $password)) {\n" \
-"                throw InvalidArgumentException('invalid credentials for cluster manager');\n" \
+"                throw new InvalidArgumentException('invalid credentials for cluster manager');\n" \
 "            }\n" \
 "            $this->_manager = new CouchbaseClusterManager(\n" \
 "                cbdsn_stringify($this->_dsn), $username, $password);\n" \

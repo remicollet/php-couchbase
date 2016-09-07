@@ -85,7 +85,7 @@ class CouchbaseCluster {
                 $password = $credentials[1];
             }
             if (!($username && $password)) {
-                throw InvalidArgumentException('invalid credentials for cluster manager');
+                throw new InvalidArgumentException('invalid credentials for cluster manager');
             }
             $this->_manager = new CouchbaseClusterManager(
                 cbdsn_stringify($this->_dsn), $username, $password);
