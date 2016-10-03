@@ -34,6 +34,7 @@ class BucketTest extends CouchbaseTestCase {
     function testConnect() {
         $h = new CouchbaseCluster($this->testDsn);
         $b = $h->openBucket();
+        $this->setTimeouts($b);
         return $b;
     }
 
@@ -318,6 +319,7 @@ class BucketTest extends CouchbaseTestCase {
 
         $h = new CouchbaseCluster($this->testDsn);
         $b = $h->openBucket();
+        $this->setTimeouts($b);
 
         $key1 = $this->makeKey('basicUpsertKey1');
         $key2 = $this->makeKey('basicUpsertKey2');
@@ -360,6 +362,7 @@ class BucketTest extends CouchbaseTestCase {
     function testOptionVals() {
         $h = new CouchbaseCluster($this->testDsn);
         $b = $h->openBucket();
+        $this->setTimeouts($b);
 
         $checkVal = 243;
 
@@ -400,11 +403,13 @@ class BucketTest extends CouchbaseTestCase {
         $h = new CouchbaseCluster(
             $this->testDsn . '?config_cache=./test.cache');
         $b = $h->openBucket();
+        $this->setTimeouts($b);
         $b->upsert($key, 'yes');
 
         $h2 = new CouchbaseCluster(
             $this->testDsn . '?config_cache=./test.cache');
         $b2 = $h2->openBucket();
+        $this->setTimeouts($b2);
         $res = $b2->get($key);
 
         $this->assertValidMetaDoc($res, 'value', 'cas', 'flags');
