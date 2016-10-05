@@ -197,7 +197,7 @@ class _CouchbaseDefaultViewQuery extends CouchbaseViewQuery {
           $this->options['group'] = 'true';
         } else if ($group == false) {
           $this->options['group'] = 'false';
-          
+
         // For backwards compatibility
         } else if ($group >= 0) {
             $this->options['group'] = 'false';
@@ -208,10 +208,10 @@ class _CouchbaseDefaultViewQuery extends CouchbaseViewQuery {
         }
         return $this;
     }
-    
+
     /**
      * Specifies the level at which to perform view grouping.
-     * 
+     *
      * @param $group_level
      * @returns $this
      */
@@ -231,7 +231,7 @@ class _CouchbaseDefaultViewQuery extends CouchbaseViewQuery {
      * @return $this
      */
     public function key($key) {
-        $this->options['key'] = 
+        $this->options['key'] =
             str_replace('\\\\', '\\', json_encode($key));
         return $this;
     }

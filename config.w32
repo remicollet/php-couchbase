@@ -32,8 +32,9 @@ if (PHP_COUCHBASE != "no") {
 
 	if (CHECK_LIB("libcouchbase.lib", "couchbase", PHP_COUCHBASE) &&
 			CHECK_HEADER_ADD_INCLUDE("libcouchbase\\couchbase.h", "CFLAGS_COUCHBASE", PHP_COUCHBASE+"\\include;"+PHP_PHP_BUILD+"\\include\\libcouchbase")){
-		EXTENSION("couchbase", couchbase_source);
+		EXTENSION("couchbase", couchbase_source, PHP_COUCHBASE_SHARED, "/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1");
 		ADD_SOURCES(configure_module_dirname + "\\fastlz", "fastlz.c", "couchbase");
+	        ADD_EXTENSION_DEP('couchbase', 'pcs');
 		AC_DEFINE('HAVE_COUCHBASELIB', 1, 'Have Couchbase library');
 		MESSAGE("\tlibcouchbase build");
 	} else {

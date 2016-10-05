@@ -47,6 +47,17 @@ if test "$PHP_COUCHBASE" != "no"; then
   else
     COUCHBASE_FILES="${COUCHBASE_FILES} fastlz/fastlz.c"
   fi
-  PHP_NEW_EXTENSION(couchbase, ${COUCHBASE_FILES}, $ext_shared)
+  PHP_NEW_EXTENSION(couchbase, ${COUCHBASE_FILES}, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
   PHP_ADD_BUILD_DIR($ext_builddir/fastlz, 1)
+  PHP_ADD_EXTENSION_DEP(couchbase, pcs)
+fi
+
+PHP_ADD_MAKEFILE_FRAGMENT
+
+AC_MSG_CHECKING([if the PCS extension is installed])
+if test -f "$phpincludedir/ext/pcs/client.h" ; then
+  AC_MSG_RESULT([yes])
+else
+  AC_MSG_RESULT([no])
+  AC_MSG_ERROR([The PCS extension must be installed first "pecl install pcs-1.3.1"])
 fi
