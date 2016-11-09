@@ -388,6 +388,7 @@ pcbc_stub_data PCBC_PHP_CODESTR[] = {
 "            $data = couchbase_fastlz_decompress($bytes);\n" \
 "        }\n" \
 "\n" \
+"        $sertype &= ~COUCHBASE_COMPRESSION_MCISCOMPRESSED;\n" \
 "        $retval = NULL;\n" \
 "        if ($sertype == COUCHBASE_VAL_IS_STRING) {\n" \
 "            $retval = json_decode($data, $options['jsonassoc']);\n" \

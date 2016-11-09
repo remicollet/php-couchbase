@@ -154,6 +154,7 @@ function couchbase_basic_decoder_v1($bytes, $flags, $datatype, $options) {
             $data = couchbase_fastlz_decompress($bytes);
         }
 
+        $sertype &= ~COUCHBASE_COMPRESSION_MCISCOMPRESSED;
         $retval = NULL;
         if ($sertype == COUCHBASE_VAL_IS_STRING) {
             $retval = json_decode($data, $options['jsonassoc']);
