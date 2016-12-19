@@ -35,7 +35,7 @@ static void n1ix_create_callback(lcb_t instance, int cbtype, const lcb_RESPN1XMG
     TSRMLS_FETCH();
 
     result->header.err = resp->rc;
-    if (result->header.err == LCB_QUERY_ERROR) {
+    if (result->header.err != LCB_SUCCESS) {
         pcbc_log(LOGARGS(instance, ERROR), "Failed to create index. %d: %.*s",
                          (int)resp->inner->htresp->htstatus,
                          (int)resp->inner->nrow,
