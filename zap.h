@@ -535,4 +535,12 @@ static void zap_object_properties_init(zend_object *obj, zend_class_entry* type)
 #define zapval_add_assoc_zval_ex(ary, key, val) add_assoc_zval_ex(ary, key, sizeof(key), val)
 #endif
 
+#ifndef ZEND_TSRMLS_CACHE_DEFINE
+#define ZEND_TSRMLS_CACHE_DEFINE()
+#endif
+
+#ifndef ZEND_TSRMLS_CACHE_UPDATE
+#define ZEND_TSRMLS_CACHE_UPDATE()
+#endif
+
 #endif // ZAP_H_

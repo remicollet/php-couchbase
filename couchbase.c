@@ -94,7 +94,7 @@ PHP_INI_END()
 
 static void php_extname_init_globals(zend_couchbase_globals *couchbase_globals)
 {
-#ifdef COMPILE_DL_COUCHBASE
+#ifdef COMPILE_DL_COUCHBASE && defined(ZTS)
 	ZEND_TSRMLS_CACHE_UPDATE();
 #endif
 
@@ -364,6 +364,8 @@ zend_module_entry couchbase_module_entry = {
 };
 
 #ifdef COMPILE_DL_COUCHBASE
+#ifdef ZTS
 ZEND_TSRMLS_CACHE_DEFINE();
+#endif
 ZEND_GET_MODULE(couchbase)
 #endif
