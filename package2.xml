@@ -73,6 +73,8 @@
             <file role="src" name="fastlz/fastlz.h"/>
             <file role="src" name="get.c"/>
             <file role="src" name="http.c"/>
+            <file role="src" name="log.c"/>
+            <file role="src" name="log.h"/>
             <file role="src" name="metadoc.c"/>
             <file role="src" name="metadoc.h"/>
             <file role="src" name="n1ix_create.c"/>
@@ -85,8 +87,8 @@
             <file role="src" name="opcookie.h"/>
             <file role="src" name="paramparser.c"/>
             <file role="src" name="paramparser.h"/>
+            <file role="src" name="php/phpc/code.phpc"/>
             <file role="src" name="php_couchbase.h"/>
-            <file role="src" name="phpstubstr.h"/>
             <file role="src" name="remove.c"/>
             <file role="src" name="store.c"/>
             <file role="src" name="subdoc.c"/>
@@ -97,8 +99,6 @@
             <file role="src" name="transcoding.h"/>
             <file role="src" name="unlock.c"/>
             <file role="src" name="zap.h"/>
-            <file role="src" name="log.c"/>
-            <file role="src" name="log.h"/>
         </dir>
     </contents>
     <dependencies>
