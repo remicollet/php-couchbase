@@ -25,9 +25,9 @@
         <active>yes</active>
     </lead>
 
-    <date>2016-10-04</date>
+    <date>2016-12-26</date>
     <version>
-        <release>2.2.3</release>
+        <release>2.2.4</release>
         <api>2.2.0</api>
     </version>
     <stability>
@@ -37,12 +37,18 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        This is the GA release of the 2.2.3 SDK. It is a maitenance release
+        This is the GA release of the 2.2.4 SDK. It is a maitenance release
         with several fixes:
 
         Changes:
-        * PCBC-389: deserialize legacy docs as JSON with falling back to old behaviour
-        * PCBC-428: use correct exception when credentials missing for CouchbaseClusterManager
+        * PCBC-401: embed PHP classes using pcs. This fixes performance issue,
+          where the extension spending time during each request to evaluate
+          and load Couchbase classes written in PHP. The pecl/pcs extension
+          have to be installed and loaded before loading couchbase SDK.
+        * PCBC-439: reset MCISCOMPRESSED before type detection.
+          This fixes decoding compressed values.
+        * PCBC-438: install callback for replica read command.
+          This fixes getFromReplica() returning NULL.
         * Documentation updates and bug fixes
     </notes>
 
@@ -104,7 +110,7 @@
     <dependencies>
         <required>
             <php>
-                <min>5.3.0</min>
+                <min>5.4.0</min>
             </php>
             <pearinstaller>
                 <min>1.4.8</min>
@@ -116,11 +122,38 @@
                 <channel>pecl.php.net</channel>
                 <providesextension>igbinary</providesextension>
             </package>
+            <package>
+                <name>pcs</name>
+                <channel>pecl.php.net</channel>
+                <providesextension>pcs</providesextension>
+            </package>
         </optional>
     </dependencies>
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2016-10-04</date>
+            <version>
+                <release>2.2.3</release>
+                <api>2.2.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
+            </license>
+            <notes>
+                This is the GA release of the 2.2.3 SDK. It is a maitenance release
+                with several fixes:
+
+                Changes:
+                * PCBC-389: deserialize legacy docs as JSON with falling back to old behaviour
+                * PCBC-428: use correct exception when credentials missing for CouchbaseClusterManager
+                * Documentation updates and bug fixes
+            </notes>
+        </release>
         <release>
             <date>2016-09-06</date>
             <version>
