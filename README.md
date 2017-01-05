@@ -73,6 +73,18 @@ An extensive documentation is available on the Couchbase website.  Visit our
 the [Couchbase](http://developer.couchbase.com/documentation/server/current/sdk/php/start-using-sdk.html) website for the documentation as well as
 numerous examples and samples.
 
+To build PHP API reference, phpDocumentor have to be installed
+
+    pear channel-discover pear.phpdoc.org
+    pear install phpdoc/phpDocumentor
+
+That will bring phpdoc command into PATH. The following steps assume that current directory is the root of this repository:
+
+    ver=$(git describe | sed 's/^v//')
+    rm -rf couchbase-php-client-$ver
+    phpdoc --target couchbase-php-client-$ver --directory . --ignore examples/,tests/,php/phpc/
+
+After that all reference documentation will be stored in couchbase-php-client-2.2.4, if current tag is 2.2.4.
 
 ## Source Control
 
