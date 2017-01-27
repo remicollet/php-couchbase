@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016 Couchbase, Inc.
+ *     Copyright 2016-2017 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -18,14 +18,14 @@
 #define LOG_H_
 
 #include <libcouchbase/couchbase.h>
-#include "zap.h"
 
 struct pcbc_logger_st {
     struct lcb_logprocs_st base;
     int minlevel;
 };
 
-void pcbc_log(int severity, lcb_t instance, const char *subsys,
-              const char *srcfile, int srcline, const char *fmt, ...);
+void pcbc_log_formatter(char *buf, int buf_size, const char *severity, const char *subsystem, int srcline,
+                        int instance_id, void *instance_ptr, int is_lcb, const char *fmt, va_list ap);
+void pcbc_log(int severity, lcb_t instance, const char *subsys, const char *srcfile, int srcline, const char *fmt, ...);
 
 #endif // LOG_H_

@@ -4,42 +4,38 @@ require_once('CouchbaseTestCase.php');
 class BucketTest extends CouchbaseTestCase {
 
     /**
-     * @test
      * Test that connections with invalid details fail.
      */
     function testBadPass() {
-        $h = new CouchbaseCluster($this->testDsn);
+        $h = new \Couchbase\Cluster($this->testDsn);
 
         $this->wrapException(function() use($h) {
             $h->openBucket('default', 'bad_pass');
-        }, 'CouchbaseException', 2);
+        }, '\Couchbase\Exception', 2);
     }
 
     /**
-     * @test
      * Test that connections with invalid details fail.
      */
     function testBadBucket() {
-        $h = new CouchbaseCluster($this->testDsn);
+        $h = new \Couchbase\Cluster($this->testDsn);
 
         $this->wrapException(function() use($h) {
             $h->openBucket('bad_bucket');
-        }, 'CouchbaseException');
+        }, '\Couchbase\Exception');
     }
 
     /**
-     * @test
      * Test that a connection with accurate details works.
      */
     function testConnect() {
-        $h = new CouchbaseCluster($this->testDsn);
+        $h = new \Couchbase\Cluster($this->testDsn);
         $b = $h->openBucket();
         $this->setTimeouts($b);
         return $b;
     }
 
     /**
-     * @test
      * Test basic upsert
      *
      * @depends testConnect
@@ -55,7 +51,6 @@ class BucketTest extends CouchbaseTestCase {
     }
 
     /**
-     * @test
      * Test basic get
      *
      * @depends testConnect
@@ -71,7 +66,6 @@ class BucketTest extends CouchbaseTestCase {
     }
 
     /**
-     * @test
      * Test basic remove
      *
      * @depends testConnect
@@ -85,11 +79,10 @@ class BucketTest extends CouchbaseTestCase {
         // This should throw a not-found exception
         $this->wrapException(function() use($b, $key) {
             $b->get($key);
-        }, 'CouchbaseException', COUCHBASE_KEYNOTFOUND);
+        }, '\Couchbase\Exception', COUCHBASE_KEYNOTFOUND);
     }
 
     /**
-     * @test
      * Test multi upsert
      *
      * @depends testConnect
@@ -113,7 +106,6 @@ class BucketTest extends CouchbaseTestCase {
     }
 
     /**
-     * @test
      * Test multi upsert with the same keys
      *
      * @depends testConnect
@@ -136,7 +128,6 @@ class BucketTest extends CouchbaseTestCase {
     }
 
     /**
-     * @test
      * Test multi get
      *
      * @depends testConnect
@@ -155,7 +146,6 @@ class BucketTest extends CouchbaseTestCase {
     }
 
     /**
-     * @test
      * Test multi remove
      *
      * @depends testConnect
@@ -174,12 +164,11 @@ class BucketTest extends CouchbaseTestCase {
         $this->assertCount(2, $res);
 
         // TODO: Different exceptions here might make sense.
-        $this->assertErrorMetaDoc($res[$keys[0]], 'CouchbaseException', COUCHBASE_KEYNOTFOUND);
-        $this->assertErrorMetaDoc($res[$keys[1]], 'CouchbaseException', COUCHBASE_KEYNOTFOUND);
+        $this->assertErrorMetaDoc($res[$keys[0]], '\Couchbase\Exception', COUCHBASE_KEYNOTFOUND);
+        $this->assertErrorMetaDoc($res[$keys[1]], '\Couchbase\Exception', COUCHBASE_KEYNOTFOUND);
     }
 
     /**
-     * @test
      * Test basic counter operations w/ an initial value
      *
      * @depends testConnect
@@ -188,15 +177,15 @@ class BucketTest extends CouchbaseTestCase {
         $key = $this->makeKey('counterInitial');
 
         $res = $b->counter($key, +1, array('initial'=>1));
-        $this->assertValidMetaDoc($res, 'value', 'flags', 'cas');
+        $this->assertValidMetaDoc($res, 'value', 'cas');
         $this->assertEquals(1, $res->value);
 
         $res = $b->counter($key, +1);
-        $this->assertValidMetaDoc($res, 'value', 'flags', 'cas');
+        $this->assertValidMetaDoc($res, 'value', 'cas');
         $this->assertEquals(2, $res->value);
 
         $res = $b->counter($key, -1);
-        $this->assertValidMetaDoc($res, 'value', 'flags', 'cas');
+        $this->assertValidMetaDoc($res, 'value', 'cas');
         $this->assertEquals(1, $res->value);
 
         $b->remove($key);
@@ -213,11 +202,10 @@ class BucketTest extends CouchbaseTestCase {
 
         $this->wrapException(function() use($b, $key) {
             $b->counter($key, +1);
-        }, 'CouchbaseException', COUCHBASE_KEYNOTFOUND);
+        }, '\Couchbase\Exception', COUCHBASE_KEYNOTFOUND);
     }
 
     /**
-     * @test
      * Test expiry operations on keys
      *
      * @depends testConnect
@@ -231,11 +219,10 @@ class BucketTest extends CouchbaseTestCase {
 
         $this->wrapException(function() use($b, $key) {
             $b->get($key);
-        }, 'CouchbaseException', COUCHBASE_KEYNOTFOUND);
+        }, '\Couchbase\Exception', COUCHBASE_KEYNOTFOUND);
     }
 
     /**
-     * @test
      * Test CAS works
      *
      * @depends testConnect
@@ -252,11 +239,10 @@ class BucketTest extends CouchbaseTestCase {
 
         $this->wrapException(function() use($b, $key, $old_cas) {
             $b->replace($key, 'ferret', array('cas'=>$old_cas));
-        }, 'CouchbaseException', COUCHBASE_KEYALREADYEXISTS);
+        }, '\Couchbase\Exception', COUCHBASE_KEYALREADYEXISTS);
     }
 
     /**
-     * @test
      * Test Locks work
      *
      * @depends testConnect
@@ -272,11 +258,10 @@ class BucketTest extends CouchbaseTestCase {
 
         $this->wrapException(function() use($b, $key) {
             $b->getAndLock($key, 1);
-        }, 'CouchbaseException', COUCHBASE_TMPFAIL);
+        }, '\Couchbase\Exception', COUCHBASE_TMPFAIL);
     }
 
     /**
-     * @test
      * Test big upserts
      *
      * @depends testConnect
@@ -284,7 +269,8 @@ class BucketTest extends CouchbaseTestCase {
     function testBigUpsert($b) {
         $key = $this->makeKey('bigUpsert');
 
-        $v = str_repeat("*", 0x1000000);
+        // $v = str_repeat("*", 0x1000000);
+        $v = str_repeat("*", 0x100000);
         $res = $b->upsert($key, $v);
 
         $this->assertValidMetaDoc($res, 'cas');
@@ -300,13 +286,11 @@ class BucketTest extends CouchbaseTestCase {
      *
      * @depends testConnect
      */
-     /*
     function testNoKeyUpsert($b) {
         $this->wrapException(function() use($b) {
             $b->upsert('', 'joe');
-        }, 'CouchbaseException', COUCHBASE_EINVAL);
+        }, '\Couchbase\Exception', COUCHBASE_EMPTY_KEY);
     }
-    */
 
     /**
      * @test
@@ -317,7 +301,7 @@ class BucketTest extends CouchbaseTestCase {
         global $recursive_transcoder_key2;
         global $recursive_transcoder_key3;
 
-        $h = new CouchbaseCluster($this->testDsn);
+        $h = new \Couchbase\Cluster($this->testDsn);
         $b = $h->openBucket();
         $this->setTimeouts($b);
 
@@ -360,7 +344,7 @@ class BucketTest extends CouchbaseTestCase {
      *   changes do not affect later tests
      */
     function testOptionVals() {
-        $h = new CouchbaseCluster($this->testDsn);
+        $h = new \Couchbase\Cluster($this->testDsn);
         $b = $h->openBucket();
         $this->setTimeouts($b);
 
@@ -388,36 +372,6 @@ class BucketTest extends CouchbaseTestCase {
     }
 
     /**
-     * @test
-     * Test all option values to make sure they save/load
-     * We open a new bucket for this test to make sure our settings
-     *   changes do not affect later tests
-     */
-    function testConfigCache() {
-        $this->markTestSkipped(
-              'Configuration cache is not currently behaving.'
-            );
-
-        $key = $this->makeKey('ccache');
-
-        $h = new CouchbaseCluster(
-            $this->testDsn . '?config_cache=./test.cache');
-        $b = $h->openBucket();
-        $this->setTimeouts($b);
-        $b->upsert($key, 'yes');
-
-        $h2 = new CouchbaseCluster(
-            $this->testDsn . '?config_cache=./test.cache');
-        $b2 = $h2->openBucket();
-        $this->setTimeouts($b2);
-        $res = $b2->get($key);
-
-        $this->assertValidMetaDoc($res, 'value', 'cas', 'flags');
-        $this->assertEquals($res->value, 'yes');
-    }
-
-    /**
-     * @test
      * @depends testConnect
      */
     function testLookupIn($b) {
@@ -432,7 +386,7 @@ class BucketTest extends CouchbaseTestCase {
 
         # Try when path is not found
         $result = $b->retrieveIn($key, 'path2');
-        $this->assertInstanceOf('CouchbaseException', $result->error);
+        $this->assertInstanceOf('\Couchbase\Exception', $result->error);
         $this->assertEquals(COUCHBASE_SUBDOC_MULTI_FAILURE, $result->error->getCode());
         $this->assertEquals(1, count($result->value));
         $this->assertEquals(null, $result->value[0]['value']);
@@ -440,7 +394,7 @@ class BucketTest extends CouchbaseTestCase {
 
         # Try when there is a mismatch
         $result = $b->retrieveIn($key, 'path1[0]');
-        $this->assertInstanceOf('CouchbaseException', $result->error);
+        $this->assertInstanceOf('\Couchbase\Exception', $result->error);
         $this->assertEquals(COUCHBASE_SUBDOC_MULTI_FAILURE, $result->error->getCode());
         $this->assertEquals(1, count($result->value));
         $this->assertEquals(null, $result->value[0]['value']);
@@ -453,7 +407,7 @@ class BucketTest extends CouchbaseTestCase {
 
         # Not found
         $result = $b->lookupIn($key)->exists('p')->execute();
-        $this->assertInstanceOf('CouchbaseException', $result->error);
+        $this->assertInstanceOf('\Couchbase\Exception', $result->error);
         $this->assertEquals(COUCHBASE_SUBDOC_MULTI_FAILURE, $result->error->getCode());
         $this->assertEquals(1, count($result->value));
         $this->assertEquals(COUCHBASE_SUBDOC_PATH_ENOENT, $result->value[0]['code']);
@@ -471,13 +425,12 @@ class BucketTest extends CouchbaseTestCase {
         $key = $this->makeKey('lookup_in_with_missing_key');
         $result = $b->lookupIn($key)->exists('path')->execute();
         $this->assertEquals(0, count($result->value));
-        $this->assertInstanceOf('CouchbaseException', $result->error);
+        $this->assertInstanceOf('\Couchbase\Exception', $result->error);
         $this->assertEquals(COUCHBASE_KEY_ENOENT, $result->error->getCode());
     }
 
     /**
-     * @test
-     * @expectedException CouchbaseException
+     * @expectedException \Couchbase\Exception
      * @expectedExceptionMessageRegExp /EMPTY_PATH/
      * @depends testConnect
      */
@@ -489,7 +442,6 @@ class BucketTest extends CouchbaseTestCase {
     }
 
     /**
-     * @test
      * @depends testConnect
      */
     function testMutateIn($b) {
@@ -579,8 +531,7 @@ class BucketTest extends CouchbaseTestCase {
     }
 
     /**
-     * @test
-     * @expectedException CouchbaseException
+     * @expectedException \Couchbase\Exception
      * @expectedExceptionMessageRegExp /EMPTY_PATH/
      * @depends testConnect
      */
@@ -592,7 +543,6 @@ class BucketTest extends CouchbaseTestCase {
     }
 
     /**
-     * @test
      * @depends testConnect
      */
     function testCounterIn($b) {
@@ -637,7 +587,6 @@ class BucketTest extends CouchbaseTestCase {
     }
 
     /**
-     * @test
      * @depends testConnect
      */
     function testMultiLookupIn($b) {
@@ -669,7 +618,6 @@ class BucketTest extends CouchbaseTestCase {
     }
 
     /**
-     * @test
      * @depends testConnect
      */
     function testMultiMutateIn($b) {
@@ -692,7 +640,6 @@ class BucketTest extends CouchbaseTestCase {
     }
 
     /**
-     * @test
      * @depends testConnect
      */
     function testMultiValue($b) {
@@ -734,6 +681,7 @@ function recursive_transcoder_encoder($value) {
     }
     return couchbase_default_encoder($value);
 }
+
 function recursive_transcoder_decoder($bytes, $flags, $datatype) {
     global $recursive_transcoder_bucket;
     global $recursive_transcoder_key3;

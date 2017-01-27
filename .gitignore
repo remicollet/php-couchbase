@@ -1,4 +1,6 @@
+*.core
 *.lo
+*.loT
 *.o
 *.swp
 *~

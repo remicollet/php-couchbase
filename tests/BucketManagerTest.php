@@ -7,14 +7,14 @@ class BucketManagerTest extends CouchbaseTestCase {
      * Test that a connection works and return manager instance.
      */
     function testConnect() {
-        $h = new CouchbaseCluster($this->testDsn);
-        $m = $h->openBucket()->manager();
+        $h = new \Couchbase\Cluster($this->testDsn);
+        $m = $h->openBucket($this->testBucket)->manager();
         return $m;
     }
 
     /**
      * @depends testConnect
-     * @expectedException CouchbaseException
+     * @expectedException \Couchbase\Exception
      * @expectedExceptionMessageRegExp /EEXISTS/
      */
     function testIndexCreateDuplicates($m) {
@@ -24,7 +24,7 @@ class BucketManagerTest extends CouchbaseTestCase {
 
     /**
      * @depends testConnect
-     * @expectedException CouchbaseException
+     * @expectedException \Couchbase\Exception
      * @expectedExceptionMessageRegExp /ENOENT/
      */
     function testIndexDropMissing($m) {
@@ -56,5 +56,58 @@ class BucketManagerTest extends CouchbaseTestCase {
         $this->assertEquals(COUCHBASE_N1XSPEC_T_GSI, $newIndex->type);
 
         $m->dropN1qlIndex($name);
+    }
+
+    /**
+     * @depends testConnect
+     */
+    function testBasicDesignDocumentLifecycle($m) {
+        $name = $this->makeKey('user_name');
+        $ddoc = [
+            "views" => [
+                "test" => [
+                    "map" => 'function(doc, meta) { emit(meta.id); }',
+                    "reduce" => "_count"
+                ]
+            ]
+        ];
+        $m->upsertDesignDocument($name, $ddoc);
+
+        $documents = $m->listDesignDocuments();
+        $this->assertNotEmpty($documents);
+
+        $newDocument = NULL;
+        foreach ($documents['rows'] as $document) {
+            if ($document['doc']['meta']['id'] == "_design/$name") {
+                $newDocument = $document;
+            }
+        }
+        $this->assertNotNull($newDocument);
+        $this->assertNotNull($newDocument['doc']['json']['views']['test']);
+
+        $newDocument = $m->getDesignDocument($name);
+        $this->assertNotNull($newDocument);
+        $this->assertNotNull($newDocument['views']['test']);
+
+        $m->removeDesignDocument($name);
+    }
+
+    /**
+     * @depends testConnect
+     * @expectedException \Couchbase\Exception
+     * @expectedExceptionMessageRegExp /already exists/
+     */
+    function testInsertDesignDocumentDuplicate($m) {
+        $name = $this->makeKey('user_name');
+        $ddoc = [
+            "views" => [
+                "test" => [
+                    "map" => 'function(doc, meta) { emit(meta.id); }',
+                    "reduce" => "_count"
+                ]
+            ]
+        ];
+        $m->insertDesignDocument($name, $ddoc);
+        $m->insertDesignDocument($name, $ddoc);
     }
 }

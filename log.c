@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016 Couchbase, Inc.
+ *     Copyright 2016-2017 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@
 #include <php.h>
 
 #include "log.h"
-#include "zap.h"
 
 static const char *level_to_string(int severity)
 {
@@ -40,39 +39,31 @@ static const char *level_to_string(int severity)
     }
 }
 
-static void log_handler(struct lcb_logprocs_st *procs, unsigned int iid,
-                        const char *subsys, int severity, const char *srcfile,
-                        int srcline, const char *fmt, va_list ap)
+#define PCBC_LOG_MSG_SIZE 1024
+
+static void log_handler(struct lcb_logprocs_st *procs, unsigned int iid, const char *subsys, int severity,
+                        const char *srcfile, int srcline, const char *fmt, va_list ap)
 {
     struct pcbc_logger_st *logger = (struct pcbc_logger_st *)procs;
-    char *buf = NULL;
-    char *msg = NULL;
+    char buf[PCBC_LOG_MSG_SIZE] = {0};
     TSRMLS_FETCH();
 
     if (severity < logger->minlevel) {
         return;
     }
 
-    vspprintf(&msg, 0, fmt, ap);
-    spprintf(&buf, 0, "[cb,%s] (%s L:%d I:%d) %s", level_to_string(severity),
-             subsys, srcline, iid, msg);
-    efree(msg);
-
+    pcbc_log_formatter(buf, PCBC_LOG_MSG_SIZE, level_to_string(severity), subsys, srcline, iid, NULL, 1, fmt, ap);
     php_log_err(buf TSRMLS_CC);
-    efree(buf);
 }
 
-struct pcbc_logger_st pcbc_logger = {
-    {0 /* version */, {{log_handler} /* v1 */} /*v*/},
-    /** Minimum severity */
-    LCB_LOG_INFO};
+struct pcbc_logger_st pcbc_logger = {{0 /* version */, {{log_handler} /* v1 */} /*v*/},
+                                     /** Minimum severity */
+                                     LCB_LOG_INFO};
 
-void pcbc_log(int severity, lcb_t instance, const char *subsys,
-              const char *srcfile, int srcline, const char *fmt, ...)
+void pcbc_log(int severity, lcb_t instance, const char *subsys, const char *srcfile, int srcline, const char *fmt, ...)
 {
     va_list ap;
-    char *msg = NULL;
-    char *buf = NULL;
+    char buf[PCBC_LOG_MSG_SIZE] = {0};
     TSRMLS_FETCH();
 
     if (severity < pcbc_logger.minlevel) {
@@ -80,18 +71,9 @@ void pcbc_log(int severity, lcb_t instance, const char *subsys,
     }
 
     va_start(ap, fmt);
-    vspprintf(&msg, 0, fmt, ap);
+    pcbc_log_formatter(buf, PCBC_LOG_MSG_SIZE, level_to_string(severity), subsys, srcline, 0, (void *)instance, 0, fmt,
+                       ap);
     va_end(ap);
-    if (instance) {
-        spprintf(&buf, 0, "[cb,%s] (%s L:%d) %s. I=%p",
-                 level_to_string(severity), subsys, srcline, msg,
-                 (void *)instance);
-    } else {
-        spprintf(&buf, 0, "[cb,%s] (%s L:%d) %s", level_to_string(severity),
-                 subsys, srcline, msg);
-    }
-    efree(msg);
 
     php_log_err(buf TSRMLS_CC);
-    efree(buf);
 }

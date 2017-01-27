@@ -107,7 +107,7 @@ phpunit tests/
 
 
 ## License
-Copyright 2016 Couchbase Inc.
+Copyright 2016-2017 Couchbase Inc.
 
 Licensed under the Apache License, Version 2.0.
 

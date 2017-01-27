@@ -18,12 +18,12 @@
 #ifndef PHP_ARRAY_API_H
 #define PHP_ARRAY_API_H
 
-#include "zend.h"
-#include "zend_execute.h"
-#include "zend_API.h"
-#include "zend_operators.h"
-#include "zend_hash.h"
-#include "zend_list.h"
+#include <zend.h>
+#include <zend_execute.h>
+#include <zend_API.h>
+#include <zend_operators.h>
+#include <zend_hash.h>
+#include <zend_list.h>
 
 #ifdef ZEND_ENGINE_3
 # define PAA_LENGTH_ADJ(l) (l)
@@ -97,7 +97,7 @@ zend_bool php_array_existsl_safe(zval *zarr, const char *key, int key_len) {
 	return ret;
 }
 #define php_array_existsn(zarr, idx) \
-	zend_hash_index_exists(Z_ARRVAL_P(zarr), idx) 
+	zend_hash_index_exists(Z_ARRVAL_P(zarr), idx)
 static inline
 zend_bool php_array_existsz(zval *zarr, zval *key) {
 	switch (Z_TYPE_P(key)) {
@@ -184,7 +184,7 @@ zval *php_array_fetchl(zval *zarr, const char *key, int key_len) {
 }
 static inline
 zval *php_array_fetch(zval *zarr, const char *key) {
-	return php_array_fetchl(zarr, key, strlen(key));
+    return php_array_fetchl(zarr, key, (int)strlen(key));
 }
 #define php_array_fetchc(zarr, litstr) php_array_fetchl(zarr, litstr, sizeof(litstr)-1)
 static inline
@@ -227,11 +227,11 @@ zval *php_array_fetchz(zval *zarr, zval *key) {
 		case IS_BOOL: /* fallthrough */
 #endif
 		case IS_LONG:
-			return php_array_fetchn(zarr, Z_LVAL_P(key));
+                    return php_array_fetchn(zarr, (long)Z_LVAL_P(key));
 		case IS_DOUBLE:
 			return php_array_fetchn(zarr, (long)Z_DVAL_P(key));
 		case IS_STRING:
-			return php_array_fetchl(zarr, Z_STRVAL_P(key), Z_STRLEN_P(key));
+                    return php_array_fetchl(zarr, Z_STRVAL_P(key), (int)Z_STRLEN_P(key));
 		default:
 			return NULL;
 	}
@@ -286,14 +286,14 @@ long php_array_zval_to_long(zval *z) {
 #else
 		case IS_BOOL: return Z_BVAL_P(z);
 #endif
-		case IS_LONG: return Z_LVAL_P(z);
+        case IS_LONG: return (long)Z_LVAL_P(z);
 		case IS_DOUBLE: return (long)Z_DVAL_P(z);
 		default:
 		{
 			zval c = *z;
 			zval_copy_ctor(&c);
 			convert_to_long(&c);
-			return Z_LVAL(c);
+			return (long)Z_LVAL(c);
 		}
 	}
 }
@@ -362,14 +362,14 @@ char *php_array_zval_to_string(zval *z, int *plen, zend_bool *pfree) {
 			return (char *)"";
 		case IS_STRING:
 			*pfree = 0;
-			*plen = Z_STRLEN_P(z);
+			*plen = (int)Z_STRLEN_P(z);
 			return Z_STRVAL_P(z);
 		default:
 		{
 			zval c = *z;
 			zval_copy_ctor(&c);
 			convert_to_string(&c);
-			*plen = Z_STRLEN(c);
+			*plen = (int)Z_STRLEN(c);
 			return Z_STRVAL(c);
 		}
 	}

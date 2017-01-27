@@ -1,44 +1,91 @@
+// -*- mode: js; -*-
+
 ARG_WITH("couchbase", "Couchbase support", "no");
 
 if (PHP_COUCHBASE != "no") {
-    couchbase_source =
-        "bucket.c " +
-        "cas.c " +
-        "cbft.c " +
-        "cluster.c " +
-        "couchbase.c " +
-        "counter.c " +
-        "docfrag.c " +
-        "durability.c " +
-        "exception.c " +
-        "get.c " +
-        "http.c " +
-        "log.c " +
-        "metadoc.c " +
-        "n1ix_create.c " +
-        "n1ix_drop.c " +
-        "n1ix_list.c " +
-        "n1ix_spec.c " +
-        "n1ql.c " +
-        "opcookie.c " +
-        "paramparser.c " +
-        "remove.c " +
-        "store.c " +
-        "subdoc.c " +
-        "touch.c " +
-        "token.c " +
-        "transcoding.c " +
-        "unlock.c ";
+    if (CHECK_LIB("libcouchbase.lib", "couchbase", PHP_COUCHBASE) &&
+        CHECK_HEADER_ADD_INCLUDE("libcouchbase\\couchbase.h", "CFLAGS_COUCHBASE", PHP_COUCHBASE + "\\include;" + PHP_PHP_BUILD + "\\include\\libcouchbase")) {
+        root_sources =
+            "couchbase.c " +
+            "exception.c " +
+            "log.c " +
+            "opcookie.c " +
+            "paramparser.c " +
+            "transcoding.c ";
+        fastlz_sources =
+            "fastlz.c";
+        src_couchbase_sources  =
+            "authenticator.c " +
+            "base36.c " +
+            "bucket.c " +
+            "bucket_manager.c " +
+            "cluster.c " +
+            "cluster_manager.c " +
+            "document.c " +
+            "document_fragment.c " +
+            "log_formatter.c " +
+            "lookup_in_builder.c " +
+            "mutate_in_builder.c " +
+            "mutation_state.c " +
+            "mutation_token.c " +
+            "n1ql_index.c " +
+            "n1ql_query.c " +
+            "pool.c " +
+            "search_query.c " +
+            "spatial_view_query.c " +
+            "view_query.c " +
+            "view_query_encodable.c ";
+        src_couchbase_bucket_sources =
+            "cbft.c " +
+            "counter.c " +
+            "durability.c " +
+            "get.c " +
+            "http.c " +
+            "n1ql.c " +
+            "remove.c " +
+            "store.c " +
+            "subdoc.c " +
+            "touch.c " +
+            "unlock.c " +
+            "view.c ";
+        src_couchbase_bucket_manager_sources =
+            "n1ix_create.c " +
+            "n1ix_drop.c " +
+            "n1ix_list.c ";
+        src_couchbase_search_sources =
+            "boolean_field_query.c " +
+            "boolean_query.c " +
+            "conjunction_query.c " +
+            "date_range_facet.c " +
+            "date_range_query.c " +
+            "disjunction_query.c " +
+            "doc_id_query.c " +
+            "facet.c " +
+            "match_all_query.c " +
+            "match_none_query.c " +
+            "match_phrase_query.c " +
+            "match_query.c " +
+            "numeric_range_facet.c " +
+            "numeric_range_query.c " +
+            "phrase_query.c " +
+            "prefix_query.c " +
+            "query_part.c " +
+            "query_string_query.c " +
+            "regexp_query.c " +
+            "term_facet.c " +
+            "term_query.c " +
+            "wildcard_query.c ";
 
-	if (CHECK_LIB("libcouchbase.lib", "couchbase", PHP_COUCHBASE) &&
-			CHECK_HEADER_ADD_INCLUDE("libcouchbase\\couchbase.h", "CFLAGS_COUCHBASE", PHP_COUCHBASE+"\\include;"+PHP_PHP_BUILD+"\\include\\libcouchbase")){
-		EXTENSION("couchbase", couchbase_source, PHP_COUCHBASE_SHARED, "/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1");
-		ADD_SOURCES(configure_module_dirname + "\\fastlz", "fastlz.c", "couchbase");
-	        ADD_EXTENSION_DEP('couchbase', 'pcs');
-		AC_DEFINE('HAVE_COUCHBASELIB', 1, 'Have Couchbase library');
-		MESSAGE("\tlibcouchbase build");
-	} else {
-		WARNING("couchbase not enabled; libraries and headers not found");
-		PHP_COUCHBASE = "no";
-	}
+        EXTENSION("couchbase", root_sources, PHP_COUCHBASE_SHARED, "/I" + configure_module_dirname + " /DZEND_ENABLE_STATIC_TSRMLS_CACHE=1");
+        ADD_SOURCES(configure_module_dirname + "\\fastlz", fastlz_sources, "couchbase");
+        ADD_SOURCES(configure_module_dirname + "\\src\\couchbase", src_couchbase_sources, "couchbase");
+        ADD_SOURCES(configure_module_dirname + "\\src\\couchbase\\search", src_couchbase_search_sources, "couchbase");
+        ADD_SOURCES(configure_module_dirname + "\\src\\couchbase\\bucket", src_couchbase_bucket_sources, "couchbase");
+        ADD_SOURCES(configure_module_dirname + "\\src\\couchbase\\bucket_manager", src_couchbase_bucket_manager_sources, "couchbase");
+        AC_DEFINE('HAVE_COUCHBASELIB', 1, 'Have Couchbase library');
+        MESSAGE("\tlibcouchbase build");
+    } else {
+        WARNING("couchbase not enabled; libraries and headers not found");
+        PHP_COUCHBASE = "no";
+    }
 }

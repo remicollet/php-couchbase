@@ -1,5 +1,6 @@
 <?php
-class CouchbaseTestCase extends PHPUnit_Framework_TestCase {
+
+class CouchbaseTestCase extends \PHPUnit_Framework_TestCase {
     public $testDsn;
     public $testBucket;
     public $testUser;
@@ -13,7 +14,7 @@ class CouchbaseTestCase extends PHPUnit_Framework_TestCase {
 
         $this->testBucket = getenv('CPBUCKET');
         if ($this->testBucket === FALSE) {
-            $this->testBucket = '';
+            $this->testBucket = 'default';
         }
 
         $this->testUser = getenv('CPUSER');
@@ -31,6 +32,8 @@ class CouchbaseTestCase extends PHPUnit_Framework_TestCase {
         $val = getenv("CB_OPERATION_TIMEOUT");
         if ($val !== FALSE) {
             $bucket->operationTimeout = intval($val);
+        } else {
+            $bucket->operationTimeout = 5000000;
         }
         $val = getenv("CB_VIEW_TIMEOUT");
         if ($val !== FALSE) {
@@ -71,14 +74,13 @@ class CouchbaseTestCase extends PHPUnit_Framework_TestCase {
     }
 
     function assertValidMetaDoc($metadoc) {
-        // Note that this is only valid at the moment, in the future
-        //   a MetaDoc might be a simple array, or other.
-        $this->assertInstanceOf('CouchbaseMetaDoc', $metadoc);
+        $this->assertInstanceOf('\Couchbase\Document', $metadoc); // FIXME: alias to \CouchbaseMetaDoc
 
         // Check it has all the fields it should.
         for ($i = 1; $i < func_num_args(); ++$i) {
             $attr = func_get_arg($i);
             $this->assertObjectHasAttribute($attr, $metadoc);
+            $this->assertNotNull($metadoc->{$attr}, "Expected document to have not NULL $attr");
         }
     }
 
@@ -89,7 +91,7 @@ class CouchbaseTestCase extends PHPUnit_Framework_TestCase {
         $this->assertEquals($code, $metadoc->error->getCode());
     }
 
-    function wrapException($cb, $type = NULL, $code = NULL) {
+    function wrapException($cb, $type = NULL, $code = NULL, $message = NULL) {
         PHPUnit_Framework_Error_Notice::$enabled = false;
         $exOut = NULL;
         try {
@@ -105,6 +107,9 @@ class CouchbaseTestCase extends PHPUnit_Framework_TestCase {
         if ($code !== NULL) {
             $this->assertErrorCode($code, $exOut);
         }
+        if ($message !== NULL) {
+            $this->assertErrorMessage($message, $exOut);
+        }
 
         return $exOut;
     }
@@ -118,7 +123,11 @@ class CouchbaseTestCase extends PHPUnit_Framework_TestCase {
         $this->assertInstanceOf($type, $ex);
     }
 
+    function assertErrorMessage($msg, $ex) {
+        $this->assertRegexp($msg, $ex->getMessage());
+    }
+
     function assertErrorCode($code, $ex) {
-        $this->assertEquals($code, $ex->getCode());
+        $this->assertEquals($code, $ex->getCode(), "Exception code does not match: {$ex->getCode()} != {$code}, exception message: '{$ex->getMessage()}'");
     }
 }
