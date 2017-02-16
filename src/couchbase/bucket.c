@@ -369,6 +369,539 @@ PHP_METHOD(Bucket, query)
     }
 } /* }}} */
 
+/* {{{ proto mixed Bucket::mapSize($id) */
+PHP_METHOD(Bucket, mapSize)
+{
+    pcbc_bucket_t *obj;
+    zval *id = NULL;
+    int rv;
+    pcbc_pp_state pp_state = {0};
+    pcbc_pp_id pp_id = {0};
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &id);
+    if (rv == FAILURE) {
+        return;
+    }
+    PCBC_CHECK_ZVAL_STRING(id, "id must be a string");
+    obj = Z_BUCKET_OBJ_P(getThis());
+
+    pp_state.arg_req = 1;
+#if PHP_VERSION_ID >= 70000
+    pp_state.zids = *id;
+#else
+    pp_state.zids = id;
+#endif
+    memcpy(pp_state.args[0].name, ZEND_STRS("id"));
+    pp_state.args[0].ptr = (zval **)&pp_id;
+#if PHP_VERSION_ID >= 70000
+    pp_state.args[0].val = *id;
+#else
+    pp_state.args[0].val = id;
+#endif
+    pcbc_bucket_get(obj, &pp_state, &pp_id, NULL, NULL, NULL, return_value TSRMLS_CC);
+    {
+        zval *val;
+
+        PCBC_READ_PROPERTY(val, pcbc_document_ce, return_value, "value", 0);
+        if (val) {
+            switch (Z_TYPE_P(val)) {
+            case IS_ARRAY:
+                RETURN_LONG(zend_hash_num_elements(Z_ARRVAL_P(val)));
+                break;
+            case IS_OBJECT:
+                RETURN_LONG(zend_hash_num_elements(Z_OBJ_HT_P(val)->get_properties(val TSRMLS_CC)));
+                break;
+            }
+        }
+    }
+    RETURN_LONG(0);
+} /* }}} */
+
+/* {{{ proto mixed Bucket::mapAdd($id, string $key, mixed $value) */
+PHP_METHOD(Bucket, mapAdd)
+{
+    pcbc_bucket_t *obj;
+    char *id = NULL, *key = NULL;
+    pcbc_str_arg_size id_len = 0, key_len = 0;
+    int rv;
+    zval *val;
+    PCBC_ZVAL builder;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ssz", &id, &id_len, &key, &key_len, &val);
+    if (rv == FAILURE) {
+        return;
+    }
+
+    obj = Z_BUCKET_OBJ_P(getThis());
+
+    PCBC_ZVAL_ALLOC(builder);
+    pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, 0 TSRMLS_CC);
+    pcbc_mutate_in_builder_upsert(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), key, key_len, val, 1 TSRMLS_CC);
+    pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
+    zval_ptr_dtor(&builder);
+    RETURN_NULL();
+} /* }}} */
+
+/* {{{ proto mixed Bucket::mapRemove($id, string $key) */
+PHP_METHOD(Bucket, mapRemove)
+{
+    pcbc_bucket_t *obj;
+    char *id = NULL, *key = NULL;
+    pcbc_str_arg_size id_len = 0, key_len = 0;
+    int rv;
+    PCBC_ZVAL builder;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &id, &id_len, &key, &key_len);
+    if (rv == FAILURE) {
+        return;
+    }
+
+    obj = Z_BUCKET_OBJ_P(getThis());
+
+    PCBC_ZVAL_ALLOC(builder);
+    pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, 0 TSRMLS_CC);
+    pcbc_mutate_in_builder_remove(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), key, key_len TSRMLS_CC);
+    pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
+    zval_ptr_dtor(&builder);
+    RETURN_NULL();
+} /* }}} */
+
+/* {{{ proto mixed Bucket::mapGet($id, string $key) */
+PHP_METHOD(Bucket, mapGet)
+{
+    pcbc_bucket_t *obj;
+    char *id = NULL, *key = NULL;
+    pcbc_str_arg_size id_len = 0, key_len = 0;
+    int rv;
+    zval *val;
+    PCBC_ZVAL builder;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &id, &id_len, &key, &key_len);
+    if (rv == FAILURE) {
+        return;
+    }
+
+    obj = Z_BUCKET_OBJ_P(getThis());
+
+    PCBC_ZVAL_ALLOC(builder);
+    pcbc_lookup_in_builder_init(PCBC_P(builder), getThis(), id, id_len, NULL, 0 TSRMLS_CC);
+    pcbc_lookup_in_builder_get(Z_LOOKUP_IN_BUILDER_OBJ_P(PCBC_P(builder)), key, key_len TSRMLS_CC);
+    pcbc_bucket_subdoc_request(obj, Z_LOOKUP_IN_BUILDER_OBJ_P(PCBC_P(builder)), 1, return_value TSRMLS_CC);
+    zval_ptr_dtor(&builder);
+
+    PCBC_READ_PROPERTY(val, pcbc_document_fragment_ce, return_value, "value", 0);
+    if (!val || Z_TYPE_P(val) != IS_ARRAY) {
+        RETURN_NULL();
+    }
+    val = php_array_fetchn(val, 0);
+    if (!val || Z_TYPE_P(val) != IS_ARRAY) {
+        RETURN_NULL();
+    }
+    val = php_array_fetch(val, "value");
+    if (!val) {
+        RETURN_NULL();
+    }
+    RETURN_ZVAL(val, 1, 0);
+} /* }}} */
+
+/* {{{ proto mixed Bucket::listPush($id, mixed $value) */
+PHP_METHOD(Bucket, listPush)
+{
+    pcbc_bucket_t *obj;
+    char *id = NULL;
+    pcbc_str_arg_size id_len = 0;
+    int rv;
+    zval *val;
+    PCBC_ZVAL builder;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz", &id, &id_len, &val);
+    if (rv == FAILURE) {
+        return;
+    }
+
+    obj = Z_BUCKET_OBJ_P(getThis());
+
+    PCBC_ZVAL_ALLOC(builder);
+    pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, 0 TSRMLS_CC);
+    pcbc_mutate_in_builder_array_append(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), NULL, 0, val, 1 TSRMLS_CC);
+    pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
+    zval_ptr_dtor(&builder);
+    RETURN_NULL();
+} /* }}} */
+
+/* {{{ proto mixed Bucket::listShift($id, mixed $value) */
+PHP_METHOD(Bucket, listShift)
+{
+    pcbc_bucket_t *obj;
+    char *id = NULL;
+    pcbc_str_arg_size id_len = 0;
+    int rv;
+    zval *val;
+    PCBC_ZVAL builder;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz", &id, &id_len, &val);
+    if (rv == FAILURE) {
+        return;
+    }
+
+    obj = Z_BUCKET_OBJ_P(getThis());
+
+    PCBC_ZVAL_ALLOC(builder);
+    pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, 0 TSRMLS_CC);
+    pcbc_mutate_in_builder_array_prepend(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), NULL, 0, val, 1 TSRMLS_CC);
+    pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
+    zval_ptr_dtor(&builder);
+    RETURN_NULL();
+} /* }}} */
+
+/* {{{ proto mixed Bucket::listRemove($id, int $index) */
+PHP_METHOD(Bucket, listRemove)
+{
+    pcbc_bucket_t *obj;
+    char *id = NULL, *path = NULL;
+    pcbc_str_arg_size id_len = 0;
+    long index = 0;
+    int rv, path_len;
+    PCBC_ZVAL builder;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sl", &id, &id_len, &index);
+    if (rv == FAILURE) {
+        return;
+    }
+
+    obj = Z_BUCKET_OBJ_P(getThis());
+
+    PCBC_ZVAL_ALLOC(builder);
+    pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, 0 TSRMLS_CC);
+    path_len = spprintf(&path, 0, "[%ld]", index);
+    pcbc_mutate_in_builder_remove(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len TSRMLS_CC);
+    pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
+    efree(path);
+    zval_ptr_dtor(&builder);
+    RETURN_NULL();
+} /* }}} */
+
+/* {{{ proto mixed Bucket::listGet($id, int $index) */
+PHP_METHOD(Bucket, listGet)
+{
+    pcbc_bucket_t *obj;
+    char *id = NULL, *path = NULL;
+    pcbc_str_arg_size id_len = 0;
+    long index = 0;
+    int rv, path_len;
+    zval *val;
+    PCBC_ZVAL builder;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sl", &id, &id_len, &index);
+    if (rv == FAILURE) {
+        return;
+    }
+
+    obj = Z_BUCKET_OBJ_P(getThis());
+
+    PCBC_ZVAL_ALLOC(builder);
+    pcbc_lookup_in_builder_init(PCBC_P(builder), getThis(), id, id_len, NULL, 0 TSRMLS_CC);
+    path_len = spprintf(&path, 0, "[%ld]", index);
+    pcbc_lookup_in_builder_get(Z_LOOKUP_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len TSRMLS_CC);
+    pcbc_bucket_subdoc_request(obj, Z_LOOKUP_IN_BUILDER_OBJ_P(PCBC_P(builder)), 1, return_value TSRMLS_CC);
+    efree(path);
+    zval_ptr_dtor(&builder);
+    PCBC_READ_PROPERTY(val, pcbc_document_fragment_ce, return_value, "value", 0);
+    if (!val || Z_TYPE_P(val) != IS_ARRAY) {
+        RETURN_NULL();
+    }
+    val = php_array_fetchn(val, 0);
+    if (!val || Z_TYPE_P(val) != IS_ARRAY) {
+        RETURN_NULL();
+    }
+    val = php_array_fetch(val, "value");
+    if (!val) {
+        RETURN_NULL();
+    }
+    RETURN_ZVAL(val, 1, 0);
+} /* }}} */
+
+/* {{{ proto mixed Bucket::listSet($id, int $index, mixed $value) */
+PHP_METHOD(Bucket, listSet)
+{
+    pcbc_bucket_t *obj;
+    char *id = NULL, *path = NULL;
+    pcbc_str_arg_size id_len = 0;
+    long index = 0;
+    int rv, path_len;
+    zval *val;
+    PCBC_ZVAL builder;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "slz", &id, &id_len, &index, &val);
+    if (rv == FAILURE) {
+        return;
+    }
+
+    obj = Z_BUCKET_OBJ_P(getThis());
+
+    PCBC_ZVAL_ALLOC(builder);
+    pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, 0 TSRMLS_CC);
+    path_len = spprintf(&path, 0, "[%ld]", index);
+    pcbc_mutate_in_builder_replace(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len, val, 1 TSRMLS_CC);
+    pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
+    efree(path);
+    zval_ptr_dtor(&builder);
+    RETURN_NULL();
+} /* }}} */
+
+/* {{{ proto mixed Bucket::setAdd($id, mixed $value) */
+PHP_METHOD(Bucket, setAdd)
+{
+    pcbc_bucket_t *obj;
+    char *id = NULL;
+    pcbc_str_arg_size id_len = 0;
+    int rv;
+    zval *val;
+    PCBC_ZVAL builder;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz", &id, &id_len, &val);
+    if (rv == FAILURE) {
+        return;
+    }
+
+    obj = Z_BUCKET_OBJ_P(getThis());
+
+    PCBC_ZVAL_ALLOC(builder);
+    pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, 0 TSRMLS_CC);
+    pcbc_mutate_in_builder_array_add_unique(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), NULL, 0, val, 1 TSRMLS_CC);
+    pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
+    zval_ptr_dtor(&builder);
+    RETURN_NULL();
+} /* }}} */
+
+/* {{{ proto mixed Bucket::setExists($id, mixed $value) */
+PHP_METHOD(Bucket, setExists)
+{
+    pcbc_bucket_t *obj;
+    zval *id = NULL, *val = NULL;
+    int rv;
+    pcbc_pp_state pp_state = {0};
+    pcbc_pp_id pp_id = {0};
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz", &id, &val);
+    if (rv == FAILURE) {
+        return;
+    }
+    PCBC_CHECK_ZVAL_STRING(id, "id must be a string");
+    obj = Z_BUCKET_OBJ_P(getThis());
+
+    pp_state.arg_req = 1;
+#if PHP_VERSION_ID >= 70000
+    pp_state.zids = *id;
+#else
+    pp_state.zids = id;
+#endif
+    memcpy(pp_state.args[0].name, ZEND_STRS("id"));
+    pp_state.args[0].ptr = (zval **)&pp_id;
+#if PHP_VERSION_ID >= 70000
+    pp_state.args[0].val = *id;
+#else
+    pp_state.args[0].val = id;
+#endif
+    pcbc_bucket_get(obj, &pp_state, &pp_id, NULL, NULL, NULL, return_value TSRMLS_CC);
+    {
+        zval *array;
+
+        PCBC_READ_PROPERTY(array, pcbc_document_ce, return_value, "value", 0);
+        if (val && Z_TYPE_P(array) == IS_ARRAY) {
+#if PHP_VERSION_ID >= 70000
+            zval *entry;
+
+            ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(array), entry)
+            {
+                if (zend_is_identical(val, entry)) {
+                    RETURN_TRUE;
+                }
+            }
+            ZEND_HASH_FOREACH_END();
+#else
+            HashPosition pos;
+            zval **entry, res;
+
+            zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(array), &pos);
+            while (zend_hash_get_current_data_ex(Z_ARRVAL_P(array), (void **)&entry, &pos) == SUCCESS) {
+                is_identical_function(&res, val, *entry TSRMLS_CC);
+                if (Z_LVAL(res)) {
+                    RETURN_TRUE;
+                }
+                zend_hash_move_forward_ex(Z_ARRVAL_P(array), &pos);
+            }
+#endif
+        }
+    }
+    RETURN_FALSE;
+} /* }}} */
+
+/* {{{ proto mixed Bucket::setRemove($id, mixed $value) */
+PHP_METHOD(Bucket, setRemove)
+{
+    pcbc_bucket_t *obj;
+    zval *id = NULL, *val = NULL;
+    int rv;
+    pcbc_pp_state pp_state = {0};
+    pcbc_pp_id pp_id = {0};
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz", &id, &val);
+    if (rv == FAILURE) {
+        return;
+    }
+    PCBC_CHECK_ZVAL_STRING(id, "id must be a string");
+    obj = Z_BUCKET_OBJ_P(getThis());
+
+    pp_state.arg_req = 1;
+#if PHP_VERSION_ID >= 70000
+    pp_state.zids = *id;
+#else
+    pp_state.zids = id;
+#endif
+    memcpy(pp_state.args[0].name, ZEND_STRS("id"));
+    pp_state.args[0].ptr = (zval **)&pp_id;
+#if PHP_VERSION_ID >= 70000
+    pp_state.args[0].val = *id;
+#else
+    pp_state.args[0].val = id;
+#endif
+    pcbc_bucket_get(obj, &pp_state, &pp_id, NULL, NULL, NULL, return_value TSRMLS_CC);
+    {
+        zval *array, *casval;
+        lcb_cas_t cas = 0;
+
+        PCBC_READ_PROPERTY(array, pcbc_document_ce, return_value, "value", 0);
+        PCBC_READ_PROPERTY(casval, pcbc_document_ce, return_value, "cas", 0);
+        if (casval && Z_TYPE_P(casval) == IS_STRING) {
+            cas = pcbc_cas_decode(casval TSRMLS_CC);
+        }
+        if (val && Z_TYPE_P(array) == IS_ARRAY) {
+            int index = 0;
+#if PHP_VERSION_ID >= 70000
+            zval *entry;
+
+            ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(array), entry)
+            {
+                if (zend_is_identical(val, entry)) {
+                    PCBC_ZVAL builder;
+                    char *path = NULL;
+                    int path_len;
+                    zval *exc = NULL;
+
+                    pcbc_mutate_in_builder_init(&builder, getThis(), Z_STRVAL_P(id), Z_STRLEN_P(id), cas TSRMLS_CC);
+                    path_len = spprintf(&path, 0, "[%ld]", index);
+                    pcbc_mutate_in_builder_remove(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len TSRMLS_CC);
+                    pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0,
+                                               return_value TSRMLS_CC);
+                    efree(path);
+                    zval_ptr_dtor(PCBC_P(builder));
+                    PCBC_READ_PROPERTY(exc, pcbc_document_ce, return_value, "error", 0);
+                    if (exc && Z_TYPE_P(exc) == IS_OBJECT &&
+                        instanceof_function(Z_OBJCE_P(exc), pcbc_exception_ce TSRMLS_CC)) {
+                        RETURN_FALSE;
+                    }
+                    RETURN_TRUE;
+                }
+                index++;
+            }
+            ZEND_HASH_FOREACH_END();
+#else
+            HashPosition pos;
+            zval **entry, res;
+
+            zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(array), &pos);
+            while (zend_hash_get_current_data_ex(Z_ARRVAL_P(array), (void **)&entry, &pos) == SUCCESS) {
+                is_identical_function(&res, val, *entry TSRMLS_CC);
+                if (Z_LVAL(res)) {
+                    PCBC_ZVAL builder;
+                    char *path = NULL;
+                    int path_len;
+                    zval *exc = NULL;
+
+                    MAKE_STD_ZVAL(builder);
+                    pcbc_mutate_in_builder_init(builder, getThis(), Z_STRVAL_P(id), Z_STRLEN_P(id), cas TSRMLS_CC);
+                    path_len = spprintf(&path, 0, "[%ld]", (long)index);
+                    pcbc_mutate_in_builder_remove(Z_MUTATE_IN_BUILDER_OBJ_P(builder), path, path_len TSRMLS_CC);
+                    pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(builder), 0, return_value TSRMLS_CC);
+                    efree(path);
+                    zval_ptr_dtor(PCBC_CP(builder));
+                    PCBC_READ_PROPERTY(exc, pcbc_document_ce, return_value, "error", 0);
+                    if (exc && Z_TYPE_P(exc) == IS_OBJECT &&
+                        instanceof_function(Z_OBJCE_P(exc), pcbc_exception_ce TSRMLS_CC)) {
+                        RETURN_FALSE;
+                    }
+                    RETURN_TRUE;
+                }
+                zend_hash_move_forward_ex(Z_ARRVAL_P(array), &pos);
+                index++;
+            }
+#endif
+        }
+    }
+    RETURN_FALSE;
+} /* }}} */
+
+/* {{{ proto mixed Bucket::queueRemove($id) */
+PHP_METHOD(Bucket, queueRemove)
+{
+    pcbc_bucket_t *obj;
+    char *id = NULL, *path = NULL;
+    pcbc_str_arg_size id_len = 0, path_len;
+    int rv;
+    zval *val;
+    PCBC_ZVAL builder;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &id, &id_len);
+    if (rv == FAILURE) {
+        return;
+    }
+
+    obj = Z_BUCKET_OBJ_P(getThis());
+
+    PCBC_ZVAL_ALLOC(builder);
+    pcbc_lookup_in_builder_init(PCBC_P(builder), getThis(), id, id_len, NULL, 0 TSRMLS_CC);
+    path = "[-1]";
+    path_len = strlen(path);
+    pcbc_lookup_in_builder_get(Z_LOOKUP_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len TSRMLS_CC);
+    pcbc_bucket_subdoc_request(obj, Z_LOOKUP_IN_BUILDER_OBJ_P(PCBC_P(builder)), 1, return_value TSRMLS_CC);
+    zval_ptr_dtor(&builder);
+    PCBC_READ_PROPERTY(val, pcbc_document_fragment_ce, return_value, "value", 0);
+    if (!val || Z_TYPE_P(val) != IS_ARRAY) {
+        RETURN_NULL();
+    }
+    val = php_array_fetchn(val, 0);
+    if (!val || Z_TYPE_P(val) != IS_ARRAY) {
+        RETURN_NULL();
+    }
+    val = php_array_fetch(val, "value");
+    if (!val) {
+        RETURN_NULL();
+    }
+    {
+        zval *casval;
+        lcb_cas_t cas = 0;
+        PCBC_ZVAL builder;
+        zval *exc = NULL;
+
+        PCBC_READ_PROPERTY(casval, pcbc_document_fragment_ce, return_value, "cas", 0);
+        if (casval && Z_TYPE_P(casval) == IS_STRING) {
+            cas = pcbc_cas_decode(casval TSRMLS_CC);
+        }
+        PCBC_ZVAL_ALLOC(builder);
+        pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, cas TSRMLS_CC);
+        pcbc_mutate_in_builder_remove(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len TSRMLS_CC);
+        pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
+        zval_ptr_dtor(&builder);
+        PCBC_READ_PROPERTY(exc, pcbc_document_ce, return_value, "error", 0);
+        if (exc && Z_TYPE_P(exc) == IS_OBJECT && instanceof_function(Z_OBJCE_P(exc), pcbc_exception_ce TSRMLS_CC)) {
+            RETURN_NULL();
+        }
+    }
+
+    RETURN_ZVAL(val, 1, 0);
+} /* }}} */
+
 ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_none, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
@@ -439,6 +972,71 @@ ZEND_ARG_INFO(0, query)
 ZEND_ARG_INFO(0, jsonAsArray)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_mapSize, 0, 0, 1)
+ZEND_ARG_INFO(0, id)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_mapAdd, 0, 0, 3)
+ZEND_ARG_INFO(0, id)
+ZEND_ARG_INFO(0, key)
+ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_mapRemove, 0, 0, 2)
+ZEND_ARG_INFO(0, id)
+ZEND_ARG_INFO(0, key)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_mapGet, 0, 0, 2)
+ZEND_ARG_INFO(0, id)
+ZEND_ARG_INFO(0, key)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_listPush, 0, 0, 2)
+ZEND_ARG_INFO(0, id)
+ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_listShift, 0, 0, 2)
+ZEND_ARG_INFO(0, id)
+ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_listRemove, 0, 0, 2)
+ZEND_ARG_INFO(0, id)
+ZEND_ARG_INFO(0, index)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_listGet, 0, 0, 2)
+ZEND_ARG_INFO(0, id)
+ZEND_ARG_INFO(0, index)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_listSet, 0, 0, 3)
+ZEND_ARG_INFO(0, id)
+ZEND_ARG_INFO(0, index)
+ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_setAdd, 0, 0, 2)
+ZEND_ARG_INFO(0, id)
+ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_setExists, 0, 0, 2)
+ZEND_ARG_INFO(0, id)
+ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_setRemove, 0, 0, 2)
+ZEND_ARG_INFO(0, id)
+ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_queueRemove, 0, 0, 1)
+ZEND_ARG_INFO(0, id)
+ZEND_END_ARG_INFO()
+
 // clang-format off
 zend_function_entry bucket_methods[] = {
     PHP_ME(Bucket, __construct, ai_Bucket_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
@@ -460,6 +1058,25 @@ zend_function_entry bucket_methods[] = {
     PHP_ME(Bucket, mutateIn, ai_Bucket_mutateIn, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(Bucket, manager, ai_Bucket_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(Bucket, query, ai_Bucket_query, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(Bucket, mapSize, ai_Bucket_mapSize, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(Bucket, mapAdd, ai_Bucket_mapAdd, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(Bucket, mapRemove, ai_Bucket_mapRemove, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(Bucket, mapGet, ai_Bucket_mapGet, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(Bucket, setAdd, ai_Bucket_setAdd, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(Bucket, setExists, ai_Bucket_setExists, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(Bucket, setRemove, ai_Bucket_setRemove, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_MALIAS(Bucket, listSize, mapSize, ai_Bucket_mapSize, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(Bucket, listPush, ai_Bucket_listPush, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(Bucket, listShift, ai_Bucket_listShift, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(Bucket, listRemove, ai_Bucket_listRemove, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(Bucket, listGet, ai_Bucket_listGet, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(Bucket, listSet, ai_Bucket_listSet, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_MALIAS(Bucket, listExists, setExists, ai_Bucket_setExists, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_MALIAS(Bucket, setSize, mapSize, ai_Bucket_mapSize, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_MALIAS(Bucket, queueSize, mapSize, ai_Bucket_mapSize, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_MALIAS(Bucket, queueAdd, listShift, ai_Bucket_listShift, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_MALIAS(Bucket, queueExists, setExists, ai_Bucket_setExists, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(Bucket, queueRemove, ai_Bucket_queueRemove, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_FE_END
 };
 // clang-format on
