@@ -176,12 +176,12 @@ static PHP_INI_MH(OnUpdateCmpr)
 }
 // clang-format off
 PHP_INI_BEGIN()
-STD_PHP_INI_ENTRY("couchbase.log_level",                     "WARN", PHP_INI_ALL, OnUpdateLogLevel, log_level,           zend_couchbase_globals, couchbase_globals)
-STD_PHP_INI_ENTRY("couchbase.encoder.format",                "json", PHP_INI_ALL, OnUpdateFormat,   enc_format,          zend_couchbase_globals, couchbase_globals)
-STD_PHP_INI_ENTRY("couchbase.encoder.compression",           "off",  PHP_INI_ALL, OnUpdateCmpr,     enc_cmpr ,           zend_couchbase_globals, couchbase_globals)
-STD_PHP_INI_ENTRY("couchbase.encoder.compression_threshold", "0.0",  PHP_INI_ALL, OnUpdateReal,     enc_cmpr_threshold,  zend_couchbase_globals, couchbase_globals)
-STD_PHP_INI_ENTRY("couchbase.encoder.compression_factor",    "0.0",  PHP_INI_ALL, OnUpdateReal,     enc_cmpr_factor,     zend_couchbase_globals, couchbase_globals)
-STD_PHP_INI_ENTRY("couchbase.decoder.json_arrays",           "0",    PHP_INI_ALL, OnUpdateBool,     dec_json_array,      zend_couchbase_globals, couchbase_globals)
+STD_PHP_INI_ENTRY("couchbase.log_level",                     "WARN", PHP_INI_ALL, OnUpdateLogLevel,   log_level,           zend_couchbase_globals, couchbase_globals)
+STD_PHP_INI_ENTRY("couchbase.encoder.format",                "json", PHP_INI_ALL, OnUpdateFormat,     enc_format,          zend_couchbase_globals, couchbase_globals)
+STD_PHP_INI_ENTRY("couchbase.encoder.compression",           "off",  PHP_INI_ALL, OnUpdateCmpr,       enc_cmpr ,           zend_couchbase_globals, couchbase_globals)
+STD_PHP_INI_ENTRY("couchbase.encoder.compression_threshold", "0",    PHP_INI_ALL, OnUpdateLongGEZero, enc_cmpr_threshold,  zend_couchbase_globals, couchbase_globals)
+STD_PHP_INI_ENTRY("couchbase.encoder.compression_factor",    "0.0",  PHP_INI_ALL, OnUpdateReal,       enc_cmpr_factor,     zend_couchbase_globals, couchbase_globals)
+STD_PHP_INI_ENTRY("couchbase.decoder.json_arrays",           "0",    PHP_INI_ALL, OnUpdateBool,       dec_json_array,      zend_couchbase_globals, couchbase_globals)
 PHP_INI_END()
 // clang-format on
 
@@ -211,7 +211,7 @@ static void php_extname_init_globals(zend_couchbase_globals *couchbase_globals)
     couchbase_globals->enc_format_i = COUCHBASE_SERTYPE_JSON;
     couchbase_globals->enc_cmpr = "off";
     couchbase_globals->enc_cmpr_i = COUCHBASE_CMPRTYPE_NONE;
-    couchbase_globals->enc_cmpr_threshold = 0.0;
+    couchbase_globals->enc_cmpr_threshold = 0;
     couchbase_globals->enc_cmpr_factor = 0.0;
     couchbase_globals->dec_json_array = 0;
 }
@@ -402,7 +402,7 @@ PHP_RSHUTDOWN_FUNCTION(couchbase) { return SUCCESS; }
 
 PHP_RINIT_FUNCTION(couchbase) { return SUCCESS; }
 
-static void basic_encoder_v1(zval *value, int sertype, int cmprtype, double cmprthresh, double cmprfactor,
+static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprthresh, double cmprfactor,
                              zval *return_value TSRMLS_DC)
 {
     PCBC_ZVAL res;
@@ -780,7 +780,7 @@ PHP_FUNCTION(basicEncoderV1)
     int rv;
     int sertype = DEFAULT_COUCHBASE_SERTYPE;
     int cmprtype = DEFAULT_COUCHBASE_CMPRTYPE;
-    double cmprthresh = DEFAULT_COUCHBASE_CMPRTHRESH;
+    long cmprthresh = DEFAULT_COUCHBASE_CMPRTHRESH;
     double cmprfactor = DEFAULT_COUCHBASE_CMPRFACTOR;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|a", &value, &options);
@@ -806,7 +806,7 @@ PHP_FUNCTION(basicEncoderV1)
             }
         }
         if (php_array_existsc(options, "cmprthresh")) {
-            cmprthresh = php_array_fetchc_double(options, "cmprthresh");
+            cmprthresh = php_array_fetchc_long(options, "cmprthresh");
         }
         if (php_array_existsc(options, "cmprfactor")) {
             cmprfactor = php_array_fetchc_double(options, "cmprfactor");

@@ -103,7 +103,7 @@ char *enc_format;
 char *enc_cmpr;
 int enc_format_i;
 int enc_cmpr_i;
-double enc_cmpr_threshold;
+long enc_cmpr_threshold;
 double enc_cmpr_factor;
 zend_bool dec_json_array;
 ZEND_END_MODULE_GLOBALS(couchbase)
