@@ -25,10 +25,10 @@
         <active>yes</active>
     </lead>
 
-    <date>2017-02-24</date>
+    <date>2017-03-02</date>
     <version>
-        <release>2.2.4</release>
-        <api>2.2.0</api>
+        <release>2.3.0</release>
+        <api>2.3.0</api>
     </version>
     <stability>
         <release>stable</release>
@@ -64,6 +64,8 @@
             <file role="src" name="opcookie.c" />
             <file role="src" name="paramparser.c" />
             <file role="src" name="php_couchbase.h" />
+            <file role="src" name="src/couchbase/authenticator.c" />
+            <file role="src" name="src/couchbase/classic_authenticator.c" />
             <file role="src" name="src/couchbase/base36.c" />
             <file role="src" name="src/couchbase/bucket.c" />
             <file role="src" name="src/couchbase/bucket/cbft.c" />
@@ -97,7 +99,7 @@
             <file role="src" name="src/couchbase/search/boolean_field_query.c" />
             <file role="src" name="src/couchbase/search/boolean_query.c" />
             <file role="src" name="src/couchbase/search/conjunction_query.c" />
-            <file role="src" name="src/couchbase/search/date_facet.c" />
+            <file role="src" name="src/couchbase/search/date_range_facet.c" />
             <file role="src" name="src/couchbase/search/date_range_query.c" />
             <file role="src" name="src/couchbase/search/disjunction_query.c" />
             <file role="src" name="src/couchbase/search/doc_id_query.c" />
@@ -106,7 +108,7 @@
             <file role="src" name="src/couchbase/search/match_none_query.c" />
             <file role="src" name="src/couchbase/search/match_phrase_query.c" />
             <file role="src" name="src/couchbase/search/match_query.c" />
-            <file role="src" name="src/couchbase/search/numeric_facet.c" />
+            <file role="src" name="src/couchbase/search/numeric_range_facet.c" />
             <file role="src" name="src/couchbase/search/numeric_range_query.c" />
             <file role="src" name="src/couchbase/search/phrase_query.c" />
             <file role="src" name="src/couchbase/search/prefix_query.c" />

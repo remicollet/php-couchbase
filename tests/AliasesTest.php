@@ -40,7 +40,7 @@ class AliasesTest extends CouchbaseTestCase {
         $this->assertClassAlias("Couchbase\DocumentFragment", "CouchbaseDocumentFragment");
         $this->assertClassAlias("Couchbase\Document", "CouchbaseMetaDoc");
         $this->assertClassAlias("Couchbase\Exception", "CouchbaseException");
-        $this->assertClassAlias("Couchbase\Authenticator", "CouchbaseAuthenticator");
+        $this->assertClassAlias("Couchbase\ClassicAuthenticator", "CouchbaseAuthenticator");
     }
 
     private function assertClassAlias($className, $aliasName) {

@@ -16,6 +16,7 @@ if (PHP_COUCHBASE != "no") {
             "fastlz.c";
         src_couchbase_sources  =
             "authenticator.c " +
+            "classic_authenticator.c " +
             "base36.c " +
             "bucket.c " +
             "bucket_manager.c " +

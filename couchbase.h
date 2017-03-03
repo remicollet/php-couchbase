@@ -123,6 +123,7 @@ PHP_MINIT_FUNCTION(ClusterManager);
 PHP_MINIT_FUNCTION(Bucket);
 PHP_MINIT_FUNCTION(BucketManager);
 PHP_MINIT_FUNCTION(Authenticator);
+PHP_MINIT_FUNCTION(ClassicAuthenticator);
 PHP_MINIT_FUNCTION(MutationToken);
 PHP_MINIT_FUNCTION(MutationState);
 PHP_MINIT_FUNCTION(ViewQueryEncodable);
@@ -279,9 +280,9 @@ typedef int pcbc_str_arg_size;
 
 #if PHP_VERSION_ID >= 70000
 #define PCBC_ALLOC_OBJECT_T(obj_t, class_type)                                                                         \
-    (obj_t *) ecalloc(1, sizeof(obj_t) + zend_object_properties_size(class_type))
+    (obj_t *)ecalloc(1, sizeof(obj_t) + zend_object_properties_size(class_type))
 #else
-#define PCBC_ALLOC_OBJECT_T(obj_t, class_type) (obj_t *) ecalloc(1, sizeof(obj_t))
+#define PCBC_ALLOC_OBJECT_T(obj_t, class_type) (obj_t *)ecalloc(1, sizeof(obj_t))
 #endif
 
 #if PHP_VERSION_ID >= 70000
@@ -414,8 +415,8 @@ typedef zval *PCBC_ZVAL;
         (__pcbc_receiver_buf) = ZSTR_VAL((__pcbc_smart_str).s);                                                        \
         (__pcbc_receiver_length) = ZSTR_LEN((__pcbc_smart_str).s);                                                     \
     } while (0)
-#define PCBC_SMARTSTR_VAL(__pcbc_smart_str) (char *) ZSTR_VAL((__pcbc_smart_str).s)
-#define PCBC_SMARTSTR_LEN(__pcbc_smart_str) (int) ZSTR_LEN((__pcbc_smart_str).s)
+#define PCBC_SMARTSTR_VAL(__pcbc_smart_str) (char *)ZSTR_VAL((__pcbc_smart_str).s)
+#define PCBC_SMARTSTR_LEN(__pcbc_smart_str) (int)ZSTR_LEN((__pcbc_smart_str).s)
 #else
 #define PCBC_SMARTSTR_DUP(__pcbc_smart_str, __pcbc_receiver_buf)                                                       \
     do {                                                                                                               \
@@ -450,7 +451,7 @@ typedef struct {
     pcbc_credential_t *tail;
     int nbuckets;
     PCBC_ZEND_OBJECT_POST
-} pcbc_authenticator_t;
+} pcbc_classic_authenticator_t;
 
 typedef struct {
     PCBC_ZEND_OBJECT_PRE
@@ -766,8 +767,8 @@ void pcbc_conjunction_search_query_init(zval *return_value, zval ***args, int nu
 void pcbc_doc_id_search_query_init(zval *return_value, zval ***args, int num_args TSRMLS_DC);
 void pcbc_phrase_search_query_init(zval *return_value, zval ***args, int num_args TSRMLS_DC);
 #endif
-void pcbc_generate_lcb_auth(pcbc_authenticator_t *auth, lcb_AUTHENTICATOR **result, lcb_type_t type, const char *name,
-                            const char *password, char **hash TSRMLS_DC);
+void pcbc_generate_lcb_auth(pcbc_classic_authenticator_t *auth, lcb_AUTHENTICATOR **result, lcb_type_t type,
+                            const char *name, const char *password, char **hash TSRMLS_DC);
 
 #if PHP_VERSION_ID >= 70000
 static inline pcbc_cluster_t *pcbc_cluster_fetch_object(zend_object *obj)
@@ -814,9 +815,9 @@ static inline pcbc_view_query_t *pcbc_view_query_fetch_object(zend_object *obj)
 {
     return (pcbc_view_query_t *)((char *)obj - XtOffsetOf(pcbc_view_query_t, std));
 }
-static inline pcbc_authenticator_t *pcbc_authenticator_fetch_object(zend_object *obj)
+static inline pcbc_classic_authenticator_t *pcbc_classic_authenticator_fetch_object(zend_object *obj)
 {
-    return (pcbc_authenticator_t *)((char *)obj - XtOffsetOf(pcbc_authenticator_t, std));
+    return (pcbc_classic_authenticator_t *)((char *)obj - XtOffsetOf(pcbc_classic_authenticator_t, std));
 }
 #define Z_CLUSTER_OBJ(zo) (pcbc_cluster_fetch_object(zo))
 #define Z_CLUSTER_OBJ_P(zv) (pcbc_cluster_fetch_object(Z_OBJ_P(zv)))
@@ -840,8 +841,8 @@ static inline pcbc_authenticator_t *pcbc_authenticator_fetch_object(zend_object 
 #define Z_SEARCH_QUERY_OBJ_P(zv) (pcbc_search_query_fetch_object(Z_OBJ_P(zv)))
 #define Z_VIEW_QUERY_OBJ(zo) (pcbc_view_query_fetch_object(zo))
 #define Z_VIEW_QUERY_OBJ_P(zv) (pcbc_view_query_fetch_object(Z_OBJ_P(zv)))
-#define Z_AUTHENTICATOR_OBJ(zo) (pcbc_authenticator_fetch_object(zo))
-#define Z_AUTHENTICATOR_OBJ_P(zv) (pcbc_authenticator_fetch_object(Z_OBJ_P(zv)))
+#define Z_CLASSIC_AUTHENTICATOR_OBJ(zo) (pcbc_classic_authenticator_fetch_object(zo))
+#define Z_CLASSIC_AUTHENTICATOR_OBJ_P(zv) (pcbc_classic_authenticator_fetch_object(Z_OBJ_P(zv)))
 #else
 #define Z_CLUSTER_OBJ(zo) ((pcbc_cluster_t *)zo)
 #define Z_CLUSTER_OBJ_P(zv) ((pcbc_cluster_t *)zend_object_store_get_object(zv TSRMLS_CC))
@@ -865,8 +866,8 @@ static inline pcbc_authenticator_t *pcbc_authenticator_fetch_object(zend_object 
 #define Z_SEARCH_QUERY_OBJ_P(zv) ((pcbc_search_query_t *)zend_object_store_get_object(zv TSRMLS_CC))
 #define Z_VIEW_QUERY_OBJ(zo) ((pcbc_view_query_t *)zo)
 #define Z_VIEW_QUERY_OBJ_P(zv) ((pcbc_view_query_t *)zend_object_store_get_object(zv TSRMLS_CC))
-#define Z_AUTHENTICATOR_OBJ(zo) ((pcbc_authenticator_t *)zo)
-#define Z_AUTHENTICATOR_OBJ_P(zv) ((pcbc_authenticator_t *)zend_object_store_get_object(zv TSRMLS_CC))
+#define Z_CLASSIC_AUTHENTICATOR_OBJ(zo) ((pcbc_classic_authenticator_t *)zo)
+#define Z_CLASSIC_AUTHENTICATOR_OBJ_P(zv) ((pcbc_classic_authenticator_t *)zend_object_store_get_object(zv TSRMLS_CC))
 #endif
 
 typedef struct {

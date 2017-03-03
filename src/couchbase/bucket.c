@@ -19,6 +19,7 @@
 #define LOGARGS(obj, lvl) LCB_LOG_##lvl, obj->conn->lcb, "pcbc/bucket", __FILE__, __LINE__
 
 zend_class_entry *pcbc_bucket_ce;
+extern zend_class_entry *pcbc_classic_authenticator_ce;
 
 PHP_METHOD(Bucket, get);
 PHP_METHOD(Bucket, getAndLock);
@@ -1164,13 +1165,15 @@ void pcbc_bucket_init(zval *return_value, pcbc_cluster_t *cluster, const char *b
     pcbc_bucket_t *bucket;
     pcbc_connection_t *conn;
     lcb_error_t err;
-    pcbc_authenticator_t *authenticator = NULL;
+    pcbc_classic_authenticator_t *authenticator = NULL;
     pcbc_credential_t extra_creds = {0};
     lcb_AUTHENTICATOR *auth = NULL;
     char *auth_hash = NULL;
 
     if (!Z_ISUNDEF(cluster->auth)) {
-        authenticator = Z_AUTHENTICATOR_OBJ_P(PCBC_P(cluster->auth));
+        if (instanceof_function(Z_OBJCE_P(PCBC_P(cluster->auth)), pcbc_classic_authenticator_ce TSRMLS_CC)) {
+            authenticator = Z_CLASSIC_AUTHENTICATOR_OBJ_P(PCBC_P(cluster->auth));
+        }
     }
     pcbc_generate_lcb_auth(authenticator, &auth, LCB_TYPE_BUCKET, bucketname, password, &auth_hash TSRMLS_CC);
     err = pcbc_connection_get(&conn, LCB_TYPE_BUCKET, cluster->connstr, bucketname, auth, auth_hash TSRMLS_CC);

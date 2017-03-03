@@ -22,6 +22,7 @@
 #define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/cluster_manager", __FILE__, __LINE__
 
 zend_class_entry *pcbc_cluster_manager_ce;
+extern zend_class_entry *pcbc_classic_authenticator_ce;
 
 /* {{{ proto void ClusterManager::__construct() Should not be called directly */
 PHP_METHOD(ClusterManager, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
@@ -213,13 +214,15 @@ void pcbc_cluster_manager_init(zval *return_value, pcbc_cluster_t *cluster, cons
     pcbc_cluster_manager_t *manager;
     lcb_error_t err;
     pcbc_connection_t *conn;
-    pcbc_authenticator_t *authenticator = NULL;
+    pcbc_classic_authenticator_t *authenticator = NULL;
     pcbc_credential_t extra_creds = {0};
     lcb_AUTHENTICATOR *auth = NULL;
     char *auth_hash = NULL;
 
     if (!Z_ISUNDEF(cluster->auth)) {
-        authenticator = Z_AUTHENTICATOR_OBJ_P(PCBC_P(cluster->auth));
+        if (instanceof_function(Z_OBJCE_P(PCBC_P(cluster->auth)), pcbc_classic_authenticator_ce TSRMLS_CC)) {
+            authenticator = Z_CLASSIC_AUTHENTICATOR_OBJ_P(PCBC_P(cluster->auth));
+        }
     }
     pcbc_generate_lcb_auth(authenticator, &auth, LCB_TYPE_CLUSTER, username, password, &auth_hash TSRMLS_CC);
     err = pcbc_connection_get(&conn, LCB_TYPE_CLUSTER, cluster->connstr, NULL, auth, auth_hash TSRMLS_CC);

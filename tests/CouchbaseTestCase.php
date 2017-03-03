@@ -19,12 +19,12 @@ class CouchbaseTestCase extends \PHPUnit_Framework_TestCase {
 
         $this->testUser = getenv('CPUSER');
         if ($this->testUser === FALSE) {
-            $this->testUser = '';
+            $this->testUser = 'Administrator';
         }
 
         $this->testPass = getenv('CPPASS');
         if ($this->testPass === FALSE) {
-            $this->testPass = '';
+            $this->testPass = 'password';
         }
     }
 
