@@ -48,8 +48,14 @@ PHP_MINIT_FUNCTION(N1qlIndex)
 #define X(name, var) zend_declare_property_null(n1ix_spec_ce, name, strlen(name), ZEND_ACC_PUBLIC TSRMLS_CC);
     PROPERTIES(X)
 #undef X
+
+    zend_declare_class_constant_long(n1ix_spec_ce, ZEND_STRL("VIEW"), LCB_N1XSPEC_T_VIEW TSRMLS_CC);
+    zend_declare_class_constant_long(n1ix_spec_ce, ZEND_STRL("GSI"), LCB_N1XSPEC_T_GSI TSRMLS_CC);
+    zend_declare_class_constant_long(n1ix_spec_ce, ZEND_STRL("DEFAULT"), LCB_N1XSPEC_T_DEFAULT TSRMLS_CC);
+
     return SUCCESS;
 }
+
 int pcbc_n1ix_init(zval *return_value, zval *json TSRMLS_DC)
 {
     zval *val;

@@ -163,7 +163,7 @@ ZEND_BEGIN_ARG_INFO_EX(ai_DisjunctionSearchQuery_none, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(ai_DisjunctionSearchQuery_min, 0, 0, 1)
-ZEND_ARG_INFO(0, field)
+ZEND_ARG_INFO(0, min)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(ai_DisjunctionSearchQuery_boost, 0, 0, 1)

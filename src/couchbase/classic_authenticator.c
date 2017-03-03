@@ -21,6 +21,7 @@
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/authenticator", __FILE__, __LINE__
 
 zend_class_entry *pcbc_classic_authenticator_ce;
+extern zend_class_entry *pcbc_authenticator_ce;
 
 /* {{{ proto void ClassicAuthenticator::__construct() */
 PHP_METHOD(ClassicAuthenticator, __construct)
@@ -308,6 +309,8 @@ PHP_MINIT_FUNCTION(ClassicAuthenticator)
     pcbc_classic_authenticator_ce->create_object = authenticator_create_object;
     PCBC_CE_FLAGS_FINAL(pcbc_classic_authenticator_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_classic_authenticator_ce);
+
+    zend_class_implements(pcbc_classic_authenticator_ce TSRMLS_CC, 1, pcbc_authenticator_ce);
 
     memcpy(&classic_authenticator_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     classic_authenticator_handlers.get_debug_info = pcbc_classic_authenticator_get_debug_info;

@@ -338,15 +338,15 @@ class BucketTest extends CouchbaseTestCase {
     }
 
     /**
-     * @test
      * Test all option values to make sure they save/load
      * We open a new bucket for this test to make sure our settings
-     *   changes do not affect later tests
+     * changes do not affect later tests. Console log level option used
+     * to generate unique (for these test suites) connection string,
+     * so that the lcb_t won't be reused from the pool
      */
     function testOptionVals() {
-        $h = new \Couchbase\Cluster($this->testDsn);
+        $h = new \Couchbase\Cluster($this->testDsn . "?console_log_level=42");
         $b = $h->openBucket();
-        $this->setTimeouts($b);
 
         $checkVal = 243;
 

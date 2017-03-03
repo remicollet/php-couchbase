@@ -109,7 +109,7 @@ PHP_METHOD(NumericRangeSearchFacet, jsonSerialize)
 ZEND_BEGIN_ARG_INFO_EX(ai_NumericRangeSearchFacet_none, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_NumericRangeSearchFacet_addRange, 0, 0, 2)
+ZEND_BEGIN_ARG_INFO_EX(ai_NumericRangeSearchFacet_addRange, 0, 0, 3)
 ZEND_ARG_INFO(0, name)
 ZEND_ARG_INFO(0, min)
 ZEND_ARG_INFO(0, max)
