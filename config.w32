@@ -1,10 +1,19 @@
 // -*- mode: js; -*-
+// vim:ft=javascript:
 
 ARG_WITH("couchbase", "Couchbase support", "no");
 
 if (PHP_COUCHBASE != "no") {
     if (CHECK_LIB("libcouchbase.lib", "couchbase", PHP_COUCHBASE) &&
         CHECK_HEADER_ADD_INCLUDE("libcouchbase\\couchbase.h", "CFLAGS_COUCHBASE", PHP_COUCHBASE + "\\include;" + PHP_PHP_BUILD + "\\include\\libcouchbase")) {
+        if (CHECK_LIB("zlib_a.lib;zlib.lib", "couchbase") &&
+            CHECK_HEADER_ADD_INCLUDE("zlib.h", "CFLAGS", "..\\zlib;" + php_usual_include_suspects)) {
+            AC_DEFINE("HAVE_COUCHBASE_ZLIB", 1, "Whether zlib compressor is enabled");
+        }
+        if (ADD_EXTENSION_DEP('couchbase', 'igbinary')) {
+            AC_DEFINE("HAVE_COUCHBASE_IGBINARY", 1, "Whether igbinary serializer is enabled");
+        }
+
         root_sources =
             "couchbase.c " +
             "exception.c " +
