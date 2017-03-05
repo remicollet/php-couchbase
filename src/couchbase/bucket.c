@@ -392,7 +392,7 @@ PHP_METHOD(Bucket, mapSize)
 #else
     pp_state.zids = id;
 #endif
-    memcpy(pp_state.args[0].name, ZEND_STRS("id"));
+    memcpy(pp_state.args[0].name, "id", sizeof("id"));
     pp_state.args[0].ptr = (zval **)&pp_id;
 #if PHP_VERSION_ID >= 70000
     pp_state.args[0].val = *id;
@@ -697,7 +697,7 @@ PHP_METHOD(Bucket, setExists)
 #else
     pp_state.zids = id;
 #endif
-    memcpy(pp_state.args[0].name, ZEND_STRS("id"));
+    memcpy(pp_state.args[0].name, "id", sizeof("id"));
     pp_state.args[0].ptr = (zval **)&pp_id;
 #if PHP_VERSION_ID >= 70000
     pp_state.args[0].val = *id;
@@ -760,7 +760,7 @@ PHP_METHOD(Bucket, setRemove)
 #else
     pp_state.zids = id;
 #endif
-    memcpy(pp_state.args[0].name, ZEND_STRS("id"));
+    memcpy(pp_state.args[0].name, "id", sizeof("id"));
     pp_state.args[0].ptr = (zval **)&pp_id;
 #if PHP_VERSION_ID >= 70000
     pp_state.args[0].val = *id;

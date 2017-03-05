@@ -127,6 +127,10 @@ COUCHBASE_FILES=" \
   fi
   PHP_NEW_EXTENSION(couchbase, ${COUCHBASE_FILES}, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
   PHP_ADD_BUILD_DIR($ext_builddir/fastlz, 1)
+  PHP_ADD_BUILD_DIR($ext_builddir/src/couchbase, 1)
+  PHP_ADD_BUILD_DIR($ext_builddir/src/couchbase/search, 1)
+  PHP_ADD_BUILD_DIR($ext_builddir/src/couchbase/bucket, 1)
+  PHP_ADD_BUILD_DIR($ext_builddir/src/couchbase/bucket_manager, 1)
   PHP_ADD_EXTENSION_DEP(couchbase, json)
 
 

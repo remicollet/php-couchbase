@@ -54,6 +54,7 @@ extern zend_json_globals *pcbc_json_globals;
 #include "php_couchbase.h"
 #include "log.h"
 #include "contrib/php_array.h"
+#include <string.h>
 // clang-format on
 
 #if PHP_VERSION_ID >= 50600
