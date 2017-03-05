@@ -23,11 +23,18 @@ if test "$PHP_COUCHBASE" != "no"; then
                  libcouchbase.h should be <libcouchbase-dir>/include and
                  libcouchbase.a should be in <libcouchbase-dir>/lib)
   fi
+
+  AC_MSG_CHECKING([for libcouchbase version >= 2.7.2])
+  LCB_VERSION=$($EGREP "define LCB_VERSION " $LIBCOUCHBASE_DIR/include/libcouchbase/configuration.h | $SED -e 's/[[^0-9x]]//g')
+  AC_MSG_RESULT([$LCB_VERSION])
+  if test $(printf %d $LCB_VERSION) -lt $(printf %d 0x020702); then
+    AC_MSG_ERROR([libcouchbase greater or equal to 2.7.2 required])
+  fi
+
   PHP_ADD_INCLUDE($LIBCOUCHBASE_DIR/include)
 
   PHP_SUBST(COUCHBASE_SHARED_LIBADD)
-  PHP_ADD_LIBRARY_WITH_PATH(couchbase, $LIBCOUCHBASE_DIR/lib,
-               COUCHBASE_SHARED_LIBADD)
+  PHP_ADD_LIBRARY_WITH_PATH(couchbase, $LIBCOUCHBASE_DIR/lib, COUCHBASE_SHARED_LIBADD)
 
   AC_DEFINE(HAVE_COUCHBASE, 1, [Whether you have Couchbase])
 
