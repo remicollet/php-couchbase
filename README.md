@@ -3,7 +3,7 @@
 This library allows you to connect to a Couchbase cluster from PHP.
 It is a native PHP extension and uses the very fast libcouchbase library to
 handle communicating to the cluster over the Couchbase binary protocol.
-It supports 5.x and 7.0.x releases of PHP interpreter.
+It supports 5.x and 7.x releases of PHP interpreter.
 
 ## Useful Links
 
@@ -55,7 +55,7 @@ Here is a simple example of instantiating a connection, setting a new document
 into the bucket and then retrieving its contents:
 
 ```php
-$cluster = new CouchbaseCluster('192.168.7.26');
+$cluster = new \Couchbase\Cluster('localhost');
 $db = $cluster->openBucket('default');
 $db->upsert('testdoc', array('name'=>'Frank'));
 $res = $db->get('testdoc');
@@ -82,9 +82,9 @@ That will bring phpdoc command into PATH. The following steps assume that curren
 
     ver=$(git describe | sed 's/^v//')
     rm -rf couchbase-php-client-$ver
-    phpdoc --target couchbase-php-client-$ver --directory . --ignore examples/,tests/,php/phpc/
+    phpdoc --target couchbase-php-client-$ver --directory api
 
-After that all reference documentation will be stored in couchbase-php-client-2.2.4, if current tag is 2.2.4.
+After that all reference documentation will be stored in couchbase-php-client-2.3.0, if current tag is 2.3.0.
 
 ## Source Control
 
@@ -102,6 +102,13 @@ curl -L https://phar.phpunit.de/phpunit.phar > ~/bin/phpunit
 chmod a+x ~/bin/phpunit
 # or just 'dnf install php-phpunit-PHPUnit' on Fedora 24+
 
+phpunit tests/
+```
+
+Integration tests require some prerequisites, so once they met, you can run integration
+tests with:
+
+```bash
 phpunit tests/
 ```
 

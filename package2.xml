@@ -25,7 +25,7 @@
         <active>yes</active>
     </lead>
 
-    <date>2017-03-02</date>
+    <date>2017-03-07</date>
     <version>
         <release>2.3.0</release>
         <api>2.3.0</api>
@@ -45,6 +45,16 @@
             <file role="doc" name="LICENSE" />
             <file role="doc" name="README.md" />
             <file role="doc" name="contrib/php_array.h.LICENSE" />
+            <file role="doc" name="api/couchbase.php" />
+            <file role="doc" name="api/toplevel.php" />
+            <file role="doc" name="examples/api/couchbase.Authenticator.php" />
+            <file role="doc" name="examples/api/couchbase.LookupInBuilder.execute.php" />
+            <file role="doc" name="examples/api/couchbase.MutateInBuilder.execute.php" />
+            <file role="doc" name="examples/api/couchbase.N1qlQuery.consistentWith.php" />
+            <file role="doc" name="examples/api/couchbase.N1qlQuery.crossBucket.php" />
+            <file role="doc" name="examples/api/couchbase.N1qlQuery.namedParams.php" />
+            <file role="doc" name="examples/api/couchbase.N1qlQuery.positionalParams.php" />
+            <file role="doc" name="examples/api/couchbase.passthruDecoder.php" />
             <file role="doc" name="examples/cache_request/index.php" />
             <file role="doc" name="examples/cas/cas_replace.php" />
             <file role="doc" name="examples/scan_consistency/request_plus.php" />
@@ -123,12 +133,16 @@
             <file role="src" name="src/couchbase/view_query.c" />
             <file role="src" name="src/couchbase/view_query_encodable.c" />
             <file role="src" name="transcoding.c" />
+            <file role="test" name="integration/CrossBucketN1qlQueryTest.php" />
+            <file role="test" name="integration/DnsSrvTest.php" />
             <file role="test" name="integration/SearchTest.php" />
+            <file role="test" name="tests/AliasesTest.php" />
             <file role="test" name="tests/BucketManagerTest.php" />
             <file role="test" name="tests/BucketTest.php" />
             <file role="test" name="tests/ClusterManagerTest.php" />
             <file role="test" name="tests/ClusterTest.php" />
             <file role="test" name="tests/CouchbaseTestCase.php" />
+            <file role="test" name="tests/DatastructuresTest.php" />
             <file role="test" name="tests/N1qlQueryTest.php" />
             <file role="test" name="tests/TranscoderTest.php" />
         </dir>

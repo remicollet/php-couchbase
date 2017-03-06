@@ -10,7 +10,7 @@
  * Create a new Cluster object to represent the connection to our
  * cluster and specify any needed options such as SSL.
  */
-$cb = new CouchbaseCluster('192.168.7.26');
+$cb = new \Couchbase\Cluster('couchbase://localhost');
 
 /*
  * We open the default bucket to store our cached data in.

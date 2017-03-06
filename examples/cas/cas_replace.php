@@ -8,7 +8,7 @@
  * Create a new Cluster object to represent the connection to our
  * cluster and specify any needed options such as SSL.
  */
-$cluster = new CouchbaseCluster('couchbase://localhost');
+$cluster = new \Couchbase\Cluster('couchbase://localhost');
 /*
  * We open the default bucket to store our docuemtns in.
  */
@@ -30,7 +30,7 @@ try {
      * Now lets see what happens if we use incorrect CAS with replace operation.
      */
     $bucket->replace('foo', array('val' => 2), array('cas' => 'fakecas'));
-} catch (CouchbaseException $ex) {
+} catch (\Couchbase\Exception $ex) {
     /*
      * As expected it throws exception telling about CAS mismatch.
      */

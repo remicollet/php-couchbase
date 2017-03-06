@@ -164,7 +164,6 @@ int pcbc_pp_begin(int param_count TSRMLS_DC, pcbc_pp_state *state, const char *s
     } while (1);
 
     if (param_count < state->arg_req) {
-        // TODO: This should not printf...
         pcbc_log(LOGARGS(ERROR), "Less than required number of args.");
         return FAILURE;
     }

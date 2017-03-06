@@ -76,7 +76,6 @@ static lcb_error_t proc_get_results(pcbc_bucket_t *bucket, zval *return_value, o
         }
     }
 
-    // TODO: non-empty value on error?
     FOREACH_OPCOOKIE_RES(opcookie_get_res, res, cookie)
     {
         if (res->key) {

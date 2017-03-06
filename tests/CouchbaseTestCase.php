@@ -86,7 +86,7 @@ class CouchbaseTestCase extends \PHPUnit_Framework_TestCase {
     }
 
     function assertValidMetaDoc($metadoc) {
-        $this->assertInstanceOf('\Couchbase\Document', $metadoc); // FIXME: alias to \CouchbaseMetaDoc
+        $this->assertInstanceOf('\Couchbase\Document', $metadoc);
 
         // Check it has all the fields it should.
         for ($i = 1; $i < func_num_args(); ++$i) {

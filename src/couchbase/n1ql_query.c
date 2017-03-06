@@ -207,7 +207,6 @@ PHP_METHOD(N1qlQuery, consistentWith)
     pcbc_mutation_state_export_for_n1ql(state, PCBC_P(scan_vectors) TSRMLS_CC);
     PCBC_READ_PROPERTY(options, pcbc_n1ql_query_ce, getThis(), "options", 0);
     ADD_ASSOC_STRING(options, "scan_consistency", "at_plus");
-    PCBC_ADDREF_P(PCBC_P(scan_vectors));
     ADD_ASSOC_ZVAL_EX(options, "scan_vectors", PCBC_P(scan_vectors));
 
     RETURN_ZVAL(getThis(), 1, 0);
