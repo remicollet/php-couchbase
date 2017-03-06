@@ -51,7 +51,7 @@ PHP_MINIT_FUNCTION(N1qlIndex)
 
     zend_declare_class_constant_long(n1ix_spec_ce, ZEND_STRL("VIEW"), LCB_N1XSPEC_T_VIEW TSRMLS_CC);
     zend_declare_class_constant_long(n1ix_spec_ce, ZEND_STRL("GSI"), LCB_N1XSPEC_T_GSI TSRMLS_CC);
-    zend_declare_class_constant_long(n1ix_spec_ce, ZEND_STRL("DEFAULT"), LCB_N1XSPEC_T_DEFAULT TSRMLS_CC);
+    zend_declare_class_constant_long(n1ix_spec_ce, ZEND_STRL("UNSPECIFIED"), LCB_N1XSPEC_T_DEFAULT TSRMLS_CC);
 
     return SUCCESS;
 }

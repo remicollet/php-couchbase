@@ -82,6 +82,9 @@ static lcb_error_t proc_get_results(pcbc_bucket_t *bucket, zval *return_value, o
         if (res->key) {
             efree(res->key);
         }
+        if (res->bytes) {
+            efree(res->bytes);
+        }
     }
 
     return err;
@@ -143,8 +146,7 @@ void pcbc_bucket_get(pcbc_bucket_t *obj, pcbc_pp_state *pp_state, pcbc_pp_id *id
     }
 }
 
-/* {{{ proto mixed Bucket::get(string $id, array $options)
-   Sets custom encoder and decoder functions for handling serialization */
+/* {{{ proto mixed Bucket::get(string $id, array $options) */
 PHP_METHOD(Bucket, get)
 {
     pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
@@ -162,8 +164,7 @@ PHP_METHOD(Bucket, get)
     pcbc_bucket_get(obj, &pp_state, &id, &lock, &expiry, &groupid, return_value TSRMLS_CC);
 }
 
-/* {{{ proto mixed Bucket::get(string $id, int $lockTime, array $options)
-   Sets custom encoder and decoder functions for handling serialization */
+/* {{{ proto mixed Bucket::getAndLock(string $id, int $lockTime, array $options) */
 PHP_METHOD(Bucket, getAndLock)
 {
     pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
@@ -178,6 +179,23 @@ PHP_METHOD(Bucket, getAndLock)
     }
 
     pcbc_bucket_get(obj, &pp_state, &id, &lock, NULL, &groupid, return_value TSRMLS_CC);
+}
+
+/* {{{ proto mixed Bucket::getAndTouch(string $id, int $expiry, array $options) */
+PHP_METHOD(Bucket, getAndTouch)
+{
+    pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
+    pcbc_pp_state pp_state;
+    pcbc_pp_id id;
+    zval *expiry = NULL, *groupid = NULL;
+
+    // Note that groupid is experimental here and should not be used.
+    if (pcbc_pp_begin(ZEND_NUM_ARGS() TSRMLS_CC, &pp_state, "id,expiry||groupid", &id, &expiry, &groupid) != SUCCESS) {
+        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+        RETURN_NULL();
+    }
+
+    pcbc_bucket_get(obj, &pp_state, &id, NULL, &expiry, &groupid, return_value TSRMLS_CC);
 }
 
 // get($id {, $lock, $groupid}) : MetaDoc

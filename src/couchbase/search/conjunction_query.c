@@ -68,9 +68,9 @@ PHP_METHOD(ConjunctionSearchQuery, boost)
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
 
-/* {{{ proto \Couchbase\ConjunctionSearchQuery ConjunctionSearchQuery::and(SearchQueryPart ...$queries)
+/* {{{ proto \Couchbase\ConjunctionSearchQuery ConjunctionSearchQuery::every(SearchQueryPart ...$queries)
  */
-PHP_METHOD(ConjunctionSearchQuery, and)
+PHP_METHOD(ConjunctionSearchQuery, every)
 {
     pcbc_conjunction_search_query_t *obj;
 #if PHP_VERSION_ID >= 70000
@@ -141,7 +141,7 @@ ZEND_BEGIN_ARG_INFO_EX(ai_ConjunctionSearchQuery_boost, 0, 0, 1)
 ZEND_ARG_INFO(0, boost)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_ConjunctionSearchQuery_and, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(ai_ConjunctionSearchQuery_every, 0, 0, 1)
 PCBC_ARG_VARIADIC_INFO(0, queries)
 ZEND_END_ARG_INFO()
 
@@ -150,7 +150,7 @@ zend_function_entry conjunction_search_query_methods[] = {
     PHP_ME(ConjunctionSearchQuery, __construct, ai_ConjunctionSearchQuery_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
     PHP_ME(ConjunctionSearchQuery, jsonSerialize, ai_ConjunctionSearchQuery_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(ConjunctionSearchQuery, boost, ai_ConjunctionSearchQuery_boost, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ConjunctionSearchQuery, and, ai_ConjunctionSearchQuery_and, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(ConjunctionSearchQuery, every, ai_ConjunctionSearchQuery_every, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_FE_END
 };
 // clang-format on

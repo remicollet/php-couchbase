@@ -23,6 +23,7 @@ extern zend_class_entry *pcbc_classic_authenticator_ce;
 
 PHP_METHOD(Bucket, get);
 PHP_METHOD(Bucket, getAndLock);
+PHP_METHOD(Bucket, getAndTouch);
 PHP_METHOD(Bucket, getFromReplica);
 PHP_METHOD(Bucket, insert);
 PHP_METHOD(Bucket, upsert);
@@ -168,6 +169,8 @@ PHP_METHOD(Bucket, __set)
         cmd = LCB_CNTL_OP_TIMEOUT;
     } else if (strncmp(name, "viewTimeout", name_len) == 0) {
         cmd = LCB_CNTL_VIEW_TIMEOUT;
+    } else if (strncmp(name, "n1qlTimeout", name_len) == 0) {
+        cmd = LCB_CNTL_N1QL_TIMEOUT;
     } else if (strncmp(name, "durabilityInterval", name_len) == 0) {
         cmd = LCB_CNTL_DURABILITY_INTERVAL;
     } else if (strncmp(name, "durabilityTimeout", name_len) == 0) {
@@ -931,6 +934,17 @@ ZEND_ARG_INFO(0, lockTime)
 ZEND_ARG_INFO(0, options)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_getAndTouch, 0, 0, 3)
+ZEND_ARG_INFO(0, ids)
+ZEND_ARG_INFO(0, expiry)
+ZEND_ARG_INFO(0, options)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_getFromReplica, 0, 0, 2)
+ZEND_ARG_INFO(0, ids)
+ZEND_ARG_INFO(0, options)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_upsert, 0, 0, 3)
 ZEND_ARG_INFO(0, id)
 ZEND_ARG_INFO(0, val)
@@ -1046,6 +1060,8 @@ zend_function_entry bucket_methods[] = {
     PHP_ME(Bucket, setTranscoder, ai_Bucket_setTranscoder, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(Bucket, get, ai_Bucket_get, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(Bucket, getAndLock, ai_Bucket_getAndLock, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(Bucket, getAndTouch, ai_Bucket_getAndTouch, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(Bucket, getFromReplica, ai_Bucket_getFromReplica, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(Bucket, upsert, ai_Bucket_upsert, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(Bucket, insert, ai_Bucket_upsert, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(Bucket, replace, ai_Bucket_upsert, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)

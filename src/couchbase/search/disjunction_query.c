@@ -89,9 +89,9 @@ PHP_METHOD(DisjunctionSearchQuery, boost)
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
 
-/* {{{ proto \Couchbase\DisjunctionSearchQuery DisjunctionSearchQuery::or(SearchQueryPart ...$queries)
+/* {{{ proto \Couchbase\DisjunctionSearchQuery DisjunctionSearchQuery::either(SearchQueryPart ...$queries)
  */
-PHP_METHOD(DisjunctionSearchQuery, or )
+PHP_METHOD(DisjunctionSearchQuery, either)
 {
     pcbc_disjunction_search_query_t *obj;
 #if PHP_VERSION_ID >= 70000
@@ -170,7 +170,7 @@ ZEND_BEGIN_ARG_INFO_EX(ai_DisjunctionSearchQuery_boost, 0, 0, 1)
 ZEND_ARG_INFO(0, boost)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_DisjunctionSearchQuery_or, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(ai_DisjunctionSearchQuery_either, 0, 0, 1)
 PCBC_ARG_VARIADIC_INFO(0, queries)
 ZEND_END_ARG_INFO()
 
@@ -179,7 +179,7 @@ zend_function_entry disjunction_search_query_methods[] = {
     PHP_ME(DisjunctionSearchQuery, __construct, ai_DisjunctionSearchQuery_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
     PHP_ME(DisjunctionSearchQuery, jsonSerialize, ai_DisjunctionSearchQuery_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(DisjunctionSearchQuery, boost, ai_DisjunctionSearchQuery_boost, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(DisjunctionSearchQuery, or, ai_DisjunctionSearchQuery_or, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(DisjunctionSearchQuery, either, ai_DisjunctionSearchQuery_either, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(DisjunctionSearchQuery, min, ai_DisjunctionSearchQuery_min, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_FE_END
 };

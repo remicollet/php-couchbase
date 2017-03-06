@@ -408,7 +408,7 @@ PHP_METHOD(BucketManager, dropN1qlIndex)
 
     obj = Z_BUCKET_MANAGER_OBJ_P(getThis());
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|sbb", &name, &name_len, &ignore_if_not_exist);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|bb", &name, &name_len, &ignore_if_not_exist);
     if (rv == FAILURE) {
         return;
     }

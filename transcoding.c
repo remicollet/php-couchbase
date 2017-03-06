@@ -28,7 +28,7 @@ int pcbc_decode_value(zval *return_value, pcbc_bucket_t *bucket, const char *byt
     PCBC_ZVAL_ALLOC(params[1]);
     PCBC_ZVAL_ALLOC(params[2]);
 
-    PCBC_PSTRINGL(params[0], bytes, bytes_len);
+    PCBC_STRINGL(params[0], bytes, bytes_len);
     ZVAL_LONG(PCBC_P(params[1]), flags);
     ZVAL_LONG(PCBC_P(params[2]), datatype);
 

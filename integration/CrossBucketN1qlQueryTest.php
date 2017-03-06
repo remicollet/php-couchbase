@@ -35,8 +35,6 @@ class SearchTest extends PHPUnit_Framework_TestCase {
         $this->populatePeople();
         $this->populateOrders();
 
-        $bucket = $this->cluster->openBucket('orders', '123456');
-
         $authenticator = new \Couchbase\ClassicAuthenticator();
         $authenticator->bucket('people', 'secret');
         $authenticator->bucket('orders', '123456');

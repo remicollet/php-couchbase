@@ -57,7 +57,7 @@ PHP_METHOD(MutationToken, bucketName)
     obj = Z_MUTATION_TOKEN_OBJ_P(getThis());
 
 #if PHP_VERSION_ID >= 70000
-    ZVAL_PSTRING(return_value, obj->bucket);
+    ZVAL_STRING(return_value, obj->bucket);
 #else
     ZVAL_STRING(return_value, obj->bucket, 1);
 #endif
@@ -93,7 +93,8 @@ PHP_METHOD(MutationToken, vbucketUuid)
 
     str = pcbc_base36_encode_str(PCBC_MUTATION_TOKEN_ID(obj));
 #if PHP_VERSION_ID >= 70000
-    ZVAL_PSTRING(return_value, str);
+    ZVAL_STRING(return_value, str);
+    efree(str);
 #else
     ZVAL_STRING(return_value, str, 0);
 #endif
@@ -114,7 +115,8 @@ PHP_METHOD(MutationToken, sequenceNumber)
 
     str = pcbc_base36_encode_str(PCBC_MUTATION_TOKEN_SEQ(obj));
 #if PHP_VERSION_ID >= 70000
-    ZVAL_PSTRING(return_value, str);
+    ZVAL_STRING(return_value, str);
+    efree(str);
 #else
     ZVAL_STRING(return_value, str, 0);
 #endif

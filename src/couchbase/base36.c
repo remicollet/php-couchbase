@@ -71,7 +71,8 @@ void pcbc_cas_encode(zval *return_value, lcb_cas_t cas TSRMLS_DC)
     char *str = pcbc_base36_encode_str(cas);
 
 #if PHP_VERSION_ID >= 70000
-    ZVAL_PSTRING(return_value, str);
+    ZVAL_STRING(return_value, str);
+    efree(str);
 #else
     ZVAL_STRING(return_value, str, 0);
 #endif

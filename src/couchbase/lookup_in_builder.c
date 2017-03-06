@@ -186,7 +186,7 @@ static void lookup_in_builder_free_object(pcbc_free_object_arg *object TSRMLS_DC
     obj->head = obj->tail = NULL;
     Z_DELREF_P(obj->bucket_zval);
     obj->bucket = NULL;
-
+    obj->bucket_zval = NULL;
     zend_object_std_dtor(&obj->std TSRMLS_CC);
 #if PHP_VERSION_ID < 70000
     efree(obj);

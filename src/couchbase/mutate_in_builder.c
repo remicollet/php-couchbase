@@ -149,6 +149,7 @@ PHP_METHOD(MutateInBuilder, insert)
         } else {
             smart_str_0(&buf);
             PCBC_SDSPEC_SET_VALUE_SMARTSTR(spec, buf);
+            smart_str_free(&buf);
         }
     }
     if (obj->tail) {
@@ -250,6 +251,7 @@ int pcbc_mutate_in_builder_replace(pcbc_mutate_in_builder_t *builder, char *path
         } else {
             smart_str_0(&buf);
             PCBC_SDSPEC_SET_VALUE_SMARTSTR(spec, buf);
+            smart_str_free(&buf);
         }
     }
     if (builder->tail) {
@@ -325,6 +327,7 @@ PHP_METHOD(MutateInBuilder, arrayInsert)
         } else {
             smart_str_0(&buf);
             PCBC_SDSPEC_SET_VALUE_SMARTSTR(spec, buf);
+            smart_str_free(&buf);
         }
     }
     if (obj->tail) {
@@ -430,6 +433,7 @@ int pcbc_mutate_in_builder_array_add_unique(pcbc_mutate_in_builder_t *builder, c
         } else {
             smart_str_0(&buf);
             PCBC_SDSPEC_SET_VALUE_SMARTSTR(spec, buf);
+            smart_str_free(&buf);
         }
     }
     if (builder->tail) {
@@ -496,6 +500,7 @@ int pcbc_mutate_in_builder_array_prepend(pcbc_mutate_in_builder_t *builder, char
         } else {
             smart_str_0(&buf);
             PCBC_SDSPEC_SET_VALUE_SMARTSTR(spec, buf);
+            smart_str_free(&buf);
         }
     }
     if (builder->tail) {
@@ -629,6 +634,7 @@ int pcbc_mutate_in_builder_array_append(pcbc_mutate_in_builder_t *builder, char 
         } else {
             smart_str_0(&buf);
             PCBC_SDSPEC_SET_VALUE_SMARTSTR(spec, buf);
+            smart_str_free(&buf);
         }
     }
     if (builder->tail) {
