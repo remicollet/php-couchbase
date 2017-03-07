@@ -17,6 +17,8 @@
 #include "couchbase.h"
 #include <ext/standard/url.h>
 
+static int pcbc_res_couchbase;
+
 extern struct pcbc_logger_st pcbc_logger;
 #define LOGARGS(conn, lvl) LCB_LOG_##lvl, conn, "pcbc/pool", __FILE__, __LINE__
 
@@ -194,102 +196,112 @@ static lcb_error_t pcbc_normalize_connstr(lcb_type_t type, char *connstr, const 
     return LCB_SUCCESS;
 }
 
-static pcbc_connection_t *pcbc_connection_lookup(lcb_type_t type, const char *connstr, const char *auth_hash TSRMLS_DC)
+void pcbc_connection_addref(pcbc_connection_t *conn TSRMLS_DC)
 {
-    pcbc_connection_pool_t *pool = &PCBCG(pool);
-    pcbc_connection_t *iter = pool->head;
+    if (conn) {
+        conn->refs++;
+        conn->idle_at = 0;
+    }
+}
 
-    for (iter = pool->head; iter; iter = iter->next) {
-        if (iter->refs == 0) {
-            continue;
+void pcbc_connection_delref(pcbc_connection_t *conn TSRMLS_DC)
+{
+    if (conn) {
+        conn->refs--;
+        pcbc_log(LOGARGS(conn->lcb, DEBUG),
+                 "cachedel: type=%d, connstr=%s, bucketname=%s, auth_hash=%s, lcb=%p, refs=%d", conn->type,
+                 conn->connstr, conn->bucketname, conn->auth_hash, conn->lcb, conn->refs);
+        if (conn->refs == 0) {
+            conn->idle_at = time(NULL);
         }
-        if (iter->type != type) {
-            continue;
-        }
-        if (strcmp(iter->connstr, connstr) != 0) {
-            continue;
-        }
-        if (iter->auth_hash != NULL) {
-            if (strcmp(iter->auth_hash, auth_hash) != 0) {
-                continue;
-            }
-        } else if (auth_hash != NULL) {
-            continue;
-        }
-        return iter;
+    }
+}
+
+#if PHP_VERSION_ID >= 70000
+static pcbc_connection_t *pcbc_connection_lookup(smart_str *plist_key TSRMLS_DC)
+{
+    zend_resource *res;
+    res = zend_hash_find_ptr(&EG(persistent_list), plist_key->s);
+    if (res != NULL && res->type == pcbc_res_couchbase && res->ptr) {
+        return res->ptr;
     }
     return NULL;
 }
 
-static void pcbc_connection_cache(pcbc_connection_t *conn TSRMLS_DC)
+static lcb_error_t pcbc_connection_cache(smart_str *plist_key, pcbc_connection_t *conn TSRMLS_DC)
 {
-    pcbc_connection_pool_t *pool = &PCBCG(pool);
+    zend_resource res;
+    res.type = pcbc_res_couchbase;
+    res.ptr = conn;
+    GC_REFCOUNT(&res) = 1;
 
-    conn->next = NULL;
-    if (pool->tail != NULL) {
-        pool->tail->next = conn;
-    } else {
-        pool->tail = conn;
+    if (zend_hash_str_update_mem(&EG(persistent_list), PCBC_SMARTSTR_VAL(*plist_key), PCBC_SMARTSTR_LEN(*plist_key),
+                                 &res, sizeof(res)) == NULL) {
+        pcbc_log(LOGARGS(NULL, ERROR), "failed to register persistent connection");
+        return LCB_EINVAL;
     }
-    if (pool->head == NULL) {
-        pool->head = conn;
-    }
-    pool->nconn++;
+    pcbc_log(LOGARGS(conn->lcb, DEBUG),
+             "cachenew: ptr=%p, type=%d, connstr=%s, bucketname=%s, auth_hash=%s, lcb=%p, refs=%d", conn, conn->type,
+             conn->connstr, conn->bucketname, conn->auth_hash, conn->lcb, conn->refs);
+    return LCB_SUCCESS;
 }
-
-int pcbc_connection_addref(pcbc_connection_t *conn TSRMLS_DC)
+#else
+static pcbc_connection_t *pcbc_connection_lookup(smart_str *plist_key TSRMLS_DC)
 {
-    if (conn) {
-        conn->refs++;
-        return SUCCESS;
+    zend_rsrc_list_entry *res = NULL;
+    int rv;
+
+    rv = zend_hash_find(&EG(persistent_list), plist_key->c, plist_key->len, (void *)&res);
+    if (rv == SUCCESS) {
+        if (res->type == pcbc_res_couchbase) {
+            return res->ptr;
+        }
     }
-    return FAILURE;
+    return NULL;
 }
-
-int pcbc_connection_delref(pcbc_connection_t *conn TSRMLS_DC)
+static lcb_error_t pcbc_connection_cache(smart_str *plist_key, pcbc_connection_t *conn TSRMLS_DC)
 {
-    if (conn) {
-        conn->refs--;
-        if (conn->refs <= 0) {
-            pcbc_connection_pool_t *pool = &PCBCG(pool);
-            pcbc_connection_t *iter = pool->head;
+    zend_rsrc_list_entry res;
+    int rv;
 
-            pcbc_log(LOGARGS(conn->lcb, INFO), "Connection refcounter is zero. Release resources");
-            pool->nconn--;
-            if (pool->head == conn) {
-                pool->head = conn->next;
-                if (pool->head == NULL) {
-                    pool->tail = NULL;
-                }
-            } else {
-                for (iter = pool->head; iter; iter = iter->next) {
-                    if (iter->next == conn) {
-                        iter->next = conn->next;
-                        if (iter->next == NULL) {
-                            pool->tail = iter;
-                        }
-                        break;
-                    }
-                }
-            }
-            efree(conn->connstr);
+    res.type = pcbc_res_couchbase;
+    res.ptr = conn;
+    rv = zend_hash_update(&EG(persistent_list), plist_key->c, plist_key->len, (void *)&res, sizeof(res), NULL);
+    if (rv == FAILURE) {
+        pcbc_log(LOGARGS(NULL, ERROR), "failed to register persistent connection");
+        return LCB_EINVAL;
+    }
+    return LCB_SUCCESS;
+}
+#endif
+
+static void pcbc_destroy_connection_resource(
+#if PHP_VERSION_ID >= 70000
+    zend_resource *res
+#else
+    zend_rsrc_list_entry *res
+#endif
+    )
+{
+    if (res->ptr) {
+        pcbc_connection_t *conn = res->ptr;
+        pcbc_log(LOGARGS(NULL, DEBUG), "cachedtor: ptr=%p", conn);
+        if (conn->lcb) {
+            pefree(conn->connstr, 1);
             if (conn->bucketname) {
-                efree(conn->bucketname);
+                pefree(conn->bucketname, 1);
                 conn->bucketname = NULL;
             }
             if (conn->auth_hash) {
-                efree(conn->auth_hash);
+                pefree(conn->auth_hash, 1);
                 conn->auth_hash = NULL;
             }
             lcb_destroy(conn->lcb);
             conn->lcb = NULL;
-            efree(conn);
-            return SUCCESS;
         }
-        pcbc_log(LOGARGS(conn->lcb, INFO), "Destroying connection, ref=%d", conn->refs);
-        return SUCCESS;
+        pefree(conn, 1);
+        res->ptr = NULL;
     }
-    return FAILURE;
 }
 
 lcb_error_t pcbc_connection_get(pcbc_connection_t **result, lcb_type_t type, const char *connstr,
@@ -299,6 +311,8 @@ lcb_error_t pcbc_connection_get(pcbc_connection_t **result, lcb_type_t type, con
     lcb_error_t rv;
     lcb_t lcb;
     pcbc_connection_t *conn = NULL;
+    smart_str plist_key = {0};
+    zend_bool is_persistent = 1; // always persistent connections
 
     rv = pcbc_normalize_connstr(type, (char *)connstr, bucketname, &cstr TSRMLS_CC);
     if (rv != LCB_SUCCESS) {
@@ -306,38 +320,120 @@ lcb_error_t pcbc_connection_get(pcbc_connection_t **result, lcb_type_t type, con
         return rv;
     }
 
-    conn = pcbc_connection_lookup(type, cstr, auth_hash TSRMLS_CC);
+    smart_str_append_long(&plist_key, type);
+    smart_str_appendc(&plist_key, '|');
+    smart_str_appends(&plist_key, cstr);
+    smart_str_appendc(&plist_key, '|');
+    smart_str_appends(&plist_key, auth_hash);
+
+    conn = pcbc_connection_lookup(&plist_key TSRMLS_CC);
     if (conn) {
         efree(cstr);
-        conn->refs++;
+        smart_str_free(&plist_key);
+        pcbc_connection_addref(conn TSRMLS_CC);
+        pcbc_log(LOGARGS(conn->lcb, DEBUG),
+                 "cachehit: type=%d, connstr=%s, bucketname=%s, auth_hash=%s, lcb=%p, refs=%d", conn->type,
+                 conn->connstr, conn->bucketname, conn->auth_hash, conn->lcb, conn->refs);
         *result = conn;
-        pcbc_log(LOGARGS(conn->lcb, INFO), "Connection has been fetched from pool ref=%d", conn->refs);
         return LCB_SUCCESS;
     }
 
     rv = pcbc_establish_connection(type, &lcb, cstr, bucketname, auth, auth_hash TSRMLS_CC);
     if (rv != LCB_SUCCESS) {
         efree(cstr);
+        smart_str_free(&plist_key);
         return rv;
     }
 
-    conn = emalloc(sizeof(pcbc_connection_t));
+    conn = pemalloc(sizeof(pcbc_connection_t), is_persistent);
     conn->refs = 1;
+    conn->idle_at = 0;
     conn->type = type;
-    conn->connstr = cstr;
+    conn->connstr = pestrdup(cstr, is_persistent);
+    efree(cstr);
     conn->bucketname = NULL;
-    conn->auth_hash = estrdup(auth_hash);
+    conn->auth_hash = pestrdup(auth_hash, is_persistent);
     if (type == LCB_TYPE_BUCKET) {
         char *tmp;
         lcb_cntl(lcb, LCB_CNTL_GET, LCB_CNTL_BUCKETNAME, &tmp);
         if (tmp) {
-            conn->bucketname = estrdup(tmp);
+            conn->bucketname = pestrdup(tmp, is_persistent);
         }
     }
     conn->lcb = lcb;
-    pcbc_connection_cache(conn TSRMLS_CC);
-    pcbc_log(LOGARGS(conn->lcb, INFO), "Put connection into the pool ref=%d", conn->refs);
+    rv = pcbc_connection_cache(&plist_key, conn TSRMLS_CC);
+    smart_str_free(&plist_key);
+    if (rv != LCB_SUCCESS) {
+        return rv;
+    }
     *result = conn;
 
     return LCB_SUCCESS;
+}
+
+static int pcbc_destroy_idle_connections(
+#if PHP_VERSION_ID >= 70000
+    zval *el
+#else
+    zend_rsrc_list_entry *res TSRMLS_DC
+#endif
+    )
+{
+#if PHP_VERSION_ID >= 70000
+    zend_resource *res = Z_RES_P(el);
+
+    if (res->type != pcbc_res_couchbase) {
+        return 0;
+    }
+#else
+    if (Z_TYPE_P(res) != pcbc_res_couchbase) {
+        return 0;
+    }
+#endif
+
+    if (res->ptr) {
+        pcbc_connection_t *conn = res->ptr;
+        time_t now;
+
+        if (conn->refs > 0) {
+            return 0;
+        }
+        if (conn->idle_at == 0) {
+            return 0;
+        }
+        now = time(NULL);
+        // abandoned more than 60 seconds ago
+        if ((now - conn->idle_at) > 60) {
+            pcbc_destroy_connection_resource(res);
+        }
+    }
+    return 0;
+}
+
+#if PHP_VERSION_ID >= 70000
+void pcbc_connection_cleanup()
+{
+    zend_hash_apply(&EG(persistent_list), (apply_func_t)pcbc_destroy_idle_connections);
+}
+#else
+void pcbc_connection_cleanup(TSRMLS_D)
+{
+    zend_hash_apply(&EG(persistent_list), (apply_func_t)pcbc_destroy_idle_connections TSRMLS_CC);
+}
+#endif
+
+ZEND_RSRC_DTOR_FUNC(pcbc_connection_dtor)
+{
+#if PHP_VERSION_ID >= 70000
+    pcbc_destroy_connection_resource(res);
+#else
+    pcbc_destroy_connection_resource(rsrc);
+#endif
+}
+
+PHP_MINIT_FUNCTION(CouchbasePool)
+{
+    pcbc_res_couchbase =
+        zend_register_list_destructors_ex(NULL, pcbc_connection_dtor, "Couchbase persistent connection", module_number);
+    return SUCCESS;
 }

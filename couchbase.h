@@ -81,23 +81,21 @@ struct pcbc_connection {
     char *auth_hash;
     lcb_t lcb;
     int refs;
-    struct pcbc_connection *next;
+    time_t idle_at;
 };
 typedef struct pcbc_connection pcbc_connection_t;
 
-typedef struct {
-    pcbc_connection_t *head;
-    pcbc_connection_t *tail;
-    int nconn;
-} pcbc_connection_pool_t;
-
 lcb_error_t pcbc_connection_get(pcbc_connection_t **result, lcb_type_t type, const char *connstr,
                                 const char *bucketname, lcb_AUTHENTICATOR *auth, char *auth_hash TSRMLS_DC);
-int pcbc_connection_addref(pcbc_connection_t *conn TSRMLS_DC);
-int pcbc_connection_delref(pcbc_connection_t *conn TSRMLS_DC);
+void pcbc_connection_addref(pcbc_connection_t *conn TSRMLS_DC);
+void pcbc_connection_delref(pcbc_connection_t *conn TSRMLS_DC);
+#if PHP_VERSION_ID >= 70000
+void pcbc_connection_cleanup();
+#else
+void pcbc_connection_cleanup(TSRMLS_D);
+#endif
 
 ZEND_BEGIN_MODULE_GLOBALS(couchbase)
-pcbc_connection_pool_t pool;
 char *log_level;
 
 char *enc_format;
@@ -116,6 +114,7 @@ ZEND_EXTERN_MODULE_GLOBALS(couchbase)
 #define PCBCG(v) (couchbase_globals.v)
 #endif
 
+PHP_MINIT_FUNCTION(CouchbasePool);
 PHP_MINIT_FUNCTION(CouchbaseException);
 PHP_MINIT_FUNCTION(Document);
 PHP_MINIT_FUNCTION(DocumentFragment);
@@ -281,9 +280,9 @@ typedef int pcbc_str_arg_size;
 
 #if PHP_VERSION_ID >= 70000
 #define PCBC_ALLOC_OBJECT_T(obj_t, class_type)                                                                         \
-    (obj_t *)ecalloc(1, sizeof(obj_t) + zend_object_properties_size(class_type))
+    (obj_t *) ecalloc(1, sizeof(obj_t) + zend_object_properties_size(class_type))
 #else
-#define PCBC_ALLOC_OBJECT_T(obj_t, class_type) (obj_t *)ecalloc(1, sizeof(obj_t))
+#define PCBC_ALLOC_OBJECT_T(obj_t, class_type) (obj_t *) ecalloc(1, sizeof(obj_t))
 #endif
 
 #if PHP_VERSION_ID >= 70000
@@ -416,8 +415,8 @@ typedef zval *PCBC_ZVAL;
         (__pcbc_receiver_buf) = ZSTR_VAL((__pcbc_smart_str).s);                                                        \
         (__pcbc_receiver_length) = ZSTR_LEN((__pcbc_smart_str).s);                                                     \
     } while (0)
-#define PCBC_SMARTSTR_VAL(__pcbc_smart_str) (char *)ZSTR_VAL((__pcbc_smart_str).s)
-#define PCBC_SMARTSTR_LEN(__pcbc_smart_str) (int)ZSTR_LEN((__pcbc_smart_str).s)
+#define PCBC_SMARTSTR_VAL(__pcbc_smart_str) (char *) ZSTR_VAL((__pcbc_smart_str).s)
+#define PCBC_SMARTSTR_LEN(__pcbc_smart_str) (int) ZSTR_LEN((__pcbc_smart_str).s)
 #else
 #define PCBC_SMARTSTR_DUP(__pcbc_smart_str, __pcbc_receiver_buf)                                                       \
     do {                                                                                                               \

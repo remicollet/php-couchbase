@@ -204,9 +204,6 @@ static void php_extname_init_globals(zend_couchbase_globals *couchbase_globals)
     ZEND_TSRMLS_CACHE_UPDATE();
 #endif
 
-    couchbase_globals->pool.head = NULL;
-    couchbase_globals->pool.tail = NULL;
-    couchbase_globals->pool.nconn = 0;
     couchbase_globals->enc_format = "json";
     couchbase_globals->enc_format_i = COUCHBASE_SERTYPE_JSON;
     couchbase_globals->enc_cmpr = "off";
@@ -246,6 +243,7 @@ PHP_MINIT_FUNCTION(couchbase)
     }
 #endif
 
+    PHP_MINIT(CouchbasePool)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(CouchbaseException)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(Document)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(DocumentFragment)(INIT_FUNC_ARGS_PASSTHRU);
@@ -377,12 +375,16 @@ PHP_MINIT_FUNCTION(couchbase)
     PCBC_REGISTER_CONST_RAW(COUCHBASE_CFFMT_STRING);
 
     REGISTER_NS_LONG_CONSTANT("Couchbase", "ENCODER_FORMAT_JSON", COUCHBASE_SERTYPE_JSON, CONST_CS | CONST_PERSISTENT);
-    REGISTER_NS_LONG_CONSTANT("Couchbase", "ENCODER_FORMAT_IGBINARY", COUCHBASE_SERTYPE_IGBINARY, CONST_CS | CONST_PERSISTENT);
+    REGISTER_NS_LONG_CONSTANT("Couchbase", "ENCODER_FORMAT_IGBINARY", COUCHBASE_SERTYPE_IGBINARY,
+                              CONST_CS | CONST_PERSISTENT);
     REGISTER_NS_LONG_CONSTANT("Couchbase", "ENCODER_FORMAT_PHP", COUCHBASE_SERTYPE_PHP, CONST_CS | CONST_PERSISTENT);
 
-    REGISTER_NS_LONG_CONSTANT("Couchbase", "ENCODER_COMPRESSION_NONE", COUCHBASE_CMPRTYPE_NONE, CONST_CS | CONST_PERSISTENT);
-    REGISTER_NS_LONG_CONSTANT("Couchbase", "ENCODER_COMPRESSION_ZLIB", COUCHBASE_CMPRTYPE_ZLIB, CONST_CS | CONST_PERSISTENT);
-    REGISTER_NS_LONG_CONSTANT("Couchbase", "ENCODER_COMPRESSION_FASTLZ", COUCHBASE_CMPRTYPE_FASTLZ, CONST_CS | CONST_PERSISTENT);
+    REGISTER_NS_LONG_CONSTANT("Couchbase", "ENCODER_COMPRESSION_NONE", COUCHBASE_CMPRTYPE_NONE,
+                              CONST_CS | CONST_PERSISTENT);
+    REGISTER_NS_LONG_CONSTANT("Couchbase", "ENCODER_COMPRESSION_ZLIB", COUCHBASE_CMPRTYPE_ZLIB,
+                              CONST_CS | CONST_PERSISTENT);
+    REGISTER_NS_LONG_CONSTANT("Couchbase", "ENCODER_COMPRESSION_FASTLZ", COUCHBASE_CMPRTYPE_FASTLZ,
+                              CONST_CS | CONST_PERSISTENT);
 
 #ifdef HAVE_COUCHBASE_IGBINARY
     REGISTER_NS_LONG_CONSTANT("Couchbase", "HAVE_IGBINARY", 1, CONST_CS | CONST_PERSISTENT);
@@ -407,9 +409,20 @@ PHP_MSHUTDOWN_FUNCTION(couchbase)
     return SUCCESS;
 }
 
-PHP_RSHUTDOWN_FUNCTION(couchbase) { return SUCCESS; }
+PHP_RSHUTDOWN_FUNCTION(couchbase)
+{
+#if PHP_VERSION_ID >= 70000
+    pcbc_connection_cleanup();
+#else
+    pcbc_connection_cleanup(TSRMLS_C);
+#endif
+    return SUCCESS;
+}
 
-PHP_RINIT_FUNCTION(couchbase) { return SUCCESS; }
+PHP_RINIT_FUNCTION(couchbase)
+{
+    return SUCCESS;
+}
 
 static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprthresh, double cmprfactor,
                              zval *return_value TSRMLS_DC)
