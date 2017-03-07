@@ -37,7 +37,15 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        This is preview release
+        * PCBC-443: Remove PCS dependency and rewrite PHP stubs using Zend C API
+        * PCBC-382: Implement cluster-level authorization using ClassicAuthenticator
+        * Migrate API to \Couchbase namespace (old API still available on toplevel as aliases,
+          see tests/AliasesTest.php)
+        * PCBC-383: Cross-bucket joins for N1QL (see examples/api/couchbase.N1qlQuery.crossBucket.php)
+        * Refresh API documentation, describe all input options, put everything into single file
+          (see api/*.php), and prepare them for PHPStorm (https://github.com/JetBrains/phpstorm-stubs/pull/180)
+        * PCBC-386: Implement Datastructures API: List, Set, Map and Queue (see tests/DatastructuresTest.php)
+        * Improve connection management, persistent connections by default, track and close idle connections.
     </notes>
 
     <contents>
