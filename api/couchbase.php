@@ -528,7 +528,7 @@ namespace Couchbase {
          *
          * After the document has been locked on the server, its CAS would be masked,
          * and all mutations of it will be rejected until the server unlocks the document
-         * automatically or it will be done manually with \Couhbase\Bucket::unlock() operation.
+         * automatically or it will be done manually with \Couchbase\Bucket::unlock() operation.
          *
          * @param string|array $ids one or more IDs
          * @param int $lockTime time to lock the documents
@@ -834,10 +834,10 @@ namespace Couchbase {
          *    PHP arrays, otherwise they will be instances of the `stdClass`
          * @return object Query-specific result object.
          *
-         * @see \Couhbase\N1qlQuery
-         * @see \Couhbase\SearchQuery
-         * @see \Couhbase\ViewQuery
-         * @see \Couhbase\SpatialViewQuery
+         * @see \Couchbase\N1qlQuery
+         * @see \Couchbase\SearchQuery
+         * @see \Couchbase\ViewQuery
+         * @see \Couchbase\SpatialViewQuery
          */
         final public function query(object $query, bool $jsonAsArray = false) {}
 
@@ -2034,7 +2034,7 @@ namespace Couchbase {
      * @see https://developer.couchbase.com/documentation/server/4.6/sdk/php/full-text-searching-with-sdk.html
      *   Searching from the SDK
      */
-    final class SearchQuery implements JsonSerializable {
+    final class SearchQuery implements \JsonSerializable {
         const HIGHLIGHT_HTML = 'html';
         const HIGHLIGHT_ANSI = 'ansi';
         const HIGHLIGHT_SIMPLE = 'simple';
@@ -2297,7 +2297,7 @@ namespace Couchbase {
     /**
      * A FTS query that queries fields explicitly indexed as boolean.
      */
-    final class BooleanFieldSearchQuery implements JsonSerializable, SearchQueryPart {
+    final class BooleanFieldSearchQuery implements \JsonSerializable, SearchQueryPart {
         /** @ignore */
         final private function __construct() {}
 
@@ -2323,7 +2323,7 @@ namespace Couchbase {
     /**
      * A compound FTS query that allows various combinations of sub-queries.
      */
-    final class BooleanSearchQuery implements JsonSerializable, SearchQueryPart {
+    final class BooleanSearchQuery implements \JsonSerializable, SearchQueryPart {
         /** @ignore */
         final private function __construct() {}
 
@@ -2361,7 +2361,7 @@ namespace Couchbase {
     /**
      * A compound FTS query that performs a logical AND between all its sub-queries (conjunction).
      */
-    final class ConjunctionSearchQuery implements JsonSerializable, SearchQueryPart {
+    final class ConjunctionSearchQuery implements \JsonSerializable, SearchQueryPart {
         /** @ignore */
         final private function __construct() {}
 
@@ -2389,7 +2389,7 @@ namespace Couchbase {
      * A compound FTS query that performs a logical OR between all its sub-queries (disjunction). It requires that a
      * minimum of the queries match. The minimum is configurable (default 1).
      */
-    final class DisjunctionSearchQuery implements JsonSerializable, SearchQueryPart {
+    final class DisjunctionSearchQuery implements \JsonSerializable, SearchQueryPart {
         /** @ignore */
         final private function __construct() {}
 
@@ -2423,7 +2423,7 @@ namespace Couchbase {
      * A FTS query that matches documents on a range of values. At least one bound is required, and the
      * inclusiveness of each bound can be configured.
      */
-    final class DateRangeSearchQuery implements JsonSerializable, SearchQueryPart {
+    final class DateRangeSearchQuery implements \JsonSerializable, SearchQueryPart {
         /** @ignore */
         final private function __construct() {}
 
@@ -2474,7 +2474,7 @@ namespace Couchbase {
      * A FTS query that matches documents on a range of values. At least one bound is required, and the
      * inclusiveness of each bound can be configured.
      */
-    final class NumericRangeSearchQuery implements JsonSerializable, SearchQueryPart {
+    final class NumericRangeSearchQuery implements \JsonSerializable, SearchQueryPart {
         /** @ignore */
         final private function __construct() {}
 
@@ -2515,7 +2515,7 @@ namespace Couchbase {
      * A FTS query that matches on Couchbase document IDs. Useful to restrict the search space to a list of keys (by using
      * this in a compound query).
      */
-    final class DocIdSearchQuery implements JsonSerializable, SearchQueryPart {
+    final class DocIdSearchQuery implements \JsonSerializable, SearchQueryPart {
         /** @ignore */
         final private function __construct() {}
 
@@ -2547,7 +2547,7 @@ namespace Couchbase {
     /**
      * A FTS query that matches all indexed documents (usually for debugging purposes).
      */
-    final class MatchAllSearchQuery implements JsonSerializable, SearchQueryPart {
+    final class MatchAllSearchQuery implements \JsonSerializable, SearchQueryPart {
         /** @ignore */
         final private function __construct() {}
 
@@ -2567,7 +2567,7 @@ namespace Couchbase {
     /**
      * A FTS query that matches 0 document (usually for debugging purposes).
      */
-    final class MatchNoneSearchQuery implements JsonSerializable, SearchQueryPart {
+    final class MatchNoneSearchQuery implements \JsonSerializable, SearchQueryPart {
         /** @ignore */
         final private function __construct() {}
 
@@ -2588,7 +2588,7 @@ namespace Couchbase {
      * A FTS query that matches several given terms (a "phrase"), applying further processing
      * like analyzers to them.
      */
-    final class MatchPhraseSearchQuery implements JsonSerializable, SearchQueryPart {
+    final class MatchPhraseSearchQuery implements \JsonSerializable, SearchQueryPart {
         /** @ignore */
         final private function __construct() {}
 
@@ -2621,7 +2621,7 @@ namespace Couchbase {
      * A FTS query that matches a given term, applying further processing to it
      * like analyzers, stemming and even #fuzziness(int).
      */
-    final class MatchSearchQuery implements JsonSerializable, SearchQueryPart {
+    final class MatchSearchQuery implements \JsonSerializable, SearchQueryPart {
         /** @ignore */
         final private function __construct() {}
 
@@ -2667,7 +2667,7 @@ namespace Couchbase {
      * applied to them, so they must appear in the index exactly as provided.  Usually for debugging purposes, prefer
      * MatchPhraseQuery.
      */
-    final class PhraseSearchQuery implements JsonSerializable, SearchQueryPart {
+    final class PhraseSearchQuery implements \JsonSerializable, SearchQueryPart {
         /** @ignore */
         final private function __construct() {}
 
@@ -2693,7 +2693,7 @@ namespace Couchbase {
     /**
      * A FTS query that allows for simple matching of regular expressions.
      */
-    final class RegexpSearchQuery implements JsonSerializable, SearchQueryPart {
+    final class RegexpSearchQuery implements \JsonSerializable, SearchQueryPart {
         /** @ignore */
         final private function __construct() {}
 
@@ -2719,7 +2719,7 @@ namespace Couchbase {
     /**
      * A FTS query that allows for simple matching using wildcard characters (* and ?).
      */
-    final class WildcardSearchQuery implements JsonSerializable, SearchQueryPart {
+    final class WildcardSearchQuery implements \JsonSerializable, SearchQueryPart {
         /** @ignore */
         final private function __construct() {}
 
@@ -2745,7 +2745,7 @@ namespace Couchbase {
     /**
      * A FTS query that allows for simple matching on a given prefix.
      */
-    final class PrefixSearchQuery implements JsonSerializable, SearchQueryPart {
+    final class PrefixSearchQuery implements \JsonSerializable, SearchQueryPart {
         /** @ignore */
         final private function __construct() {}
 
@@ -2771,7 +2771,7 @@ namespace Couchbase {
     /**
      * A FTS query that performs a search according to the "string query" syntax.
      */
-    final class QueryStringSearchQuery implements JsonSerializable, SearchQueryPart {
+    final class QueryStringSearchQuery implements \JsonSerializable, SearchQueryPart {
         /** @ignore */
         final private function __construct() {}
 
@@ -2791,7 +2791,7 @@ namespace Couchbase {
     /**
      * A facet that gives the number of occurrences of the most recurring terms in all hits.
      */
-    final class TermSearchQuery implements JsonSerializable, SearchQueryPart {
+    final class TermSearchQuery implements \JsonSerializable, SearchQueryPart {
         /** @ignore */
         final private function __construct() {}
 
@@ -2836,7 +2836,7 @@ namespace Couchbase {
      */
     interface SearchFacet {}
 
-    final class TermSearchFacet implements JsonSerializable, SearchFacet {
+    final class TermSearchFacet implements \JsonSerializable, SearchFacet {
         /** @ignore */
         final private function __construct() {}
 
@@ -2850,7 +2850,7 @@ namespace Couchbase {
     /**
      * A facet that categorizes hits inside date ranges (or buckets) provided by the user.
      */
-    final class DateRangeSearchFacet implements JsonSerializable, SearchFacet {
+    final class DateRangeSearchFacet implements \JsonSerializable, SearchFacet {
         /** @ignore */
         final private function __construct() {}
 
@@ -2872,7 +2872,7 @@ namespace Couchbase {
     /**
      * A facet that categorizes hits into numerical ranges (or buckets) provided by the user.
      */
-    final class NumericRangeSearchFacet implements JsonSerializable, SearchFacet {
+    final class NumericRangeSearchFacet implements \JsonSerializable, SearchFacet {
         /** @ignore */
         final private function __construct() {}
 
