@@ -27,25 +27,17 @@
 
     <date>2017-03-07</date>
     <version>
-        <release>2.3.0</release>
+        <release>2.3.1snapshot</release>
         <api>2.3.0</api>
     </version>
     <stability>
-        <release>stable</release>
+        <release>snapshot</release>
         <api>stable</api>
     </stability>
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        * PCBC-443: Remove PCS dependency and rewrite PHP stubs using Zend C API
-        * PCBC-382: Implement cluster-level authorization using ClassicAuthenticator
-        * Migrate API to \Couchbase namespace (old API still available on toplevel as aliases,
-          see tests/AliasesTest.php)
-        * PCBC-383: Cross-bucket joins for N1QL (see examples/api/couchbase.N1qlQuery.crossBucket.php)
-        * Refresh API documentation, describe all input options, put everything into single file
-          (see api/*.php), and prepare them for PHPStorm (https://github.com/JetBrains/phpstorm-stubs/pull/180)
-        * PCBC-386: Implement Datastructures API: List, Set, Map and Queue (see tests/DatastructuresTest.php)
-        * Improve connection management, persistent connections by default, track and close idle connections.
+        snapshot
     </notes>
 
     <contents>
@@ -175,6 +167,30 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2017-03-07</date>
+            <version>
+                <release>2.3.0</release>
+                <api>2.3.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
+            </license>
+            <notes>
+                * PCBC-443: Remove PCS dependency and rewrite PHP stubs using Zend C API
+                * PCBC-382: Implement cluster-level authorization using ClassicAuthenticator
+                * Migrate API to \Couchbase namespace (old API still available on toplevel as aliases,
+                  see tests/AliasesTest.php)
+                * PCBC-383: Cross-bucket joins for N1QL (see examples/api/couchbase.N1qlQuery.crossBucket.php)
+                * Refresh API documentation, describe all input options, put everything into single file
+                  (see api/*.php), and prepare them for PHPStorm (https://github.com/JetBrains/phpstorm-stubs/pull/180)
+                * PCBC-386: Implement Datastructures API: List, Set, Map and Queue (see tests/DatastructuresTest.php)
+                * Improve connection management, persistent connections by default, track and close idle connections.
+            </notes>
+        </release>
         <release>
             <date>2016-12-26</date>
             <version>
