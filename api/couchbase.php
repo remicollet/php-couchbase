@@ -751,6 +751,24 @@ namespace Couchbase {
         final public function remove($ids, $options = []) {}
 
         /**
+         * Unlocks previously locked document
+         *
+         * @param string|array $ids one or more IDs
+         * @param array $options options
+         *   * "cas" last known document CAS, which has been returned by locking command.
+         *   * "groupid" override value for hashing (not recommended to use)
+         * @return \Couchbase\Document|array document or list of the documents
+         *
+         * @see \Couchbase\Bucket::get()
+         * @see \Couchbase\Bucket::getAndLock()
+         * @see https://developer.couchbase.com/documentation/server/current/sdk/core-operations.html
+         *   Overview of K/V operations
+         * @see https://developer.couchbase.com/documentation/server/current/sdk/php/document-operations.html
+         *   More details about K/V operations for PHP SDK
+         */
+        final public function unlock($ids, $options = []) {}
+
+        /**
          * Updates document's expiration time.
          *
          * @param string|array $ids one or more IDs

@@ -37,7 +37,8 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        snapshot
+        * PCBC-459: restore \Couchbase\Bucket::unlock() method, which has been
+          lost in refactoring
     </notes>
 
     <contents>
