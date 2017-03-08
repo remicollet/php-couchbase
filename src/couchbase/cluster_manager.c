@@ -15,9 +15,9 @@
  */
 
 #include "couchbase.h"
-#include <ext/standard/url.h>
 #include <ext/standard/php_array.h>
 #include <ext/standard/php_http.h>
+#include <ext/standard/url.h>
 
 #define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/cluster_manager", __FILE__, __LINE__
 
@@ -25,7 +25,10 @@ zend_class_entry *pcbc_cluster_manager_ce;
 extern zend_class_entry *pcbc_classic_authenticator_ce;
 
 /* {{{ proto void ClusterManager::__construct() Should not be called directly */
-PHP_METHOD(ClusterManager, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(ClusterManager, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 /* {{{ proto array ClusterManager::listBuckets() */
@@ -55,7 +58,7 @@ PHP_METHOD(ClusterManager, createBucket)
 {
     pcbc_cluster_manager_t *obj;
     const char *name = NULL;
-    pcbc_str_arg_size  name_len = 0;
+    pcbc_str_arg_size name_len = 0;
     zval *options = NULL;
     int rv;
     lcb_CMDHTTP cmd = {0};
@@ -106,7 +109,7 @@ PHP_METHOD(ClusterManager, removeBucket)
 {
     pcbc_cluster_manager_t *obj;
     const char *name = NULL;
-    pcbc_str_arg_size  name_len = 0;
+    pcbc_str_arg_size name_len = 0;
     lcb_CMDHTTP cmd = {0};
     char *path;
     int rv, path_len;
@@ -239,7 +242,7 @@ void pcbc_cluster_manager_init(zval *return_value, pcbc_cluster_t *cluster, cons
 
 static HashTable *pcbc_cluster_manager_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
 {
-    /* pcbc_cluster_manager_t *obj = NULL; */
+/* pcbc_cluster_manager_t *obj = NULL; */
 #if PHP_VERSION_ID >= 70000
     zval retval;
 #else

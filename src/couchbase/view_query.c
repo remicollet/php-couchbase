@@ -23,7 +23,10 @@
 zend_class_entry *pcbc_view_query_ce;
 
 /* {{{ proto ViewQuery::__construct() */
-PHP_METHOD(ViewQuery, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(ViewQuery, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 void pcbc_view_query_init(zval *return_value, char *design_document, int design_document_len, char *view_name,

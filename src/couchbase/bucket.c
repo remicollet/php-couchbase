@@ -44,7 +44,10 @@ PHP_METHOD(Bucket, durability);
 
 /* {{{ proto void Bucket::__construct()
    Should not be called directly */
-PHP_METHOD(Bucket, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(Bucket, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 /* {{{ proto void Bucket::setTranscoder(callable $encoder, callable $decoder)

@@ -47,7 +47,10 @@ zend_class_entry *pcbc_boolean_search_query_ce;
 extern PHP_JSON_API zend_class_entry *php_json_serializable_ce;
 
 /* {{{ proto void BooleanSearchQuery::__construct() */
-PHP_METHOD(BooleanSearchQuery, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(BooleanSearchQuery, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 /* {{{ proto \Couchbase\BooleanSearchQuery BooleanSearchQuery::boost(double $boost)

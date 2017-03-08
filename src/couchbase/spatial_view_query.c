@@ -15,9 +15,9 @@
  */
 
 #include "couchbase.h"
-#include <ext/standard/url.h>
 #include <ext/standard/php_http.h>
 #include <ext/standard/php_string.h>
+#include <ext/standard/url.h>
 
 #if PHP_VERSION_ID >= 70000
 static inline pcbc_spatial_view_query_t *pcbc_spatial_view_query_fetch_object(zend_object *obj)
@@ -36,7 +36,10 @@ static inline pcbc_spatial_view_query_t *pcbc_spatial_view_query_fetch_object(ze
 zend_class_entry *pcbc_spatial_view_query_ce;
 
 /* {{{ proto SpatialViewQuery::__construct() */
-PHP_METHOD(SpatialViewQuery, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(SpatialViewQuery, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 void pcbc_spatial_view_query_init(zval *return_value, char *design_document, int design_document_len, char *view_name,

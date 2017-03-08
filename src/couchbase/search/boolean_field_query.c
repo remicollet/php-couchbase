@@ -36,7 +36,8 @@ static inline pcbc_boolean_field_search_query_t *pcbc_boolean_field_search_query
 #define Z_BOOLEAN_FIELD_SEARCH_QUERY_OBJ_P(zv) (pcbc_boolean_field_search_query_fetch_object(Z_OBJ_P(zv)))
 #else
 #define Z_BOOLEAN_FIELD_SEARCH_QUERY_OBJ(zo) ((pcbc_boolean_field_search_query_t *)zo)
-#define Z_BOOLEAN_FIELD_SEARCH_QUERY_OBJ_P(zv) ((pcbc_boolean_field_search_query_t *)zend_object_store_get_object(zv TSRMLS_CC))
+#define Z_BOOLEAN_FIELD_SEARCH_QUERY_OBJ_P(zv)                                                                         \
+    ((pcbc_boolean_field_search_query_t *)zend_object_store_get_object(zv TSRMLS_CC))
 #endif
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/boolean_field_search_query", __FILE__, __LINE__
@@ -46,7 +47,10 @@ zend_class_entry *pcbc_boolean_field_search_query_ce;
 extern PHP_JSON_API zend_class_entry *php_json_serializable_ce;
 
 /* {{{ proto void BooleanFieldSearchQuery::__construct() */
-PHP_METHOD(BooleanFieldSearchQuery, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(BooleanFieldSearchQuery, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 /* {{{ proto \Couchbase\BooleanFieldSearchQuery BooleanFieldSearchQuery::field(string $field)

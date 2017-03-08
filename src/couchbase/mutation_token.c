@@ -22,7 +22,10 @@
 zend_class_entry *pcbc_mutation_token_ce;
 
 /* {{{ proto void MutationToken::__construct() Should not be called directly */
-PHP_METHOD(MutationToken, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(MutationToken, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 /* {{{ proto \Couchbase\MutationToken MutationToken::from(string $bucketName, int $vbucketID, string $vbucketUUID,

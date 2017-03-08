@@ -49,7 +49,10 @@ zend_class_entry *pcbc_match_phrase_search_query_ce;
 extern PHP_JSON_API zend_class_entry *php_json_serializable_ce;
 
 /* {{{ proto void MatchPhraseSearchQuery::__construct() */
-PHP_METHOD(MatchPhraseSearchQuery, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(MatchPhraseSearchQuery, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 /* {{{ proto \Couchbase\MatchPhraseSearchQuery MatchPhraseSearchQuery::analyzer(string $analyzer)

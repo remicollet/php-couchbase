@@ -22,7 +22,10 @@
 zend_class_entry *pcbc_mutation_state_ce;
 
 /* {{{ proto void MutationState::__construct() Should not be called directly */
-PHP_METHOD(MutationState, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(MutationState, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 static void pcbc_add_token(pcbc_mutation_state_t *state, pcbc_mutation_token_t *token TSRMLS_DC)
@@ -105,7 +108,10 @@ PHP_METHOD(MutationState, from)
 #if PHP_VERSION_ID >= 70000
         zval *entry;
 
-        ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(source), entry) { ADD_TOKEN_FROM_ZVAL(entry); }
+        ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(source), entry)
+        {
+            ADD_TOKEN_FROM_ZVAL(entry);
+        }
         ZEND_HASH_FOREACH_END();
 #else
         HashPosition pos;
@@ -145,7 +151,10 @@ PHP_METHOD(MutationState, add)
 #if PHP_VERSION_ID >= 70000
         zval *entry;
 
-        ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(source), entry) { ADD_TOKEN_FROM_ZVAL(entry); }
+        ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(source), entry)
+        {
+            ADD_TOKEN_FROM_ZVAL(entry);
+        }
         ZEND_HASH_FOREACH_END();
 #else
         HashPosition pos;

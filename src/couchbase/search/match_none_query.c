@@ -34,7 +34,8 @@ static inline pcbc_match_none_search_query_t *pcbc_match_none_search_query_fetch
 #define Z_MATCH_NONE_SEARCH_QUERY_OBJ_P(zv) (pcbc_match_none_search_query_fetch_object(Z_OBJ_P(zv)))
 #else
 #define Z_MATCH_NONE_SEARCH_QUERY_OBJ(zo) ((pcbc_match_none_search_query_t *)zo)
-#define Z_MATCH_NONE_SEARCH_QUERY_OBJ_P(zv) ((pcbc_match_none_search_query_t *)zend_object_store_get_object(zv TSRMLS_CC))
+#define Z_MATCH_NONE_SEARCH_QUERY_OBJ_P(zv)                                                                            \
+    ((pcbc_match_none_search_query_t *)zend_object_store_get_object(zv TSRMLS_CC))
 #endif
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/match_none_search_query", __FILE__, __LINE__
@@ -44,7 +45,10 @@ zend_class_entry *pcbc_match_none_search_query_ce;
 extern PHP_JSON_API zend_class_entry *php_json_serializable_ce;
 
 /* {{{ proto void MatchNoneSearchQuery::__construct() */
-PHP_METHOD(MatchNoneSearchQuery, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(MatchNoneSearchQuery, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 /* {{{ proto \Couchbase\MatchNoneSearchQuery MatchNoneSearchQuery::boost(double $boost)

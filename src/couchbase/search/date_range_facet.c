@@ -48,7 +48,10 @@ zend_class_entry *date_range_search_facet_ce;
 extern PHP_JSON_API zend_class_entry *php_json_serializable_ce;
 
 /* {{{ proto void DateRangeSearchFacet::__construct() */
-PHP_METHOD(DateRangeSearchFacet, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(DateRangeSearchFacet, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 /* {{{ proto \Couchbase\DateRangeSearchFacet DateRangeSearchFacet::addRange(string $name, (string|int) $start,

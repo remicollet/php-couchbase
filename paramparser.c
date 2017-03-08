@@ -215,7 +215,10 @@ int pcbc_pp_begin(int param_count TSRMLS_DC, pcbc_pp_state *state, const char *s
     return SUCCESS;
 }
 
-int pcbc_pp_ismapped(pcbc_pp_state *state) { return Z_TYPE_P(PCBC_P(state->zids)) != IS_STRING; }
+int pcbc_pp_ismapped(pcbc_pp_state *state)
+{
+    return Z_TYPE_P(PCBC_P(state->zids)) != IS_STRING;
+}
 
 int pcbc_pp_keycount(pcbc_pp_state *state)
 {

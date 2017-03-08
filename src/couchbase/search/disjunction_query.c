@@ -48,7 +48,10 @@ zend_class_entry *pcbc_disjunction_search_query_ce;
 extern PHP_JSON_API zend_class_entry *php_json_serializable_ce;
 
 /* {{{ proto void DisjunctionSearchQuery::__construct() */
-PHP_METHOD(DisjunctionSearchQuery, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(DisjunctionSearchQuery, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 /* {{{ proto \Couchbase\DisjunctionSearchQuery DisjunctionSearchQuery::min(int $field)

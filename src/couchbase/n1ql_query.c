@@ -26,7 +26,10 @@ zend_class_entry *pcbc_n1ql_query_ce;
 #define PCBC_N1QL_CONSISTENCY_STATEMENT_PLUS 3
 
 /* {{{ proto void N1qlQuery::__construct() Should not be called directly */
-PHP_METHOD(N1qlQuery, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(N1qlQuery, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 /* {{{ proto \Couchbase\N1qlQuery N1qlQuery::fromString(string $statement) */

@@ -16,7 +16,10 @@
 
 #include "couchbase.h"
 
-opcookie *opcookie_init() { return ecalloc(1, sizeof(opcookie)); }
+opcookie *opcookie_init()
+{
+    return ecalloc(1, sizeof(opcookie));
+}
 
 void opcookie_destroy(opcookie *cookie)
 {
@@ -29,7 +32,10 @@ void opcookie_destroy(opcookie *cookie)
     efree(cookie);
 }
 
-lcb_error_t opcookie_get_first_error(opcookie *cookie) { return cookie->first_error; }
+lcb_error_t opcookie_get_first_error(opcookie *cookie)
+{
+    return cookie->first_error;
+}
 
 void opcookie_push(opcookie *cookie, opcookie_res *res)
 {

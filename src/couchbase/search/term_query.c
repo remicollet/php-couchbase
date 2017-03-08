@@ -48,7 +48,10 @@ zend_class_entry *pcbc_term_search_query_ce;
 extern PHP_JSON_API zend_class_entry *php_json_serializable_ce;
 
 /* {{{ proto void TermSearchQuery::__construct() */
-PHP_METHOD(TermSearchQuery, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(TermSearchQuery, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 /* {{{ proto \Couchbase\TermSearchQuery TermSearchQuery::field(string $field)

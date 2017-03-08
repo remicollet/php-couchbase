@@ -22,7 +22,10 @@ zend_class_entry *pcbc_mutate_in_builder_ce;
 
 /* {{{ proto void Bucket::__construct()
    Should not be called directly */
-PHP_METHOD(MutateInBuilder, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(MutateInBuilder, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 int pcbc_mutate_in_builder_remove(pcbc_mutate_in_builder_t *builder, char *path, int path_len TSRMLS_DC)
@@ -715,7 +718,7 @@ PHP_METHOD(MutateInBuilder, arrayAppendAll)
             efree(spec);
             RETURN_NULL(); // TODO: throw exception?
         } else {
-            char *p, *stripped  = NULL;
+            char *p, *stripped = NULL;
             int n;
             smart_str_0(&buf);
             p = PCBC_SMARTSTR_VAL(buf);

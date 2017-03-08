@@ -132,7 +132,10 @@ static lcb_error_t proc_ftsrow_results(pcbc_bucket_t *bucket, zval *return_value
         }
     }
 
-    FOREACH_OPCOOKIE_RES(opcookie_ftsrow_res, res, cookie) { zval_ptr_dtor(&res->row); }
+    FOREACH_OPCOOKIE_RES(opcookie_ftsrow_res, res, cookie)
+    {
+        zval_ptr_dtor(&res->row);
+    }
 
     return err;
 }

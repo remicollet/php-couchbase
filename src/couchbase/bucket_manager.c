@@ -21,7 +21,10 @@
 zend_class_entry *pcbc_bucket_manager_ce;
 
 /* {{{ proto void BucketManager::__construct() Should not be called directly */
-PHP_METHOD(BucketManager, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(BucketManager, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 /* {{{ proto array BucketManager::info() */
@@ -249,7 +252,7 @@ PHP_METHOD(BucketManager, getDesignDocument)
     pcbc_bucket_manager_t *obj;
     lcb_CMDHTTP cmd = {0};
     char *path, *name = NULL;
-    int rv,  path_len;
+    int rv, path_len;
     pcbc_str_arg_size name_len = 0;
 
     obj = Z_BUCKET_MANAGER_OBJ_P(getThis());

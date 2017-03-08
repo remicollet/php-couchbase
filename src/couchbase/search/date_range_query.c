@@ -55,7 +55,10 @@ zend_class_entry *pcbc_date_range_search_query_ce;
 extern PHP_JSON_API zend_class_entry *php_json_serializable_ce;
 
 /* {{{ proto void DateRangeSearchQuery::__construct() */
-PHP_METHOD(DateRangeSearchQuery, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(DateRangeSearchQuery, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 /* {{{ proto \Couchbase\DateRangeSearchQuery DateRangeSearchQuery::field(string $field)

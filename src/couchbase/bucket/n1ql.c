@@ -131,7 +131,10 @@ static lcb_error_t proc_n1qlrow_results(zval *return_value, opcookie *cookie TSR
         }
     }
 
-    FOREACH_OPCOOKIE_RES(opcookie_n1qlrow_res, res, cookie) { zval_ptr_dtor(&res->row); }
+    FOREACH_OPCOOKIE_RES(opcookie_n1qlrow_res, res, cookie)
+    {
+        zval_ptr_dtor(&res->row);
+    }
 
     return err;
 }

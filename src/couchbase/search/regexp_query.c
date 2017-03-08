@@ -46,7 +46,10 @@ zend_class_entry *pcbc_regexp_search_query_ce;
 extern PHP_JSON_API zend_class_entry *php_json_serializable_ce;
 
 /* {{{ proto void RegexpSearchQuery::__construct() */
-PHP_METHOD(RegexpSearchQuery, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(RegexpSearchQuery, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 /* {{{ proto \Couchbase\RegexpSearchQuery RegexpSearchQuery::field(string $field)

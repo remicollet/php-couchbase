@@ -53,7 +53,10 @@ zend_class_entry *pcbc_numeric_range_search_query_ce;
 extern PHP_JSON_API zend_class_entry *php_json_serializable_ce;
 
 /* {{{ proto void NumericRangeSearchQuery::__construct() */
-PHP_METHOD(NumericRangeSearchQuery, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(NumericRangeSearchQuery, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 /* {{{ proto \Couchbase\NumericRangeSearchQuery NumericRangeSearchQuery::field(string $field)

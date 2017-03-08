@@ -22,7 +22,10 @@
 zend_class_entry *pcbc_lookup_in_builder_ce;
 
 /* {{{ proto void LookupInBuilder::__construct() Should not be called directly */
-PHP_METHOD(LookupInBuilder, __construct) { throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL); }
+PHP_METHOD(LookupInBuilder, __construct)
+{
+    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+}
 /* }}} */
 
 int pcbc_lookup_in_builder_get(pcbc_lookup_in_builder_t *builder, char *path, int path_len TSRMLS_DC)

@@ -280,9 +280,9 @@ typedef int pcbc_str_arg_size;
 
 #if PHP_VERSION_ID >= 70000
 #define PCBC_ALLOC_OBJECT_T(obj_t, class_type)                                                                         \
-    (obj_t *) ecalloc(1, sizeof(obj_t) + zend_object_properties_size(class_type))
+    (obj_t *)ecalloc(1, sizeof(obj_t) + zend_object_properties_size(class_type))
 #else
-#define PCBC_ALLOC_OBJECT_T(obj_t, class_type) (obj_t *) ecalloc(1, sizeof(obj_t))
+#define PCBC_ALLOC_OBJECT_T(obj_t, class_type) (obj_t *)ecalloc(1, sizeof(obj_t))
 #endif
 
 #if PHP_VERSION_ID >= 70000
@@ -415,8 +415,8 @@ typedef zval *PCBC_ZVAL;
         (__pcbc_receiver_buf) = ZSTR_VAL((__pcbc_smart_str).s);                                                        \
         (__pcbc_receiver_length) = ZSTR_LEN((__pcbc_smart_str).s);                                                     \
     } while (0)
-#define PCBC_SMARTSTR_VAL(__pcbc_smart_str) (char *) ZSTR_VAL((__pcbc_smart_str).s)
-#define PCBC_SMARTSTR_LEN(__pcbc_smart_str) (int) ZSTR_LEN((__pcbc_smart_str).s)
+#define PCBC_SMARTSTR_VAL(__pcbc_smart_str) (char *)ZSTR_VAL((__pcbc_smart_str).s)
+#define PCBC_SMARTSTR_LEN(__pcbc_smart_str) (int)ZSTR_LEN((__pcbc_smart_str).s)
 #else
 #define PCBC_SMARTSTR_DUP(__pcbc_smart_str, __pcbc_receiver_buf)                                                       \
     do {                                                                                                               \

@@ -39,7 +39,8 @@ void unlock_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
     opcookie_push((opcookie *)rb->cookie, &result->header);
 }
 
-static lcb_error_t proc_unlock_results(pcbc_bucket_t *bucket, zval *return_value, opcookie *cookie, int is_mapped TSRMLS_DC)
+static lcb_error_t proc_unlock_results(pcbc_bucket_t *bucket, zval *return_value, opcookie *cookie,
+                                       int is_mapped TSRMLS_DC)
 {
     opcookie_unlock_res *res;
     lcb_error_t err = LCB_SUCCESS;

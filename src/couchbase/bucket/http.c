@@ -78,7 +78,10 @@ static lcb_error_t proc_http_results(zval *return_value, opcookie *cookie TSRMLS
         }
     }
 
-    FOREACH_OPCOOKIE_RES(opcookie_http_res, res, cookie) { zval_ptr_dtor(&res->bytes); }
+    FOREACH_OPCOOKIE_RES(opcookie_http_res, res, cookie)
+    {
+        zval_ptr_dtor(&res->bytes);
+    }
 
     return err;
 }
