@@ -510,7 +510,7 @@ namespace Couchbase {
          *   * "lockTime" non zero if the documents have to be locked
          *   * "expiry" non zero if the expiration time should be updated
          *   * "groupid" override value for hashing (not recommended to use)
-         * @return \Couchbase\Document|array
+         * @return \Couchbase\Document|array document or list of the documents
          *
          * @see \Couchbase\Bucket::getAndLock()
          * @see \Couchbase\Bucket::getAndTouch()
@@ -534,7 +534,7 @@ namespace Couchbase {
          * @param int $lockTime time to lock the documents
          * @param array $options options
          *   * "groupid" override value for hashing (not recommended to use)
-         * @return \Couchbase\Document
+         * @return \Couchbase\Document|array document or list of the documents
          *
          * @see \Couchbase\Bucket::unlock()
          * @see https://developer.couchbase.com/documentation/server/current/sdk/core-operations.html
@@ -555,7 +555,7 @@ namespace Couchbase {
          *      server as absolute UNIX time (seconds from epoch 1970-01-01T00:00:00).
          * @param array $options options
          *   * "groupid" override value for hashing (not recommended to use)
-         * @return \Couchbase\Document
+         * @return \Couchbase\Document|array document or list of the documents
          *
          * @see https://developer.couchbase.com/documentation/server/current/sdk/core-operations.html
          *   Overview of K/V operations
@@ -572,7 +572,7 @@ namespace Couchbase {
          *   * "index" the replica index. If the index is zero, it will return
          *      first successful replica, otherwise it will read only selected node.
          *   * "groupid" override value for hashing (not recommended to use)
-         * @return \Couchbase\Document
+         * @return \Couchbase\Document|array document or list of the documents
          *
          * @see https://developer.couchbase.com/documentation/server/current/sdk/core-operations.html
          *   Overview of K/V operations
@@ -586,7 +586,7 @@ namespace Couchbase {
         /**
          * Inserts or updates a document, depending on whether the document already exists on the cluster.
          *
-         * @param string $id ID of the document
+         * @param string|array $ids one or more IDs
          * @param mixed $value value of the document
          * @param array $options options
          *   * "expiry" document expiration time in seconds. If larger than 30 days (60*60*24*30),
@@ -602,19 +602,19 @@ namespace Couchbase {
          *      is possible (which may be 0 if the bucket is not configured for replicas).
          *   * "flags" override flags (not recommended to use)
          *   * "groupid" override value for hashing (not recommended to use)
-         * @return \Couchbase\Document
+         * @return \Couchbase\Document|array document or list of the documents
          *
          * @see https://developer.couchbase.com/documentation/server/current/sdk/core-operations.html
          *   Overview of K/V operations
          * @see https://developer.couchbase.com/documentation/server/current/sdk/php/document-operations.html
          *   More details about K/V operations for PHP SDK
          */
-        final public function upsert($id, $value, $options = []) {}
+        final public function upsert($ids, $value, $options = []) {}
 
         /**
          * Inserts a document. This operation will fail if the document already exists on the cluster.
          *
-         * @param string $id ID of the document
+         * @param string|array $ids one or more IDs
          * @param mixed $value value of the document
          * @param array $options options
          *   * "expiry" document expiration time in seconds. If larger than 30 days (60*60*24*30),
@@ -630,19 +630,19 @@ namespace Couchbase {
          *      is possible (which may be 0 if the bucket is not configured for replicas).
          *   * "flags" override flags (not recommended to use)
          *   * "groupid" override value for hashing (not recommended to use)
-         * @return \Couchbase\Document
+         * @return \Couchbase\Document|array document or list of the documents
          *
          * @see https://developer.couchbase.com/documentation/server/current/sdk/core-operations.html
          *   Overview of K/V operations
          * @see https://developer.couchbase.com/documentation/server/current/sdk/php/document-operations.html
          *   More details about K/V operations for PHP SDK
          */
-        final public function insert($id, $value, $options = []) {}
+        final public function insert($ids, $value, $options = []) {}
 
         /**
          * Replaces a document. This operation will fail if the document does not exists on the cluster.
          *
-         * @param string $id ID of the document
+         * @param string|array $ids one or more IDs
          * @param mixed $value value of the document
          * @param array $options options
          *   * "cas" last known document CAS, which serves for optimistic locking.
@@ -659,14 +659,14 @@ namespace Couchbase {
          *      is possible (which may be 0 if the bucket is not configured for replicas).
          *   * "flags" override flags (not recommended to use)
          *   * "groupid" override value for hashing (not recommended to use)
-         * @return \Couchbase\Document
+         * @return \Couchbase\Document|array document or list of the documents
          *
          * @see https://developer.couchbase.com/documentation/server/current/sdk/core-operations.html
          *   Overview of K/V operations
          * @see https://developer.couchbase.com/documentation/server/current/sdk/php/document-operations.html
          *   More details about K/V operations for PHP SDK
          */
-        final public function replace($id, $value, $options = []) {}
+        final public function replace($ids, $value, $options = []) {}
 
         /**
          * Appends content to a document.
@@ -675,7 +675,7 @@ namespace Couchbase {
          * Note that this might make the value un-decodable. Consider sub-document API
          * for partial updates of the JSON documents.
          *
-         * @param string $id ID of the document
+         * @param string|array $ids one or more IDs
          * @param mixed $value value of the document
          * @param array $options options
          *   * "cas" last known document CAS, which serves for optimistic locking.
@@ -691,7 +691,7 @@ namespace Couchbase {
          *      number, will be set to the maximum number of nodes to which replication
          *      is possible (which may be 0 if the bucket is not configured for replicas).
          *   * "groupid" override value for hashing (not recommended to use)
-         * @return \Couchbase\Document
+         * @return \Couchbase\Document|array document or list of the documents
          *
          * @see \Couchbase\Bucket::mutateIn()
          * @see https://developer.couchbase.com/documentation/server/current/sdk/core-operations.html
@@ -699,7 +699,7 @@ namespace Couchbase {
          * @see https://developer.couchbase.com/documentation/server/current/sdk/php/document-operations.html
          *   More details about K/V operations for PHP SDK
          */
-        final public function append($id, $value, $options = []) {}
+        final public function append($ids, $value, $options = []) {}
 
         /**
          * Prepends content to a document.
@@ -708,7 +708,7 @@ namespace Couchbase {
          * Note that this might make the value un-decodable. Consider sub-document API
          * for partial updates of the JSON documents.
          *
-         * @param string $id ID of the document
+         * @param string|array $ids one or more IDs
          * @param mixed $value value of the document
          * @param array $options options
          *   * "cas" last known document CAS, which serves for optimistic locking.
@@ -724,7 +724,7 @@ namespace Couchbase {
          *      number, will be set to the maximum number of nodes to which replication
          *      is possible (which may be 0 if the bucket is not configured for replicas).
          *   * "groupid" override value for hashing (not recommended to use)
-         * @return \Couchbase\Document
+         * @return \Couchbase\Document|array document or list of the documents
          *
          * @see \Couchbase\Bucket::mutateIn()
          * @see https://developer.couchbase.com/documentation/server/current/sdk/core-operations.html
@@ -732,7 +732,7 @@ namespace Couchbase {
          * @see https://developer.couchbase.com/documentation/server/current/sdk/php/document-operations.html
          *   More details about K/V operations for PHP SDK
          */
-        final public function prepend($id, $value, $options = []) {}
+        final public function prepend($ids, $value, $options = []) {}
 
         /**
          * Removes the document.
@@ -741,7 +741,7 @@ namespace Couchbase {
          * @param array $options options
          *   * "cas" last known document CAS, which serves for optimistic locking.
          *   * "groupid" override value for hashing (not recommended to use)
-         * @return \Couchbase\Document
+         * @return \Couchbase\Document|array document or list of the documents
          *
          * @see https://developer.couchbase.com/documentation/server/current/sdk/core-operations.html
          *   Overview of K/V operations
@@ -759,7 +759,7 @@ namespace Couchbase {
          *      server as absolute UNIX time (seconds from epoch 1970-01-01T00:00:00).
          * @param array $options options
          *   * "groupid" override value for hashing (not recommended to use)
-         * @return \Couchbase\Document
+         * @return \Couchbase\Document|array document or list of the documents
          *
          * @see https://developer.couchbase.com/documentation/server/current/sdk/core-operations.html
          *   Overview of K/V operations
@@ -779,7 +779,7 @@ namespace Couchbase {
          *      If larger than 30 days (60*60*24*30), it will be interpreted by the
          *      server as absolute UNIX time (seconds from epoch 1970-01-01T00:00:00).
          *   * "groupid" override value for hashing (not recommended to use)
-         * @return \Couchbase\Document
+         * @return \Couchbase\Document|array document or list of the documents
          *
          * @see https://developer.couchbase.com/documentation/server/current/sdk/core-operations.html
          *   Overview of K/V operations
@@ -1306,6 +1306,7 @@ namespace Couchbase {
          * Create container from the given mutation token holders.
          *
          * @param array|Document|DocumentFragment $source anything that can have attached MutationToken
+         * @return MutationState
          *
          * @see \Couchbase\MutationToken
          */
@@ -2836,6 +2837,9 @@ namespace Couchbase {
      */
     interface SearchFacet {}
 
+    /**
+     * A facet that gives the number of occurrences of the most recurring terms in all hits.
+     */
     final class TermSearchFacet implements \JsonSerializable, SearchFacet {
         /** @ignore */
         final private function __construct() {}
