@@ -24,7 +24,7 @@ Couchbase PHP client generally available through PECL: http://pecl.php.net/packa
 pecl install couchbase
 ```
 
-Additionally Windows builds available from [Release Notes and Archives][http://developer.couchbase.com/server/other-products/release-notes-archives/php-sdk] page.
+Additionally Windows builds available from [Release Notes and Archives](http://developer.couchbase.com/server/other-products/release-notes-archives/php-sdk) page.
 
 On MacOS platform, the library could be installed via Homebrew:
 
