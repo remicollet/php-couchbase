@@ -614,6 +614,9 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
             if (cmprflags != COUCHBASE_COMPRESSION_NONE) {
                 if (PCBC_STRLEN_P(res) > PCBC_STRLEN_P(compressed) * cmprfactor) {
                     zval_dtor(PCBC_P(res));
+#if PHP_VERSION_ID < 70000
+                    efree(res);
+#endif
                     res = compressed;
 
                     flags |= cmprflags;
@@ -624,6 +627,9 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
                     flags |= COUCHBASE_CFFMT_PRIVATE;
                 } else {
                     zval_dtor(PCBC_P(compressed));
+#if PHP_VERSION_ID < 70000
+                    efree(compressed);
+#endif
                 }
             }
         }
