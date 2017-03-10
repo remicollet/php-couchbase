@@ -280,9 +280,9 @@ typedef int pcbc_str_arg_size;
 
 #if PHP_VERSION_ID >= 70000
 #define PCBC_ALLOC_OBJECT_T(obj_t, class_type)                                                                         \
-    (obj_t *)ecalloc(1, sizeof(obj_t) + zend_object_properties_size(class_type))
+    (obj_t *) ecalloc(1, sizeof(obj_t) + zend_object_properties_size(class_type))
 #else
-#define PCBC_ALLOC_OBJECT_T(obj_t, class_type) (obj_t *)ecalloc(1, sizeof(obj_t))
+#define PCBC_ALLOC_OBJECT_T(obj_t, class_type) (obj_t *) ecalloc(1, sizeof(obj_t))
 #endif
 
 #if PHP_VERSION_ID >= 70000
@@ -309,21 +309,20 @@ typedef int pcbc_str_arg_size;
 #define PCBC_STRLEN_ZP(__pcbc_zval) Z_STRLEN_P((__pcbc_zval))
 #define PCBC_STRVAL_ZP(__pcbc_zval) Z_STRVAL_P((__pcbc_zval))
 #define PCBC_STRINGL(__pcbc_zval, __pcbc_str, __pcbc_len) ZVAL_STRINGL(&(__pcbc_zval), (__pcbc_str), (__pcbc_len))
-#define PCBC_PSTRINGL(__pcbc_zval, __pcbc_str, __pcbc_len) ZVAL_PSTRINGL(&(__pcbc_zval), (__pcbc_str), (__pcbc_len))
+#define PCBC_STRINGS(__pcbc_zval, __pcbc_smart_str)                                                                    \
+    ZVAL_STRINGL(&(__pcbc_zval), ZSTR_VAL((__pcbc_smart_str).s), ZSTR_LEN((__pcbc_smart_str).s))
 #define PCBC_STRING(__pcbc_zval, __pcbc_str) ZVAL_STRING(&(__pcbc_zval), (__pcbc_str))
 #define PCBC_PSTRING(__pcbc_zval, __pcbc_str) ZVAL_STRING(&(__pcbc_zval), (__pcbc_str))
-#define PCBC_PSTRINGS(__pcbc_zval, __pcbc_smart_str) ZVAL_STR(&(__pcbc_zval), (__pcbc_smart_str).s)
 #else
 #define PCBC_STRLEN_P(__pcbc_zval) Z_STRLEN_P((__pcbc_zval))
 #define PCBC_STRVAL_P(__pcbc_zval) Z_STRVAL_P((__pcbc_zval))
 #define PCBC_STRLEN_ZP(__pcbc_zval) Z_STRLEN_P((__pcbc_zval))
 #define PCBC_STRVAL_ZP(__pcbc_zval) Z_STRVAL_P((__pcbc_zval))
 #define PCBC_STRINGL(__pcbc_zval, __pcbc_str, __pcbc_len) ZVAL_STRINGL((__pcbc_zval), (__pcbc_str), (__pcbc_len), 1)
-#define PCBC_PSTRINGL(__pcbc_zval, __pcbc_str, __pcbc_len) ZVAL_STRINGL((__pcbc_zval), (__pcbc_str), (__pcbc_len), 0)
+#define PCBC_STRINGS(__pcbc_zval, __pcbc_smart_str)                                                                    \
+    ZVAL_STRINGL((__pcbc_zval), (__pcbc_smart_str).c, (__pcbc_smart_str).len, 1)
 #define PCBC_STRING(__pcbc_zval, __pcbc_str) ZVAL_STRING((__pcbc_zval), (__pcbc_str), 1)
 #define PCBC_PSTRING(__pcbc_zval, __pcbc_str) ZVAL_STRING((__pcbc_zval), (__pcbc_str), 0)
-#define PCBC_PSTRINGS(__pcbc_zval, __pcbc_smart_str)                                                                   \
-    PCBC_PSTRINGL((__pcbc_zval), (__pcbc_smart_str).c, (__pcbc_smart_str).len)
 #endif
 
 #if PHP_VERSION_ID >= 70000
@@ -408,19 +407,19 @@ typedef zval *PCBC_ZVAL;
 #if PHP_VERSION_ID >= 70000
 #define PCBC_SMARTSTR_DUP(__pcbc_smart_str, __pcbc_receiver_buf)                                                       \
     do {                                                                                                               \
-        (__pcbc_receiver_buf) = estrdup(ZSTR_VAL((__pcbc_smart_str).s));                                               \
+        (__pcbc_receiver_buf) = estrndup(ZSTR_VAL((__pcbc_smart_str).s), ZSTR_LEN((__pcbc_smart_str).s));              \
     } while (0)
 #define PCBC_SMARTSTR_SET(__pcbc_smart_str, __pcbc_receiver_buf, __pcbc_receiver_length)                               \
     do {                                                                                                               \
         (__pcbc_receiver_buf) = ZSTR_VAL((__pcbc_smart_str).s);                                                        \
         (__pcbc_receiver_length) = ZSTR_LEN((__pcbc_smart_str).s);                                                     \
     } while (0)
-#define PCBC_SMARTSTR_VAL(__pcbc_smart_str) (char *)ZSTR_VAL((__pcbc_smart_str).s)
-#define PCBC_SMARTSTR_LEN(__pcbc_smart_str) (int)ZSTR_LEN((__pcbc_smart_str).s)
+#define PCBC_SMARTSTR_VAL(__pcbc_smart_str) (char *) ZSTR_VAL((__pcbc_smart_str).s)
+#define PCBC_SMARTSTR_LEN(__pcbc_smart_str) (int) ZSTR_LEN((__pcbc_smart_str).s)
 #else
 #define PCBC_SMARTSTR_DUP(__pcbc_smart_str, __pcbc_receiver_buf)                                                       \
     do {                                                                                                               \
-        (__pcbc_receiver_buf) = estrdup((__pcbc_smart_str).c);                                                         \
+        (__pcbc_receiver_buf) = estrndup((__pcbc_smart_str).c, (__pcbc_smart_str).len);                                \
     } while (0)
 #define PCBC_SMARTSTR_SET(__pcbc_smart_str, __pcbc_receiver_buf, __pcbc_receiver_length)                               \
     do {                                                                                                               \

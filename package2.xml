@@ -9,8 +9,7 @@
     <channel>pecl.php.net</channel>
     <summary>Couchbase Server PHP extension</summary>
     <description>
-        The PHP client library provides fast access to documents stored in
-        a Couchbase Server.
+        The PHP client library provides fast access to documents stored in a Couchbase Server.
     </description>
     <lead>
         <name>Brett Lawson</name>
@@ -39,6 +38,8 @@
     <notes>
         * PCBC-459: restore \Couchbase\Bucket::unlock() method, which has been
           lost in refactoring
+        * PCBC-460: prefer managed strings to persistent when storing document
+          values.
     </notes>
 
     <contents>

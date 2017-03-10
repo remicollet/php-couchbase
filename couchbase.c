@@ -504,11 +504,11 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
                 if (last_error != 0) {
                     pcbc_log(LOGARGS(WARN), "Failed to encode value as JSON: json_last_error=%d", last_error);
                     ZVAL_NULL(PCBC_P(res));
-                    smart_str_free(&buf);
                 } else {
                     smart_str_0(&buf);
-                    PCBC_PSTRINGS(res, buf);
+                    PCBC_STRINGS(res, buf);
                 }
+                smart_str_free(&buf);
             }
             break;
         case COUCHBASE_SERTYPE_PHP:
@@ -523,10 +523,10 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
 
                 if (EG(exception)) {
                     pcbc_log(LOGARGS(WARN), "Failed to serialize value");
-                    smart_str_free(&buf);
                 } else {
-                    PCBC_PSTRINGS(res, buf);
+                    PCBC_STRINGS(res, buf);
                 }
+                smart_str_free(&buf);
             }
             break;
 #ifdef HAVE_COUCHBASE_IGBINARY
@@ -540,7 +540,8 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
                 if (igbinary_serialize(&buf, &len, value TSRMLS_CC)) {
                     pcbc_log(LOGARGS(WARN), "Failed to serialize value with igbinary");
                 } else {
-                    PCBC_PSTRINGL(res, (char *)buf, len);
+                    PCBC_STRINGL(res, (char *)buf, len);
+                    efree(buf);
                 }
             }
             break;
@@ -580,7 +581,8 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
                 *((uint8_t *)output + output_size) = '\0';
                 cmprflags = COUCHBASE_COMPRESSION_ZLIB;
                 PCBC_ZVAL_ALLOC(compressed);
-                PCBC_PSTRINGL(compressed, output, output_size);
+                PCBC_STRINGL(compressed, output, output_size);
+                efree(output);
 #else
                 pcbc_log(LOGARGS(WARN), "The zlib library was not available when the couchbase extension was built.");
                 break;
@@ -603,7 +605,8 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
                 *((uint8_t *)output + output_size) = '\0';
                 cmprflags = COUCHBASE_COMPRESSION_FASTLZ;
                 PCBC_ZVAL_ALLOC(compressed);
-                PCBC_PSTRINGL(compressed, output, output_size);
+                PCBC_STRINGL(compressed, output, output_size);
+                efree(output);
             } else {
                 pcbc_log(LOGARGS(WARN), "Unsupported compression method: %d", cmprtype);
                 break;
