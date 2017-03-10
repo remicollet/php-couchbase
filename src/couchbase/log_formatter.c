@@ -56,9 +56,15 @@ void pcbc_log_formatter(char *buf, int buf_size, const char *severity, const cha
                         int instance_id, void *instance_ptr, int is_lcb, const char *fmt, va_list ap)
 {
     char msg[PCBC_LOG_MSG_SIZE] = {0};
+    int i;
 
     vsnprintf(msg, PCBC_LOG_MSG_SIZE, fmt, ap);
     msg[PCBC_LOG_MSG_SIZE - 1] = '\0';
+    for (i = 0; i < PCBC_LOG_MSG_SIZE; i++) {
+        if (msg[i] == '\n') {
+            msg[i] = ' ';
+        }
+    }
     if (is_lcb) {
         snprintf(buf, buf_size, "[cb,%s] (%s L:%d I:%d) %s", severity, subsystem, srcline, instance_id, msg);
     } else if (instance_ptr) {

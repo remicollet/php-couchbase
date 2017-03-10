@@ -41,6 +41,7 @@
         * PCBC-460: prefer managed strings to persistent when storing document
           values.
         * PCBC-461: deallocate intermediate results when using encoder compression
+        * PCBC-462: replace new lines in log entries with space
     </notes>
 
     <contents>
