@@ -42,6 +42,7 @@
           values.
         * PCBC-461: deallocate intermediate results when using encoder compression
         * PCBC-462: replace new lines in log entries with space
+        * PCBC-464: fix NumericRangeFacet with NULL boundary on PHP 5.4
     </notes>
 
     <contents>

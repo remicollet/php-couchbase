@@ -60,14 +60,29 @@ PHP_METHOD(NumericRangeSearchFacet, __construct)
 PHP_METHOD(NumericRangeSearchFacet, addRange)
 {
     pcbc_numeric_range_search_facet_t *obj;
-    double min = 0, max = 0;
-    zend_bool min_null = 0, max_null = 0;
     char *name = NULL;
     PCBC_ZVAL range;
     int rv;
     pcbc_str_arg_size name_len = 0;
+    double min = 0, max = 0;
+    zend_bool min_null = 0, max_null = 0;
 
+#if PHP_VERSION_ID >= 50600
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sd!d!", &name, &name_len, &min, &min_null, &max, &max_null);
+#else
+    zval *zmin = NULL, *zmax = NULL;
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "szz", &name, &name_len, &min, &max);
+    if (zmin) {
+        min = Z_DVAL_P(zmin);
+    } else {
+        min_null = 1;
+    }
+    if (zmax) {
+        min = Z_DVAL_P(zmax);
+    } else {
+        min_null = 1;
+    }
+#endif
     if (rv == FAILURE) {
         RETURN_NULL();
     }
