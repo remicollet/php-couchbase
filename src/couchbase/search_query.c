@@ -51,6 +51,8 @@ PHP_METHOD(SearchQuery, __construct)
 #endif
     ZVAL_UNDEF(PCBC_P(obj->consistency));
     ZVAL_UNDEF(PCBC_P(obj->fields));
+    ZVAL_UNDEF(PCBC_P(obj->facets));
+    ZVAL_UNDEF(PCBC_P(obj->highlight_fields));
 }
 /* }}} */
 

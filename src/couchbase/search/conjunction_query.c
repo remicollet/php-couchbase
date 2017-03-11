@@ -106,6 +106,7 @@ PHP_METHOD(ConjunctionSearchQuery, every)
                 continue;
             }
             add_next_index_zval(PCBC_P(obj->queries), PCBC_P(*query));
+            PCBC_ADDREF_P(PCBC_P(*query));
         }
     }
 #if PHP_VERSION_ID < 70000
@@ -190,6 +191,7 @@ void pcbc_conjunction_search_query_init(zval *return_value,
                 continue;
             }
             add_next_index_zval(PCBC_P(obj->queries), PCBC_P(*query));
+            PCBC_ADDREF_P(PCBC_P(*query));
         }
     }
 }

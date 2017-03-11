@@ -85,7 +85,9 @@ PHP_METHOD(DateRangeSearchFacet, addRange)
         switch (Z_TYPE_P(start)) {
         case IS_STRING:
             ADD_ASSOC_ZVAL_EX(PCBC_P(range), "start", start);
-            PCBC_ADDREF_P(start);
+#if PHP_VERSION_ID < 70000
+            Z_ADDREF_P(start);
+#endif
             break;
         case IS_LONG:
             date_str = php_format_date(ZEND_STRL(PCBC_DATE_FORMAT_RFC3339), Z_LVAL_P(start), 1 TSRMLS_CC);
@@ -108,7 +110,9 @@ PHP_METHOD(DateRangeSearchFacet, addRange)
         switch (Z_TYPE_P(end)) {
         case IS_STRING:
             ADD_ASSOC_ZVAL_EX(PCBC_P(range), "end", end);
-            PCBC_ADDREF_P(end);
+#if PHP_VERSION_ID < 70000
+            Z_ADDREF_P(end);
+#endif
             break;
         case IS_LONG:
             date_str = php_format_date(ZEND_STRL(PCBC_DATE_FORMAT_RFC3339), Z_LVAL_P(end), 1 TSRMLS_CC);
@@ -126,7 +130,6 @@ PHP_METHOD(DateRangeSearchFacet, addRange)
             RETURN_NULL();
         }
     }
-    PCBC_ADDREF_P(PCBC_P(range));
     add_next_index_zval(PCBC_P(obj->ranges), PCBC_P(range));
 
     RETURN_ZVAL(getThis(), 1, 0);
@@ -181,8 +184,6 @@ void pcbc_date_range_search_facet_init(zval *return_value, char *field, int fiel
 
     PCBC_ZVAL_ALLOC(obj->ranges);
     array_init(PCBC_P(obj->ranges));
-    PCBC_ADDREF_P(PCBC_P(obj->ranges));
-    zval_ptr_dtor(&obj->ranges);
 }
 
 zend_object_handlers date_search_facet_handlers;
@@ -194,6 +195,7 @@ static void date_search_facet_free_object(pcbc_free_object_arg *object TSRMLS_DC
     if (obj->field != NULL) {
         efree(obj->field);
     }
+    zval_ptr_dtor(&obj->ranges);
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
 #if PHP_VERSION_ID < 70000

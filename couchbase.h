@@ -912,12 +912,9 @@ lcb_error_t proc_store_results(pcbc_bucket_t *bucket, zval *return_value, opcook
     }
 
 #if PHP_VERSION_ID >= 70000
-#define PCBC_ADDREF_P(__pcbc_zval)                                                                                     \
-    if (Z_REFCOUNTED_P((__pcbc_zval))) {                                                                               \
-        Z_ADDREF_P((__pcbc_zval));                                                                                     \
-    }
+#define PCBC_ADDREF_P(__pcbc_zval) Z_TRY_ADDREF_P((__pcbc_zval))
 #else
-#define PCBC_ADDREF_P(__pcbc_zval) Z_ADDREF_P((__pcbc_zval));
+#define PCBC_ADDREF_P(__pcbc_zval) Z_ADDREF_P((__pcbc_zval))
 #endif
 
 #endif /* COUCHBASE_H_ */

@@ -98,7 +98,6 @@ PHP_METHOD(NumericRangeSearchFacet, addRange)
     if (!max_null) {
         ADD_ASSOC_DOUBLE_EX(PCBC_P(range), "max", max);
     }
-    PCBC_ADDREF_P(PCBC_P(range));
     add_next_index_zval(PCBC_P(obj->ranges), PCBC_P(range));
 
     RETURN_ZVAL(getThis(), 1, 0);
@@ -153,8 +152,6 @@ void pcbc_numeric_range_search_facet_init(zval *return_value, char *field, int f
 
     PCBC_ZVAL_ALLOC(obj->ranges);
     array_init(PCBC_P(obj->ranges));
-    PCBC_ADDREF_P(PCBC_P(obj->ranges));
-    zval_ptr_dtor(&obj->ranges);
 }
 
 zend_object_handlers numeric_search_facet_handlers;
@@ -166,6 +163,7 @@ static void numeric_search_facet_free_object(pcbc_free_object_arg *object TSRMLS
     if (obj->field != NULL) {
         efree(obj->field);
     }
+    zval_ptr_dtor(&obj->ranges);
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
 #if PHP_VERSION_ID < 70000

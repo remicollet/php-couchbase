@@ -126,6 +126,7 @@ PHP_METHOD(DisjunctionSearchQuery, either)
                 pcbc_log(LOGARGS(WARN), "query has to implement SearchQueryPart interface (skipping argument #%d)", i);
                 continue;
             }
+            add_next_index_zval(PCBC_P(obj->queries), PCBC_P(*query));
             PCBC_ADDREF_P(PCBC_P(*query));
         }
     }
@@ -221,6 +222,7 @@ void pcbc_disjunction_search_query_init(zval *return_value,
                 continue;
             }
             add_next_index_zval(PCBC_P(obj->queries), PCBC_P(*query));
+            PCBC_ADDREF_P(PCBC_P(*query));
         }
     }
 }
