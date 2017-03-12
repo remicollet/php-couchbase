@@ -155,7 +155,7 @@ ZEND_BEGIN_ARG_INFO_EX(ai_ClusterManager_none, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(ai_ClusterManager_removeBucket, 0, 0, 1)
-ZEND_ARG_INFO(0, connstr)
+ZEND_ARG_INFO(0, name)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(ai_ClusterManager_createBucket, 0, 0, 2)
