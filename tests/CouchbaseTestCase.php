@@ -67,7 +67,7 @@ class CouchbaseTestCase extends \PHPUnit_Framework_TestCase {
         if ($val !== FALSE) {
             $bucket->htconfigIdleTimeout = intval($val);
         }
-        if (getenv("JENKINS_HOME")) {
+        if (getenv("REPORT_TIMEOUT_SETTINGS")) {
             printf("\n[TIMEOUTS] OT=%d, VT=%d, DI=%d, DT=%d, HT=%d, CT=%d, CD=%d, CNT=%d, HCIT=%d\n",
                    $bucket->operationTimeout,
                    $bucket->viewTimeout,
