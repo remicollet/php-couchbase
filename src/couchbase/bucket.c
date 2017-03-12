@@ -308,47 +308,47 @@ PHP_METHOD(Bucket, query)
         pcbc_bucket_cbft_request(obj, &cmd, 1, json_options, return_value TSRMLS_CC);
         smart_str_free(&buf);
     } else if (instanceof_function(Z_OBJCE_P(query), pcbc_view_query_encodable_ce TSRMLS_CC)) {
-        zval *retval = NULL;
+        PCBC_ZVAL retval;
         PCBC_ZVAL fname;
 
         PCBC_ZVAL_ALLOC(fname);
-        PCBC_PSTRING(fname, "encode");
-        rv = call_user_function_ex(EG(function_table), PCBC_CP(query), PCBC_P(fname), PCBC_CP(retval), 0, NULL, 1,
+        PCBC_STRING(fname, "encode");
+        rv = call_user_function_ex(EG(function_table), PCBC_CP(query), PCBC_P(fname), &retval, 0, NULL, 1,
                                    NULL TSRMLS_CC);
         zval_ptr_dtor(&fname);
-        if (rv == FAILURE || !retval) {
+        if (rv == FAILURE || Z_ISUNDEF(retval)) {
             throw_pcbc_exception("failed to call encode() on view query", LCB_EINVAL);
             RETURN_NULL();
         }
         if (EG(exception)) {
             RETURN_NULL();
         }
-        if (Z_TYPE_P(retval) == IS_ARRAY) {
+        if (Z_TYPE_P(PCBC_P(retval)) == IS_ARRAY) {
             char *ddoc = NULL, *view = NULL, *optstr = NULL, *postdata = NULL;
             int ddoc_len = 0, view_len = 0, optstr_len = 0, postdata_len = 0;
             zend_bool ddoc_free = 0, view_free = 0, optstr_free = 0, postdata_free = 0;
             lcb_CMDVIEWQUERY cmd = {0};
 
-            if (php_array_fetch_bool(retval, "include_docs")) {
+            if (php_array_fetch_bool(PCBC_P(retval), "include_docs")) {
                 cmd.cmdflags |= LCB_CMDVIEWQUERY_F_INCLUDE_DOCS;
                 cmd.docs_concurrent_max = 20; /* sane default */
             }
-            ddoc = php_array_fetch_string(retval, "ddoc", &ddoc_len, &ddoc_free);
+            ddoc = php_array_fetch_string(PCBC_P(retval), "ddoc", &ddoc_len, &ddoc_free);
             if (ddoc) {
                 cmd.nddoc = ddoc_len;
                 cmd.ddoc = ddoc;
             }
-            view = php_array_fetch_string(retval, "view", &view_len, &view_free);
+            view = php_array_fetch_string(PCBC_P(retval), "view", &view_len, &view_free);
             if (view) {
                 cmd.nview = view_len;
                 cmd.view = view;
             }
-            optstr = php_array_fetch_string(retval, "optstr", &optstr_len, &optstr_free);
+            optstr = php_array_fetch_string(PCBC_P(retval), "optstr", &optstr_len, &optstr_free);
             if (optstr) {
                 cmd.noptstr = optstr_len;
                 cmd.optstr = optstr;
             }
-            postdata = php_array_fetch_string(retval, "postdata", &postdata_len, &postdata_free);
+            postdata = php_array_fetch_string(PCBC_P(retval), "postdata", &postdata_len, &postdata_free);
             if (postdata) {
                 cmd.npostdata = postdata_len;
                 cmd.postdata = postdata;
@@ -369,7 +369,7 @@ PHP_METHOD(Bucket, query)
                 efree(postdata);
             }
         }
-        zval_ptr_dtor(PCBC_CP(retval));
+        zval_ptr_dtor(&retval);
     } else {
         throw_pcbc_exception("Unknown type of Query object", LCB_EINVAL);
         RETURN_NULL();

@@ -344,7 +344,9 @@ PHP_METHOD(SpatialViewQuery, encode)
         if (rv == FAILURE) {
             pcbc_log(LOGARGS(WARN), "Failed to encode options as RFC1738 query");
         } else {
-            ADD_ASSOC_STRINGL(return_value, "optstr", PCBC_SMARTSTR_VAL(buf), PCBC_SMARTSTR_LEN(buf));
+            if (!PCBC_SMARTSTR_EMPTY(buf)) {
+                ADD_ASSOC_STRINGL(return_value, "optstr", PCBC_SMARTSTR_VAL(buf), PCBC_SMARTSTR_LEN(buf));
+            }
         }
         smart_str_free(&buf);
     }

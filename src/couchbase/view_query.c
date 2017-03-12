@@ -223,7 +223,7 @@ PHP_METHOD(ViewQuery, group)
     zend_bool group = 0;
     int rv;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &group);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "b", &group);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -466,11 +466,15 @@ PHP_METHOD(ViewQuery, encode)
         if (rv == FAILURE) {
             pcbc_log(LOGARGS(WARN), "Failed to encode options as RFC1738 query");
         } else {
-            ADD_ASSOC_STRINGL(return_value, "optstr", PCBC_SMARTSTR_VAL(buf), PCBC_SMARTSTR_LEN(buf));
+            if (!PCBC_SMARTSTR_EMPTY(buf)) {
+                ADD_ASSOC_STRINGL(return_value, "optstr", PCBC_SMARTSTR_VAL(buf), PCBC_SMARTSTR_LEN(buf));
+            }
         }
         smart_str_free(&buf);
     }
-    ADD_ASSOC_STRINGL(return_value, "postdata", obj->keys, obj->keys_len);
+    if (obj->keys) {
+        ADD_ASSOC_STRINGL(return_value, "postdata", obj->keys, obj->keys_len);
+    }
 } /* }}} */
 
 ZEND_BEGIN_ARG_INFO_EX(ai_ViewQuery_none, 0, 0, 0)

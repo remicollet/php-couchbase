@@ -416,6 +416,7 @@ typedef zval *PCBC_ZVAL;
     } while (0)
 #define PCBC_SMARTSTR_VAL(__pcbc_smart_str) (char *) ZSTR_VAL((__pcbc_smart_str).s)
 #define PCBC_SMARTSTR_LEN(__pcbc_smart_str) (int) ZSTR_LEN((__pcbc_smart_str).s)
+#define PCBC_SMARTSTR_EMPTY(__pcbc_smart_str) ((__pcbc_smart_str).s == NULL || PCBC_SMARTSTR_LEN(__pcbc_smart_str) == 0)
 #else
 #define PCBC_SMARTSTR_DUP(__pcbc_smart_str, __pcbc_receiver_buf)                                                       \
     do {                                                                                                               \
@@ -428,6 +429,7 @@ typedef zval *PCBC_ZVAL;
     } while (0)
 #define PCBC_SMARTSTR_VAL(__pcbc_smart_str) (char *)(__pcbc_smart_str).c
 #define PCBC_SMARTSTR_LEN(__pcbc_smart_str) (int)(__pcbc_smart_str).len
+#define PCBC_SMARTSTR_EMPTY(__pcbc_smart_str) ((__pcbc_smart_str).c == NULL || PCBC_SMARTSTR_LEN(__pcbc_smart_str) == 0)
 #endif
 
 #define PCBC_SMARTSTR_TRACE(__pcbc_smart_str)                                                                          \
