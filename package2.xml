@@ -46,6 +46,8 @@
         * PCBC-463: fix incorrect reference counting on Search API. (might lead to
           segfaults and leaks)
         * PCBC-465: check encoded ViewQuery before sending to libcouchbase
+        * PCBC-467: intermediate values in Datastructures API might leak.
+          (e.g. result of internal "get" to find out size of the list)
     </notes>
 
     <contents>

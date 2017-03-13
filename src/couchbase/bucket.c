@@ -408,18 +408,21 @@ PHP_METHOD(Bucket, mapSize)
     pcbc_bucket_get(obj, &pp_state, &pp_id, NULL, NULL, NULL, return_value TSRMLS_CC);
     {
         zval *val;
+        long size = 0;
 
         PCBC_READ_PROPERTY(val, pcbc_document_ce, return_value, "value", 0);
         if (val) {
             switch (Z_TYPE_P(val)) {
             case IS_ARRAY:
-                RETURN_LONG(zend_hash_num_elements(Z_ARRVAL_P(val)));
+                size = zend_hash_num_elements(Z_ARRVAL_P(val));
                 break;
             case IS_OBJECT:
-                RETURN_LONG(zend_hash_num_elements(Z_OBJ_HT_P(val)->get_properties(val TSRMLS_CC)));
+                size = zend_hash_num_elements(Z_OBJ_HT_P(val)->get_properties(val TSRMLS_CC));
                 break;
             }
         }
+        zval_dtor(return_value);
+        RETURN_LONG(size);
     }
     RETURN_LONG(0);
 } /* }}} */
@@ -713,6 +716,7 @@ PHP_METHOD(Bucket, setExists)
     pcbc_bucket_get(obj, &pp_state, &pp_id, NULL, NULL, NULL, return_value TSRMLS_CC);
     {
         zval *array;
+        zend_bool found = 0;
 
         PCBC_READ_PROPERTY(array, pcbc_document_ce, return_value, "value", 0);
         if (val && Z_TYPE_P(array) == IS_ARRAY) {
@@ -722,7 +726,8 @@ PHP_METHOD(Bucket, setExists)
             ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(array), entry)
             {
                 if (zend_is_identical(val, entry)) {
-                    RETURN_TRUE;
+                    found = 1;
+                    break;
                 }
             }
             ZEND_HASH_FOREACH_END();
@@ -734,12 +739,15 @@ PHP_METHOD(Bucket, setExists)
             while (zend_hash_get_current_data_ex(Z_ARRVAL_P(array), (void **)&entry, &pos) == SUCCESS) {
                 is_identical_function(&res, val, *entry TSRMLS_CC);
                 if (Z_LVAL(res)) {
-                    RETURN_TRUE;
+                    found = 1;
+                    break;
                 }
                 zend_hash_move_forward_ex(Z_ARRVAL_P(array), &pos);
             }
 #endif
         }
+        zval_dtor(return_value);
+        RETURN_BOOL(found);
     }
     RETURN_FALSE;
 } /* }}} */
@@ -784,31 +792,15 @@ PHP_METHOD(Bucket, setRemove)
             cas = pcbc_cas_decode(casval TSRMLS_CC);
         }
         if (val && Z_TYPE_P(array) == IS_ARRAY) {
-            int index = 0;
+            int index = 0, found = -1;
 #if PHP_VERSION_ID >= 70000
             zval *entry;
 
             ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(array), entry)
             {
                 if (zend_is_identical(val, entry)) {
-                    PCBC_ZVAL builder;
-                    char *path = NULL;
-                    int path_len;
-                    zval *exc = NULL;
-
-                    pcbc_mutate_in_builder_init(&builder, getThis(), Z_STRVAL_P(id), Z_STRLEN_P(id), cas TSRMLS_CC);
-                    path_len = spprintf(&path, 0, "[%ld]", index);
-                    pcbc_mutate_in_builder_remove(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len TSRMLS_CC);
-                    pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0,
-                                               return_value TSRMLS_CC);
-                    efree(path);
-                    zval_ptr_dtor(PCBC_P(builder));
-                    PCBC_READ_PROPERTY(exc, pcbc_document_ce, return_value, "error", 0);
-                    if (exc && Z_TYPE_P(exc) == IS_OBJECT &&
-                        instanceof_function(Z_OBJCE_P(exc), pcbc_exception_ce TSRMLS_CC)) {
-                        RETURN_FALSE;
-                    }
-                    RETURN_TRUE;
+                    found = index;
+                    break;
                 }
                 index++;
             }
@@ -821,29 +813,34 @@ PHP_METHOD(Bucket, setRemove)
             while (zend_hash_get_current_data_ex(Z_ARRVAL_P(array), (void **)&entry, &pos) == SUCCESS) {
                 is_identical_function(&res, val, *entry TSRMLS_CC);
                 if (Z_LVAL(res)) {
-                    PCBC_ZVAL builder;
-                    char *path = NULL;
-                    int path_len;
-                    zval *exc = NULL;
-
-                    MAKE_STD_ZVAL(builder);
-                    pcbc_mutate_in_builder_init(builder, getThis(), Z_STRVAL_P(id), Z_STRLEN_P(id), cas TSRMLS_CC);
-                    path_len = spprintf(&path, 0, "[%ld]", (long)index);
-                    pcbc_mutate_in_builder_remove(Z_MUTATE_IN_BUILDER_OBJ_P(builder), path, path_len TSRMLS_CC);
-                    pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(builder), 0, return_value TSRMLS_CC);
-                    efree(path);
-                    zval_ptr_dtor(PCBC_CP(builder));
-                    PCBC_READ_PROPERTY(exc, pcbc_document_ce, return_value, "error", 0);
-                    if (exc && Z_TYPE_P(exc) == IS_OBJECT &&
-                        instanceof_function(Z_OBJCE_P(exc), pcbc_exception_ce TSRMLS_CC)) {
-                        RETURN_FALSE;
-                    }
-                    RETURN_TRUE;
+                    found = index;
+                    break;
                 }
                 zend_hash_move_forward_ex(Z_ARRVAL_P(array), &pos);
                 index++;
             }
 #endif
+            zval_dtor(return_value);
+            if (found >= 0) {
+                PCBC_ZVAL builder;
+                char *path = NULL;
+                int path_len;
+                zval *exc = NULL;
+                zend_bool has_error = 0;
+
+                PCBC_ZVAL_ALLOC(builder);
+                pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), Z_STRVAL_P(id), Z_STRLEN_P(id), cas TSRMLS_CC);
+                path_len = spprintf(&path, 0, "[%ld]", (long)found);
+                pcbc_mutate_in_builder_remove(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len TSRMLS_CC);
+                pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
+                efree(path);
+                zval_ptr_dtor(&builder);
+                PCBC_READ_PROPERTY(exc, pcbc_document_ce, return_value, "error", 0);
+                has_error = exc && (Z_TYPE_P(exc) == IS_OBJECT) &&
+                            instanceof_function(Z_OBJCE_P(exc), pcbc_exception_ce TSRMLS_CC);
+                zval_dtor(return_value);
+                RETURN_BOOL(!has_error);
+            }
         }
     }
     RETURN_FALSE;
