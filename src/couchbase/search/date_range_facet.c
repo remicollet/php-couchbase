@@ -84,10 +84,7 @@ PHP_METHOD(DateRangeSearchFacet, addRange)
     if (start) {
         switch (Z_TYPE_P(start)) {
         case IS_STRING:
-            ADD_ASSOC_ZVAL_EX(PCBC_P(range), "start", start);
-#if PHP_VERSION_ID < 70000
-            Z_ADDREF_P(start);
-#endif
+            ADD_ASSOC_STRINGL(PCBC_P(range), "start", Z_STRVAL_P(start), Z_STRLEN_P(start));
             break;
         case IS_LONG:
             date_str = php_format_date(ZEND_STRL(PCBC_DATE_FORMAT_RFC3339), Z_LVAL_P(start), 1 TSRMLS_CC);
@@ -109,10 +106,7 @@ PHP_METHOD(DateRangeSearchFacet, addRange)
     if (end) {
         switch (Z_TYPE_P(end)) {
         case IS_STRING:
-            ADD_ASSOC_ZVAL_EX(PCBC_P(range), "end", end);
-#if PHP_VERSION_ID < 70000
-            Z_ADDREF_P(end);
-#endif
+            ADD_ASSOC_STRINGL(PCBC_P(range), "end", Z_STRVAL_P(end), Z_STRLEN_P(end));
             break;
         case IS_LONG:
             date_str = php_format_date(ZEND_STRL(PCBC_DATE_FORMAT_RFC3339), Z_LVAL_P(end), 1 TSRMLS_CC);
