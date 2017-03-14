@@ -7,13 +7,10 @@ It supports 5.x and 7.x releases of PHP interpreter.
 
 ## Useful Links
 
-Source - http://github.com/couchbaselabs/php-couchbase
-
-Bug Tracker - http://www.couchbase.com/issues/browse/PCBC
-
+Source - https://github.com/couchbaselabs/php-couchbase
+Bug Tracker - https://www.couchbase.com/issues/browse/PCBC
 Couchbase PHP Community - https://forums.couchbase.com/c/php-sdk
-
-Documentation - http://developer.couchbase.com/documentation/server/current/sdk/php/start-using-sdk.html
+Documentation - https://developer.couchbase.com/documentation/server/current/sdk/php/start-using-sdk.html
 
 
 ## Installing
