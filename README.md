@@ -7,13 +7,19 @@ It supports 5.x and 7.x releases of PHP interpreter.
 
 ## Useful Links
 
-Source - https://github.com/couchbaselabs/php-couchbase
-Bug Tracker - https://www.couchbase.com/issues/browse/PCBC
-Couchbase PHP Community - https://forums.couchbase.com/c/php-sdk
-Documentation - https://developer.couchbase.com/documentation/server/current/sdk/php/start-using-sdk.html
+* Source - https://github.com/couchbaselabs/php-couchbase
+* Bug Tracker - https://www.couchbase.com/issues/browse/PCBC
+* Couchbase PHP Community - https://forums.couchbase.com/c/php-sdk
+* Documentation - https://developer.couchbase.com/documentation/server/current/sdk/php/start-using-sdk.html
+* PECL - https://pecl.php.net/package/couchbase
+* Packages - https://developer.couchbase.com/server/other-products/release-notes-archives/php-sdk
+* Snapshots - http://sdkbuilds.sc.couchbase.com/job/php-sdk-package/lastSuccessfulBuild/artifact/packages/
 
 
 ## Installing
+
+The target system should have libcouchbase installed. Detailed guide and links to the most recent versions
+located here: https://developer.couchbase.com/server/other-products/release-notes-archives/c-sdk.
 
 Couchbase PHP client generally available through PECL: http://pecl.php.net/package/couchbase
 

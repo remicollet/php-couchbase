@@ -27,6 +27,9 @@ if test "$PHP_COUCHBASE" != "no"; then
   AC_MSG_CHECKING([for libcouchbase version >= 2.7.2])
   LCB_VERSION=$($EGREP "define LCB_VERSION " $LIBCOUCHBASE_DIR/include/libcouchbase/configuration.h | $SED -e 's/[[^0-9x]]//g')
   AC_MSG_RESULT([$LCB_VERSION])
+  if test "x$LCB_VERSION" = "x0x000000"; then
+    AC_MSG_ERROR([seems like libcouchbase is not installed from official tarball or git clone. Do not use github tags to download releases.])
+  fi
   if test $(printf %d $LCB_VERSION) -lt $(printf %d 0x020702); then
     AC_MSG_ERROR([libcouchbase greater or equal to 2.7.2 required])
   fi
