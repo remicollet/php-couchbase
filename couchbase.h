@@ -601,6 +601,7 @@ typedef struct {
     PCBC_ZVAL query_part;
     PCBC_ZVAL consistency;
     PCBC_ZVAL fields;
+    PCBC_ZVAL sort;
     PCBC_ZVAL facets;
 
     char *highlight_style;

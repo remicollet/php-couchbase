@@ -2287,6 +2287,24 @@ namespace Couchbase {
         final public function highlight($style, ...$fields) {}
 
         /**
+         * Configures the list of fields (including special fields) which are used for sorting purposes.
+         * If empty, the default sorting (descending by score) is used by the server.
+         *
+         * The list of sort fields can include actual fields (like "firstname" but then they must be stored in the
+         * index, configured in the server side mapping). Fields provided first are considered first and in a "tie" case
+         * the next sort field is considered. So sorting by "firstname" and then "lastname" will first sort ascending by
+         * the firstname and if the names are equal then sort ascending by lastname. Special fields like "_id" and
+         * "_score" can also be used. If prefixed with "-" the sort order is set to descending.
+         *
+         * If no sort is provided, it is equal to sort("-_score"), since the server will sort it by score in descending
+         * order.
+         *
+         * @param sort the fields that should take part in the sorting.
+         * @return SearchQuery
+         */
+        final public function sort(...$sort) {}
+
+        /**
          * Adds one SearchFacet to the query
          *
          * This is an additive operation (the given facets are added to any facet previously requested),

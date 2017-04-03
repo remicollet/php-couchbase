@@ -51,6 +51,7 @@ PHP_METHOD(SearchQuery, __construct)
 #endif
     ZVAL_UNDEF(PCBC_P(obj->consistency));
     ZVAL_UNDEF(PCBC_P(obj->fields));
+    ZVAL_UNDEF(PCBC_P(obj->sort));
     ZVAL_UNDEF(PCBC_P(obj->facets));
     ZVAL_UNDEF(PCBC_P(obj->highlight_fields));
 }
@@ -578,6 +579,54 @@ PHP_METHOD(SearchQuery, fields)
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
 
+/* {{{ proto \Couchbase\SearchQuery SearchQuery::sort(string ...$sort) */
+PHP_METHOD(SearchQuery, sort)
+{
+    pcbc_search_query_t *obj;
+#if PHP_VERSION_ID >= 70000
+    zval *args = NULL;
+#else
+    zval ***args = NULL;
+#endif
+    int num_args = 0;
+    int rv;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "+", &args, &num_args);
+    if (rv == FAILURE) {
+        return;
+    }
+
+    obj = Z_SEARCH_QUERY_OBJ_P(getThis());
+    if (Z_ISUNDEF(obj->sort)) {
+        PCBC_ZVAL_ALLOC(obj->sort);
+        array_init(PCBC_P(obj->sort));
+    }
+    if (num_args && args) {
+        int i;
+        for (i = 0; i < num_args; ++i) {
+            PCBC_ZVAL *field;
+#if PHP_VERSION_ID >= 70000
+            field = &args[i];
+#else
+            field = args[i];
+#endif
+            if (Z_TYPE_P(PCBC_P(*field)) != IS_STRING) {
+                pcbc_log(LOGARGS(WARN), "field has to be a string (skipping argument #%d)", i);
+                continue;
+            }
+            add_next_index_zval(PCBC_P(obj->sort), PCBC_P(*field));
+            PCBC_ADDREF_P(PCBC_P(*field));
+        }
+    }
+#if PHP_VERSION_ID < 70000
+    if (args) {
+        efree(args);
+    }
+#endif
+
+    RETURN_ZVAL(getThis(), 1, 0);
+} /* }}} */
+
 /* {{{ proto \Couchbase\SearchQuery SearchQuery::highlight(string $style, string ...$fields)
    See SearchQuery::HIGHLIGHT_{HTML,ANSI,SIMPLE}. Pass NULL for $style to switch it off.
 */
@@ -682,6 +731,10 @@ PHP_METHOD(SearchQuery, jsonSerialize)
         ADD_ASSOC_ZVAL_EX(return_value, "fields", PCBC_P(obj->fields));
         PCBC_ADDREF_P(PCBC_P(obj->fields));
     }
+    if (!Z_ISUNDEF(obj->sort)) {
+        ADD_ASSOC_ZVAL_EX(return_value, "sort", PCBC_P(obj->sort));
+        PCBC_ADDREF_P(PCBC_P(obj->sort));
+    }
     if (!Z_ISUNDEF(obj->facets)) {
         ADD_ASSOC_ZVAL_EX(return_value, "facets", PCBC_P(obj->facets));
         PCBC_ADDREF_P(PCBC_P(obj->facets));
@@ -783,6 +836,10 @@ ZEND_BEGIN_ARG_INFO_EX(ai_SearchQuery_fields, 0, 0, 1)
 PCBC_ARG_VARIADIC_INFO(0, fields)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(ai_SearchQuery_sort, 0, 0, 1)
+PCBC_ARG_VARIADIC_INFO(0, sort)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(ai_SearchQuery_highlight, 0, 0, 2)
 ZEND_ARG_INFO(0, style)
 PCBC_ARG_VARIADIC_INFO(0, fields)
@@ -828,6 +885,7 @@ zend_function_entry search_query_methods[] = {
     PHP_ME(SearchQuery, serverSideTimeout, ai_SearchQuery_serverSideTimeout, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(SearchQuery, consistentWith, ai_SearchQuery_consistentWith, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(SearchQuery, fields, ai_SearchQuery_fields, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(SearchQuery, sort, ai_SearchQuery_sort, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(SearchQuery, highlight, ai_SearchQuery_highlight, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(SearchQuery, addFacet, ai_SearchQuery_addFacet, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_FE_END
@@ -857,6 +915,10 @@ static void search_query_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* 
     if (!Z_ISUNDEF(obj->fields)) {
         zval_ptr_dtor(&obj->fields);
         ZVAL_UNDEF(PCBC_P(obj->fields));
+    }
+    if (!Z_ISUNDEF(obj->sort)) {
+        zval_ptr_dtor(&obj->sort);
+        ZVAL_UNDEF(PCBC_P(obj->sort));
     }
     if (!Z_ISUNDEF(obj->facets)) {
         zval_ptr_dtor(&obj->facets);
@@ -925,6 +987,10 @@ static HashTable *pcbc_search_query_get_debug_info(zval *object, int *is_temp TS
     if (!Z_ISUNDEF(obj->fields)) {
         ADD_ASSOC_ZVAL_EX(&retval, "fields", PCBC_P(obj->fields));
         PCBC_ADDREF_P(PCBC_P(obj->fields));
+    }
+    if (!Z_ISUNDEF(obj->sort)) {
+        ADD_ASSOC_ZVAL_EX(&retval, "sort", PCBC_P(obj->sort));
+        PCBC_ADDREF_P(PCBC_P(obj->sort));
     }
     if (!Z_ISUNDEF(obj->facets)) {
         ADD_ASSOC_ZVAL_EX(&retval, "facets", PCBC_P(obj->facets));

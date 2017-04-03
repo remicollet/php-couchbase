@@ -127,8 +127,10 @@ class SearchTest extends PHPUnit_Framework_TestCase {
         $startStr = $startDate->format(DATE_RFC3339);
         $endInt = mktime(20, 0, 0, 12, 1, 2010);
         $endDate = DateTime::createFromFormat("U", $endInt);
-        $queryPart = \Couchbase\SearchQuery::dateRange()->field("updated")
-                   ->start($startStr)->end($endInt);
+        $queryPart = \Couchbase\SearchQuery::conjuncts(
+            \Couchbase\SearchQuery::term("beer")->field("type"),
+            \Couchbase\SearchQuery::dateRange()->field("updated")->start($startStr)->end($endInt)
+        );
         $query = new \Couchbase\SearchQuery("beer-search", $queryPart);
         $query->fields("updated", "type");
         $result = $this->bucket->query($query);
@@ -207,7 +209,7 @@ class SearchTest extends PHPUnit_Framework_TestCase {
     }
 
     function testSearchWithFacets() {
-        $queryPart = \Couchbase\SearchQuery::match("beer");
+        $queryPart = \Couchbase\SearchQuery::term("beer")->field("type");
         $query = new \Couchbase\SearchQuery("beer-search", $queryPart);
         $query
             ->addFacet("foo", \Couchbase\SearchQuery::termFacet("name", 3))

@@ -40,4 +40,12 @@ class SearchQueryTest extends CouchbaseTestCase {
         $this->assertNotNull($result);
         $this->assertEquals(JSON_ERROR_NONE, json_last_error());
     }
+
+    function testInlineSearchQury() {
+        $query = new \Couchbase\SearchQuery('search', \Couchbase\SearchQuery::match('foo'));
+        $query->sort('hello', 'world', '-_score');
+        $result = json_encode($query);
+        $this->assertEquals(JSON_ERROR_NONE, json_last_error());
+        $this->assertEquals('{"indexName":"search","sort":["hello","world","-_score"],"query":{"match":"foo"}}', $result);
+    }
 }
