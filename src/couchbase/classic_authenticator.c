@@ -122,6 +122,7 @@ PHP_METHOD(ClassicAuthenticator, bucket)
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
 
+/* TODO: update to refactored lcb_AUTHENTICATOR after libcouchbase 2.7.4 */
 void pcbc_generate_lcb_auth(pcbc_classic_authenticator_t *auth, lcb_AUTHENTICATOR **result, lcb_type_t type,
                             const char *name, const char *password, char **hash TSRMLS_DC)
 {
@@ -159,6 +160,9 @@ void pcbc_generate_lcb_auth(pcbc_classic_authenticator_t *auth, lcb_AUTHENTICATO
                 pass = ptr->password;
                 pass_len = ptr->password_len;
             }
+            if (type == LCB_TYPE_BUCKET && password == NULL && strcmp(ptr->username, name) == 0) {
+                lcbauth_add_pass(*result, ptr->username, ptr->password, LCBAUTH_F_CLUSTER);
+            }
             lcbauth_add_pass(*result, ptr->username, pass, LCBAUTH_F_BUCKET);
             PHP_MD5Update(&md5, "bucket", sizeof("bucket"));
             PHP_MD5Update(&md5, ptr->username, ptr->username_len);
@@ -179,6 +183,7 @@ void pcbc_generate_lcb_auth(pcbc_classic_authenticator_t *auth, lcb_AUTHENTICATO
     if (type == LCB_TYPE_BUCKET) {
         if (password || (password == NULL && write_null_password)) {
             lcbauth_add_pass(*result, name, pass, LCBAUTH_F_BUCKET);
+            lcbauth_add_pass(*result, name, pass, LCBAUTH_F_CLUSTER);
             PHP_MD5Update(&md5, "extra-bucket", sizeof("extra-bucket"));
         }
     } else {

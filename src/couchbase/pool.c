@@ -34,7 +34,7 @@ void subdoc_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
 void http_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
 void durability_callback(lcb_t instance, const void *cookie, lcb_error_t error, const lcb_durability_resp_t *resp);
 
-static lcb_error_t pcbc_establish_connection(lcb_type_t type, lcb_t *result, const char *connstr, const char *name,
+static lcb_error_t pcbc_establish_connection(lcb_type_t type, lcb_t *result, const char *connstr,
                                              lcb_AUTHENTICATOR *auth, char *auth_hash TSRMLS_DC)
 {
     struct lcb_create_st create_options;
@@ -338,7 +338,7 @@ lcb_error_t pcbc_connection_get(pcbc_connection_t **result, lcb_type_t type, con
         return LCB_SUCCESS;
     }
 
-    rv = pcbc_establish_connection(type, &lcb, cstr, bucketname, auth, auth_hash TSRMLS_CC);
+    rv = pcbc_establish_connection(type, &lcb, cstr, auth, auth_hash TSRMLS_CC);
     if (rv != LCB_SUCCESS) {
         efree(cstr);
         smart_str_free(&plist_key);

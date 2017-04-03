@@ -50,6 +50,8 @@
           (e.g. result of internal "get" to find out size of the list)
         * PCBC-469: implement SearchQuery->sort() function to support sorting FTS
           results, which is accessible in Couchbase Server 4.6+
+        * PCBC-471: fixed issue, when the library always use credentials for the
+          first bucket in Authenticator.
     </notes>
 
     <contents>
