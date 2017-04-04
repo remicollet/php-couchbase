@@ -24,6 +24,7 @@ if (PHP_COUCHBASE != "no") {
         fastlz_sources =
             "fastlz.c";
         src_couchbase_sources  =
+            "analytics_query.c " +
             "authenticator.c " +
             "classic_authenticator.c " +
             "base36.c " +

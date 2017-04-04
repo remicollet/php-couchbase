@@ -289,7 +289,7 @@ PHP_METHOD(Bucket, query)
             cmd.cmdflags |= LCB_CMD_F_MULTIAUTH;
         }
         pcbc_log(LOGARGS(obj, TRACE), "N1QL: %*s", PCBC_SMARTSTR_TRACE(buf));
-        pcbc_bucket_n1ql_request(obj, &cmd, 1, json_options, return_value TSRMLS_CC);
+        pcbc_bucket_n1ql_request(obj, &cmd, 1, json_options, 0, return_value TSRMLS_CC);
         smart_str_free(&buf);
     } else if (instanceof_function(Z_OBJCE_P(query), pcbc_search_query_ce TSRMLS_CC)) {
         smart_str buf = {0};
@@ -306,6 +306,27 @@ PHP_METHOD(Bucket, query)
         PCBC_SMARTSTR_SET(buf, cmd.query, cmd.nquery);
         pcbc_log(LOGARGS(obj, TRACE), "FTS: %*s", PCBC_SMARTSTR_TRACE(buf));
         pcbc_bucket_cbft_request(obj, &cmd, 1, json_options, return_value TSRMLS_CC);
+        smart_str_free(&buf);
+    } else if (instanceof_function(Z_OBJCE_P(query), pcbc_analytics_query_ce TSRMLS_CC)) {
+        smart_str buf = {0};
+        int last_error;
+        zval *options = NULL;
+        lcb_CMDN1QL cmd = {0};
+        pcbc_analytics_query_t *cbas = Z_ANALYTICS_QUERY_OBJ_P(query);
+
+        PCBC_READ_PROPERTY(options, pcbc_analytics_query_ce, query, "options", 0);
+        PCBC_JSON_ENCODE(&buf, options, 0, last_error);
+        if (last_error != 0) {
+            pcbc_log(LOGARGS(obj, WARN), "Failed to encode N1QL query as JSON: json_last_error=%d", last_error);
+            smart_str_free(&buf);
+            RETURN_NULL();
+        }
+        smart_str_0(&buf);
+        cmd.cmdflags |= LCB_CMDN1QL_F_CBASQUERY;
+        PCBC_SMARTSTR_SET(buf, cmd.query, cmd.nquery);
+        cmd.host = cbas->hostname;
+        pcbc_log(LOGARGS(obj, TRACE), "ANALYTICS: %*s", PCBC_SMARTSTR_TRACE(buf));
+        pcbc_bucket_n1ql_request(obj, &cmd, 1, json_options, 1, return_value TSRMLS_CC);
         smart_str_free(&buf);
     } else if (instanceof_function(Z_OBJCE_P(query), pcbc_view_query_encodable_ce TSRMLS_CC)) {
         PCBC_ZVAL retval;

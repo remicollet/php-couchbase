@@ -129,6 +129,7 @@ PHP_MINIT_FUNCTION(MutationState);
 PHP_MINIT_FUNCTION(ViewQueryEncodable);
 PHP_MINIT_FUNCTION(ViewQuery);
 PHP_MINIT_FUNCTION(SpatialViewQuery);
+PHP_MINIT_FUNCTION(AnalyticsQuery);
 PHP_MINIT_FUNCTION(N1qlQuery);
 PHP_MINIT_FUNCTION(N1qlIndex);
 PHP_MINIT_FUNCTION(MutateInBuilder);
@@ -161,6 +162,7 @@ zval *bop_get_return_doc(zval *return_value, const char *key, int key_len, int i
 
 #define PCBC_DATE_FORMAT_RFC3339 "Y-m-d\\TH:i:sP"
 
+extern zend_class_entry *pcbc_analytics_query_ce;
 extern zend_class_entry *pcbc_n1ql_query_ce;
 extern zend_class_entry *pcbc_cluster_ce;
 extern zend_class_entry *pcbc_bucket_ce;
@@ -585,6 +587,12 @@ typedef struct {
 
 typedef struct {
     PCBC_ZEND_OBJECT_PRE
+    char *hostname;
+    PCBC_ZEND_OBJECT_POST
+} pcbc_analytics_query_t;
+
+typedef struct {
+    PCBC_ZEND_OBJECT_PRE
     int adhoc;
     int cross_bucket;
     PCBC_ZEND_OBJECT_POST
@@ -709,6 +717,7 @@ void pcbc_n1ix_create(pcbc_bucket_manager_t *manager, lcb_CMDN1XMGMT *cmd, zend_
 void pcbc_n1ix_drop(pcbc_bucket_manager_t *manager, lcb_CMDN1XMGMT *cmd, zend_bool ignore_if_not_exist,
                     zval *return_value TSRMLS_DC);
 
+void pcbc_analytics_query_init(zval *return_value, const char *statement, int statement_len TSRMLS_DC);
 void pcbc_n1ql_query_init(zval *return_value, const char *statement, int statement_len TSRMLS_DC);
 void pcbc_mutation_state_init(zval *return_value, zval *source TSRMLS_DC);
 void pcbc_mutation_token_init(zval *return_value, const char *bucket, const lcb_MUTATION_TOKEN *mt TSRMLS_DC);
@@ -729,7 +738,7 @@ void pcbc_document_init(zval *return_value, pcbc_bucket_t *bucket, const char *b
 int pcbc_document_fragment_init(zval *return_value, zval *value, zval *cas, zval *token TSRMLS_DC);
 int pcbc_document_fragment_init_error(zval *return_value, lcb_error_t err, zval *value TSRMLS_DC);
 void pcbc_bucket_n1ql_request(pcbc_bucket_t *bucket, lcb_CMDN1QL *cmd, int json_response, int json_options,
-                              zval *return_value TSRMLS_DC);
+                              int is_cbas, zval *return_value TSRMLS_DC);
 void pcbc_bucket_cbft_request(pcbc_bucket_t *bucket, lcb_CMDFTS *cmd, int json_response, int json_options,
                               zval *return_value TSRMLS_DC);
 void pcbc_bucket_view_request(pcbc_bucket_t *bucket, lcb_CMDVIEWQUERY *cmd, int json_response, int json_options,
@@ -789,6 +798,10 @@ static inline pcbc_bucket_manager_t *pcbc_bucket_manager_fetch_object(zend_objec
 {
     return (pcbc_bucket_manager_t *)((char *)obj - XtOffsetOf(pcbc_bucket_manager_t, std));
 }
+static inline pcbc_analytics_query_t *pcbc_analytics_query_fetch_object(zend_object *obj)
+{
+    return (pcbc_analytics_query_t *)((char *)obj - XtOffsetOf(pcbc_analytics_query_t, std));
+}
 static inline pcbc_n1ql_query_t *pcbc_n1ql_query_fetch_object(zend_object *obj)
 {
     return (pcbc_n1ql_query_t *)((char *)obj - XtOffsetOf(pcbc_n1ql_query_t, std));
@@ -829,6 +842,8 @@ static inline pcbc_classic_authenticator_t *pcbc_classic_authenticator_fetch_obj
 #define Z_BUCKET_OBJ_P(zv) (pcbc_bucket_fetch_object(Z_OBJ_P(zv)))
 #define Z_BUCKET_MANAGER_OBJ(zo) (pcbc_bucket_manager_fetch_object(zo))
 #define Z_BUCKET_MANAGER_OBJ_P(zv) (pcbc_bucket_manager_fetch_object(Z_OBJ_P(zv)))
+#define Z_ANALYTICS_QUERY_OBJ(zo) (pcbc_analytics_query_fetch_object(zo))
+#define Z_ANALYTICS_QUERY_OBJ_P(zv) (pcbc_analytics_query_fetch_object(Z_OBJ_P(zv)))
 #define Z_N1QL_QUERY_OBJ(zo) (pcbc_n1ql_query_fetch_object(zo))
 #define Z_N1QL_QUERY_OBJ_P(zv) (pcbc_n1ql_query_fetch_object(Z_OBJ_P(zv)))
 #define Z_LOOKUP_IN_BUILDER_OBJ(zo) (pcbc_lookup_in_builder_fetch_object(zo))
@@ -854,6 +869,8 @@ static inline pcbc_classic_authenticator_t *pcbc_classic_authenticator_fetch_obj
 #define Z_BUCKET_OBJ_P(zv) ((pcbc_bucket_t *)zend_object_store_get_object(zv TSRMLS_CC))
 #define Z_BUCKET_MANAGER_OBJ(zo) ((pcbc_bucket_manager_t *)zo)
 #define Z_BUCKET_MANAGER_OBJ_P(zv) ((pcbc_bucket_manager_t *)zend_object_store_get_object(zv TSRMLS_CC))
+#define Z_ANALYTICS_QUERY_OBJ(zo) ((pcbc_analytics_query_t *)zo)
+#define Z_ANALYTICS_QUERY_OBJ_P(zv) ((pcbc_analytics_query_t *)zend_object_store_get_object(zv TSRMLS_CC))
 #define Z_N1QL_QUERY_OBJ(zo) ((pcbc_n1ql_query_t *)zo)
 #define Z_N1QL_QUERY_OBJ_P(zv) ((pcbc_n1ql_query_t *)zend_object_store_get_object(zv TSRMLS_CC))
 #define Z_LOOKUP_IN_BUILDER_OBJ(zo) ((pcbc_lookup_in_builder_t *)zo)
@@ -883,6 +900,7 @@ typedef struct {
     lcb_error_t first_error;
     int json_response;
     int json_options;
+    int is_cbas; // FIXME: convert to bit-flags
     PCBC_ZVAL exc;
 } opcookie;
 

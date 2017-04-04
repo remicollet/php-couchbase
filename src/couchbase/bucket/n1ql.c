@@ -31,6 +31,10 @@ static void n1qlrow_callback(lcb_t instance, int ignoreme, const lcb_RESPN1QL *r
     TSRMLS_FETCH();
 
     result->header.err = resp->rc;
+    if (cookie->is_cbas && (resp->rc == LCB_ESOCKSHUTDOWN || resp->rc == LCB_NETWORK_ERROR)) {
+        // FIXME: patch rc because libcouchbase does not handle socket close from CBAS
+        result->header.err = LCB_SUCCESS;
+    }
     result->rflags = resp->rflags;
 #if PHP_VERSION_ID < 70000
     MAKE_STD_ZVAL(result->row);
@@ -52,31 +56,36 @@ static void n1qlrow_callback(lcb_t instance, int ignoreme, const lcb_RESPN1QL *r
         PCBC_STRINGL(result->row, resp->row, resp->nrow);
     }
     if (result->header.err != LCB_SUCCESS) {
-        zval *val;
-        val = php_array_fetch(PCBC_P(result->row), "errors");
-        if (val) {
-            zval *err = php_array_fetch(val, "0");
-            if (err) {
-                char *msg = NULL;
-                int msg_len;
-                zend_bool need_free = 0;
-                long code = php_array_fetch_long(err, "code");
-                msg = php_array_fetch_string(err, "msg", &msg_len, &need_free);
-                if (code && msg) {
-                    char *m = NULL;
-                    spprintf(&m, 0, "Failed to perform N1QL query. HTTP %d: code: %d, message: \"%*s\"",
-                             (int)resp->htresp->htstatus, (int)code, msg_len, msg);
-                    PCBC_ZVAL_ALLOC(cookie->exc);
-                    pcbc_exception_init(PCBC_P(cookie->exc), code, m TSRMLS_CC);
-                    if (m) {
-                        efree(m);
+        int reported = 0;
+        if (Z_TYPE_P(PCBC_P(result->row)) == IS_ARRAY) {
+            zval *val;
+            val = php_array_fetch(PCBC_P(result->row), "errors");
+            if (val) {
+                zval *err = php_array_fetch(val, "0");
+                if (err) {
+                    char *msg = NULL;
+                    int msg_len;
+                    zend_bool need_free = 0;
+                    long code = php_array_fetch_long(err, "code");
+                    msg = php_array_fetch_string(err, "msg", &msg_len, &need_free);
+                    if (code && msg) {
+                        char *m = NULL;
+                        spprintf(&m, 0, "Failed to perform N1QL query. HTTP %d: code: %d, message: \"%*s\"",
+                                 (int)resp->htresp->htstatus, (int)code, msg_len, msg);
+                        PCBC_ZVAL_ALLOC(cookie->exc);
+                        pcbc_exception_init(PCBC_P(cookie->exc), code, m TSRMLS_CC);
+                        reported = 1;
+                        if (m) {
+                            efree(m);
+                        }
+                    }
+                    if (msg && need_free) {
+                        efree(msg);
                     }
                 }
-                if (msg && need_free) {
-                    efree(msg);
-                }
             }
-        } else {
+        }
+        if (!reported) {
             pcbc_log(LOGARGS(instance, ERROR), "Failed to perform N1QL query. %d: %.*s", (int)resp->htresp->htstatus,
                      (int)resp->nrow, (char *)resp->row);
         }
@@ -140,7 +149,7 @@ static lcb_error_t proc_n1qlrow_results(zval *return_value, opcookie *cookie TSR
 }
 
 void pcbc_bucket_n1ql_request(pcbc_bucket_t *bucket, lcb_CMDN1QL *cmd, int json_response, int json_options,
-                              zval *return_value TSRMLS_DC)
+                              int is_cbas, zval *return_value TSRMLS_DC)
 {
     opcookie *cookie;
     lcb_error_t err;
@@ -150,6 +159,7 @@ void pcbc_bucket_n1ql_request(pcbc_bucket_t *bucket, lcb_CMDN1QL *cmd, int json_
     cookie = opcookie_init();
     cookie->json_response = json_response;
     cookie->json_options = json_options;
+    cookie->is_cbas = is_cbas;
     err = lcb_n1ql_query(bucket->conn->lcb, cookie, cmd);
     if (err == LCB_SUCCESS) {
         lcb_wait(bucket->conn->lcb);
