@@ -26,34 +26,17 @@
 
     <date>2017-04-05</date>
     <version>
-        <release>2.3.1</release>
+        <release>2.3.2</release>
         <api>2.3.0</api>
     </version>
     <stability>
-        <release>stable</release>
+        <release>snapshot</release>
         <api>stable</api>
     </stability>
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        * PCBC-459: restore \Couchbase\Bucket::unlock() method, which has been
-          lost in refactoring
-        * PCBC-460: prefer managed strings to persistent when storing document
-          values.
-        * PCBC-461: deallocate intermediate results when using encoder compression
-        * PCBC-462: replace new lines in log entries with space
-        * PCBC-464: fix NumericRangeFacet with NULL boundary on PHP 5.4
-        * PCBC-463: fix incorrect reference counting on Search API. (might lead to
-          segfaults and leaks)
-        * PCBC-465: check encoded ViewQuery before sending to libcouchbase
-        * PCBC-467: intermediate values in Datastructures API might leak.
-          (e.g. result of internal "get" to find out size of the list)
-        * PCBC-469: implement SearchQuery->sort() function to support sorting FTS
-          results, which is accessible in Couchbase Server 4.6+
-        * PCBC-471: fixed issue, when the library always use credentials for the
-          first bucket in Authenticator.
-        * PCBC-441: add experimental support of Analytics query.
-          https://developer.couchbase.com/documentation/server/4.5/analytics/introduction.html
+        snapshot
     </notes>
 
     <contents>
@@ -184,6 +167,39 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2017-04-05</date>
+            <version>
+                <release>2.3.1</release>
+                <api>2.3.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
+            </license>
+            <notes>
+                * PCBC-459: restore \Couchbase\Bucket::unlock() method, which has been
+                  lost in refactoring
+                * PCBC-460: prefer managed strings to persistent when storing document
+                  values.
+                * PCBC-461: deallocate intermediate results when using encoder compression
+                * PCBC-462: replace new lines in log entries with space
+                * PCBC-464: fix NumericRangeFacet with NULL boundary on PHP 5.4
+                * PCBC-463: fix incorrect reference counting on Search API. (might lead to
+                  segfaults and leaks)
+                * PCBC-465: check encoded ViewQuery before sending to libcouchbase
+                * PCBC-467: intermediate values in Datastructures API might leak.
+                  (e.g. result of internal "get" to find out size of the list)
+                * PCBC-469: implement SearchQuery->sort() function to support sorting FTS
+                  results, which is accessible in Couchbase Server 4.6+
+                * PCBC-471: fixed issue, when the library always use credentials for the
+                  first bucket in Authenticator.
+                * PCBC-441: add experimental support of Analytics query.
+                  https://developer.couchbase.com/documentation/server/4.5/analytics/introduction.html
+            </notes>
+        </release>
         <release>
             <date>2017-03-07</date>
             <version>
