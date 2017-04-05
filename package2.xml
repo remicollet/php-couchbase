@@ -30,7 +30,7 @@
         <api>2.3.0</api>
     </version>
     <stability>
-        <release>snapshot</release>
+        <release>stable</release>
         <api>stable</api>
     </stability>
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
