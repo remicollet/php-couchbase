@@ -24,9 +24,9 @@
         <active>yes</active>
     </lead>
 
-    <date>2017-03-07</date>
+    <date>2017-04-05</date>
     <version>
-        <release>2.3.1snapshot</release>
+        <release>2.3.1</release>
         <api>2.3.0</api>
     </version>
     <stability>
