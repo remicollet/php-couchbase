@@ -145,8 +145,12 @@ void pcbc_lookup_in_builder_init(zval *return_value, zval *bucket, const char *i
 
     object_init_ex(return_value, pcbc_lookup_in_builder_ce);
     builder = Z_LOOKUP_IN_BUILDER_OBJ_P(return_value);
+#if PHP_VERSION_ID >= 70000
+    ZVAL_COPY(&builder->bucket_zval, bucket);
+#else
+    Z_ADDREF_P(bucket);
     builder->bucket_zval = bucket;
-    Z_ADDREF_P(builder->bucket_zval);
+#endif
     builder->bucket = Z_BUCKET_OBJ_P(bucket);
     builder->id_len = id_len;
     builder->id = estrndup(id, id_len);
@@ -187,9 +191,9 @@ static void lookup_in_builder_free_object(pcbc_free_object_arg *object TSRMLS_DC
         efree(tmp);
     }
     obj->head = obj->tail = NULL;
-    Z_DELREF_P(obj->bucket_zval);
+    Z_DELREF_P(PCBC_P(obj->bucket_zval));
+    ZVAL_UNDEF(PCBC_P(obj->bucket_zval));
     obj->bucket = NULL;
-    obj->bucket_zval = NULL;
     zend_object_std_dtor(&obj->std TSRMLS_CC);
 #if PHP_VERSION_ID < 70000
     efree(obj);

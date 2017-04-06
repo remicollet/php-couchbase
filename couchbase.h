@@ -563,7 +563,7 @@ typedef struct pcbc_sd_spec pcbc_sd_spec_t;
 typedef struct {
     PCBC_ZEND_OBJECT_PRE
     pcbc_bucket_t *bucket;
-    zval *bucket_zval;
+    PCBC_ZVAL bucket_zval;
     char *id;
     int id_len;
     int nspecs;
@@ -575,7 +575,7 @@ typedef struct {
 typedef struct {
     PCBC_ZEND_OBJECT_PRE
     pcbc_bucket_t *bucket;
-    zval *bucket_zval;
+    PCBC_ZVAL bucket_zval;
     char *id;
     int id_len;
     lcb_cas_t cas;

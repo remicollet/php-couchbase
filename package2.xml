@@ -36,7 +36,8 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        snapshot
+        * PCBC-473: fix incorrect bucket reference copy in subdocument
+          mutation/lookup builders, which might lead to segfault.
     </notes>
 
     <contents>
