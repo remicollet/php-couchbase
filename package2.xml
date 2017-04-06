@@ -38,6 +38,7 @@
     <notes>
         * PCBC-473: fix incorrect bucket reference copy in subdocument
           mutation/lookup builders, which might lead to segfault.
+        * PCBC-474: fix segfault when using ViewQuery::keys()
     </notes>
 
     <contents>

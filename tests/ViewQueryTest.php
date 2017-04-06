@@ -83,6 +83,12 @@ class ViewQueryTest extends CouchbaseTestCase {
         $this->assertEquals(["USA", "New York"], $res->rows[2]->key);
         $this->assertEquals(2, $res->rows[2]->value);
 
+        $query = \Couchbase\ViewQuery::from($ddocName, 'test');
+        $query->consistency(\Couchbase\ViewQuery::UPDATE_BEFORE);
+        $query->reduce(false)->keys(array_values([['USA', 'New York']]));
+        $res = $this->bucket->query($query);
+        $this->assertCount(2, $res->rows);
+
         $this->manager->removeDesignDocument($ddocName);
     }
 }

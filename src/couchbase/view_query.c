@@ -40,6 +40,7 @@ void pcbc_view_query_init(zval *return_value, char *design_document, int design_
     obj->view_name = estrndup(view_name, view_name_len);
     PCBC_ZVAL_ALLOC(obj->options);
     array_init(PCBC_P(obj->options));
+    obj->keys = NULL;
 }
 
 /* {{{ proto \Couchbase\ViewQuery ViewQuery::limit(int $limit)
@@ -308,16 +309,17 @@ PHP_METHOD(ViewQuery, keys)
 
         PCBC_ZVAL_ALLOC(payload);
         array_init_size(PCBC_P(payload), 1);
+        Z_ADDREF_P(keys);
         ADD_ASSOC_ZVAL_EX(PCBC_P(payload), "keys", keys);
         PCBC_JSON_ENCODE(&buf, PCBC_P(payload), 0, last_error);
         zval_ptr_dtor(&payload);
         if (last_error != 0) {
             pcbc_log(LOGARGS(WARN), "Failed to encode keys as JSON: json_last_error=%d", last_error);
-            smart_str_free(&buf);
         } else {
-            obj->keys = PCBC_SMARTSTR_VAL(buf);
             obj->keys_len = PCBC_SMARTSTR_LEN(buf);
+            PCBC_SMARTSTR_DUP(buf, obj->keys);
         }
+        smart_str_free(&buf);
     }
 
     RETURN_ZVAL(getThis(), 1, 0);
