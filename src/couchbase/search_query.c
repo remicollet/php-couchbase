@@ -1027,7 +1027,7 @@ PHP_MINIT_FUNCTION(SearchQuery)
     PCBC_CE_FLAGS_FINAL(pcbc_search_query_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_search_query_ce);
 
-    zend_class_implements(pcbc_search_query_ce TSRMLS_CC, 1, php_json_serializable_ce);
+    zend_class_implements(pcbc_search_query_ce TSRMLS_CC, 1, pcbc_json_serializable_ce);
 
     zend_declare_class_constant_stringl(pcbc_search_query_ce, ZEND_STRL("HIGHLIGHT_HTML"), ZEND_STRL("html") TSRMLS_CC);
     zend_declare_class_constant_stringl(pcbc_search_query_ce, ZEND_STRL("HIGHLIGHT_ANSI"), ZEND_STRL("ansi") TSRMLS_CC);

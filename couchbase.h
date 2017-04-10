@@ -175,6 +175,7 @@ extern zend_class_entry *pcbc_search_query_ce;
 extern zend_class_entry *pcbc_search_query_part_ce;
 extern zend_class_entry *pcbc_search_facet_ce;
 extern zend_class_entry *pcbc_view_query_encodable_ce;
+extern zend_class_entry *pcbc_json_serializable_ce;
 
 #if PHP_VERSION_ID >= 70000
 #define PCBC_ZVAL_ALLOC(__pcbc_val) ZVAL_UNDEF(&(__pcbc_val))

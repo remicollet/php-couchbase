@@ -43,8 +43,6 @@ static inline pcbc_term_search_facet_t *pcbc_term_search_facet_fetch_object(zend
 
 zend_class_entry *pcbc_term_search_facet_ce;
 
-extern PHP_JSON_API zend_class_entry *php_json_serializable_ce;
-
 /* {{{ proto void TermSearchFacet::__construct() */
 PHP_METHOD(TermSearchFacet, __construct)
 {
@@ -158,7 +156,7 @@ PHP_MINIT_FUNCTION(TermSearchFacet)
     PCBC_CE_FLAGS_FINAL(pcbc_term_search_facet_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_term_search_facet_ce);
 
-    zend_class_implements(pcbc_term_search_facet_ce TSRMLS_CC, 1, php_json_serializable_ce);
+    zend_class_implements(pcbc_term_search_facet_ce TSRMLS_CC, 1, pcbc_json_serializable_ce);
     zend_class_implements(pcbc_term_search_facet_ce TSRMLS_CC, 1, pcbc_search_facet_ce);
 
     memcpy(&term_search_facet_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));

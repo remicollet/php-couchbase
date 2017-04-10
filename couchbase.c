@@ -41,6 +41,7 @@ ts_rsrc_id *pcbc_json_globals_id;
 #else
 zend_json_globals *pcbc_json_globals;
 #endif
+zend_class_entry *pcbc_json_serializable_ce;
 
 ZEND_DECLARE_MODULE_GLOBALS(couchbase)
 
@@ -242,6 +243,24 @@ PHP_MINIT_FUNCTION(couchbase)
         }
     }
 #endif
+    pcbc_json_serializable_ce = NULL;
+    {
+#if PHP_VERSION_ID >= 70000
+        pcbc_json_serializable_ce = zend_hash_str_find_ptr(CG(class_table), ZEND_STRL("jsonserializable"));
+#else
+        zend_class_entry **pce;
+        int rv;
+
+        rv = zend_hash_find(CG(class_table), ZEND_STRS("jsonserializable"), (void **)&pce);
+        if (rv == SUCCESS) {
+            pcbc_json_serializable_ce = *pce;
+        }
+#endif
+        if (pcbc_json_serializable_ce == NULL) {
+            pcbc_log(LOGARGS(FATAL), "failed to find JsonSerializable class. Make sure 'json' module is loaded before 'couchbase'");
+            return FAILURE;
+        }
+    }
 
     PHP_MINIT(CouchbasePool)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(CouchbaseException)(INIT_FUNC_ARGS_PASSTHRU);

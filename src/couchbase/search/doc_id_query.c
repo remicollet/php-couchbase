@@ -44,8 +44,6 @@ static inline pcbc_doc_id_search_query_t *pcbc_doc_id_search_query_fetch_object(
 
 zend_class_entry *pcbc_doc_id_search_query_ce;
 
-extern PHP_JSON_API zend_class_entry *php_json_serializable_ce;
-
 /* {{{ proto void DocIdSearchQuery::__construct() */
 PHP_METHOD(DocIdSearchQuery, __construct)
 {
@@ -302,7 +300,7 @@ PHP_MINIT_FUNCTION(DocIdSearchQuery)
     PCBC_CE_FLAGS_FINAL(pcbc_doc_id_search_query_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_doc_id_search_query_ce);
 
-    zend_class_implements(pcbc_doc_id_search_query_ce TSRMLS_CC, 1, php_json_serializable_ce);
+    zend_class_implements(pcbc_doc_id_search_query_ce TSRMLS_CC, 1, pcbc_json_serializable_ce);
     zend_class_implements(pcbc_doc_id_search_query_ce TSRMLS_CC, 1, pcbc_search_query_part_ce);
 
     memcpy(&doc_id_search_query_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));

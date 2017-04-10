@@ -45,8 +45,6 @@ static inline date_range_search_facet_t *date_range_search_facet_fetch_object(ze
 
 zend_class_entry *date_range_search_facet_ce;
 
-extern PHP_JSON_API zend_class_entry *php_json_serializable_ce;
-
 /* {{{ proto void DateRangeSearchFacet::__construct() */
 PHP_METHOD(DateRangeSearchFacet, __construct)
 {
@@ -250,7 +248,7 @@ PHP_MINIT_FUNCTION(DateRangeSearchFacet)
     PCBC_CE_FLAGS_FINAL(date_range_search_facet_ce);
     PCBC_CE_DISABLE_SERIALIZATION(date_range_search_facet_ce);
 
-    zend_class_implements(date_range_search_facet_ce TSRMLS_CC, 1, php_json_serializable_ce);
+    zend_class_implements(date_range_search_facet_ce TSRMLS_CC, 1, pcbc_json_serializable_ce);
     zend_class_implements(date_range_search_facet_ce TSRMLS_CC, 1, pcbc_search_facet_ce);
 
     memcpy(&date_search_facet_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
