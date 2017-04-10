@@ -33,11 +33,14 @@ static void viewrow_callback(lcb_t instance, int ignoreme, const lcb_RESPVIEWQUE
     int last_error;
     TSRMLS_FETCH();
 
-#if PHP_VERSION_ID < 70000
-    MAKE_STD_ZVAL(result->id);
-    MAKE_STD_ZVAL(result->key);
-    MAKE_STD_ZVAL(result->value);
-#endif
+    PCBC_ZVAL_ALLOC(result->id);
+    PCBC_ZVAL_ALLOC(result->key);
+    PCBC_ZVAL_ALLOC(result->value);
+
+    ZVAL_NULL(PCBC_P(result->id));
+    ZVAL_NULL(PCBC_P(result->key));
+    ZVAL_NULL(PCBC_P(result->value));
+
     result->header.err = resp->rc;
     result->rflags = resp->rflags;
     if (result->header.err == LCB_SUCCESS) {
@@ -57,8 +60,6 @@ static void viewrow_callback(lcb_t instance, int ignoreme, const lcb_RESPVIEWQUE
                              last_error);
                     PCBC_STRINGL(result->value, resp->value, resp->nvalue);
                 }
-            } else {
-                ZVAL_NULL(PCBC_P(result->value));
             }
 
             if (resp->nkey) {
@@ -70,8 +71,6 @@ static void viewrow_callback(lcb_t instance, int ignoreme, const lcb_RESPVIEWQUE
                         PCBC_STRINGL(result->key, resp->key, resp->nkey);
                     }
                 }
-            } else {
-                ZVAL_NULL(PCBC_P(result->key));
             }
         } else {
             PCBC_STRINGL(result->key, resp->key, resp->nkey);
@@ -132,9 +131,8 @@ static lcb_error_t proc_viewrow_results(zval *return_value, opcookie *cookie TSR
 
     if (err == LCB_SUCCESS) {
         PCBC_ZVAL rows;
-#if PHP_VERSION_ID < 70000
-        MAKE_STD_ZVAL(rows);
-#endif
+
+        PCBC_ZVAL_ALLOC(rows);
         array_init(PCBC_P(rows));
 
         object_init(return_value);
@@ -153,9 +151,8 @@ static lcb_error_t proc_viewrow_results(zval *return_value, opcookie *cookie TSR
                 }
             } else {
                 PCBC_ZVAL row;
-#if PHP_VERSION_ID < 70000
-                MAKE_STD_ZVAL(row);
-#endif
+
+                PCBC_ZVAL_ALLOC(row);
                 object_init(PCBC_P(row));
                 add_property_zval(PCBC_P(row), "id", PCBC_P(res->id));
                 add_property_zval(PCBC_P(row), "key", PCBC_P(res->key));

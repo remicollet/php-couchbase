@@ -36,9 +36,8 @@ static void n1qlrow_callback(lcb_t instance, int ignoreme, const lcb_RESPN1QL *r
         result->header.err = LCB_SUCCESS;
     }
     result->rflags = resp->rflags;
-#if PHP_VERSION_ID < 70000
-    MAKE_STD_ZVAL(result->row);
-#endif
+    PCBC_ZVAL_ALLOC(result->row);
+    ZVAL_NULL(PCBC_P(result->row));
     if (cookie->json_response) {
         int last_error;
         int json_options = cookie->json_options;
@@ -104,9 +103,8 @@ static lcb_error_t proc_n1qlrow_results(zval *return_value, opcookie *cookie TSR
 
     if (err == LCB_SUCCESS) {
         PCBC_ZVAL rows;
-#if PHP_VERSION_ID < 70000
-        MAKE_STD_ZVAL(rows);
-#endif
+
+        PCBC_ZVAL_ALLOC(rows);
         array_init(PCBC_P(rows));
 
         object_init(return_value);

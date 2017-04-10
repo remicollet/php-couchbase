@@ -39,6 +39,8 @@
         * PCBC-473: fix incorrect bucket reference copy in subdocument
           mutation/lookup builders, which might lead to segfault.
         * PCBC-474: fix segfault when using ViewQuery::keys()
+        * PCBC-476: do not call destructors on unintialized ZVALs. Fixes possible
+          segfaults with view queries on PHP 5.x.
     </notes>
 
     <contents>

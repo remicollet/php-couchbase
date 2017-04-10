@@ -34,9 +34,7 @@ void http_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
         pcbc_log(LOGARGS(instance, WARN), "Failed to perform HTTP request: rc=%d", (int)resp->rc);
     }
 
-#if PHP_VERSION_ID < 70000
-    MAKE_STD_ZVAL(result->bytes);
-#endif
+    PCBC_ZVAL_ALLOC(result->bytes);
     if (resp->nbody) {
         if (((opcookie *)rb->cookie)->json_response) {
             int last_error;
