@@ -33,7 +33,8 @@ PHP_METHOD(SearchQuery, __construct)
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sO", &index_name, &index_name_len, &query_part,
                                pcbc_search_query_part_ce);
     if (rv == FAILURE) {
-        return;
+        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+        RETURN_NULL();
     }
 
     obj = Z_SEARCH_QUERY_OBJ_P(getThis());

@@ -36,7 +36,8 @@ PHP_METHOD(Cluster, __construct)
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &connstr, &connstr_len);
     if (rv == FAILURE) {
-        return;
+        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+        RETURN_NULL();
     }
     if (connstr_len == 0) {
         connstr = DEFAULT_CONNECTION_STRING;

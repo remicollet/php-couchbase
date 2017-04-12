@@ -27,7 +27,13 @@ extern zend_class_entry *pcbc_authenticator_ce;
 PHP_METHOD(ClassicAuthenticator, __construct)
 {
     pcbc_classic_authenticator_t *obj;
+    int rv;
 
+    rv = zend_parse_parameters_none();
+    if (rv == FAILURE) {
+        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+        RETURN_NULL();
+    }
     obj = Z_CLASSIC_AUTHENTICATOR_OBJ_P(getThis());
     obj->cluster.username = NULL;
     obj->cluster.username_len = 0;

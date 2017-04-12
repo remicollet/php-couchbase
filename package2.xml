@@ -43,6 +43,8 @@
           segfaults with view queries on PHP 5.x.
         * PCBC-477: lookup JsonSerializable interface in run time, instead of compile time
           using php_json_serializable_ce symbol. This fixes support on some 5.4-5.5 builds.
+        * PCBC-479: do not allow to create objects in invalid state. For example Cluster
+          might return an instance, and only show PHP warning on invalid arguments.
     </notes>
 
     <contents>
