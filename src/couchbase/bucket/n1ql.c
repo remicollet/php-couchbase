@@ -146,8 +146,8 @@ static lcb_error_t proc_n1qlrow_results(zval *return_value, opcookie *cookie TSR
     return err;
 }
 
-void pcbc_bucket_n1ql_request(pcbc_bucket_t *bucket, lcb_CMDN1QL *cmd, int json_response, int json_options,
-                              int is_cbas, zval *return_value TSRMLS_DC)
+void pcbc_bucket_n1ql_request(pcbc_bucket_t *bucket, lcb_CMDN1QL *cmd, int json_response, int json_options, int is_cbas,
+                              zval *return_value TSRMLS_DC)
 {
     opcookie *cookie;
     lcb_error_t err;
