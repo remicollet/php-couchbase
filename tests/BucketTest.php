@@ -201,8 +201,15 @@ class BucketTest extends CouchbaseTestCase {
         $key = $this->makeKey('counterBadKey');
 
         $this->wrapException(function() use($b, $key) {
+            $b->counter($key);
+        }, '\Couchbase\Exception', COUCHBASE_KEYNOTFOUND);
+
+        $this->wrapException(function() use($b, $key) {
             $b->counter($key, +1);
         }, '\Couchbase\Exception', COUCHBASE_KEYNOTFOUND);
+
+        $res = $b->counter($key, -1, ['initial' => 42]);
+        $this->assertValidMetaDoc($res, 'cas');
     }
 
     /**

@@ -45,6 +45,8 @@
           using php_json_serializable_ce symbol. This fixes support on some 5.4-5.5 builds.
         * PCBC-479: do not allow to create objects in invalid state. For example Cluster
           might return an instance, and only show PHP warning on invalid arguments.
+        * PCBC-481: Bucket->counter() without specifying delta value results in
+          null pointer dereference.
     </notes>
 
     <contents>

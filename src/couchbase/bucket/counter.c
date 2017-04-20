@@ -113,7 +113,11 @@ PHP_METHOD(Bucket, counter)
         PCBC_CHECK_ZVAL_STRING(zgroupid, "groupid must be a string");
 
         LCB_CMD_SET_KEY(&cmd, id.str, id.len);
-        cmd.delta = Z_LVAL_P(zdelta);
+        if (zdelta) {
+            cmd.delta = Z_LVAL_P(zdelta);
+        } else {
+            cmd.delta = 1;
+        }
         if (zinitial) {
             cmd.initial = Z_LVAL_P(zinitial);
             cmd.create = 1;
