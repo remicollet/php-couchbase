@@ -427,7 +427,7 @@ PHP_METHOD(Bucket, mapSize)
     pp_state.args[0].val = id;
 #endif
     pcbc_bucket_get(obj, &pp_state, &pp_id, NULL, NULL, NULL, return_value TSRMLS_CC);
-    {
+    if(!EG(exception)) {
         zval *val;
         long size = 0;
 
@@ -735,7 +735,7 @@ PHP_METHOD(Bucket, setExists)
     pp_state.args[0].val = id;
 #endif
     pcbc_bucket_get(obj, &pp_state, &pp_id, NULL, NULL, NULL, return_value TSRMLS_CC);
-    {
+    if(!EG(exception)) {
         zval *array;
         zend_bool found = 0;
 
@@ -803,7 +803,7 @@ PHP_METHOD(Bucket, setRemove)
     pp_state.args[0].val = id;
 #endif
     pcbc_bucket_get(obj, &pp_state, &pp_id, NULL, NULL, NULL, return_value TSRMLS_CC);
-    {
+    if(!EG(exception)) {
         zval *array, *casval;
         lcb_cas_t cas = 0;
 

@@ -105,4 +105,20 @@ class DatastructuresTest extends CouchbaseTestCase {
         $doc = $this->bucket->get($key);
         $this->assertEquals(["world"], $doc->value);
     }
+
+    function testMissingKeys() {
+        $key = $this->makeKey("datastructuresMissingKey");
+
+        $this->wrapException(function() use($key) {
+            $res = $this->bucket->queueSize($key);
+        }, '\Couchbase\Exception', COUCHBASE_KEYNOTFOUND);
+
+        $this->wrapException(function() use($key) {
+            $res = $this->bucket->setExists($key, 42);
+        }, '\Couchbase\Exception', COUCHBASE_KEYNOTFOUND);
+
+        $this->wrapException(function() use($key) {
+            $res = $this->bucket->setRemove($key, 42);
+        }, '\Couchbase\Exception', COUCHBASE_KEYNOTFOUND);
+    }
 }

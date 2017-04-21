@@ -47,6 +47,9 @@
           might return an instance, and only show PHP warning on invalid arguments.
         * PCBC-481: Bucket->counter() without specifying delta value results in
           null pointer dereference.
+        * PCBC-482: mapSize/setExists/setRemove methods of Bucket did not check if 'get'
+          sub-request had thrown exception. This cause segfault, if operation executed on
+          keys which do not exist.
     </notes>
 
     <contents>
