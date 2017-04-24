@@ -1,4 +1,4 @@
-# Couchbase PHP Client
+# Couchbase PHP Client [![Build Status](http://sdkbuilds.sc.couchbase.com/buildStatus/icon?job=builds-php)](http://sdkbuilds.sc.couchbase.com/job/builds-php) 
 
 This library allows you to connect to a Couchbase cluster from PHP.
 It is a native PHP extension and uses the very fast libcouchbase library to
