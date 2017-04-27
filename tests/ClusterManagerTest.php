@@ -47,4 +47,45 @@ class ClusterManagerTest extends CouchbaseTestCase {
         }
         $m->removeBucket($name);
     }
+
+    /**
+     * @depends testConnect
+     */
+    function testEphemeralBucketCRUD($m) {
+        $serverVersion = $m->info()['nodes'][0]['version'];
+        if ($serverVersion < 5) {
+            $this->markTestSkipped("Ephemeral buckets are not available for $serverVersion");
+            return;
+        }
+
+        $name = $this->makeKey('newEphemeralBucket');
+        $m->createBucket($name, ['bucketType' => 'ephemeral']);
+        $buckets = $m->listBuckets();
+        $this->assertNotEmpty($buckets);
+        $newBucket = NULL;
+        foreach ($buckets as $bucket) {
+            if ($bucket['name'] == $name) {
+                $newBucket = $bucket;
+            }
+        }
+        $this->assertNotNull($newBucket['uuid']);
+        $this->assertEquals('ephemeral', $newBucket['bucketType']);
+        $warmup = true;
+        while ($warmup) {
+            $buckets = $m->listBuckets();
+            foreach ($buckets as $bucket) {
+                if ($bucket['name'] == $name) {
+                    $warmup = false;
+                    foreach ($bucket['nodes'] as $node) {
+                        if ($node['status'] == 'warmup') {
+                            $warmup = true;
+                        }
+                    }
+                    break;
+                }
+            }
+            sleep(1);
+        }
+        $m->removeBucket($name);
+    }
 }

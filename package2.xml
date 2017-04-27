@@ -50,6 +50,7 @@
         * PCBC-482: mapSize/setExists/setRemove methods of Bucket did not check if 'get'
           sub-request had thrown exception. This cause segfault, if operation executed on
           keys which do not exist.
+        * PCBC-453: verify that ClusterManager supports ephemeral buckets
     </notes>
 
     <contents>
