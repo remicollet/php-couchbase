@@ -8,9 +8,9 @@ class ClusterManagerTest extends CouchbaseTestCase {
      */
     function testConnect() {
         $h = new \Couchbase\Cluster($this->testDsn);
-        $this->assertNotNull($this->testUser);
-        $this->assertNotNull($this->testPass);
-        $m = $h->manager($this->testUser, $this->testPass);
+        $this->assertNotNull($this->testAdminUser);
+        $this->assertNotNull($this->testAdminPassword);
+        $m = $h->manager($this->testAdminUser, $this->testAdminPassword);
         return $m;
     }
 

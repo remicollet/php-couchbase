@@ -8,6 +8,7 @@ class BucketManagerTest extends CouchbaseTestCase {
      */
     function testConnect() {
         $h = new \Couchbase\Cluster($this->testDsn);
+        $h->authenticate($this->testAuthenticator);
         $m = $h->openBucket($this->testBucket)->manager();
         return $m;
     }

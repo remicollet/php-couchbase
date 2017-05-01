@@ -10,7 +10,7 @@
  */
 class SearchTest extends PHPUnit_Framework_TestCase {
     public function __construct() {
-        $testDsn = getenv('CPDSN');
+        $testDsn = getenv('CB_DSN');
         if ($testDsn === FALSE) {
             $testDsn = 'couchbase://localhost/';
         }

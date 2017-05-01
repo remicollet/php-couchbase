@@ -30,7 +30,8 @@ class BucketTest extends CouchbaseTestCase {
      */
     function testConnect() {
         $h = new \Couchbase\Cluster($this->testDsn);
-        $b = $h->openBucket();
+        $h->authenticate($this->testAuthenticator);
+        $b = $h->openBucket($this->testBucket);
         $this->setTimeouts($b);
         return $b;
     }
@@ -318,7 +319,8 @@ class BucketTest extends CouchbaseTestCase {
         global $recursive_transcoder_key3;
 
         $h = new \Couchbase\Cluster($this->testDsn);
-        $b = $h->openBucket();
+        $h->authenticate($this->testAuthenticator);
+        $b = $h->openBucket($this->testBucket);
         $this->setTimeouts($b);
 
         $key1 = $this->makeKey('basicUpsertKey1');
@@ -362,7 +364,8 @@ class BucketTest extends CouchbaseTestCase {
      */
     function testOptionVals() {
         $h = new \Couchbase\Cluster($this->testDsn . "?console_log_level=42");
-        $b = $h->openBucket();
+        $h->authenticate($this->testAuthenticator);
+        $b = $h->openBucket($this->testBucket);
 
         $checkVal = 243;
 

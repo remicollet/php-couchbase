@@ -12,14 +12,17 @@
  */
 class SearchTest extends PHPUnit_Framework_TestCase {
     public function __construct() {
-        $this->testDsn = getenv('CPDSN');
+        $this->testDsn = getenv('CB_DSN');
         if ($this->testDsn === FALSE) {
             $this->testDsn = 'couchbase://localhost/';
         }
+        $this->authenticator = \Couchbase\ClassicAuthenticator();
+        $this->authenticator->bucket('beer-sample', getenv('CB_USER_PASSWORD'));
     }
 
     protected function setUp() {
         $this->cluster = new \Couchbase\Cluster($this->testDsn);
+        $this->cluster->authenticate($this->authenticator);
         $this->bucket = $this->cluster->openBucket('beer-sample');
     }
 
@@ -56,6 +59,7 @@ class SearchTest extends PHPUnit_Framework_TestCase {
 
     function testSearchWithConsistency() {
         $cluster = new \Couchbase\Cluster($this->testDsn . '?fetch_mutation_tokens=true');
+        $this->cluster->authenticate($this->authenticator);
         $bucket = $cluster->openBucket('beer-sample');
 
         $id = uniqid('testSearchWithConsistency');

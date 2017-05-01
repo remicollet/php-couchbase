@@ -7,6 +7,7 @@ class N1qlQueryTest extends CouchbaseTestCase {
 
     protected function setUp() {
         $this->cluster = new \Couchbase\Cluster($this->testDsn);
+        $this->cluster->authenticate($this->testAuthenticator);
         $this->bucket = $this->cluster->openBucket($this->testBucket);
         $this->setTimeouts($this->bucket);
     }
@@ -65,6 +66,7 @@ class N1qlQueryTest extends CouchbaseTestCase {
     function testAtPlus() {
         $bucketName = $this->testBucket;
         $cluster = new \Couchbase\Cluster($this->testDsn . '?fetch_mutation_tokens=true');
+        $cluster->authenticate($this->testAuthenticator);
         $bucket = $cluster->openBucket($bucketName);
         $this->setTimeouts($bucket);
 

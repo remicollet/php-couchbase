@@ -3,29 +3,44 @@
 class CouchbaseTestCase extends \PHPUnit_Framework_TestCase {
     public $testDsn;
     public $testBucket;
+    public $testAdminUser;
+    public $testAdminPassword;
     public $testUser;
-    public $testPass;
+    public $testPassword;
+    public $testAuthenticator;
 
     public function __construct() {
-        $this->testDsn = getenv('CPDSN');
+        $this->testDsn = getenv('CB_DSN');
         if ($this->testDsn === FALSE) {
             $this->testDsn = 'couchbase://localhost/default';
         }
 
-        $this->testBucket = getenv('CPBUCKET');
+        $this->testBucket = getenv('CB_BUCKET');
         if ($this->testBucket === FALSE) {
             $this->testBucket = 'default';
         }
 
-        $this->testUser = getenv('CPUSER');
-        if ($this->testUser === FALSE) {
-            $this->testUser = 'Administrator';
+        $this->testAdminUser = getenv('CB_ADMIN_USER');
+        if ($this->testAdminUser === FALSE) {
+            $this->testAdminUser = 'Administrator';
         }
 
-        $this->testPass = getenv('CPPASS');
-        if ($this->testPass === FALSE) {
-            $this->testPass = 'password';
+        $this->testAdminPassword = getenv('CB_ADMIN_PASSWORD');
+        if ($this->testAdminPassword === FALSE) {
+            $this->testAdminPassword = 'password';
         }
+
+        $this->testUser = getenv('CB_USER');
+        if ($this->testUser === FALSE) {
+            $this->testUser = 'default';
+        }
+
+        $this->testPassword = getenv('CB_PASSWORD');
+        if ($this->testPassword === FALSE) {
+            $this->testPassword = '';
+        }
+        $this->testAuthenticator = new \Couchbase\ClassicAuthenticator();
+        $this->testAuthenticator->bucket($this->testBucket, $this->testPassword);
     }
 
     function setTimeouts($bucket) {

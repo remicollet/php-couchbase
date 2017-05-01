@@ -1,4 +1,4 @@
-# Couchbase PHP Client [![Build Status](http://sdkbuilds.sc.couchbase.com/buildStatus/icon?job=builds-php)](http://sdkbuilds.sc.couchbase.com/job/builds-php) 
+# Couchbase PHP Client [![Build Status](http://sdkbuilds.sc.couchbase.com/buildStatus/icon?job=builds-php)](http://sdkbuilds.sc.couchbase.com/job/builds-php)
 
 This library allows you to connect to a Couchbase cluster from PHP.
 It is a native PHP extension and uses the very fast libcouchbase library to
@@ -97,8 +97,8 @@ The source code is available at
 To execute our test suite, simply install and execute phpunit against your
 checked out source code. Tests assume that you have Couchbase Server with
 default bucket running on localhost (otherwise use environment variable
-`CPDSN`, `CPBUCKET`, `CPUSER`, `CPPASS`. E.g. `CPDSN=couchbase://192.168.1.42/
-CPBUCKET=travel-sample`).
+`CB_DSN`, `CB_ADMIN_USER`, `CB_ADMIN_PASSWORD`, `CB_BUCKET`, `CB_USER`,
+`CB_PASSWORD`. E.g. `CB_DSN=couchbase://192.168.1.42/ CB_BUCKET=travel-sample`).
 
 ```bash
 curl -L https://phar.phpunit.de/phpunit.phar > ~/bin/phpunit
