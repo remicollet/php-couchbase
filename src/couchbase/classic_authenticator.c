@@ -18,7 +18,7 @@
 
 #include <ext/standard/md5.h>
 
-#define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/authenticator", __FILE__, __LINE__
+#define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/classic_authenticator", __FILE__, __LINE__
 
 zend_class_entry *pcbc_classic_authenticator_ce;
 extern zend_class_entry *pcbc_authenticator_ce;
@@ -129,8 +129,8 @@ PHP_METHOD(ClassicAuthenticator, bucket)
 } /* }}} */
 
 /* TODO: update to refactored lcb_AUTHENTICATOR after libcouchbase 2.7.4 */
-void pcbc_generate_lcb_auth(pcbc_classic_authenticator_t *auth, lcb_AUTHENTICATOR **result, lcb_type_t type,
-                            const char *name, const char *password, char **hash TSRMLS_DC)
+void pcbc_generate_classic_lcb_auth(pcbc_classic_authenticator_t *auth, lcb_AUTHENTICATOR **result, lcb_type_t type,
+                                    const char *name, const char *password, char **hash TSRMLS_DC)
 {
     PHP_MD5_CTX md5;
     unsigned char digest[16];
@@ -141,6 +141,7 @@ void pcbc_generate_lcb_auth(pcbc_classic_authenticator_t *auth, lcb_AUTHENTICATO
     int write_null_password = 1;
 
     *result = lcbauth_new();
+    lcbauth_set_mode(*result, LCBAUTH_MODE_CLASSIC);
     PHP_MD5Init(&md5);
 
     if (auth && (auth->cluster.username || auth->nbuckets)) {
@@ -217,7 +218,7 @@ ZEND_ARG_INFO(0, password)
 ZEND_END_ARG_INFO()
 
 // clang-format off
-zend_function_entry authenticator_methods[] = {
+zend_function_entry classic_authenticator_methods[] = {
     PHP_ME(ClassicAuthenticator, __construct, ai_ClassicAuthenticator_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
     PHP_ME(ClassicAuthenticator, cluster, ai_ClassicAuthenticator_cluster, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(ClassicAuthenticator, bucket, ai_ClassicAuthenticator_bucket, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
@@ -315,7 +316,7 @@ PHP_MINIT_FUNCTION(ClassicAuthenticator)
 {
     zend_class_entry ce;
 
-    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "ClassicAuthenticator", authenticator_methods);
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "ClassicAuthenticator", classic_authenticator_methods);
     pcbc_classic_authenticator_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_classic_authenticator_ce->create_object = authenticator_create_object;
     PCBC_CE_FLAGS_FINAL(pcbc_classic_authenticator_ce);

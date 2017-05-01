@@ -39,8 +39,13 @@ class CouchbaseTestCase extends \PHPUnit_Framework_TestCase {
         if ($this->testPassword === FALSE) {
             $this->testPassword = '';
         }
-        $this->testAuthenticator = new \Couchbase\ClassicAuthenticator();
-        $this->testAuthenticator->bucket($this->testBucket, $this->testPassword);
+        if (getenv('CB_SPOCK')) {
+            $this->testAuthenticator = new \Couchbase\PasswordAuthenticator();
+            $this->testAuthenticator->username($this->testUser)->password($this->testPassword);
+        } else {
+            $this->testAuthenticator = new \Couchbase\ClassicAuthenticator();
+            $this->testAuthenticator->bucket($this->testBucket, $this->testPassword);
+        }
     }
 
     function setTimeouts($bucket) {

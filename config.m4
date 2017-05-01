@@ -56,6 +56,7 @@ COUCHBASE_FILES=" \
     src/couchbase/analytics_query.c \
     src/couchbase/authenticator.c \
     src/couchbase/classic_authenticator.c \
+    src/couchbase/password_authenticator.c \
     src/couchbase/base36.c \
     src/couchbase/pool.c \
     src/couchbase/log_formatter.c \

@@ -20,6 +20,7 @@
 
 zend_class_entry *pcbc_bucket_ce;
 extern zend_class_entry *pcbc_classic_authenticator_ce;
+extern zend_class_entry *pcbc_password_authenticator_ce;
 
 PHP_METHOD(Bucket, get);
 PHP_METHOD(Bucket, getAndLock);
@@ -1215,10 +1216,14 @@ void pcbc_bucket_init(zval *return_value, pcbc_cluster_t *cluster, const char *b
 
     if (!Z_ISUNDEF(cluster->auth)) {
         if (instanceof_function(Z_OBJCE_P(PCBC_P(cluster->auth)), pcbc_classic_authenticator_ce TSRMLS_CC)) {
-            authenticator = Z_CLASSIC_AUTHENTICATOR_OBJ_P(PCBC_P(cluster->auth));
+            pcbc_generate_classic_lcb_auth(Z_CLASSIC_AUTHENTICATOR_OBJ_P(PCBC_P(cluster->auth)), &auth, LCB_TYPE_BUCKET, bucketname, password, &auth_hash TSRMLS_CC);
+        } else if (instanceof_function(Z_OBJCE_P(PCBC_P(cluster->auth)), pcbc_password_authenticator_ce TSRMLS_CC)) {
+            pcbc_generate_password_lcb_auth(Z_PASSWORD_AUTHENTICATOR_OBJ_P(PCBC_P(cluster->auth)), &auth, LCB_TYPE_BUCKET, bucketname, password, &auth_hash TSRMLS_CC);
         }
     }
-    pcbc_generate_lcb_auth(authenticator, &auth, LCB_TYPE_BUCKET, bucketname, password, &auth_hash TSRMLS_CC);
+    if (!auth) {
+        pcbc_generate_classic_lcb_auth(NULL, &auth, LCB_TYPE_BUCKET, bucketname, password, &auth_hash TSRMLS_CC);
+    }
     err = pcbc_connection_get(&conn, LCB_TYPE_BUCKET, cluster->connstr, bucketname, auth, auth_hash TSRMLS_CC);
     efree(auth_hash);
     if (err) {

@@ -328,6 +328,7 @@ namespace Couchbase {
          *
          * @see \Couchbase\Authenticator
          * @see \Couchbase\ClassicAuthenticator
+         * @see \Couchbase\PasswordAuthenticator
          */
         final public function authenticate($authenticator) {}
     }
@@ -1233,6 +1234,7 @@ namespace Couchbase {
      *
      * @see \Couchbase\Cluster::authenticate()
      * @see \Couchbase\ClassicAuthenticator
+     * @see \Couchbase\PasswordAuthenticator
      */
     interface Authenticator {}
 
@@ -1265,6 +1267,32 @@ namespace Couchbase {
          * @param string $password bucket password
          */
         final public function bucket($name, $password) {}
+    }
+
+    /**
+     * Authenticator based on RBAC feature of Couchbase Server 5+.
+     *
+     * This authenticator uses single credentials for all operations (data and management).
+     *
+     * @see \Couchbase\Cluster::authenticate()
+     * @see \Couchbase\Authenticator
+     */
+    final class PasswordAuthenticator implements Authenticator {
+        /**
+         * Sets username
+         *
+         * @param string $username username
+         * @return \Couchbase\PasswordAuthenticator
+         */
+        final public function cluster($username) {}
+
+        /**
+         * Sets password
+         *
+         * @param string $password password
+         * @return \Couchbase\PasswordAuthenticator
+         */
+        final public function bucket($password) {}
     }
 
     /**

@@ -10,7 +10,14 @@ class ClusterManagerTest extends CouchbaseTestCase {
         $h = new \Couchbase\Cluster($this->testDsn);
         $this->assertNotNull($this->testAdminUser);
         $this->assertNotNull($this->testAdminPassword);
-        $m = $h->manager($this->testAdminUser, $this->testAdminPassword);
+        if (getenv('CB_SPOCK')) {
+            $authenticator = new \Couchbase\PasswordAuthenticator();
+            $authenticator->username($this->testAdminUser)->password($this->testAdminPassword);
+            $h->authenticate($authenticator);
+            $m = $h->manager();
+        } else {
+            $m = $h->manager($this->testAdminUser, $this->testAdminPassword);
+        }
         return $m;
     }
 
