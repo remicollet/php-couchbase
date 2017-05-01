@@ -689,6 +689,32 @@ class BucketTest extends CouchbaseTestCase {
         $this->assertEquals(1, count($result->value));
         $this->assertEquals(array(array(42), true, 1, 2, 3), $result->value[0]['value']);
     }
+
+    /**
+     * @depends testConnect
+     */
+    function testSubdocAttributes($b) {
+        if (!getenv('CB_SPOCK')) {
+            $this->markTestSkipped("Subdoc attributes are not supported, skipping the test");
+            return;
+        }
+        $key = $this->makeKey('subdoc_attributes');
+        $b->upsert($key, ['foo' => 'bar']);
+
+        $result = $b->mutateIn($key)
+                ->upsert('app.created_by', ['name' => 'John Doe', 'role' => 'DB administrator'],
+                         ['xattr' => true, 'createPath' => true])
+                ->execute();
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(COUCHBASE_SUCCESS, $result->value[0]['code']);
+
+        $result = $b->lookupIn($key)
+                ->get('app.created_by', ['xattr' => true, 'createPath' => true])
+                ->execute();
+        $this->assertEquals(1, count($result->value));
+        $this->assertEquals(COUCHBASE_SUCCESS, $result->value[0]['code']);
+        $this->assertEquals(['name' => 'John Doe', 'role' => 'DB administrator'], $result->value[0]['value']);
+    }
 }
 
 function recursive_transcoder_encoder($value) {

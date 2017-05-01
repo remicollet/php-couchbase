@@ -51,8 +51,9 @@
           sub-request had thrown exception. This cause segfault, if operation executed on
           keys which do not exist.
         * PCBC-453: verify that ClusterManager supports ephemeral buckets
-	* PCBC-451: add RBAC support in \Couchbase\PasswordAuthenticator class (Couchbase
-	  Server 5.x feature).
+        * PCBC-451: add RBAC support in \Couchbase\PasswordAuthenticator class (Couchbase
+          Server 5.x feature).
+        * PCBC-440: add experimental support of extended attributes for subdocument operations.
     </notes>
 
     <contents>

@@ -468,7 +468,7 @@ PHP_METHOD(Bucket, mapAdd)
 
     PCBC_ZVAL_ALLOC(builder);
     pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, 0 TSRMLS_CC);
-    pcbc_mutate_in_builder_upsert(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), key, key_len, val, 1 TSRMLS_CC);
+    pcbc_mutate_in_builder_upsert(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), key, key_len, val, LCB_SDSPEC_F_MKINTERMEDIATES TSRMLS_CC);
     pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
     zval_ptr_dtor(&builder);
     RETURN_NULL();
@@ -492,7 +492,7 @@ PHP_METHOD(Bucket, mapRemove)
 
     PCBC_ZVAL_ALLOC(builder);
     pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, 0 TSRMLS_CC);
-    pcbc_mutate_in_builder_remove(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), key, key_len TSRMLS_CC);
+    pcbc_mutate_in_builder_remove(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), key, key_len, 0 TSRMLS_CC);
     pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
     zval_ptr_dtor(&builder);
     RETURN_NULL();
@@ -517,7 +517,7 @@ PHP_METHOD(Bucket, mapGet)
 
     PCBC_ZVAL_ALLOC(builder);
     pcbc_lookup_in_builder_init(PCBC_P(builder), getThis(), id, id_len, NULL, 0 TSRMLS_CC);
-    pcbc_lookup_in_builder_get(Z_LOOKUP_IN_BUILDER_OBJ_P(PCBC_P(builder)), key, key_len TSRMLS_CC);
+    pcbc_lookup_in_builder_get(Z_LOOKUP_IN_BUILDER_OBJ_P(PCBC_P(builder)), key, key_len, NULL TSRMLS_CC);
     pcbc_bucket_subdoc_request(obj, Z_LOOKUP_IN_BUILDER_OBJ_P(PCBC_P(builder)), 1, return_value TSRMLS_CC);
     zval_ptr_dtor(&builder);
 
@@ -555,7 +555,7 @@ PHP_METHOD(Bucket, listPush)
 
     PCBC_ZVAL_ALLOC(builder);
     pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, 0 TSRMLS_CC);
-    pcbc_mutate_in_builder_array_append(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), NULL, 0, val, 1 TSRMLS_CC);
+    pcbc_mutate_in_builder_array_append(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), NULL, 0, val, LCB_SDSPEC_F_MKINTERMEDIATES TSRMLS_CC);
     pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
     zval_ptr_dtor(&builder);
     RETURN_NULL();
@@ -580,7 +580,7 @@ PHP_METHOD(Bucket, listShift)
 
     PCBC_ZVAL_ALLOC(builder);
     pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, 0 TSRMLS_CC);
-    pcbc_mutate_in_builder_array_prepend(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), NULL, 0, val, 1 TSRMLS_CC);
+    pcbc_mutate_in_builder_array_prepend(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), NULL, 0, val, LCB_SDSPEC_F_MKINTERMEDIATES TSRMLS_CC);
     pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
     zval_ptr_dtor(&builder);
     RETURN_NULL();
@@ -606,7 +606,7 @@ PHP_METHOD(Bucket, listRemove)
     PCBC_ZVAL_ALLOC(builder);
     pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, 0 TSRMLS_CC);
     path_len = spprintf(&path, 0, "[%ld]", index);
-    pcbc_mutate_in_builder_remove(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len TSRMLS_CC);
+    pcbc_mutate_in_builder_remove(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len, 0 TSRMLS_CC);
     pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
     efree(path);
     zval_ptr_dtor(&builder);
@@ -634,7 +634,7 @@ PHP_METHOD(Bucket, listGet)
     PCBC_ZVAL_ALLOC(builder);
     pcbc_lookup_in_builder_init(PCBC_P(builder), getThis(), id, id_len, NULL, 0 TSRMLS_CC);
     path_len = spprintf(&path, 0, "[%ld]", index);
-    pcbc_lookup_in_builder_get(Z_LOOKUP_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len TSRMLS_CC);
+    pcbc_lookup_in_builder_get(Z_LOOKUP_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len, NULL TSRMLS_CC);
     pcbc_bucket_subdoc_request(obj, Z_LOOKUP_IN_BUILDER_OBJ_P(PCBC_P(builder)), 1, return_value TSRMLS_CC);
     efree(path);
     zval_ptr_dtor(&builder);
@@ -674,7 +674,7 @@ PHP_METHOD(Bucket, listSet)
     PCBC_ZVAL_ALLOC(builder);
     pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, 0 TSRMLS_CC);
     path_len = spprintf(&path, 0, "[%ld]", index);
-    pcbc_mutate_in_builder_replace(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len, val, 1 TSRMLS_CC);
+    pcbc_mutate_in_builder_replace(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len, val, 0 TSRMLS_CC);
     pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
     efree(path);
     zval_ptr_dtor(&builder);
@@ -700,7 +700,7 @@ PHP_METHOD(Bucket, setAdd)
 
     PCBC_ZVAL_ALLOC(builder);
     pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, 0 TSRMLS_CC);
-    pcbc_mutate_in_builder_array_add_unique(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), NULL, 0, val, 1 TSRMLS_CC);
+    pcbc_mutate_in_builder_array_add_unique(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), NULL, 0, val, LCB_SDSPEC_F_MKINTERMEDIATES TSRMLS_CC);
     pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
     zval_ptr_dtor(&builder);
     RETURN_NULL();
@@ -853,7 +853,7 @@ PHP_METHOD(Bucket, setRemove)
                 PCBC_ZVAL_ALLOC(builder);
                 pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), Z_STRVAL_P(id), Z_STRLEN_P(id), cas TSRMLS_CC);
                 path_len = spprintf(&path, 0, "[%ld]", (long)found);
-                pcbc_mutate_in_builder_remove(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len TSRMLS_CC);
+                pcbc_mutate_in_builder_remove(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len, 0 TSRMLS_CC);
                 pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
                 efree(path);
                 zval_ptr_dtor(&builder);
@@ -889,7 +889,7 @@ PHP_METHOD(Bucket, queueRemove)
     pcbc_lookup_in_builder_init(PCBC_P(builder), getThis(), id, id_len, NULL, 0 TSRMLS_CC);
     path = "[-1]";
     path_len = strlen(path);
-    pcbc_lookup_in_builder_get(Z_LOOKUP_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len TSRMLS_CC);
+    pcbc_lookup_in_builder_get(Z_LOOKUP_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len, NULL TSRMLS_CC);
     pcbc_bucket_subdoc_request(obj, Z_LOOKUP_IN_BUILDER_OBJ_P(PCBC_P(builder)), 1, return_value TSRMLS_CC);
     zval_ptr_dtor(&builder);
     PCBC_READ_PROPERTY(val, pcbc_document_fragment_ce, return_value, "value", 0);
@@ -916,7 +916,7 @@ PHP_METHOD(Bucket, queueRemove)
         }
         PCBC_ZVAL_ALLOC(builder);
         pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, cas TSRMLS_CC);
-        pcbc_mutate_in_builder_remove(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len TSRMLS_CC);
+        pcbc_mutate_in_builder_remove(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), path, path_len, 0 TSRMLS_CC);
         pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
         zval_ptr_dtor(&builder);
         PCBC_READ_PROPERTY(exc, pcbc_document_ce, return_value, "error", 0);

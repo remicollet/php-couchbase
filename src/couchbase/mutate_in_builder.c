@@ -28,13 +28,14 @@ PHP_METHOD(MutateInBuilder, __construct)
 }
 /* }}} */
 
-int pcbc_mutate_in_builder_remove(pcbc_mutate_in_builder_t *builder, char *path, int path_len TSRMLS_DC)
+int pcbc_mutate_in_builder_remove(pcbc_mutate_in_builder_t *builder, char *path, int path_len, lcb_U32 flags TSRMLS_DC)
 {
     pcbc_sd_spec_t *spec;
 
     spec = ecalloc(1, sizeof(pcbc_sd_spec_t));
     spec->next = NULL;
     spec->s.sdcmd = LCB_SDCMD_REMOVE;
+    spec->s.options = flags;
     PCBC_SDSPEC_COPY_PATH(spec, path, path_len);
     if (builder->tail) {
         builder->tail->next = spec;
@@ -47,7 +48,7 @@ int pcbc_mutate_in_builder_remove(pcbc_mutate_in_builder_t *builder, char *path,
 
     return SUCCESS;
 }
-/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::remove(string $path)
+/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::remove(string $path, array $options = [])
  */
 PHP_METHOD(MutateInBuilder, remove)
 {
@@ -55,34 +56,35 @@ PHP_METHOD(MutateInBuilder, remove)
     char *path = NULL;
     pcbc_str_arg_size path_len = 0;
     int rv;
+    zval *options = NULL;
 
     obj = Z_MUTATE_IN_BUILDER_OBJ_P(getThis());
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|z", &path, &path_len, &options);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
-    pcbc_mutate_in_builder_remove(obj, path, path_len TSRMLS_CC);
+    pcbc_mutate_in_builder_remove(obj, path, path_len, pcbc_subdoc_options_to_flags(1, 0, options TSRMLS_CC) TSRMLS_CC);
 
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
 
-/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::counter(string $path, int $delta, bool $createParents = false)
+/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::counter(string $path, int $delta, array $options = [])
  */
 PHP_METHOD(MutateInBuilder, counter)
 {
     pcbc_mutate_in_builder_t *obj;
     char *path = NULL;
     pcbc_str_arg_size path_len = 0;
-    zend_bool create_parents = 0;
+    zval *options = NULL;
     int rv;
     pcbc_sd_spec_t *spec;
     long delta;
 
     obj = Z_MUTATE_IN_BUILDER_OBJ_P(getThis());
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sl|b", &path, &path_len, &delta, &create_parents);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sl|z", &path, &path_len, &delta, &options);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -90,9 +92,7 @@ PHP_METHOD(MutateInBuilder, counter)
     spec = ecalloc(1, sizeof(pcbc_sd_spec_t));
     spec->next = NULL;
     spec->s.sdcmd = LCB_SDCMD_COUNTER;
-    if (create_parents) {
-        spec->s.options |= LCB_SDSPEC_F_MKINTERMEDIATES;
-    }
+    spec->s.options = pcbc_subdoc_options_to_flags(1, 0, options TSRMLS_CC);
     PCBC_SDSPEC_COPY_PATH(spec, path, path_len);
     {
         char *delta_str = NULL;
@@ -113,21 +113,21 @@ PHP_METHOD(MutateInBuilder, counter)
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
 
-/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::insert(string $path, mixed $value, bool $createParents = false)
+/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::insert(string $path, mixed $value, array $options = [])
  */
 PHP_METHOD(MutateInBuilder, insert)
 {
     pcbc_mutate_in_builder_t *obj;
     char *path = NULL;
     pcbc_str_arg_size path_len = 0;
-    zend_bool create_parents = 0;
+    zval *options = NULL;
     int rv;
     pcbc_sd_spec_t *spec;
     zval *value;
 
     obj = Z_MUTATE_IN_BUILDER_OBJ_P(getThis());
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz|b", &path, &path_len, &value, &create_parents);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz|z", &path, &path_len, &value, &options);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -135,9 +135,7 @@ PHP_METHOD(MutateInBuilder, insert)
     spec = ecalloc(1, sizeof(pcbc_sd_spec_t));
     spec->next = NULL;
     spec->s.sdcmd = LCB_SDCMD_DICT_ADD;
-    if (create_parents) {
-        spec->s.options |= LCB_SDSPEC_F_MKINTERMEDIATES;
-    }
+    spec->s.options = pcbc_subdoc_options_to_flags(1, 0, options TSRMLS_CC);
     PCBC_SDSPEC_COPY_PATH(spec, path, path_len);
     {
         smart_str buf = {0};
@@ -167,17 +165,14 @@ PHP_METHOD(MutateInBuilder, insert)
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
 
-int pcbc_mutate_in_builder_upsert(pcbc_mutate_in_builder_t *builder, char *path, int path_len, zval *value,
-                                  zend_bool create_parents TSRMLS_DC)
+int pcbc_mutate_in_builder_upsert(pcbc_mutate_in_builder_t *builder, char *path, int path_len, zval *value, lcb_U32 flags TSRMLS_DC)
 {
     pcbc_sd_spec_t *spec;
 
     spec = ecalloc(1, sizeof(pcbc_sd_spec_t));
     spec->next = NULL;
     spec->s.sdcmd = LCB_SDCMD_DICT_UPSERT;
-    if (create_parents) {
-        spec->s.options |= LCB_SDSPEC_F_MKINTERMEDIATES;
-    }
+    spec->s.options = flags;
     PCBC_SDSPEC_COPY_PATH(spec, path, path_len);
     {
         smart_str buf = {0};
@@ -206,25 +201,25 @@ int pcbc_mutate_in_builder_upsert(pcbc_mutate_in_builder_t *builder, char *path,
     return SUCCESS;
 }
 
-/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::upsert(string $path, mixed $value, bool $createParents = false)
+/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::upsert(string $path, mixed $value, array $options = [])
  */
 PHP_METHOD(MutateInBuilder, upsert)
 {
     pcbc_mutate_in_builder_t *obj;
     char *path = NULL;
     pcbc_str_arg_size path_len = 0;
-    zend_bool create_parents = 0;
+    zval *options = NULL;
     int rv;
     zval *value;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz|b", &path, &path_len, &value, &create_parents);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz|z", &path, &path_len, &value, &options);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
     obj = Z_MUTATE_IN_BUILDER_OBJ_P(getThis());
 
-    rv = pcbc_mutate_in_builder_upsert(obj, path, path_len, value, create_parents TSRMLS_CC);
+    rv = pcbc_mutate_in_builder_upsert(obj, path, path_len, value, pcbc_subdoc_options_to_flags(1, 0, options TSRMLS_CC) TSRMLS_CC);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -233,13 +228,14 @@ PHP_METHOD(MutateInBuilder, upsert)
 } /* }}} */
 
 int pcbc_mutate_in_builder_replace(pcbc_mutate_in_builder_t *builder, char *path, int path_len, zval *value,
-                                   zend_bool create_parents TSRMLS_DC)
+                                   lcb_U32 flags TSRMLS_DC)
 {
     pcbc_sd_spec_t *spec;
 
     spec = ecalloc(1, sizeof(pcbc_sd_spec_t));
     spec->next = NULL;
     spec->s.sdcmd = LCB_SDCMD_REPLACE;
+    spec->s.options = flags;
     PCBC_SDSPEC_COPY_PATH(spec, path, path_len);
     {
         smart_str buf = {0};
@@ -269,25 +265,25 @@ int pcbc_mutate_in_builder_replace(pcbc_mutate_in_builder_t *builder, char *path
     return SUCCESS;
 }
 
-/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::replace(string $path, mixed $value)
+/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::replace(string $path, mixed $value, array $options = [])
  */
 PHP_METHOD(MutateInBuilder, replace)
 {
     pcbc_mutate_in_builder_t *obj;
     char *path = NULL;
     pcbc_str_arg_size path_len = 0;
-    zend_bool create_parents = 0;
+    zval *options = NULL;
     int rv;
     zval *value;
 
     obj = Z_MUTATE_IN_BUILDER_OBJ_P(getThis());
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz", &path, &path_len, &value);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz|z", &path, &path_len, &value, &options);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
-    rv = pcbc_mutate_in_builder_replace(obj, path, path_len, value, create_parents TSRMLS_CC);
+    rv = pcbc_mutate_in_builder_replace(obj, path, path_len, value, pcbc_subdoc_options_to_flags(1, 0, options TSRMLS_CC) TSRMLS_CC);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -295,7 +291,7 @@ PHP_METHOD(MutateInBuilder, replace)
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
 
-/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::arrayInsert(string $path, mixed $value)
+/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::arrayInsert(string $path, mixed $value. array $options = [])
  */
 PHP_METHOD(MutateInBuilder, arrayInsert)
 {
@@ -305,10 +301,11 @@ PHP_METHOD(MutateInBuilder, arrayInsert)
     int rv;
     pcbc_sd_spec_t *spec;
     zval *value;
+    zval *options = NULL;
 
     obj = Z_MUTATE_IN_BUILDER_OBJ_P(getThis());
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz", &path, &path_len, &value);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz|z", &path, &path_len, &value, &options);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -316,6 +313,7 @@ PHP_METHOD(MutateInBuilder, arrayInsert)
     spec = ecalloc(1, sizeof(pcbc_sd_spec_t));
     spec->next = NULL;
     spec->s.sdcmd = LCB_SDCMD_ARRAY_INSERT;
+    spec->s.options = pcbc_subdoc_options_to_flags(1, 0, options TSRMLS_CC);
     PCBC_SDSPEC_COPY_PATH(spec, path, path_len);
     {
         smart_str buf = {0};
@@ -345,7 +343,7 @@ PHP_METHOD(MutateInBuilder, arrayInsert)
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
 
-/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::arrayInsertAll(string $path, array $value)
+/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::arrayInsertAll(string $path, array $value, array $options = [])
  */
 PHP_METHOD(MutateInBuilder, arrayInsertAll)
 {
@@ -355,10 +353,11 @@ PHP_METHOD(MutateInBuilder, arrayInsertAll)
     int rv;
     pcbc_sd_spec_t *spec;
     zval *value;
+    zval *options = NULL;
 
     obj = Z_MUTATE_IN_BUILDER_OBJ_P(getThis());
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz", &path, &path_len, &value);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz|z", &path, &path_len, &value, &options);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -366,6 +365,7 @@ PHP_METHOD(MutateInBuilder, arrayInsertAll)
     spec = ecalloc(1, sizeof(pcbc_sd_spec_t));
     spec->next = NULL;
     spec->s.sdcmd = LCB_SDCMD_ARRAY_INSERT;
+    spec->s.options = pcbc_subdoc_options_to_flags(1, 0, options TSRMLS_CC);
     PCBC_SDSPEC_COPY_PATH(spec, path, path_len);
     {
         smart_str buf = {0};
@@ -412,16 +412,14 @@ PHP_METHOD(MutateInBuilder, arrayInsertAll)
 } /* }}} */
 
 int pcbc_mutate_in_builder_array_add_unique(pcbc_mutate_in_builder_t *builder, char *path, int path_len, zval *value,
-                                            zend_bool create_parents TSRMLS_DC)
+                                            lcb_U32 flags TSRMLS_DC)
 {
     pcbc_sd_spec_t *spec;
 
     spec = ecalloc(1, sizeof(pcbc_sd_spec_t));
     spec->next = NULL;
     spec->s.sdcmd = LCB_SDCMD_ARRAY_ADD_UNIQUE;
-    if (create_parents) {
-        spec->s.options |= LCB_SDSPEC_F_MKINTERMEDIATES;
-    }
+    spec->s.options = flags;
     PCBC_SDSPEC_COPY_PATH(spec, path, path_len);
     {
         smart_str buf = {0};
@@ -452,25 +450,25 @@ int pcbc_mutate_in_builder_array_add_unique(pcbc_mutate_in_builder_t *builder, c
 }
 
 /* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::arrayAddUnique(string $path, mixed $value,
- *                                                                      bool $createParents = false)
+ *                                                                      array $options = [])
  */
 PHP_METHOD(MutateInBuilder, arrayAddUnique)
 {
     pcbc_mutate_in_builder_t *obj;
     char *path = NULL;
     pcbc_str_arg_size path_len = 0;
-    zend_bool create_parents = 0;
+    zval *options = NULL;
     int rv;
     zval *value;
 
     obj = Z_MUTATE_IN_BUILDER_OBJ_P(getThis());
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz|b", &path, &path_len, &value, &create_parents);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz|z", &path, &path_len, &value, &options);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
-    rv = pcbc_mutate_in_builder_array_add_unique(obj, path, path_len, value, create_parents TSRMLS_CC);
+    rv = pcbc_mutate_in_builder_array_add_unique(obj, path, path_len, value, pcbc_subdoc_options_to_flags(1, 0, options TSRMLS_CC) TSRMLS_CC);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -479,16 +477,14 @@ PHP_METHOD(MutateInBuilder, arrayAddUnique)
 } /* }}} */
 
 int pcbc_mutate_in_builder_array_prepend(pcbc_mutate_in_builder_t *builder, char *path, int path_len, zval *value,
-                                         zend_bool create_parents TSRMLS_DC)
+                                         lcb_U32 flags TSRMLS_DC)
 {
     pcbc_sd_spec_t *spec;
 
     spec = ecalloc(1, sizeof(pcbc_sd_spec_t));
     spec->next = NULL;
     spec->s.sdcmd = LCB_SDCMD_ARRAY_ADD_FIRST;
-    if (create_parents) {
-        spec->s.options |= LCB_SDSPEC_F_MKINTERMEDIATES;
-    }
+    spec->s.options = flags;
     PCBC_SDSPEC_COPY_PATH(spec, path, path_len);
     {
         smart_str buf = {0};
@@ -519,44 +515,44 @@ int pcbc_mutate_in_builder_array_prepend(pcbc_mutate_in_builder_t *builder, char
 }
 
 /* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::arrayPrepend(string $path, mixed $value,
-                                                                      bool $createParents = false)
+                                                                      array $options = [])
  */
 PHP_METHOD(MutateInBuilder, arrayPrepend)
 {
     pcbc_mutate_in_builder_t *obj;
     char *path = NULL;
     pcbc_str_arg_size path_len = 0;
-    zend_bool create_parents = 0;
+    zval *options = NULL;
     int rv;
     zval *value;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz|b", &path, &path_len, &value, &create_parents);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz|z", &path, &path_len, &value, &options);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
     obj = Z_MUTATE_IN_BUILDER_OBJ_P(getThis());
 
-    pcbc_mutate_in_builder_array_prepend(obj, path, path_len, value, create_parents TSRMLS_CC);
+    pcbc_mutate_in_builder_array_prepend(obj, path, path_len, value, pcbc_subdoc_options_to_flags(1, 0, options TSRMLS_CC) TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
 
 /* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::arrayPrependAll(string $path, array $values,
- *                                                                       bool $createParents = false)
+ *                                                                       array $options = [])
  */
 PHP_METHOD(MutateInBuilder, arrayPrependAll)
 {
     pcbc_mutate_in_builder_t *obj;
     char *path = NULL;
     pcbc_str_arg_size path_len = 0;
-    zend_bool create_parents = 0;
+    zval *options = NULL;
     int rv;
     pcbc_sd_spec_t *spec;
     zval *value;
 
     obj = Z_MUTATE_IN_BUILDER_OBJ_P(getThis());
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz|b", &path, &path_len, &value, &create_parents);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz|z", &path, &path_len, &value, &options);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -564,9 +560,7 @@ PHP_METHOD(MutateInBuilder, arrayPrependAll)
     spec = ecalloc(1, sizeof(pcbc_sd_spec_t));
     spec->next = NULL;
     spec->s.sdcmd = LCB_SDCMD_ARRAY_ADD_FIRST;
-    if (create_parents) {
-        spec->s.options |= LCB_SDSPEC_F_MKINTERMEDIATES;
-    }
+    spec->s.options = pcbc_subdoc_options_to_flags(1, 0, options TSRMLS_CC);
     PCBC_SDSPEC_COPY_PATH(spec, path, path_len);
     {
         smart_str buf = {0};
@@ -613,16 +607,14 @@ PHP_METHOD(MutateInBuilder, arrayPrependAll)
 } /* }}} */
 
 int pcbc_mutate_in_builder_array_append(pcbc_mutate_in_builder_t *builder, char *path, int path_len, zval *value,
-                                        zend_bool create_parents TSRMLS_DC)
+                                        lcb_U32 flags TSRMLS_DC)
 {
     pcbc_sd_spec_t *spec;
 
     spec = ecalloc(1, sizeof(pcbc_sd_spec_t));
     spec->next = NULL;
     spec->s.sdcmd = LCB_SDCMD_ARRAY_ADD_LAST;
-    if (create_parents) {
-        spec->s.options |= LCB_SDSPEC_F_MKINTERMEDIATES;
-    }
+    spec->s.options = flags;
     PCBC_SDSPEC_COPY_PATH(spec, path, path_len);
     {
         smart_str buf = {0};
@@ -652,26 +644,25 @@ int pcbc_mutate_in_builder_array_append(pcbc_mutate_in_builder_t *builder, char 
     return SUCCESS;
 }
 
-/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::arrayAppend(string $path, mixed $value, bool $createParents =
- * false)
+/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::arrayAppend(string $path, mixed $value, array $options = [])
  */
 PHP_METHOD(MutateInBuilder, arrayAppend)
 {
     pcbc_mutate_in_builder_t *obj;
     char *path = NULL;
     pcbc_str_arg_size path_len = 0;
-    zend_bool create_parents = 0;
+    zval *options = NULL;
     int rv;
     zval *value;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz|b", &path, &path_len, &value, &create_parents);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz|z", &path, &path_len, &value, &options);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
     obj = Z_MUTATE_IN_BUILDER_OBJ_P(getThis());
 
-    rv = pcbc_mutate_in_builder_array_append(obj, path, path_len, value, create_parents TSRMLS_CC);
+    rv = pcbc_mutate_in_builder_array_append(obj, path, path_len, value, pcbc_subdoc_options_to_flags(1, 0, options TSRMLS_CC) TSRMLS_CC);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -679,23 +670,21 @@ PHP_METHOD(MutateInBuilder, arrayAppend)
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
 
-/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::arrayAppendAll(string $path, array $values, bool $createParents
- * =
- * false)
+/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::arrayAppendAll(string $path, array $values, array $options = [])
  */
 PHP_METHOD(MutateInBuilder, arrayAppendAll)
 {
     pcbc_mutate_in_builder_t *obj;
     char *path = NULL;
     pcbc_str_arg_size path_len = 0;
-    zend_bool create_parents = 0;
+    zval *options = NULL;
     int rv;
     pcbc_sd_spec_t *spec;
     zval *value;
 
     obj = Z_MUTATE_IN_BUILDER_OBJ_P(getThis());
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz|b", &path, &path_len, &value, &create_parents);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz|z", &path, &path_len, &value, &options);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -703,9 +692,7 @@ PHP_METHOD(MutateInBuilder, arrayAppendAll)
     spec = ecalloc(1, sizeof(pcbc_sd_spec_t));
     spec->next = NULL;
     spec->s.sdcmd = LCB_SDCMD_ARRAY_ADD_LAST;
-    if (create_parents) {
-        spec->s.options |= LCB_SDSPEC_F_MKINTERMEDIATES;
-    }
+    spec->s.options = pcbc_subdoc_options_to_flags(1, 0, options TSRMLS_CC);
     PCBC_SDSPEC_COPY_PATH(spec, path, path_len);
     {
         smart_str buf = {0};
@@ -933,6 +920,7 @@ static HashTable *mutate_in_builder_get_debug_info(zval *object, int *is_temp TS
             ADD_ASSOC_STRINGL(PCBC_P(s), "path", path, path_len);
             PCBC_SDSPEC_GET_VALUE(spec, value, value_len);
             ADD_ASSOC_STRINGL(PCBC_P(s), "value", value, value_len);
+            ADD_ASSOC_LONG_EX(PCBC_P(s), "options", spec->s.options);
             break;
         case LCB_SDCMD_DICT_ADD:
             ADD_ASSOC_STRING(PCBC_P(s), "cmd", "insert");
@@ -973,6 +961,7 @@ static HashTable *mutate_in_builder_get_debug_info(zval *object, int *is_temp TS
             ADD_ASSOC_STRINGL(PCBC_P(s), "path", path, path_len);
             PCBC_SDSPEC_GET_VALUE(spec, value, value_len);
             ADD_ASSOC_STRINGL(PCBC_P(s), "value", value, value_len);
+            ADD_ASSOC_LONG_EX(PCBC_P(s), "options", spec->s.options);
             break;
         case LCB_SDCMD_ARRAY_ADD_UNIQUE:
             ADD_ASSOC_STRING(PCBC_P(s), "cmd", "arrayAddUnique");
@@ -994,6 +983,7 @@ static HashTable *mutate_in_builder_get_debug_info(zval *object, int *is_temp TS
             ADD_ASSOC_STRING(PCBC_P(s), "cmd", "remove");
             PCBC_SDSPEC_GET_PATH(spec, path, path_len);
             ADD_ASSOC_STRINGL(PCBC_P(s), "path", path, path_len);
+            ADD_ASSOC_LONG_EX(PCBC_P(s), "options", spec->s.options);
             break;
         }
         add_next_index_zval(PCBC_P(specs), PCBC_P(s));

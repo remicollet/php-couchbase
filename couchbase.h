@@ -704,19 +704,20 @@ void pcbc_bucket_manager_init(zval *return_value, zval *bucket TSRMLS_DC);
 void pcbc_bucket_get(pcbc_bucket_t *obj, pcbc_pp_state *pp_state, pcbc_pp_id *id, zval **lock, zval **expiry,
                      zval **groupid, zval *return_value TSRMLS_DC);
 
-int pcbc_lookup_in_builder_get(pcbc_lookup_in_builder_t *builder, char *path, int path_len TSRMLS_DC);
+lcb_U32 pcbc_subdoc_options_to_flags(int is_path, int is_lookup, zval *options TSRMLS_DC);
+int pcbc_lookup_in_builder_get(pcbc_lookup_in_builder_t *builder, char *path, int path_len, zval *options TSRMLS_DC);
 void pcbc_mutate_in_builder_init(zval *return_value, zval *bucket, const char *id, int id_len, lcb_cas_t cas TSRMLS_DC);
 int pcbc_mutate_in_builder_upsert(pcbc_mutate_in_builder_t *builder, char *path, int path_len, zval *value,
-                                  zend_bool create_parents TSRMLS_DC);
-int pcbc_mutate_in_builder_remove(pcbc_mutate_in_builder_t *builder, char *path, int path_len TSRMLS_DC);
+                                  lcb_U32 flags TSRMLS_DC);
+int pcbc_mutate_in_builder_remove(pcbc_mutate_in_builder_t *builder, char *path, int path_len, lcb_U32 flags TSRMLS_DC);
 int pcbc_mutate_in_builder_array_append(pcbc_mutate_in_builder_t *builder, char *path, int path_len, zval *value,
-                                        zend_bool create_parents TSRMLS_DC);
+                                        lcb_U32 flags TSRMLS_DC);
 int pcbc_mutate_in_builder_array_prepend(pcbc_mutate_in_builder_t *builder, char *path, int path_len, zval *value,
-                                         zend_bool create_parents TSRMLS_DC);
+                                         lcb_U32 flags TSRMLS_DC);
 int pcbc_mutate_in_builder_array_add_unique(pcbc_mutate_in_builder_t *builder, char *path, int path_len, zval *value,
-                                            zend_bool create_parents TSRMLS_DC);
+                                            lcb_U32 flags TSRMLS_DC);
 int pcbc_mutate_in_builder_replace(pcbc_mutate_in_builder_t *builder, char *path, int path_len, zval *value,
-                                   zend_bool create_parents TSRMLS_DC);
+                                   lcb_U32 flags TSRMLS_DC);
 
 void pcbc_cluster_manager_init(zval *return_value, pcbc_cluster_t *cluster, const char *name,
                                const char *password TSRMLS_DC);

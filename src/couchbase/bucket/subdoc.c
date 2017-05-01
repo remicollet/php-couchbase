@@ -167,3 +167,47 @@ void pcbc_bucket_subdoc_request(pcbc_bucket_t *obj, void *builder, int is_lookup
         throw_lcb_exception(err);
     }
 }
+
+lcb_U32 pcbc_subdoc_options_to_flags(int is_path, int is_lookup, zval *options TSRMLS_DC)
+{
+    lcb_U32 flags = 0;
+
+    if (!options) {
+        return 0;
+    }
+
+    if (is_path && !is_lookup) {
+        switch (Z_TYPE_P(options)) {
+#if PHP_VERSION_ID >= 70000
+        case IS_TRUE:
+            return LCB_SDSPEC_F_MKINTERMEDIATES;
+        case IS_FALSE:
+            return 0;
+#else
+        case IS_BOOL:
+            if (Z_BVAL_P(options)) {
+                return LCB_SDSPEC_F_MKINTERMEDIATES;
+            } else {
+                return 0;
+            }
+#endif
+        }
+    }
+    if (Z_TYPE_P(options) == IS_ARRAY) {
+        if (is_path) {
+            if (php_array_fetch_bool(options, "xattr")) {
+                flags |= LCB_SDSPEC_F_XATTRPATH;
+            }
+            if (!is_lookup) {
+                if (php_array_fetch_bool(options, "createPath")) {
+                    flags |= LCB_SDSPEC_F_MKINTERMEDIATES;
+                }
+                if (php_array_fetch_bool(options, "expandMacroValues")) {
+                    flags |= LCB_SDSPEC_F_XATTR_MACROVALUES;
+                }
+            }
+        }
+    }
+
+    return flags;
+}

@@ -28,13 +28,14 @@ PHP_METHOD(LookupInBuilder, __construct)
 }
 /* }}} */
 
-int pcbc_lookup_in_builder_get(pcbc_lookup_in_builder_t *builder, char *path, int path_len TSRMLS_DC)
+int pcbc_lookup_in_builder_get(pcbc_lookup_in_builder_t *builder, char *path, int path_len, zval *options TSRMLS_DC)
 {
     pcbc_sd_spec_t *spec;
 
     spec = ecalloc(1, sizeof(pcbc_sd_spec_t));
     spec->next = NULL;
     spec->s.sdcmd = LCB_SDCMD_GET;
+    spec->s.options = pcbc_subdoc_options_to_flags(1, 1, options TSRMLS_CC);
     PCBC_SDSPEC_COPY_PATH(spec, path, path_len);
     if (builder->tail) {
         builder->tail->next = spec;
@@ -47,37 +48,39 @@ int pcbc_lookup_in_builder_get(pcbc_lookup_in_builder_t *builder, char *path, in
     return SUCCESS;
 }
 
-/* {{{ proto \Couchbase\LookupInBuilder LookupInBuilder::get(string $path) */
+/* {{{ proto \Couchbase\LookupInBuilder LookupInBuilder::get(string $path, array $options = []) */
 PHP_METHOD(LookupInBuilder, get)
 {
     pcbc_lookup_in_builder_t *obj;
     char *path = NULL;
     pcbc_str_arg_size path_len = 0;
+    zval *options = NULL;
     int rv;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|z", &path, &path_len, &options);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
     obj = Z_LOOKUP_IN_BUILDER_OBJ_P(getThis());
-    pcbc_lookup_in_builder_get(obj, path, path_len TSRMLS_CC);
+    pcbc_lookup_in_builder_get(obj, path, path_len, options TSRMLS_CC);
 
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
 
-/* {{{ proto \Couchbase\LookupInBuilder LookupInBuilder::exists(string $path) */
+/* {{{ proto \Couchbase\LookupInBuilder LookupInBuilder::exists(string $path, array $options = []) */
 PHP_METHOD(LookupInBuilder, exists)
 {
     pcbc_lookup_in_builder_t *obj;
     const char *path = NULL;
     pcbc_str_arg_size path_len = 0;
     int rv;
+    zval *options = NULL;
     pcbc_sd_spec_t *spec;
 
     obj = Z_LOOKUP_IN_BUILDER_OBJ_P(getThis());
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|z", &path, &path_len, &options);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -85,6 +88,7 @@ PHP_METHOD(LookupInBuilder, exists)
     spec = ecalloc(1, sizeof(pcbc_sd_spec_t));
     spec->next = NULL;
     spec->s.sdcmd = LCB_SDCMD_EXISTS;
+    spec->s.options = pcbc_subdoc_options_to_flags(1, 1, options TSRMLS_CC);
     PCBC_SDSPEC_COPY_PATH(spec, path, path_len);
     if (obj->tail) {
         obj->tail->next = spec;
@@ -119,6 +123,7 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(ai_LookupInBuilder_get, 0, 0, 1)
 ZEND_ARG_INFO(0, path)
+ZEND_ARG_INFO(0, options)
 ZEND_END_ARG_INFO()
 
 // clang-format off
@@ -170,7 +175,7 @@ void pcbc_lookup_in_builder_init(zval *return_value, zval *bucket, const char *i
                 pcbc_log(LOGARGS(builder, WARN), "path has to be a string (skipping argument #%d)", i);
                 continue;
             }
-            pcbc_lookup_in_builder_get(builder, Z_STRVAL_P(PCBC_P(*path)), Z_STRLEN_P(PCBC_P(*path)) TSRMLS_CC);
+            pcbc_lookup_in_builder_get(builder, Z_STRVAL_P(PCBC_P(*path)), Z_STRLEN_P(PCBC_P(*path)), NULL TSRMLS_CC);
         }
     }
 }
@@ -257,11 +262,13 @@ static HashTable *lookup_in_builder_get_debug_info(zval *object, int *is_temp TS
             ADD_ASSOC_STRING(PCBC_P(s), "cmd", "get");
             PCBC_SDSPEC_GET_PATH(spec, path, path_len);
             ADD_ASSOC_STRINGL(PCBC_P(s), "path", path, path_len);
+            ADD_ASSOC_LONG_EX(PCBC_P(s), "options", spec->s.options);
             break;
         case LCB_SDCMD_EXISTS:
             ADD_ASSOC_STRING(PCBC_P(s), "cmd", "exists");
             PCBC_SDSPEC_GET_PATH(spec, path, path_len);
             ADD_ASSOC_STRINGL(PCBC_P(s), "path", path, path_len);
+            ADD_ASSOC_LONG_EX(PCBC_P(s), "options", spec->s.options);
             break;
         }
         add_next_index_zval(PCBC_P(specs), PCBC_P(s));
