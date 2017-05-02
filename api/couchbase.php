@@ -1284,7 +1284,7 @@ namespace Couchbase {
          * @param string $username username
          * @return \Couchbase\PasswordAuthenticator
          */
-        final public function cluster($username) {}
+        final public function username($username) {}
 
         /**
          * Sets password
@@ -1292,7 +1292,7 @@ namespace Couchbase {
          * @param string $password password
          * @return \Couchbase\PasswordAuthenticator
          */
-        final public function bucket($password) {}
+        final public function password($password) {}
     }
 
     /**
