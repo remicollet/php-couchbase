@@ -26,34 +26,17 @@
 
     <date>2017-05-02</date>
     <version>
-        <release>2.3.2</release>
+        <release>2.3.3snapshot</release>
         <api>2.3.0</api>
     </version>
     <stability>
-        <release>stable</release>
+        <release>snapshot</release>
         <api>stable</api>
     </stability>
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        * PCBC-473: fix incorrect bucket reference copy in subdocument
-          mutation/lookup builders, which might lead to segfault.
-        * PCBC-474: fix segfault when using ViewQuery::keys()
-        * PCBC-476: do not call destructors on unintialized ZVALs. Fixes possible
-          segfaults with view queries on PHP 5.x.
-        * PCBC-477: lookup JsonSerializable interface in run time, instead of compile time
-          using php_json_serializable_ce symbol. This fixes support on some 5.4-5.5 builds.
-        * PCBC-479: do not allow to create objects in invalid state. For example Cluster
-          might return an instance, and only show PHP warning on invalid arguments.
-        * PCBC-481: Bucket->counter() without specifying delta value results in
-          null pointer dereference.
-        * PCBC-482: mapSize/setExists/setRemove methods of Bucket did not check if 'get'
-          sub-request had thrown exception. This cause segfault, if operation executed on
-          keys which do not exist.
-        * PCBC-453: verify that ClusterManager supports ephemeral buckets
-        * PCBC-451: add RBAC support in \Couchbase\PasswordAuthenticator class (Couchbase
-          Server 5.x feature).
-        * PCBC-440: add experimental support of extended attributes for subdocument operations.
+        snapshot
     </notes>
 
     <contents>
@@ -185,6 +168,39 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2017-05-02</date>
+            <version>
+                <release>2.3.2</release>
+                <api>2.3.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
+            </license>
+            <notes>
+                * PCBC-473: fix incorrect bucket reference copy in subdocument
+                mutation/lookup builders, which might lead to segfault.
+                * PCBC-474: fix segfault when using ViewQuery::keys()
+                * PCBC-476: do not call destructors on unintialized ZVALs. Fixes possible
+                segfaults with view queries on PHP 5.x.
+                * PCBC-477: lookup JsonSerializable interface in run time, instead of compile time
+                using php_json_serializable_ce symbol. This fixes support on some 5.4-5.5 builds.
+                * PCBC-479: do not allow to create objects in invalid state. For example Cluster
+                might return an instance, and only show PHP warning on invalid arguments.
+                * PCBC-481: Bucket->counter() without specifying delta value results in
+                null pointer dereference.
+                * PCBC-482: mapSize/setExists/setRemove methods of Bucket did not check if 'get'
+                sub-request had thrown exception. This cause segfault, if operation executed on
+                keys which do not exist.
+                * PCBC-453: verify that ClusterManager supports ephemeral buckets
+                * PCBC-451: add RBAC support in \Couchbase\PasswordAuthenticator class (Couchbase
+                Server 5.x feature).
+                * PCBC-440: add experimental support of extended attributes for subdocument operations.
+            </notes>
+        </release>
         <release>
             <date>2017-04-05</date>
             <version>
