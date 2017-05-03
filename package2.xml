@@ -36,7 +36,7 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        snapshot
+        * PCBC-487: Fix adhoc vs prepared query logic. It should be inversed manually before 2.3.3.
     </notes>
 
     <contents>
