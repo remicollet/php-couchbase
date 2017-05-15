@@ -95,6 +95,8 @@ COUCHBASE_FILES=" \
     src/couchbase/search/date_range_query.c \
     src/couchbase/search/disjunction_query.c \
     src/couchbase/search/doc_id_query.c \
+    src/couchbase/search/geo_bounding_box_query.c \
+    src/couchbase/search/geo_distance_query.c \
     src/couchbase/search/match_all_query.c \
     src/couchbase/search/match_none_query.c \
     src/couchbase/search/match_phrase_query.c \

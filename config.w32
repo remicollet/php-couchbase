@@ -72,6 +72,8 @@ if (PHP_COUCHBASE != "no") {
             "date_range_query.c " +
             "disjunction_query.c " +
             "doc_id_query.c " +
+            "geo_bounding_box_query.c " +
+            "geo_distance_query.c " +
             "facet.c " +
             "match_all_query.c " +
             "match_none_query.c " +

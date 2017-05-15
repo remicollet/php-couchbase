@@ -38,6 +38,7 @@
     <notes>
         * PCBC-487: Fix adhoc vs prepared query logic. It should be inversed manually before 2.3.3.
         * PCBC-475: Add support for Term Range Query (full text search).
+        * PCBC-475: Add support for geo search queries.
     </notes>
 
     <contents>
@@ -115,6 +116,8 @@
             <file role="src" name="src/couchbase/search/date_range_query.c" />
             <file role="src" name="src/couchbase/search/disjunction_query.c" />
             <file role="src" name="src/couchbase/search/doc_id_query.c" />
+            <file role="src" name="src/couchbase/search/geo_bounding_box_query.c" />
+            <file role="src" name="src/couchbase/search/geo_distance_query.c" />
             <file role="src" name="src/couchbase/search/facet.c" />
             <file role="src" name="src/couchbase/search/match_all_query.c" />
             <file role="src" name="src/couchbase/search/match_none_query.c" />

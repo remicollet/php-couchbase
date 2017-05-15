@@ -2267,6 +2267,27 @@ namespace Couchbase {
         final public static function wildcard($wildcard) {}
 
         /**
+         * Prepare geo distance search query
+         *
+         * @param float $longitude
+         * @param float $latitude
+         * @param string $distance e.g. "10mi"
+         * @return GeoDistanceSearchQuery
+         */
+        final public static function geoDistance($longitude, $latitude, $distance) {}
+
+        /**
+         * Prepare geo bounding box search query
+         *
+         * @param float $topLeftLongitude
+         * @param float $topLeftLatitude
+         * @param float $bottomRightLongitude
+         * @param float $bottomRightLatitude
+         * @return GeoBoundingBoxSearchQuery
+         */
+        final public static function geoBoundingBox($topLeftLongitude, $topLeftLatitude, $bottomRightLongitude, $bottomRightLatitude) {}
+
+        /**
          * Prepare term search facet
          *
          * @param string $field
@@ -2994,6 +3015,60 @@ namespace Couchbase {
          * @return TermRangeSearchQuery
          */
         final public function max($max, $inclusive = false) {}
+    }
+
+    /**
+     * A FTS query that finds all matches from a given location (point) within the given distance.
+     *
+     * Both the point and the distance are required.
+     */
+    final class GeoDistanceSearchQuery implements \JsonSerializable, SearchQueryPart {
+        /** @ignore */
+        final private function __construct() {}
+
+        /**
+         * @ignore
+         * @return array
+         */
+        final public function jsonSerialize() {}
+
+        /**
+         * @param float $boost
+         * @return GeoDistanceSearchQuery
+         */
+        final public function boost($boost) {}
+
+        /**
+         * @param string $field
+         * @return GeoDistanceSearchQuery
+         */
+        final public function field($field) {}
+    }
+
+    /**
+     * A FTS query which allows to match geo bounding boxes.
+     */
+    final class GeoBoundingBoxSearchQuery implements \JsonSerializable, SearchQueryPart {
+        /** @ignore */
+        final private function __construct() {}
+
+        /**
+         * @ignore
+         * @return array
+         */
+        final public function jsonSerialize() {}
+
+        /**
+         * @param float $boost
+         * @return GeoBoundingBoxSearchQuery
+         */
+        final public function boost($boost) {}
+
+        /**
+         * @param string $field
+         * @return GeoBoundingBoxSearchQuery
+         */
+        final public function field($field) {}
     }
 
     /**

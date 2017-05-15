@@ -291,6 +291,8 @@ PHP_MINIT_FUNCTION(couchbase)
     PHP_MINIT(DateRangeSearchQuery)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(DisjunctionSearchQuery)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(DocIdSearchQuery)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(GeoBoundingBoxSearchQuery)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(GeoDistanceSearchQuery)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(MatchAllSearchQuery)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(MatchNoneSearchQuery)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(MatchPhraseSearchQuery)(INIT_FUNC_ARGS_PASSTHRU);

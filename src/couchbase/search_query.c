@@ -423,6 +423,44 @@ PHP_METHOD(SearchQuery, boolean)
     pcbc_boolean_search_query_init(return_value TSRMLS_CC);
 } /* }}} */
 
+/* {{{ proto \Couchbase\GeoDistanceSearchQuery SearchQuery::geoDistance(float $longitude, float $latitude,
+                                                                        string distance) */
+PHP_METHOD(SearchQuery, geoDistance)
+{
+    double longitude = 0;
+    double latitude = 0;
+    char *distance = NULL;
+    pcbc_str_arg_size distance_len = 0;
+    int rv;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "dds", &longitude, &latitude, &distance, &distance_len);
+    if (rv == FAILURE) {
+        return;
+    }
+
+    pcbc_geo_distance_search_query_init(return_value, longitude, latitude, distance, distance_len TSRMLS_CC);
+} /* }}} */
+
+/* {{{ proto \Couchbase\GeoBoundingBoxSearchQuery SearchQuery::geoBoundingBox(float $topLeftLongitude,
+                     float $topLeftLongitude, float $bottomRightLongitude, float $bottomRightLatitude) */
+PHP_METHOD(SearchQuery, geoBoundingBox)
+{
+    double top_left_longitude = 0;
+    double top_left_latitude = 0;
+    double bottom_right_longitude = 0;
+    double bottom_right_latitude = 0;
+    int rv;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "dddd", &top_left_longitude, &top_left_latitude,
+                               &bottom_right_longitude, &bottom_right_latitude);
+    if (rv == FAILURE) {
+        return;
+    }
+
+    pcbc_geo_bounding_box_search_query_init(return_value, top_left_longitude, top_left_latitude, bottom_right_longitude,
+                                            bottom_right_latitude TSRMLS_CC);
+} /* }}} */
+
 /* {{{ proto \Couchbase\TermSearchFacet SearchQuery::termFacet(string $field, int $limit) */
 PHP_METHOD(SearchQuery, termFacet)
 {
@@ -826,6 +864,19 @@ ZEND_BEGIN_ARG_INFO_EX(ai_SearchQuery_term, 0, 0, 1)
 ZEND_ARG_INFO(0, term)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(ai_SearchQuery_geoBoundingBox, 0, 0, 4)
+ZEND_ARG_INFO(0, topLeftLongitude)
+ZEND_ARG_INFO(0, topLeftLatitude)
+ZEND_ARG_INFO(0, bottomRightLongitude)
+ZEND_ARG_INFO(0, bottomRightLatitude)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_SearchQuery_geoDistance, 0, 0, 3)
+ZEND_ARG_INFO(0, longitude)
+ZEND_ARG_INFO(0, latitude)
+ZEND_ARG_INFO(0, distance)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(ai_SearchQuery_limit, 0, 0, 1)
 ZEND_ARG_INFO(0, limit)
 ZEND_END_ARG_INFO()
@@ -890,6 +941,8 @@ zend_function_entry search_query_methods[] = {
     PHP_ME(SearchQuery, regexp, ai_SearchQuery_regexp, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(SearchQuery, term, ai_SearchQuery_term, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(SearchQuery, termRange, ai_SearchQuery_none, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(SearchQuery, geoBoundingBox, ai_SearchQuery_geoBoundingBox, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(SearchQuery, geoDistance, ai_SearchQuery_geoDistance, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(SearchQuery, wildcard, ai_SearchQuery_wildcard, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(SearchQuery, termFacet, ai_SearchQuery_facet, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(SearchQuery, dateRangeFacet, ai_SearchQuery_facet, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)

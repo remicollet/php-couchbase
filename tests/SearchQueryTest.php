@@ -21,6 +21,8 @@ class SearchQueryTest extends CouchbaseTestCase {
                         ->start('2010-11-01T10:00:00+00:00')
                         ->end('2010-12-01T10:00:00+00:00'),
                     \Couchbase\SearchQuery::termRange()->min('hello')->max('world'),
+                    \Couchbase\SearchQuery::geoDistance(1.0, 3.0, "10mi"),
+                    \Couchbase\SearchQuery::geoBoundingBox(1.0, 3.0, 4.0, 5.0),
                     \Couchbase\SearchQuery::numericRange()->min(3)->max(42.5))->either(
                         \Couchbase\SearchQuery::wildcard('user*')->field('type')))
                 ->mustNot(

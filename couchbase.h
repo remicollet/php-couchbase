@@ -143,6 +143,8 @@ PHP_MINIT_FUNCTION(ConjunctionSearchQuery);
 PHP_MINIT_FUNCTION(DateRangeSearchQuery);
 PHP_MINIT_FUNCTION(DisjunctionSearchQuery);
 PHP_MINIT_FUNCTION(DocIdSearchQuery);
+PHP_MINIT_FUNCTION(GeoBoundingBoxSearchQuery);
+PHP_MINIT_FUNCTION(GeoDistanceSearchQuery);
 PHP_MINIT_FUNCTION(MatchAllSearchQuery);
 PHP_MINIT_FUNCTION(MatchNoneSearchQuery);
 PHP_MINIT_FUNCTION(MatchPhraseSearchQuery);
@@ -285,9 +287,9 @@ typedef int pcbc_str_arg_size;
 
 #if PHP_VERSION_ID >= 70000
 #define PCBC_ALLOC_OBJECT_T(obj_t, class_type)                                                                         \
-    (obj_t *) ecalloc(1, sizeof(obj_t) + zend_object_properties_size(class_type))
+    (obj_t *)ecalloc(1, sizeof(obj_t) + zend_object_properties_size(class_type))
 #else
-#define PCBC_ALLOC_OBJECT_T(obj_t, class_type) (obj_t *) ecalloc(1, sizeof(obj_t))
+#define PCBC_ALLOC_OBJECT_T(obj_t, class_type) (obj_t *)ecalloc(1, sizeof(obj_t))
 #endif
 
 #if PHP_VERSION_ID >= 70000
@@ -419,8 +421,8 @@ typedef zval *PCBC_ZVAL;
         (__pcbc_receiver_buf) = ZSTR_VAL((__pcbc_smart_str).s);                                                        \
         (__pcbc_receiver_length) = ZSTR_LEN((__pcbc_smart_str).s);                                                     \
     } while (0)
-#define PCBC_SMARTSTR_VAL(__pcbc_smart_str) (char *) ZSTR_VAL((__pcbc_smart_str).s)
-#define PCBC_SMARTSTR_LEN(__pcbc_smart_str) (int) ZSTR_LEN((__pcbc_smart_str).s)
+#define PCBC_SMARTSTR_VAL(__pcbc_smart_str) (char *)ZSTR_VAL((__pcbc_smart_str).s)
+#define PCBC_SMARTSTR_LEN(__pcbc_smart_str) (int)ZSTR_LEN((__pcbc_smart_str).s)
 #define PCBC_SMARTSTR_EMPTY(__pcbc_smart_str) ((__pcbc_smart_str).s == NULL || PCBC_SMARTSTR_LEN(__pcbc_smart_str) == 0)
 #else
 #define PCBC_SMARTSTR_DUP(__pcbc_smart_str, __pcbc_receiver_buf)                                                       \
@@ -773,6 +775,10 @@ void pcbc_regexp_search_query_init(zval *return_value, char *regexp, int regexp_
 void pcbc_term_search_query_init(zval *return_value, char *term, int term_len TSRMLS_DC);
 void pcbc_term_range_search_query_init(zval *return_value TSRMLS_DC);
 void pcbc_wildcard_search_query_init(zval *return_value, char *wildcard, int wildcard_len TSRMLS_DC);
+void pcbc_geo_bounding_box_search_query_init(zval *return_value, double top_left_longitude, double top_left_latitude,
+                                             double bottom_right_longitude, double bottom_right_latitude TSRMLS_DC);
+void pcbc_geo_distance_search_query_init(zval *return_value, double longitude, double latitude, char *distance,
+                                         int distance_len TSRMLS_DC);
 void pcbc_term_search_facet_init(zval *return_value, char *field, int field_len, int limit TSRMLS_DC);
 void pcbc_date_range_search_facet_init(zval *return_value, char *field, int field_len, int limit TSRMLS_DC);
 void pcbc_numeric_range_search_facet_init(zval *return_value, char *field, int field_len, int limit TSRMLS_DC);
