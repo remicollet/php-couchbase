@@ -388,6 +388,11 @@ class BucketTest extends CouchbaseTestCase {
         $this->assertEquals($b->configDelay, $checkVal);
         $this->assertEquals($b->configNodeTimeout, $checkVal);
         $this->assertEquals($b->htconfigIdleTimeout, $checkVal);
+
+        if (version_compare(libcouchbase_version(), "2.7.5") >= 0) {
+            $b->configPollInterval = $checkVal;
+            $this->assertEquals($b->configPollInterval, $checkVal);
+        }
     }
 
     /**
@@ -715,6 +720,16 @@ class BucketTest extends CouchbaseTestCase {
         $this->assertEquals(COUCHBASE_SUCCESS, $result->value[0]['code']);
         $this->assertEquals(['name' => 'John Doe', 'role' => 'DB administrator'], $result->value[0]['value']);
     }
+}
+
+function libcouchbase_version() {
+    $ext = new ReflectionExtension('couchbase');
+    ob_start();
+    $ext->info();
+    $data = ob_get_contents();
+    ob_end_clean();
+    preg_match('/libcouchbase runtime version => (\d+\.\d+\.\d+)/', $data, $matches);
+    return $matches[1];
 }
 
 function recursive_transcoder_encoder($value) {

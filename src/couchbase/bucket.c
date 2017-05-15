@@ -189,6 +189,10 @@ PHP_METHOD(Bucket, __set)
         cmd = LCB_CNTL_CONFIG_NODE_TIMEOUT;
     } else if (strncmp(name, "htconfigIdleTimeout", name_len) == 0) {
         cmd = LCB_CNTL_HTCONFIG_IDLE_TIMEOUT;
+#ifdef LCB_CNTL_CONFIG_POLL_INTERVAL
+    } else if (strncmp(name, "configPollInterval", name_len) == 0) {
+        cmd = LCB_CNTL_CONFIG_POLL_INTERVAL;
+#endif
     } else {
         pcbc_log(LOGARGS(obj, WARN), "Undefined property of \\Couchbase\\Bucket via __set(): %s", name);
         RETURN_NULL();
@@ -229,6 +233,10 @@ PHP_METHOD(Bucket, __get)
         cmd = LCB_CNTL_CONFIG_NODE_TIMEOUT;
     } else if (strncmp(name, "htconfigIdleTimeout", name_len) == 0) {
         cmd = LCB_CNTL_HTCONFIG_IDLE_TIMEOUT;
+#ifdef LCB_CNTL_CONFIG_POLL_INTERVAL
+    } else if (strncmp(name, "configPollInterval", name_len) == 0) {
+        cmd = LCB_CNTL_CONFIG_POLL_INTERVAL;
+#endif
     } else {
         pcbc_log(LOGARGS(obj, WARN), "Undefined property of \\Couchbase\\Bucket via __get(): %s", name);
         RETURN_NULL();
@@ -428,7 +436,7 @@ PHP_METHOD(Bucket, mapSize)
     pp_state.args[0].val = id;
 #endif
     pcbc_bucket_get(obj, &pp_state, &pp_id, NULL, NULL, NULL, return_value TSRMLS_CC);
-    if(!EG(exception)) {
+    if (!EG(exception)) {
         zval *val;
         long size = 0;
 
@@ -468,7 +476,8 @@ PHP_METHOD(Bucket, mapAdd)
 
     PCBC_ZVAL_ALLOC(builder);
     pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, 0 TSRMLS_CC);
-    pcbc_mutate_in_builder_upsert(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), key, key_len, val, LCB_SDSPEC_F_MKINTERMEDIATES TSRMLS_CC);
+    pcbc_mutate_in_builder_upsert(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), key, key_len, val,
+                                  LCB_SDSPEC_F_MKINTERMEDIATES TSRMLS_CC);
     pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
     zval_ptr_dtor(&builder);
     RETURN_NULL();
@@ -555,7 +564,8 @@ PHP_METHOD(Bucket, listPush)
 
     PCBC_ZVAL_ALLOC(builder);
     pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, 0 TSRMLS_CC);
-    pcbc_mutate_in_builder_array_append(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), NULL, 0, val, LCB_SDSPEC_F_MKINTERMEDIATES TSRMLS_CC);
+    pcbc_mutate_in_builder_array_append(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), NULL, 0, val,
+                                        LCB_SDSPEC_F_MKINTERMEDIATES TSRMLS_CC);
     pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
     zval_ptr_dtor(&builder);
     RETURN_NULL();
@@ -580,7 +590,8 @@ PHP_METHOD(Bucket, listShift)
 
     PCBC_ZVAL_ALLOC(builder);
     pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, 0 TSRMLS_CC);
-    pcbc_mutate_in_builder_array_prepend(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), NULL, 0, val, LCB_SDSPEC_F_MKINTERMEDIATES TSRMLS_CC);
+    pcbc_mutate_in_builder_array_prepend(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), NULL, 0, val,
+                                         LCB_SDSPEC_F_MKINTERMEDIATES TSRMLS_CC);
     pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
     zval_ptr_dtor(&builder);
     RETURN_NULL();
@@ -700,7 +711,8 @@ PHP_METHOD(Bucket, setAdd)
 
     PCBC_ZVAL_ALLOC(builder);
     pcbc_mutate_in_builder_init(PCBC_P(builder), getThis(), id, id_len, 0 TSRMLS_CC);
-    pcbc_mutate_in_builder_array_add_unique(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), NULL, 0, val, LCB_SDSPEC_F_MKINTERMEDIATES TSRMLS_CC);
+    pcbc_mutate_in_builder_array_add_unique(Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), NULL, 0, val,
+                                            LCB_SDSPEC_F_MKINTERMEDIATES TSRMLS_CC);
     pcbc_bucket_subdoc_request(obj, Z_MUTATE_IN_BUILDER_OBJ_P(PCBC_P(builder)), 0, return_value TSRMLS_CC);
     zval_ptr_dtor(&builder);
     RETURN_NULL();
@@ -736,7 +748,7 @@ PHP_METHOD(Bucket, setExists)
     pp_state.args[0].val = id;
 #endif
     pcbc_bucket_get(obj, &pp_state, &pp_id, NULL, NULL, NULL, return_value TSRMLS_CC);
-    if(!EG(exception)) {
+    if (!EG(exception)) {
         zval *array;
         zend_bool found = 0;
 
@@ -804,7 +816,7 @@ PHP_METHOD(Bucket, setRemove)
     pp_state.args[0].val = id;
 #endif
     pcbc_bucket_get(obj, &pp_state, &pp_id, NULL, NULL, NULL, return_value TSRMLS_CC);
-    if(!EG(exception)) {
+    if (!EG(exception)) {
         zval *array, *casval;
         lcb_cas_t cas = 0;
 
@@ -1216,9 +1228,11 @@ void pcbc_bucket_init(zval *return_value, pcbc_cluster_t *cluster, const char *b
 
     if (!Z_ISUNDEF(cluster->auth)) {
         if (instanceof_function(Z_OBJCE_P(PCBC_P(cluster->auth)), pcbc_classic_authenticator_ce TSRMLS_CC)) {
-            pcbc_generate_classic_lcb_auth(Z_CLASSIC_AUTHENTICATOR_OBJ_P(PCBC_P(cluster->auth)), &auth, LCB_TYPE_BUCKET, bucketname, password, &auth_hash TSRMLS_CC);
+            pcbc_generate_classic_lcb_auth(Z_CLASSIC_AUTHENTICATOR_OBJ_P(PCBC_P(cluster->auth)), &auth, LCB_TYPE_BUCKET,
+                                           bucketname, password, &auth_hash TSRMLS_CC);
         } else if (instanceof_function(Z_OBJCE_P(PCBC_P(cluster->auth)), pcbc_password_authenticator_ce TSRMLS_CC)) {
-            pcbc_generate_password_lcb_auth(Z_PASSWORD_AUTHENTICATOR_OBJ_P(PCBC_P(cluster->auth)), &auth, LCB_TYPE_BUCKET, bucketname, password, &auth_hash TSRMLS_CC);
+            pcbc_generate_password_lcb_auth(Z_PASSWORD_AUTHENTICATOR_OBJ_P(PCBC_P(cluster->auth)), &auth,
+                                            LCB_TYPE_BUCKET, bucketname, password, &auth_hash TSRMLS_CC);
         }
     }
     if (!auth) {
