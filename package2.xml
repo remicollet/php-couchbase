@@ -37,6 +37,7 @@
     </license>
     <notes>
         * PCBC-487: Fix adhoc vs prepared query logic. It should be inversed manually before 2.3.3.
+        * PCBC-475: Add support for Term Range Query (full text search).
     </notes>
 
     <contents>
@@ -128,6 +129,7 @@
             <file role="src" name="src/couchbase/search/regexp_query.c" />
             <file role="src" name="src/couchbase/search/term_facet.c" />
             <file role="src" name="src/couchbase/search/term_query.c" />
+            <file role="src" name="src/couchbase/search/term_range_query.c" />
             <file role="src" name="src/couchbase/search/wildcard_query.c" />
             <file role="src" name="src/couchbase/search_query.c" />
             <file role="src" name="src/couchbase/spatial_view_query.c" />

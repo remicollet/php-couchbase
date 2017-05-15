@@ -86,6 +86,7 @@ if (PHP_COUCHBASE != "no") {
             "regexp_query.c " +
             "term_facet.c " +
             "term_query.c " +
+            "term_range_query.c " +
             "wildcard_query.c ";
 
         EXTENSION("couchbase", root_sources, PHP_COUCHBASE_SHARED, "/I" + configure_module_dirname + " /DZEND_ENABLE_STATIC_TSRMLS_CACHE=1");

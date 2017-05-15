@@ -397,6 +397,19 @@ PHP_METHOD(SearchQuery, numericRange)
     pcbc_numeric_range_search_query_init(return_value TSRMLS_CC);
 } /* }}} */
 
+/* {{{ proto \Couchbase\TermRangeSearchQuery SearchQuery::termRange() */
+PHP_METHOD(SearchQuery, termRange)
+{
+    int rv;
+
+    rv = zend_parse_parameters_none();
+    if (rv == FAILURE) {
+        return;
+    }
+
+    pcbc_term_range_search_query_init(return_value TSRMLS_CC);
+} /* }}} */
+
 /* {{{ proto \Couchbase\BooleanSearchQuery SearchQuery::boolean() */
 PHP_METHOD(SearchQuery, boolean)
 {
@@ -876,6 +889,7 @@ zend_function_entry search_query_methods[] = {
     PHP_ME(SearchQuery, queryString, ai_SearchQuery_queryString, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(SearchQuery, regexp, ai_SearchQuery_regexp, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(SearchQuery, term, ai_SearchQuery_term, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(SearchQuery, termRange, ai_SearchQuery_none, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(SearchQuery, wildcard, ai_SearchQuery_wildcard, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(SearchQuery, termFacet, ai_SearchQuery_facet, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(SearchQuery, dateRangeFacet, ai_SearchQuery_facet, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)

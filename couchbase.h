@@ -153,6 +153,7 @@ PHP_MINIT_FUNCTION(PrefixSearchQuery);
 PHP_MINIT_FUNCTION(QueryStringSearchQuery);
 PHP_MINIT_FUNCTION(RegexpSearchQuery);
 PHP_MINIT_FUNCTION(TermSearchQuery);
+PHP_MINIT_FUNCTION(TermRangeSearchQuery);
 PHP_MINIT_FUNCTION(WildcardSearchQuery);
 PHP_MINIT_FUNCTION(SearchFacet);
 PHP_MINIT_FUNCTION(TermSearchFacet);
@@ -770,6 +771,7 @@ void pcbc_prefix_search_query_init(zval *return_value, char *prefix, int prefix_
 void pcbc_query_string_search_query_init(zval *return_value, char *query, int query_len TSRMLS_DC);
 void pcbc_regexp_search_query_init(zval *return_value, char *regexp, int regexp_len TSRMLS_DC);
 void pcbc_term_search_query_init(zval *return_value, char *term, int term_len TSRMLS_DC);
+void pcbc_term_range_search_query_init(zval *return_value TSRMLS_DC);
 void pcbc_wildcard_search_query_init(zval *return_value, char *wildcard, int wildcard_len TSRMLS_DC);
 void pcbc_term_search_facet_init(zval *return_value, char *field, int field_len, int limit TSRMLS_DC);
 void pcbc_date_range_search_facet_init(zval *return_value, char *field, int field_len, int limit TSRMLS_DC);

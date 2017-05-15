@@ -105,6 +105,7 @@ COUCHBASE_FILES=" \
     src/couchbase/search/query_string_query.c \
     src/couchbase/search/regexp_query.c \
     src/couchbase/search/term_query.c \
+    src/couchbase/search/term_range_query.c \
     src/couchbase/search/wildcard_query.c \
     src/couchbase/search/facet.c \
     src/couchbase/search/term_facet.c \

@@ -2158,6 +2158,13 @@ namespace Couchbase {
         final public static function numericRange() {}
 
         /**
+         * Prepare term range search query
+         *
+         * @return TermRangeSearchQuery
+         */
+        final public static function termRange() {}
+
+        /**
          * Prepare boolean field search query
          *
          * @param bool $value
@@ -2946,6 +2953,47 @@ namespace Couchbase {
          * @return TermSearchQuery
          */
         final public function fuzziness($fuzziness) {}
+    }
+
+    /**
+     * A FTS query that matches documents on a range of values. At least one bound is required, and the
+     * inclusiveness of each bound can be configured.
+     */
+    final class TermRangeSearchQuery implements \JsonSerializable, SearchQueryPart {
+        /** @ignore */
+        final private function __construct() {}
+
+        /**
+         * @ignore
+         * @return array
+         */
+        final public function jsonSerialize() {}
+
+        /**
+         * @param float $boost
+         * @return TermRangeSearchQuery
+         */
+        final public function boost($boost) {}
+
+        /**
+         * @param string $field
+         * @return TermRangeSearchQuery
+         */
+        final public function field($field) {}
+
+        /**
+         * @param string $min
+         * @param bool $inclusive
+         * @return TermRangeSearchQuery
+         */
+        final public function min($min, $inclusive = true) {}
+
+        /**
+         * @param string $max
+         * @param bool $inclusive
+         * @return TermRangeSearchQuery
+         */
+        final public function max($max, $inclusive = false) {}
     }
 
     /**
