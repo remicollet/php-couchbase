@@ -2151,6 +2151,13 @@ namespace Couchbase {
         final public static function dateRange() {}
 
         /**
+         * Prepare numeric range search query
+         *
+         * @return NumericRangeSearchQuery
+         */
+        final public static function numericRange() {}
+
+        /**
          * Prepare boolean field search query
          *
          * @param bool $value
