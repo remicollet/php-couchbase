@@ -901,7 +901,6 @@ PHP_FUNCTION(basicDecoderV1)
    Default passthru encoder which simply passes data as-is rather than performing any transcoding */
 PHP_FUNCTION(passthruEncoder)
 {
-    PCBC_ZVAL zero;
     zval *value;
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &value) == FAILURE) {
         RETURN_NULL();
@@ -910,14 +909,12 @@ PHP_FUNCTION(passthruEncoder)
     array_init_size(return_value, 3);
     add_index_zval(return_value, 0, value);
     PCBC_ADDREF_P(value);
-    PCBC_ZVAL_ALLOC(zero);
-    ZVAL_LONG(PCBC_P(zero), 0);
-    add_index_zval(return_value, 1, PCBC_P(zero));
-    add_index_zval(return_value, 2, PCBC_P(zero));
+    add_index_long(return_value, 1, 0);
+    add_index_long(return_value, 2, 0);
 } /* }}} */
 
-/* {{{ proto \Couchbase\couchbase_passthru_encoder(string $value)
-   Default passthru encoder which simply passes data as-is rather than performing any transcoding */
+/* {{{ proto \Couchbase\couchbase_passthru_decoder(string $value, int $flags, int $datatype)
+   Default passthru decoder which simply passes data as-is rather than performing any transcoding */
 PHP_FUNCTION(passthruDecoder)
 {
     zval *value, *flags, *datatype;
