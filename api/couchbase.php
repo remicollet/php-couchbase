@@ -386,6 +386,78 @@ namespace Couchbase {
          *   Retrieving Cluster Information
          */
         final public function info() {}
+
+        /**
+         * Lists all users on this cluster.
+         *
+         * @return array
+         */
+        final public function listUsers() {}
+
+        /**
+         * Creates new user
+         *
+         * @param string $name Name of the user
+         * @param \Couchbase\UserSettings $settings settings (credentials and roles)
+         *
+         * @see https://developer.couchbase.com/documentation/server/5.0/rest-api/rbac.html
+         *   More options and details
+         */
+        final public function upsertUser($name, $settings) {}
+
+        /**
+         * Removes a user identified by its name.
+         *
+         * @param string $name name of the bucket
+         *
+         * @see https://developer.couchbase.com/documentation/server/5.0/rest-api/rbac.html
+         *   More details
+         */
+        final public function removeUser($name) {}
+    }
+
+    /**
+     * Represents settings for new/updated user.
+     *
+     * @see https://developer.couchbase.com/documentation/server/5.0/rest-api/rbac.html
+     */
+    final class UserSettings {
+        /**
+         * Sets full name of the user (optional).
+         *
+         * @param string $fullName Full name of the user
+         *
+         * @return \Couchbase\UserSettings
+         *
+         * @see https://developer.couchbase.com/documentation/server/5.0/rest-api/rbac.html
+         *   More details
+         */
+        final public function fullName($fullName) {}
+
+        /**
+         * Sets password of the user.
+         *
+         * @param string $password Password of the user
+         *
+         * @return \Couchbase\UserSettings
+         *
+         * @see https://developer.couchbase.com/documentation/server/5.0/rest-api/rbac.html
+         *   More details
+         */
+        final public function password($password) {}
+
+        /**
+         * Adds role to the list of the accessible roles of the user.
+         *
+         * @param string $role identifier of the role
+         * @param string $bucket the bucket where this role applicable (or `*` for all buckets)
+         *
+         * @return \Couchbase\UserSettings
+         *
+         * @see https://developer.couchbase.com/documentation/server/5.0/rest-api/rbac.html
+         *   More details
+         */
+        final public function role($role, $bucket) {}
     }
 
     /**

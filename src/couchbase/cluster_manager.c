@@ -152,6 +152,120 @@ PHP_METHOD(ClusterManager, info)
     pcbc_http_request(return_value, obj->conn->lcb, &cmd, 1 TSRMLS_CC);
 } /* }}} */
 
+/* {{{ proto array ClusterManager::listUsers() */
+PHP_METHOD(ClusterManager, listUsers)
+{
+    pcbc_cluster_manager_t *obj;
+    lcb_CMDHTTP cmd = {0};
+    const char *path = "/settings/rbac/users";
+    int rv;
+
+    obj = Z_CLUSTER_MANAGER_OBJ_P(getThis());
+
+    rv = zend_parse_parameters_none();
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+
+    cmd.type = LCB_HTTP_TYPE_MANAGEMENT;
+    cmd.method = LCB_HTTP_METHOD_GET;
+    LCB_CMD_SET_KEY(&cmd, path, strlen(path));
+    cmd.content_type = PCBC_CONTENT_TYPE_FORM;
+    pcbc_http_request(return_value, obj->conn->lcb, &cmd, 1 TSRMLS_CC);
+} /* }}} */
+
+/* {{{ proto array ClusterManager::removeUser(string $name) */
+PHP_METHOD(ClusterManager, removeUser)
+{
+    pcbc_cluster_manager_t *obj;
+    const char *name = NULL;
+    pcbc_str_arg_size name_len = 0;
+    lcb_CMDHTTP cmd = {0};
+    char *path;
+    int rv, path_len;
+
+    obj = Z_CLUSTER_MANAGER_OBJ_P(getThis());
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &name, &name_len);
+    if (rv == FAILURE) {
+        return;
+    }
+    path_len = spprintf(&path, 0, "/settings/rbac/users/local/%*s", name_len, name);
+    cmd.type = LCB_HTTP_TYPE_MANAGEMENT;
+    cmd.method = LCB_HTTP_METHOD_DELETE;
+    LCB_CMD_SET_KEY(&cmd, path, path_len);
+    cmd.content_type = PCBC_CONTENT_TYPE_FORM;
+    pcbc_http_request(return_value, obj->conn->lcb, &cmd, 0 TSRMLS_CC);
+    efree(path);
+    if (Z_STRLEN_P(return_value) == 0 || (Z_STRVAL_P(return_value)[0] == '"' && Z_STRVAL_P(return_value)[1] == '"')) {
+        RETURN_TRUE;
+    } else {
+        throw_pcbc_exception(Z_STRVAL_P(return_value), LCB_EINVAL);
+        RETURN_NULL();
+    }
+} /* }}} */
+
+/* {{{ proto array ClusterManager::upsertUser(string $name, \Couchbase\UserSettings $settings) */
+PHP_METHOD(ClusterManager, upsertUser)
+{
+    pcbc_cluster_manager_t *obj;
+    const char *name = NULL;
+    pcbc_str_arg_size name_len = 0;
+    zval *settings = NULL;
+    char *path;
+    int rv, path_len;
+    lcb_CMDHTTP cmd = {0};
+    smart_str buf = {0};
+    PCBC_ZVAL body;
+    pcbc_user_settings_t *user;
+
+    obj = Z_CLUSTER_MANAGER_OBJ_P(getThis());
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sO", &name, &name_len, &settings, pcbc_user_settings_ce);
+    if (rv == FAILURE) {
+        return;
+    }
+
+    user = Z_USER_SETTINGS_OBJ_P(settings);
+    path_len = spprintf(&path, 0, "/settings/rbac/users/local/%*s", name_len, name);
+    cmd.type = LCB_HTTP_TYPE_MANAGEMENT;
+    cmd.method = LCB_HTTP_METHOD_PUT;
+    LCB_CMD_SET_KEY(&cmd, path, path_len);
+    cmd.content_type = PCBC_CONTENT_TYPE_FORM;
+
+    PCBC_ZVAL_ALLOC(body);
+    array_init_size(PCBC_P(body), 3);
+    if (user->full_name) {
+        ADD_ASSOC_STRINGL(PCBC_P(body), "name", user->full_name, user->full_name_len);
+    }
+    if (user->password) {
+        ADD_ASSOC_STRINGL(PCBC_P(body), "password", user->password, user->password_len);
+    }
+    if (PCBC_SMARTSTR_LEN(user->roles)) {
+        ADD_ASSOC_STRINGL(PCBC_P(body), "roles", PCBC_SMARTSTR_VAL(user->roles), PCBC_SMARTSTR_LEN(user->roles));
+    }
+    rv = php_url_encode_hash_ex(HASH_OF(PCBC_P(body)), &buf, NULL, 0, NULL, 0, NULL, 0, NULL, NULL,
+                                PHP_QUERY_RFC1738 TSRMLS_CC);
+    zval_ptr_dtor(&body);
+    if (rv == FAILURE) {
+        pcbc_log(LOGARGS(obj->conn->lcb, WARN), "Failed to encode options as RFC1738 query");
+        smart_str_free(&buf);
+        RETURN_NULL();
+    } else {
+        smart_str_0(&buf);
+        PCBC_SMARTSTR_SET(buf, cmd.body, cmd.nbody);
+    }
+    pcbc_http_request(return_value, obj->conn->lcb, &cmd, 0 TSRMLS_CC);
+    smart_str_free(&buf);
+    efree(path);
+    if (Z_STRLEN_P(return_value) == 0 || (Z_STRVAL_P(return_value)[0] == '"' && Z_STRVAL_P(return_value)[1] == '"')) {
+        RETURN_TRUE;
+    } else {
+        throw_pcbc_exception(Z_STRVAL_P(return_value), LCB_EINVAL);
+        RETURN_NULL();
+    }
+} /* }}} */
+
 ZEND_BEGIN_ARG_INFO_EX(ai_ClusterManager_none, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
@@ -164,12 +278,24 @@ ZEND_ARG_INFO(0, name)
 ZEND_ARG_INFO(0, options)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(ai_ClusterManager_upsertUser, 0, 0, 2)
+ZEND_ARG_INFO(0, name)
+ZEND_ARG_INFO(0, settings)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_ClusterManager_removeUser, 0, 0, 1)
+ZEND_ARG_INFO(0, name)
+ZEND_END_ARG_INFO()
+
 // clang-format off
 zend_function_entry cluster_manager_methods[] = {
     PHP_ME(ClusterManager, __construct, ai_ClusterManager_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
     PHP_ME(ClusterManager, listBuckets, ai_ClusterManager_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(ClusterManager, createBucket, ai_ClusterManager_createBucket, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(ClusterManager, removeBucket, ai_ClusterManager_removeBucket, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(ClusterManager, listUsers, ai_ClusterManager_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(ClusterManager, upsertUser, ai_ClusterManager_upsertUser, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(ClusterManager, removeUser, ai_ClusterManager_removeUser, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(ClusterManager, info, ai_ClusterManager_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_FE_END
 };
@@ -225,9 +351,11 @@ void pcbc_cluster_manager_init(zval *return_value, pcbc_cluster_t *cluster, cons
 
     if (!Z_ISUNDEF(cluster->auth)) {
         if (instanceof_function(Z_OBJCE_P(PCBC_P(cluster->auth)), pcbc_classic_authenticator_ce TSRMLS_CC)) {
-            pcbc_generate_classic_lcb_auth(Z_CLASSIC_AUTHENTICATOR_OBJ_P(PCBC_P(cluster->auth)), &auth, LCB_TYPE_CLUSTER, username, password, &auth_hash TSRMLS_CC);
+            pcbc_generate_classic_lcb_auth(Z_CLASSIC_AUTHENTICATOR_OBJ_P(PCBC_P(cluster->auth)), &auth,
+                                           LCB_TYPE_CLUSTER, username, password, &auth_hash TSRMLS_CC);
         } else if (instanceof_function(Z_OBJCE_P(PCBC_P(cluster->auth)), pcbc_password_authenticator_ce TSRMLS_CC)) {
-            pcbc_generate_password_lcb_auth(Z_PASSWORD_AUTHENTICATOR_OBJ_P(PCBC_P(cluster->auth)), &auth, LCB_TYPE_CLUSTER, username, password, &auth_hash TSRMLS_CC);
+            pcbc_generate_password_lcb_auth(Z_PASSWORD_AUTHENTICATOR_OBJ_P(PCBC_P(cluster->auth)), &auth,
+                                            LCB_TYPE_CLUSTER, username, password, &auth_hash TSRMLS_CC);
         }
     }
     if (!auth) {

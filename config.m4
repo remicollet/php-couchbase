@@ -79,6 +79,7 @@ COUCHBASE_FILES=" \
     src/couchbase/bucket_manager/n1ix_list.c \
     src/couchbase/cluster.c \
     src/couchbase/cluster_manager.c \
+    src/couchbase/cluster_manager/user_settings.c \
     src/couchbase/document.c \
     src/couchbase/document_fragment.c \
     src/couchbase/lookup_in_builder.c \

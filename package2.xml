@@ -39,6 +39,7 @@
         * PCBC-487: Fix adhoc vs prepared query logic. It should be inversed manually before 2.3.3.
         * PCBC-475: Add support for Term Range Query (full text search).
         * PCBC-475: Add support for geo search queries.
+        * PCBC-468: Add support for user CRUD in ClusterManager
     </notes>
 
     <contents>
@@ -99,6 +100,7 @@
             <file role="src" name="src/couchbase/bucket_manager/n1ix_list.c" />
             <file role="src" name="src/couchbase/cluster.c" />
             <file role="src" name="src/couchbase/cluster_manager.c" />
+            <file role="src" name="src/couchbase/cluster_manager/user_settings.c" />
             <file role="src" name="src/couchbase/document.c" />
             <file role="src" name="src/couchbase/document_fragment.c" />
             <file role="src" name="src/couchbase/log_formatter.c" />

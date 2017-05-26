@@ -120,6 +120,7 @@ PHP_MINIT_FUNCTION(Document);
 PHP_MINIT_FUNCTION(DocumentFragment);
 PHP_MINIT_FUNCTION(Cluster);
 PHP_MINIT_FUNCTION(ClusterManager);
+PHP_MINIT_FUNCTION(UserSettings);
 PHP_MINIT_FUNCTION(Bucket);
 PHP_MINIT_FUNCTION(BucketManager);
 PHP_MINIT_FUNCTION(Authenticator);
@@ -180,6 +181,7 @@ extern zend_class_entry *pcbc_search_query_part_ce;
 extern zend_class_entry *pcbc_search_facet_ce;
 extern zend_class_entry *pcbc_view_query_encodable_ce;
 extern zend_class_entry *pcbc_json_serializable_ce;
+extern zend_class_entry *pcbc_user_settings_ce;
 
 #if PHP_VERSION_ID >= 70000
 #define PCBC_ZVAL_ALLOC(__pcbc_val) ZVAL_UNDEF(&(__pcbc_val))
@@ -422,7 +424,7 @@ typedef zval *PCBC_ZVAL;
         (__pcbc_receiver_length) = ZSTR_LEN((__pcbc_smart_str).s);                                                     \
     } while (0)
 #define PCBC_SMARTSTR_VAL(__pcbc_smart_str) (char *)ZSTR_VAL((__pcbc_smart_str).s)
-#define PCBC_SMARTSTR_LEN(__pcbc_smart_str) (int)ZSTR_LEN((__pcbc_smart_str).s)
+#define PCBC_SMARTSTR_LEN(__pcbc_smart_str) ((__pcbc_smart_str).s ? (int)(ZSTR_LEN((__pcbc_smart_str).s)) : 0)
 #define PCBC_SMARTSTR_EMPTY(__pcbc_smart_str) ((__pcbc_smart_str).s == NULL || PCBC_SMARTSTR_LEN(__pcbc_smart_str) == 0)
 #else
 #define PCBC_SMARTSTR_DUP(__pcbc_smart_str, __pcbc_receiver_buf)                                                       \
@@ -658,6 +660,16 @@ typedef struct {
     PCBC_ZEND_OBJECT_POST
 } pcbc_spatial_view_query_t;
 
+typedef struct {
+    PCBC_ZEND_OBJECT_PRE
+    char *full_name;
+    char *password;
+    int full_name_len;
+    int password_len;
+    smart_str roles;
+    PCBC_ZEND_OBJECT_POST
+} pcbc_user_settings_t;
+
 /* param parser */
 #define PCBC_PP_MAX_ARGS 10
 
@@ -860,6 +872,10 @@ static inline pcbc_password_authenticator_t *pcbc_password_authenticator_fetch_o
 {
     return (pcbc_password_authenticator_t *)((char *)obj - XtOffsetOf(pcbc_password_authenticator_t, std));
 }
+static inline pcbc_user_settings_t *pcbc_user_settings_fetch_object(zend_object *obj)
+{
+    return (pcbc_user_settings_t *)((char *)obj - XtOffsetOf(pcbc_user_settings_t, std));
+}
 #define Z_CLUSTER_OBJ(zo) (pcbc_cluster_fetch_object(zo))
 #define Z_CLUSTER_OBJ_P(zv) (pcbc_cluster_fetch_object(Z_OBJ_P(zv)))
 #define Z_CLUSTER_MANAGER_OBJ(zo) (pcbc_cluster_manager_fetch_object(zo))
@@ -888,6 +904,8 @@ static inline pcbc_password_authenticator_t *pcbc_password_authenticator_fetch_o
 #define Z_CLASSIC_AUTHENTICATOR_OBJ_P(zv) (pcbc_classic_authenticator_fetch_object(Z_OBJ_P(zv)))
 #define Z_PASSWORD_AUTHENTICATOR_OBJ(zo) (pcbc_password_authenticator_fetch_object(zo))
 #define Z_PASSWORD_AUTHENTICATOR_OBJ_P(zv) (pcbc_password_authenticator_fetch_object(Z_OBJ_P(zv)))
+#define Z_USER_SETTINGS_OBJ(zo) (pcbc_user_settings_fetch_object(zo))
+#define Z_USER_SETTINGS_OBJ_P(zv) (pcbc_user_settings_fetch_object(Z_OBJ_P(zv)))
 #else
 #define Z_CLUSTER_OBJ(zo) ((pcbc_cluster_t *)zo)
 #define Z_CLUSTER_OBJ_P(zv) ((pcbc_cluster_t *)zend_object_store_get_object(zv TSRMLS_CC))
@@ -917,6 +935,8 @@ static inline pcbc_password_authenticator_t *pcbc_password_authenticator_fetch_o
 #define Z_CLASSIC_AUTHENTICATOR_OBJ_P(zv) ((pcbc_classic_authenticator_t *)zend_object_store_get_object(zv TSRMLS_CC))
 #define Z_PASSWORD_AUTHENTICATOR_OBJ(zo) ((pcbc_password_authenticator_t *)zo)
 #define Z_PASSWORD_AUTHENTICATOR_OBJ_P(zv) ((pcbc_password_authenticator_t *)zend_object_store_get_object(zv TSRMLS_CC))
+#define Z_USER_SETTINGS_OBJ(zo) ((pcbc_user_settings_t *)zo)
+#define Z_USER_SETTINGS_OBJ_P(zv) ((pcbc_user_settings_t *)zend_object_store_get_object(zv TSRMLS_CC))
 #endif
 
 typedef struct {
