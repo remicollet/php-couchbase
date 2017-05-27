@@ -42,6 +42,19 @@ PHP_METHOD(PasswordAuthenticator, __construct)
 }
 /* }}} */
 
+void pcbc_password_authenticator_init(zval *return_value, char *username, int username_len, char *password,
+                                      int password_len TSRMLS_DC)
+{
+    pcbc_password_authenticator_t *obj;
+
+    object_init_ex(return_value, pcbc_password_authenticator_ce);
+    obj = Z_PASSWORD_AUTHENTICATOR_OBJ_P(return_value);
+    obj->username = estrndup(username, username_len);
+    obj->username_len = username_len;
+    obj->password = estrndup(password, password_len);
+    obj->password_len = password_len;
+}
+
 /* {{{ proto \Couchbase\PasswordAuthenticator PasswordAuthenticator::username(string $username)
  */
 PHP_METHOD(PasswordAuthenticator, username)

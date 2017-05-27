@@ -41,6 +41,7 @@
         * PCBC-475: Add support for Term Range Query (full text search).
         * PCBC-475: Add support for geo search queries.
         * PCBC-468: Add support for user CRUD in ClusterManager
+        * PCBC-489: Add shortcut for PasswordAuthenticator as Cluster->authenticateAs($username, $password)
     </notes>
 
     <contents>

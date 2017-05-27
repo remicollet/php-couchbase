@@ -113,6 +113,36 @@ PHP_METHOD(Cluster, authenticate)
     RETURN_NULL();
 } /* }}} */
 
+/* {{{ proto void Cluster::authenticateAs(string $username, string $password) */
+PHP_METHOD(Cluster, authenticateAs)
+{
+    pcbc_cluster_t *obj;
+    PCBC_ZVAL authenticator;
+    char *username = NULL, *password = NULL;
+    pcbc_str_arg_size username_len = 0, password_len = 0;
+    int rv;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &username, &username_len, &password, &password_len);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    PCBC_ZVAL_ALLOC(authenticator);
+    pcbc_password_authenticator_init(PCBC_P(authenticator), username, username_len, password, password_len TSRMLS_CC);
+    obj = Z_CLUSTER_OBJ_P(getThis());
+    if (!Z_ISUNDEF(obj->auth)) {
+        zval_ptr_dtor(&obj->auth);
+        ZVAL_UNDEF(PCBC_P(obj->auth));
+    }
+#if PHP_VERSION_ID >= 70000
+    ZVAL_ZVAL(&obj->auth, PCBC_P(authenticator), 1, 0);
+#else
+    PCBC_ADDREF_P(PCBC_P(authenticator));
+    obj->auth = authenticator;
+#endif
+
+    RETURN_NULL();
+} /* }}} */
+
 ZEND_BEGIN_ARG_INFO_EX(ai_Cluster_constructor, 0, 0, 1)
 ZEND_ARG_INFO(0, connstr)
 ZEND_END_ARG_INFO()
@@ -131,12 +161,18 @@ ZEND_BEGIN_ARG_INFO_EX(ai_Cluster_authenticate, 0, 0, 1)
 ZEND_ARG_INFO(0, authenticator)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(ai_Cluster_authenticateAs, 0, 0, 2)
+ZEND_ARG_INFO(0, username)
+ZEND_ARG_INFO(0, password)
+ZEND_END_ARG_INFO()
+
 // clang-format off
 zend_function_entry cluster_methods[] = {
     PHP_ME(Cluster, __construct, ai_Cluster_constructor, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
     PHP_ME(Cluster, openBucket, ai_Cluster_openBucket, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(Cluster, manager, ai_Cluster_manager, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(Cluster, authenticate, ai_Cluster_authenticate, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(Cluster, authenticateAs, ai_Cluster_authenticateAs, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_FE_END
 };
 // clang-format on

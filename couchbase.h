@@ -814,6 +814,8 @@ void pcbc_generate_classic_lcb_auth(pcbc_classic_authenticator_t *auth, lcb_AUTH
                                     const char *name, const char *password, char **hash TSRMLS_DC);
 void pcbc_generate_password_lcb_auth(pcbc_password_authenticator_t *auth, lcb_AUTHENTICATOR **result, lcb_type_t type,
                                      const char *name, const char *password, char **hash TSRMLS_DC);
+void pcbc_password_authenticator_init(zval *return_value, char *username, int username_len, char *password,
+                                      int password_len TSRMLS_DC);
 
 #if PHP_VERSION_ID >= 70000
 static inline pcbc_cluster_t *pcbc_cluster_fetch_object(zend_object *obj)

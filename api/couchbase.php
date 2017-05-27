@@ -331,6 +331,18 @@ namespace Couchbase {
          * @see \Couchbase\PasswordAuthenticator
          */
         final public function authenticate($authenticator) {}
+
+        /**
+         * Create \Couchbase\PasswordAuthenticator from given credentials and associate it with Cluster
+         *
+         * @param string $username
+         * @param string $password
+         * @return null
+         *
+         * @see \Couchbase\Authenticator
+         * @see \Couchbase\PasswordAuthenticator
+         */
+        final public function authenticateAs($username, $password) {}
     }
 
     /**
