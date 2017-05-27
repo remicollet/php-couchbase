@@ -37,6 +37,7 @@
     </license>
     <notes>
         * PCBC-487: Fix adhoc vs prepared query logic. It should be inversed manually before 2.3.3.
+        * PCBC-494: Fix double free error in passthruEncoder
         * PCBC-475: Add support for Term Range Query (full text search).
         * PCBC-475: Add support for geo search queries.
         * PCBC-468: Add support for user CRUD in ClusterManager
