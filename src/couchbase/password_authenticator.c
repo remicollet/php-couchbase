@@ -156,7 +156,6 @@ zend_object_handlers password_authenticator_handlers;
 static void password_authenticator_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
 {
     pcbc_password_authenticator_t *obj = Z_PASSWORD_AUTHENTICATOR_OBJ(object);
-    pcbc_credential_t *ptr;
 
     if (obj->username != NULL) {
         efree(obj->username);
@@ -202,8 +201,6 @@ static HashTable *pcbc_password_authenticator_get_debug_info(zval *object, int *
 #else
     zval retval = zval_used_for_init;
 #endif
-    PCBC_ZVAL buckets;
-    pcbc_credential_t *ptr;
 
     *is_temp = 1;
     obj = Z_PASSWORD_AUTHENTICATOR_OBJ_P(object);

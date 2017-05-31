@@ -795,10 +795,11 @@ static void basic_decoder_v1(char *bytes, int bytes_len, unsigned long flags, un
                 pcbc_log(LOGARGS(WARN), "Failed to deserialize value with igbinary");
                 ZVAL_NULL(PCBC_P(res));
             }
+            break;
 #else
             pcbc_log(LOGARGS(WARN), "The igbinary extension was not available when the couchbase extension was built.");
+            RETURN_NULL();
 #endif
-            break;
         default:
             pcbc_log(LOGARGS(WARN), "Unknown serialization type: %d", cffmt);
             ZVAL_NULL(PCBC_P(res));
