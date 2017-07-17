@@ -88,16 +88,16 @@ PHP_METHOD(UserSettings, password)
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
 
-/* {{{ proto \Couchbase\UserSettings UserSettings::role(string $role)
+/* {{{ proto \Couchbase\UserSettings UserSettings::role(string $role, string $bucket = NULL)
  */
 PHP_METHOD(UserSettings, role)
 {
     pcbc_user_settings_t *obj;
     char *role = NULL, *bucket = NULL;
     int rv;
-    pcbc_str_arg_size role_len, bucket_len;
+    pcbc_str_arg_size role_len = 0, bucket_len = 0;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &role, &role_len, &bucket, &bucket_len);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|s", &role, &role_len, &bucket, &bucket_len);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -107,9 +107,11 @@ PHP_METHOD(UserSettings, role)
         smart_str_appendc(&obj->roles, ',');
     }
     smart_str_appendl(&obj->roles, role, role_len);
-    smart_str_appendc(&obj->roles, '[');
-    smart_str_appendl(&obj->roles, bucket, bucket_len);
-    smart_str_appendc(&obj->roles, ']');
+    if (bucket_len) {
+        smart_str_appendc(&obj->roles, '[');
+        smart_str_appendl(&obj->roles, bucket, bucket_len);
+        smart_str_appendc(&obj->roles, ']');
+    }
 
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */

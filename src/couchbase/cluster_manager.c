@@ -21,6 +21,9 @@
 
 #define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/cluster_manager", __FILE__, __LINE__
 
+#define PCBC_CLUSTER_MANAGER_RBAC_DOMAIN_LOCAL 1
+#define PCBC_CLUSTER_MANAGER_RBAC_DOMAIN_EXTERNAL 2
+
 zend_class_entry *pcbc_cluster_manager_ce;
 extern zend_class_entry *pcbc_classic_authenticator_ce;
 extern zend_class_entry *pcbc_password_authenticator_ce;
@@ -152,21 +155,33 @@ PHP_METHOD(ClusterManager, info)
     pcbc_http_request(return_value, obj->conn->lcb, &cmd, 1 TSRMLS_CC);
 } /* }}} */
 
-/* {{{ proto array ClusterManager::listUsers() */
+/* {{{ proto array ClusterManager::listUsers($domain = ClusterManager::RBAC_DOMAIN_LOCAL) */
 PHP_METHOD(ClusterManager, listUsers)
 {
     pcbc_cluster_manager_t *obj;
     lcb_CMDHTTP cmd = {0};
-    const char *path = "/settings/rbac/users";
+    long domain = PCBC_CLUSTER_MANAGER_RBAC_DOMAIN_LOCAL;
+    char *path;
     int rv;
 
     obj = Z_CLUSTER_MANAGER_OBJ_P(getThis());
 
-    rv = zend_parse_parameters_none();
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|l", &domain);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
+    switch (domain) {
+    case PCBC_CLUSTER_MANAGER_RBAC_DOMAIN_LOCAL:
+        path = "/settings/rbac/users/local";
+        break;
+    case PCBC_CLUSTER_MANAGER_RBAC_DOMAIN_EXTERNAL:
+        path = "/settings/rbac/users/external";
+        break;
+    default:
+        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+        RETURN_NULL();
+    }
     cmd.type = LCB_HTTP_TYPE_MANAGEMENT;
     cmd.method = LCB_HTTP_METHOD_GET;
     LCB_CMD_SET_KEY(&cmd, path, strlen(path));
@@ -174,7 +189,43 @@ PHP_METHOD(ClusterManager, listUsers)
     pcbc_http_request(return_value, obj->conn->lcb, &cmd, 1 TSRMLS_CC);
 } /* }}} */
 
-/* {{{ proto array ClusterManager::removeUser(string $name) */
+/* {{{ proto array ClusterManager::getUser(string $name, $domain = ClusterManager::RBAC_DOMAIN_LOCAL) */
+PHP_METHOD(ClusterManager, getUser)
+{
+    pcbc_cluster_manager_t *obj;
+    const char *name = NULL;
+    pcbc_str_arg_size name_len = 0;
+    lcb_CMDHTTP cmd = {0};
+    char *path;
+    int rv, path_len;
+    long domain = PCBC_CLUSTER_MANAGER_RBAC_DOMAIN_LOCAL;
+
+    obj = Z_CLUSTER_MANAGER_OBJ_P(getThis());
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l", &name, &name_len, &domain);
+    if (rv == FAILURE) {
+        return;
+    }
+    switch (domain) {
+    case PCBC_CLUSTER_MANAGER_RBAC_DOMAIN_LOCAL:
+        path_len = spprintf(&path, 0, "/settings/rbac/users/local/%*s", name_len, name);
+        break;
+    case PCBC_CLUSTER_MANAGER_RBAC_DOMAIN_EXTERNAL:
+        path_len = spprintf(&path, 0, "/settings/rbac/users/external/%*s", name_len, name);
+        break;
+    default:
+        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+        RETURN_NULL();
+    }
+
+    cmd.type = LCB_HTTP_TYPE_MANAGEMENT;
+    cmd.method = LCB_HTTP_METHOD_GET;
+    LCB_CMD_SET_KEY(&cmd, path, path_len);
+    pcbc_http_request(return_value, obj->conn->lcb, &cmd, 1 TSRMLS_CC);
+    efree(path);
+} /* }}} */
+
+/* {{{ proto array ClusterManager::removeUser(string $name, $domain = ClusterManager::RBAC_DOMAIN_LOCAL) */
 PHP_METHOD(ClusterManager, removeUser)
 {
     pcbc_cluster_manager_t *obj;
@@ -183,14 +234,26 @@ PHP_METHOD(ClusterManager, removeUser)
     lcb_CMDHTTP cmd = {0};
     char *path;
     int rv, path_len;
+    long domain = PCBC_CLUSTER_MANAGER_RBAC_DOMAIN_LOCAL;
 
     obj = Z_CLUSTER_MANAGER_OBJ_P(getThis());
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &name, &name_len);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l", &name, &name_len, &domain);
     if (rv == FAILURE) {
         return;
     }
-    path_len = spprintf(&path, 0, "/settings/rbac/users/local/%*s", name_len, name);
+    switch (domain) {
+    case PCBC_CLUSTER_MANAGER_RBAC_DOMAIN_LOCAL:
+        path_len = spprintf(&path, 0, "/settings/rbac/users/local/%*s", name_len, name);
+        break;
+    case PCBC_CLUSTER_MANAGER_RBAC_DOMAIN_EXTERNAL:
+        path_len = spprintf(&path, 0, "/settings/rbac/users/external/%*s", name_len, name);
+        break;
+    default:
+        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+        RETURN_NULL();
+    }
+
     cmd.type = LCB_HTTP_TYPE_MANAGEMENT;
     cmd.method = LCB_HTTP_METHOD_DELETE;
     LCB_CMD_SET_KEY(&cmd, path, path_len);
@@ -205,7 +268,7 @@ PHP_METHOD(ClusterManager, removeUser)
     }
 } /* }}} */
 
-/* {{{ proto array ClusterManager::upsertUser(string $name, \Couchbase\UserSettings $settings) */
+/* {{{ proto array ClusterManager::upsertUser(string $name, \Couchbase\UserSettings $settings, $domain = ClusterManager::RBAC_DOMAIN_LOCAL) */
 PHP_METHOD(ClusterManager, upsertUser)
 {
     pcbc_cluster_manager_t *obj;
@@ -218,16 +281,28 @@ PHP_METHOD(ClusterManager, upsertUser)
     smart_str buf = {0};
     PCBC_ZVAL body;
     pcbc_user_settings_t *user;
+    long domain = PCBC_CLUSTER_MANAGER_RBAC_DOMAIN_LOCAL;
 
     obj = Z_CLUSTER_MANAGER_OBJ_P(getThis());
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sO", &name, &name_len, &settings, pcbc_user_settings_ce);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sO|l", &name, &name_len, &settings, pcbc_user_settings_ce, &domain);
     if (rv == FAILURE) {
         return;
     }
 
     user = Z_USER_SETTINGS_OBJ_P(settings);
-    path_len = spprintf(&path, 0, "/settings/rbac/users/local/%*s", name_len, name);
+    switch (domain) {
+    case PCBC_CLUSTER_MANAGER_RBAC_DOMAIN_LOCAL:
+        path_len = spprintf(&path, 0, "/settings/rbac/users/local/%*s", name_len, name);
+        break;
+    case PCBC_CLUSTER_MANAGER_RBAC_DOMAIN_EXTERNAL:
+        path_len = spprintf(&path, 0, "/settings/rbac/users/external/%*s", name_len, name);
+        break;
+    default:
+        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+        RETURN_NULL();
+    }
+
     cmd.type = LCB_HTTP_TYPE_MANAGEMENT;
     cmd.method = LCB_HTTP_METHOD_PUT;
     LCB_CMD_SET_KEY(&cmd, path, path_len);
@@ -278,14 +353,26 @@ ZEND_ARG_INFO(0, name)
 ZEND_ARG_INFO(0, options)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_ClusterManager_upsertUser, 0, 0, 2)
+ZEND_BEGIN_ARG_INFO_EX(ai_ClusterManager_upsertUser, 0, 0, 3)
 ZEND_ARG_INFO(0, name)
 ZEND_ARG_INFO(0, settings)
+ZEND_ARG_INFO(0, domain)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_ClusterManager_removeUser, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(ai_ClusterManager_removeUser, 0, 0, 2)
 ZEND_ARG_INFO(0, name)
+ZEND_ARG_INFO(0, domain)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_ClusterManager_getUser, 0, 0, 2)
+ZEND_ARG_INFO(0, name)
+ZEND_ARG_INFO(0, domain)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_ClusterManager_listUsers, 0, 0, 1)
+ZEND_ARG_INFO(0, domain)
+ZEND_END_ARG_INFO()
+
 
 // clang-format off
 zend_function_entry cluster_manager_methods[] = {
@@ -293,8 +380,9 @@ zend_function_entry cluster_manager_methods[] = {
     PHP_ME(ClusterManager, listBuckets, ai_ClusterManager_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(ClusterManager, createBucket, ai_ClusterManager_createBucket, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(ClusterManager, removeBucket, ai_ClusterManager_removeBucket, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ClusterManager, listUsers, ai_ClusterManager_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(ClusterManager, listUsers, ai_ClusterManager_listUsers, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(ClusterManager, upsertUser, ai_ClusterManager_upsertUser, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(ClusterManager, getUser, ai_ClusterManager_getUser, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(ClusterManager, removeUser, ai_ClusterManager_removeUser, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(ClusterManager, info, ai_ClusterManager_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_FE_END
@@ -406,6 +494,10 @@ PHP_MINIT_FUNCTION(ClusterManager)
     pcbc_cluster_manager_handlers.free_obj = pcbc_cluster_manager_free_object;
     pcbc_cluster_manager_handlers.offset = XtOffsetOf(pcbc_cluster_manager_t, std);
 #endif
+    zend_declare_class_constant_long(pcbc_cluster_manager_ce, ZEND_STRL("RBAC_DOMAIN_LOCAL"),
+                                     PCBC_CLUSTER_MANAGER_RBAC_DOMAIN_LOCAL TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_cluster_manager_ce, ZEND_STRL("RBAC_DOMAIN_EXTERNAL"),
+                                     PCBC_CLUSTER_MANAGER_RBAC_DOMAIN_EXTERNAL TSRMLS_CC);
 
     zend_register_class_alias("\\CouchbaseClusterManager", pcbc_cluster_manager_ce);
     return SUCCESS;
