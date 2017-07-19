@@ -24,9 +24,9 @@
         <active>yes</active>
     </lead>
 
-    <date>2017-05-31</date>
+    <date>2017-07-19</date>
     <version>
-        <release>2.3.3</release>
+        <release>2.3.4</release>
         <api>2.3.0</api>
     </version>
     <stability>
@@ -36,12 +36,8 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        * PCBC-487: Fix adhoc vs prepared query logic. It should be inversed manually before 2.3.3.
-        * PCBC-494: Fix double free error in passthruEncoder
-        * PCBC-475: Add support for Term Range Query (full text search).
-        * PCBC-475: Add support for geo search queries.
-        * PCBC-468: Add support for user CRUD in ClusterManager
-        * PCBC-489: Add shortcut for PasswordAuthenticator as Cluster->authenticateAs($username, $password)
+        * PCBC-495: update user management APIs
+        * PCBC-478: add tests for Error Map using CouchbaseMock
     </notes>
 
     <contents>
@@ -143,6 +139,7 @@
             <file role="src" name="src/couchbase/view_query.c" />
             <file role="src" name="src/couchbase/view_query_encodable.c" />
             <file role="src" name="transcoding.c" />
+            <file role="test" name="integration/MockTest.php" />
             <file role="test" name="integration/CrossBucketN1qlQueryTest.php" />
             <file role="test" name="integration/DnsSrvTest.php" />
             <file role="test" name="integration/SearchTest.php" />
@@ -177,6 +174,27 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2017-05-31</date>
+            <version>
+                <release>2.3.3</release>
+                <api>2.3.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
+            </license>
+            <notes>
+                * PCBC-487: Fix adhoc vs prepared query logic. It should be inversed manually before 2.3.3.
+                * PCBC-494: Fix double free error in passthruEncoder
+                * PCBC-475: Add support for Term Range Query (full text search).
+                * PCBC-475: Add support for geo search queries.
+                * PCBC-468: Add support for user CRUD in ClusterManager
+                * PCBC-489: Add shortcut for PasswordAuthenticator as Cluster->authenticateAs($username, $password)
+            </notes>
+        </release>
         <release>
             <date>2017-05-02</date>
             <version>
