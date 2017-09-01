@@ -367,7 +367,7 @@ class BucketTest extends CouchbaseTestCase {
         $h->authenticate($this->testAuthenticator);
         $b = $h->openBucket($this->testBucket);
 
-        $checkVal = 243;
+        $checkVal = 50243;
 
         $b->operationTimeout = $checkVal;
         $b->viewTimeout = $checkVal;
@@ -378,6 +378,7 @@ class BucketTest extends CouchbaseTestCase {
         $b->configDelay = $checkVal;
         $b->configNodeTimeout = $checkVal;
         $b->htconfigIdleTimeout = $checkVal;
+        $b->configPollInterval = $checkVal;
 
         $this->assertEquals($b->operationTimeout, $checkVal);
         $this->assertEquals($b->viewTimeout, $checkVal);
@@ -388,11 +389,7 @@ class BucketTest extends CouchbaseTestCase {
         $this->assertEquals($b->configDelay, $checkVal);
         $this->assertEquals($b->configNodeTimeout, $checkVal);
         $this->assertEquals($b->htconfigIdleTimeout, $checkVal);
-
-        if (version_compare(libcouchbase_version(), "2.7.5") >= 0) {
-            $b->configPollInterval = $checkVal;
-            $this->assertEquals($b->configPollInterval, $checkVal);
-        }
+        $this->assertEquals($b->configPollInterval, $checkVal);
     }
 
     /**
