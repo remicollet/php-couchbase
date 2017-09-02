@@ -37,6 +37,7 @@
     </license>
     <notes>
         * Add more examples (XATTRs and RBAC user management).
+        * PCBC-505: Enable error maps for libcouchbase 2.8.0. For higher versions it will be enabled by libcouchbase.
     </notes>
 
     <contents>

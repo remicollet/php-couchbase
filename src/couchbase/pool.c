@@ -67,6 +67,19 @@ static lcb_error_t pcbc_establish_connection(lcb_type_t type, lcb_t *result, con
         return err;
     }
 
+#if LCB_VERSION == 0x020800
+    // versions higher than 2.8.0 will have error maps enabled by default
+    if (strstr(connstr, "enable_errmap") == NULL) {
+        int enabled = 1;
+        err = lcb_cntl(conn, LCB_CNTL_SET, LCB_CNTL_ENABLE_ERRMAP, &enabled);
+        if (err != LCB_SUCCESS) {
+            pcbc_log(LOGARGS(conn, ERROR), "Failed to enable error maps: %s", pcbc_lcb_strerror(err));
+            lcb_destroy(conn);
+            return err;
+        }
+    }
+#endif
+
     lcb_install_callback3(conn, LCB_CALLBACK_GET, get_callback);
     lcb_install_callback3(conn, LCB_CALLBACK_GETREPLICA, get_callback);
     lcb_install_callback3(conn, LCB_CALLBACK_STORE, store_callback);
