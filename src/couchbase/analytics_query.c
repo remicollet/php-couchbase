@@ -43,25 +43,6 @@ PHP_METHOD(AnalyticsQuery, fromString)
     pcbc_analytics_query_init(return_value, statement, statement_len TSRMLS_CC);
 } /* }}} */
 
-/* {{{ proto \Couchbase\AnalyticsQuery AnalyticsQuery::hostname(string $hostname) */
-PHP_METHOD(AnalyticsQuery, hostname)
-{
-    pcbc_analytics_query_t *obj;
-    char *hostname = NULL;
-    pcbc_str_arg_size hostname_len = 0;
-    int rv;
-
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &hostname, &hostname_len);
-    if (rv == FAILURE) {
-        RETURN_NULL();
-    }
-
-    obj = Z_ANALYTICS_QUERY_OBJ_P(getThis());
-    obj->hostname = estrndup(hostname, hostname_len);
-
-    RETURN_ZVAL(getThis(), 1, 0);
-} /* }}} */
-
 ZEND_BEGIN_ARG_INFO_EX(ai_AnalyticsQuery_none, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
@@ -69,15 +50,10 @@ ZEND_BEGIN_ARG_INFO_EX(ai_AnalyticsQuery_fromString, 0, 0, 1)
 ZEND_ARG_INFO(0, statement)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_AnalyticsQuery_hostname, 0, 0, 1)
-ZEND_ARG_INFO(0, hostname)
-ZEND_END_ARG_INFO()
-
 // clang-format off
 zend_function_entry analytics_query_methods[] = {
     PHP_ME(AnalyticsQuery, __construct, ai_AnalyticsQuery_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
     PHP_ME(AnalyticsQuery, fromString, ai_AnalyticsQuery_fromString, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(AnalyticsQuery, hostname, ai_AnalyticsQuery_hostname, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_FE_END
 };
 // clang-format on
@@ -97,7 +73,6 @@ void pcbc_analytics_query_init(zval *return_value, const char *statement, int st
     ADD_ASSOC_STRINGL(PCBC_P(options), "statement", statement, statement_len);
     zend_update_property(pcbc_analytics_query_ce, return_value, ZEND_STRL("options"), PCBC_P(options) TSRMLS_CC);
     zval_ptr_dtor(&options);
-    query->hostname = NULL;
 }
 
 static void analytics_query_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
@@ -150,9 +125,6 @@ static HashTable *analytics_query_get_debug_info(zval *object, int *is_temp TSRM
     PCBC_READ_PROPERTY(options, pcbc_analytics_query_ce, object, "options", 0);
     PCBC_ADDREF_P(options);
     add_assoc_zval(&retval, "options", options);
-    if (obj->hostname) {
-        ADD_ASSOC_STRING(&retval, "hostname", obj->hostname);
-    }
 
     return Z_ARRVAL(retval);
 } /* }}} */

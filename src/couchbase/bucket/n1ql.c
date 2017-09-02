@@ -31,10 +31,6 @@ static void n1qlrow_callback(lcb_t instance, int ignoreme, const lcb_RESPN1QL *r
     TSRMLS_FETCH();
 
     result->header.err = resp->rc;
-    if (cookie->is_cbas && (resp->rc == LCB_ESOCKSHUTDOWN || resp->rc == LCB_NETWORK_ERROR)) {
-        // FIXME: patch rc because libcouchbase does not handle socket close from CBAS
-        result->header.err = LCB_SUCCESS;
-    }
     result->rflags = resp->rflags;
     PCBC_ZVAL_ALLOC(result->row);
     ZVAL_NULL(PCBC_P(result->row));

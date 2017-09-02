@@ -333,7 +333,6 @@ PHP_METHOD(Bucket, query)
         smart_str_0(&buf);
         cmd.cmdflags |= LCB_CMDN1QL_F_CBASQUERY;
         PCBC_SMARTSTR_SET(buf, cmd.query, cmd.nquery);
-        cmd.host = cbas->hostname;
         pcbc_log(LOGARGS(obj, TRACE), "ANALYTICS: %*s", PCBC_SMARTSTR_TRACE(buf));
         pcbc_bucket_n1ql_request(obj, &cmd, 1, json_options, 1, return_value TSRMLS_CC);
         smart_str_free(&buf);

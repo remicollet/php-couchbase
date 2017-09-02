@@ -604,7 +604,6 @@ typedef struct {
 
 typedef struct {
     PCBC_ZEND_OBJECT_PRE
-    char *hostname;
     PCBC_ZEND_OBJECT_POST
 } pcbc_analytics_query_t;
 

@@ -3342,19 +3342,6 @@ namespace Couchbase {
          * @example examples/api/couchbase.AnalyticsQuery.php
          */
         final public static function fromString($statement) {}
-
-        /**
-         * Sets query service location.
-         *
-         * Note that this method accessible only while Analytics support
-         * is experimental. It will be removed after GA release of this
-         * feature, and service location will be supplied in cluster config.
-         *
-         * @param string $hostname location of the analytics service.
-         *    Usually something like "localhost:8095/query/service"
-         * @return AnalyticsQuery
-         */
-        final public function hostname($hostname) {}
     }
 
 }
