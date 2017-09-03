@@ -156,6 +156,108 @@ PHP_METHOD(N1qlQuery, crossBucket)
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
 
+/* {{{ proto \Couchbase\N1qlQuery N1qlQuery::scanCap(int $scanCap) */
+PHP_METHOD(N1qlQuery, scanCap)
+{
+    long scan_cap = 0;
+    int rv;
+    zval *options;
+    char *val = NULL;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &scan_cap);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+
+    PCBC_READ_PROPERTY(options, pcbc_n1ql_query_ce, getThis(), "options", 0);
+    spprintf(&val, 0, "%d", scan_cap);
+    ADD_ASSOC_STRING(options, "scan_cap", val);
+    efree(val);
+
+    RETURN_ZVAL(getThis(), 1, 0);
+} /* }}} */
+
+/* {{{ proto \Couchbase\N1qlQuery N1qlQuery::pipelineBatch(int $pipelineBatch) */
+PHP_METHOD(N1qlQuery, pipelineBatch)
+{
+    long pipeline_batch = 0;
+    int rv;
+    zval *options;
+    char *val = NULL;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &pipeline_batch);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+
+    PCBC_READ_PROPERTY(options, pcbc_n1ql_query_ce, getThis(), "options", 0);
+    spprintf(&val, 0, "%d", pipeline_batch);
+    ADD_ASSOC_STRING(options, "pipeline_batch", val);
+    efree(val);
+
+    RETURN_ZVAL(getThis(), 1, 0);
+} /* }}} */
+
+/* {{{ proto \Couchbase\N1qlQuery N1qlQuery::pipelineCap(int $pipelineCap) */
+PHP_METHOD(N1qlQuery, pipelineCap)
+{
+    long pipeline_cap = 0;
+    int rv;
+    zval *options;
+    char *val = NULL;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &pipeline_cap);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+
+    PCBC_READ_PROPERTY(options, pcbc_n1ql_query_ce, getThis(), "options", 0);
+    spprintf(&val, 0, "%d", pipeline_cap);
+    ADD_ASSOC_STRING(options, "pipeline_cap", val);
+    efree(val);
+
+    RETURN_ZVAL(getThis(), 1, 0);
+} /* }}} */
+
+/* {{{ proto \Couchbase\N1qlQuery N1qlQuery::maxParallelism(int $maxParallelism) */
+PHP_METHOD(N1qlQuery, maxParallelism)
+{
+    long max_parallelism = 0;
+    int rv;
+    zval *options;
+    char *val = NULL;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &max_parallelism);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+
+    PCBC_READ_PROPERTY(options, pcbc_n1ql_query_ce, getThis(), "options", 0);
+    spprintf(&val, 0, "%d", max_parallelism);
+    ADD_ASSOC_STRING(options, "max_parallelism", val);
+    efree(val);
+
+    RETURN_ZVAL(getThis(), 1, 0);
+} /* }}} */
+
+/* {{{ proto \Couchbase\N1qlQuery N1qlQuery::readonly(boolean $readonly) */
+PHP_METHOD(N1qlQuery, readonly)
+{
+    zend_bool readonly = 0;
+    zval *options;
+    int rv;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "b", &readonly);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+
+    PCBC_READ_PROPERTY(options, pcbc_n1ql_query_ce, getThis(), "options", 0);
+    ADD_ASSOC_BOOL_EX(options, "readonly", readonly);
+
+    RETURN_ZVAL(getThis(), 1, 0);
+} /* }}} */
+
 /* {{{ proto \Couchbase\N1qlQuery N1qlQuery::consistency(int $consistency) */
 PHP_METHOD(N1qlQuery, consistency)
 {
@@ -242,6 +344,26 @@ ZEND_BEGIN_ARG_INFO_EX(ai_N1qlQuery_consistentWith, 0, 0, 1)
 ZEND_ARG_INFO(0, mutationState)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(ai_N1qlQuery_scanCap, 0, 0, 1)
+ZEND_ARG_INFO(0, scanCap)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_N1qlQuery_pipelineBatch, 0, 0, 1)
+ZEND_ARG_INFO(0, pipelineBatch)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_N1qlQuery_pipelineCap, 0, 0, 1)
+ZEND_ARG_INFO(0, pipelineCap)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_N1qlQuery_maxParallelism, 0, 0, 1)
+ZEND_ARG_INFO(0, maxParallelism)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_N1qlQuery_readonly, 0, 0, 1)
+ZEND_ARG_INFO(0, readonly)
+ZEND_END_ARG_INFO()
+
 // clang-format off
 zend_function_entry n1ql_query_methods[] = {
     PHP_ME(N1qlQuery, __construct, ai_N1qlQuery_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
@@ -252,6 +374,11 @@ zend_function_entry n1ql_query_methods[] = {
     PHP_ME(N1qlQuery, namedParams, ai_N1qlQuery_params, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(N1qlQuery, consistency, ai_N1qlQuery_consistency, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(N1qlQuery, consistentWith, ai_N1qlQuery_consistentWith, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(N1qlQuery, scanCap, ai_N1qlQuery_scanCap, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(N1qlQuery, pipelineBatch, ai_N1qlQuery_pipelineBatch, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(N1qlQuery, pipelineCap, ai_N1qlQuery_pipelineCap, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(N1qlQuery, maxParallelism, ai_N1qlQuery_maxParallelism, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(N1qlQuery, readonly, ai_N1qlQuery_readonly, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_FE_END
 };
 // clang-format on
