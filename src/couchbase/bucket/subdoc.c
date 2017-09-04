@@ -91,7 +91,7 @@ static lcb_error_t proc_subdoc_results(zval *return_value, opcookie *cookie TSRM
             pcbc_document_fragment_init(return_value, PCBC_P(res->value), PCBC_P(res->cas),
                                         PCBC_P(res->token) TSRMLS_CC);
         } else {
-            pcbc_document_fragment_init_error(return_value, res->header.err, res->header.err == LCB_SUBDOC_MULTI_FAILURE
+            pcbc_document_fragment_init_error(return_value, &res->header, res->header.err == LCB_SUBDOC_MULTI_FAILURE
                                                                                  ? PCBC_P(res->value)
                                                                                  : NULL TSRMLS_CC);
         }

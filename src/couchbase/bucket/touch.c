@@ -24,7 +24,7 @@ void touch_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
     const lcb_RESPTOUCH *resp = (const lcb_RESPTOUCH *)rb;
     TSRMLS_FETCH();
 
-    result->header.err = resp->rc;
+    PCBC_RESP_ERR_COPY(result->header, cbtype, rb);
     if (resp->nkey) {
         result->key = estrndup(resp->key, resp->nkey);
     }

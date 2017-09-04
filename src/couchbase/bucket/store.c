@@ -24,7 +24,7 @@ void store_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
     const lcb_MUTATION_TOKEN *mutinfo;
     TSRMLS_FETCH();
 
-    result->header.err = rb->rc;
+    PCBC_RESP_ERR_COPY(result->header, cbtype, rb);
     result->key_len = rb->nkey;
     if (rb->nkey) {
         result->key = estrndup(rb->key, rb->nkey);
@@ -64,7 +64,7 @@ lcb_error_t proc_store_results(pcbc_bucket_t *bucket, zval *return_value, opcook
             if (res->header.err == LCB_SUCCESS) {
                 pcbc_document_init(doc, bucket, NULL, 0, 0, res->cas, &res->token TSRMLS_CC);
             } else {
-                pcbc_document_init_error(doc, res->header.err TSRMLS_CC);
+                pcbc_document_init_error(doc, &res->header TSRMLS_CC);
             }
         }
     }
@@ -74,6 +74,7 @@ lcb_error_t proc_store_results(pcbc_bucket_t *bucket, zval *return_value, opcook
         if (res->key) {
             efree(res->key);
         }
+        PCBC_RESP_ERR_FREE(res->header);
     }
 
     return err;

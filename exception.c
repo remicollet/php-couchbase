@@ -49,12 +49,19 @@ void pcbc_exception_init(zval *return_value, long code, const char *message TSRM
     pcbc_exception_make(return_value, pcbc_exception_ce, code, message TSRMLS_CC);
 }
 
-void pcbc_exception_init_lcb(zval *return_value, long code, const char *message TSRMLS_DC)
+void pcbc_exception_init_lcb(zval *return_value, long code, const char *message, const char *ctx,
+                             const char *ref TSRMLS_DC)
 {
     if (!message) {
         message = pcbc_lcb_strerror((lcb_error_t)code);
     }
     pcbc_exception_make(return_value, pcbc_exception_ce, code, message TSRMLS_CC);
+    if (ctx) {
+        zend_update_property_string(pcbc_exception_ce, return_value, ZEND_STRL("context"), ctx TSRMLS_CC);
+    }
+    if (ref) {
+        zend_update_property_string(pcbc_exception_ce, return_value, ZEND_STRL("ref"), ref TSRMLS_CC);
+    }
 }
 
 PHP_MINIT_FUNCTION(CouchbaseException)

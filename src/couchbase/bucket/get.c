@@ -35,7 +35,7 @@ void get_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
     const lcb_RESPGET *resp = (const lcb_RESPGET *)rb;
     TSRMLS_FETCH();
 
-    result->header.err = resp->rc;
+    PCBC_RESP_ERR_COPY(result->header, cbtype, rb);
     result->key_len = resp->nkey;
     if (resp->nkey) {
         result->key = estrndup(resp->key, resp->nkey);
@@ -71,7 +71,7 @@ static lcb_error_t proc_get_results(pcbc_bucket_t *bucket, zval *return_value, o
                 pcbc_document_init_decode(doc, bucket, res->bytes, res->bytes_len, res->flags, res->datatype, res->cas,
                                           NULL TSRMLS_CC);
             } else {
-                pcbc_document_init_error(doc, res->header.err TSRMLS_CC);
+                pcbc_document_init_error(doc, &res->header TSRMLS_CC);
             }
         }
     }
@@ -84,6 +84,7 @@ static lcb_error_t proc_get_results(pcbc_bucket_t *bucket, zval *return_value, o
         if (res->bytes) {
             efree(res->bytes);
         }
+        PCBC_RESP_ERR_FREE(res->header);
     }
 
     return err;

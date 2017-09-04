@@ -190,7 +190,8 @@ extern zend_class_entry *pcbc_user_settings_ce;
 #endif
 
 void pcbc_exception_init(zval *return_value, long code, const char *message TSRMLS_DC);
-void pcbc_exception_init_lcb(zval *return_value, long code, const char *message TSRMLS_DC);
+void pcbc_exception_init_lcb(zval *return_value, long code, const char *message, const char *ctx,
+                             const char *ref TSRMLS_DC);
 const char *pcbc_lcb_strerror(lcb_error_t error);
 #define throw_pcbc_exception(__pcbc_message, __pcbc_code)                                                              \
     do {                                                                                                               \
@@ -203,7 +204,7 @@ const char *pcbc_lcb_strerror(lcb_error_t error);
     do {                                                                                                               \
         PCBC_ZVAL __pcbc_error;                                                                                        \
         PCBC_ZVAL_ALLOC(__pcbc_error);                                                                                 \
-        pcbc_exception_init_lcb(PCBC_P(__pcbc_error), __pcbc_code, NULL TSRMLS_CC);                                    \
+        pcbc_exception_init_lcb(PCBC_P(__pcbc_error), __pcbc_code, NULL, NULL, NULL TSRMLS_CC);                        \
         zend_throw_exception_object(PCBC_P(__pcbc_error) TSRMLS_CC);                                                   \
     } while (0)
 
@@ -694,6 +695,33 @@ typedef struct {
     HashPosition hash_pos;
 } pcbc_pp_state;
 
+typedef struct {
+    void *next;
+    lcb_error_t err;
+    char *err_ctx;
+    char *err_ref;
+} opcookie_res;
+
+#define PCBC_RESP_ERR_COPY(opcookie, cbtype, respbase)                                                                 \
+    do {                                                                                                               \
+        const char *ctx, *ref;                                                                                         \
+        opcookie.err = respbase->rc;                                                                                   \
+        ctx = lcb_resp_get_error_context(cbtype, respbase);                                                            \
+        if (ctx) {                                                                                                     \
+            opcookie.err_ctx = strdup(ctx);                                                                            \
+        }                                                                                                              \
+        ref = lcb_resp_get_error_ref(cbtype, respbase);                                                                \
+        if (ref) {                                                                                                     \
+            opcookie.err_ref = strdup(ref);                                                                            \
+        }                                                                                                              \
+    } while (0);
+
+#define PCBC_RESP_ERR_FREE(opcookie)                                                                                   \
+    do {                                                                                                               \
+        free(opcookie.err_ctx);                                                                                        \
+        free(opcookie.err_ref);                                                                                        \
+    } while (0);
+
 // assumes first parameter in the spec is the ids (`id|`).
 int pcbc_pp_begin(int param_count TSRMLS_DC, pcbc_pp_state *state, const char *spec, ...);
 int pcbc_pp_ismapped(pcbc_pp_state *state);
@@ -758,12 +786,12 @@ void pcbc_document_init_decode(zval *return_value, pcbc_bucket_t *bucket, const 
                                const lcb_MUTATION_TOKEN *token TSRMLS_DC);
 void pcbc_document_init_counter(zval *return_value, pcbc_bucket_t *bucket, lcb_U64 value, lcb_cas_t cas,
                                 const lcb_MUTATION_TOKEN *token TSRMLS_DC);
-void pcbc_document_init_error(zval *return_value, lcb_error_t err TSRMLS_DC);
+void pcbc_document_init_error(zval *return_value, opcookie_res *header TSRMLS_DC);
 void pcbc_document_init(zval *return_value, pcbc_bucket_t *bucket, const char *bytes, int bytes_len, lcb_U32 flags,
                         lcb_cas_t cas, const lcb_MUTATION_TOKEN *token TSRMLS_DC);
 
 int pcbc_document_fragment_init(zval *return_value, zval *value, zval *cas, zval *token TSRMLS_DC);
-int pcbc_document_fragment_init_error(zval *return_value, lcb_error_t err, zval *value TSRMLS_DC);
+int pcbc_document_fragment_init_error(zval *return_value, opcookie_res *header, zval *value TSRMLS_DC);
 void pcbc_bucket_n1ql_request(pcbc_bucket_t *bucket, lcb_CMDN1QL *cmd, int json_response, int json_options, int is_cbas,
                               zval *return_value TSRMLS_DC);
 void pcbc_bucket_cbft_request(pcbc_bucket_t *bucket, lcb_CMDFTS *cmd, int json_response, int json_options,
@@ -940,11 +968,6 @@ static inline pcbc_user_settings_t *pcbc_user_settings_fetch_object(zend_object 
 #define Z_USER_SETTINGS_OBJ(zo) ((pcbc_user_settings_t *)zo)
 #define Z_USER_SETTINGS_OBJ_P(zv) ((pcbc_user_settings_t *)zend_object_store_get_object(zv TSRMLS_CC))
 #endif
-
-typedef struct {
-    void *next;
-    lcb_error_t err;
-} opcookie_res;
 
 typedef struct {
     opcookie_res *res_head;

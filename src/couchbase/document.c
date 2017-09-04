@@ -24,13 +24,13 @@ zend_function_entry document_methods[] = {
 };
 // clang-format on
 
-void pcbc_document_init_error(zval *return_value, lcb_error_t err TSRMLS_DC)
+void pcbc_document_init_error(zval *return_value, opcookie_res *header TSRMLS_DC)
 {
     PCBC_ZVAL exc;
     PCBC_ZVAL_ALLOC(exc);
 
     object_init_ex(return_value, pcbc_document_ce);
-    pcbc_exception_init_lcb(PCBC_P(exc), err, NULL TSRMLS_CC);
+    pcbc_exception_init_lcb(PCBC_P(exc), header->err, NULL, header->err_ctx, header->err_ref TSRMLS_CC);
     zend_update_property(pcbc_document_ce, return_value, ZEND_STRL("error"), PCBC_P(exc) TSRMLS_CC);
 
     zval_ptr_dtor(&exc);

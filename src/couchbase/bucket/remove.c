@@ -24,7 +24,7 @@ void remove_callback(lcb_t instance, int cbtype, const lcb_RESPREMOVE *resp)
     const lcb_MUTATION_TOKEN *mutinfo;
     TSRMLS_FETCH();
 
-    result->header.err = resp->rc;
+    PCBC_RESP_ERR_COPY(result->header, cbtype, resp);
     result->key_len = resp->nkey;
     if (resp->nkey) {
         result->key = estrndup(resp->key, resp->nkey);

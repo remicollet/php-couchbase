@@ -39,6 +39,7 @@
         * Add more examples (XATTRs and RBAC user management).
         * PCBC-505: Enable error maps for libcouchbase 2.8.0. For higher versions it will be enabled by libcouchbase.
         * PCBC-499: Expose more query options on N1QL query for advanced tuning query performance
+        * PCBC-485: Expose enhanced error message. The server might fill properties "context" and "ref" of the error.
     </notes>
 
     <contents>

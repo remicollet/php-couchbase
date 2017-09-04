@@ -54,7 +54,7 @@ static lcb_error_t proc_durability_results(pcbc_bucket_t *bucket, zval *return_v
             if (res->header.err == LCB_SUCCESS) {
                 pcbc_document_init(doc, bucket, NULL, 0, 0, 0, NULL TSRMLS_CC);
             } else {
-                pcbc_document_init_error(doc, res->header.err TSRMLS_CC);
+                pcbc_document_init_error(doc, &res->header TSRMLS_CC);
             }
         }
     }

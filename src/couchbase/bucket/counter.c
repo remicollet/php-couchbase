@@ -35,6 +35,7 @@ void counter_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
     TSRMLS_FETCH();
 
     result->header.err = resp->rc;
+    PCBC_RESP_ERR_COPY(result->header, cbtype, rb);
     result->key_len = resp->nkey;
     if (resp->nkey) {
         result->key = estrndup(resp->key, resp->nkey);
@@ -68,7 +69,7 @@ static lcb_error_t proc_arithmetic_results(pcbc_bucket_t *bucket, zval *return_v
             if (res->header.err == LCB_SUCCESS) {
                 pcbc_document_init_counter(doc, bucket, res->value, res->cas, &res->token TSRMLS_CC);
             } else {
-                pcbc_document_init_error(doc, res->header.err TSRMLS_CC);
+                pcbc_document_init_error(doc, &res->header TSRMLS_CC);
             }
         }
     }
@@ -78,6 +79,7 @@ static lcb_error_t proc_arithmetic_results(pcbc_bucket_t *bucket, zval *return_v
         if (res->key) {
             efree(res->key);
         }
+        PCBC_RESP_ERR_FREE(res->header);
     }
 
     return err;

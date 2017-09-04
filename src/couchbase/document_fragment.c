@@ -41,13 +41,13 @@ int pcbc_document_fragment_init(zval *return_value, zval *value, zval *cas, zval
     return SUCCESS;
 }
 
-int pcbc_document_fragment_init_error(zval *return_value, lcb_error_t err, zval *value TSRMLS_DC)
+int pcbc_document_fragment_init_error(zval *return_value, opcookie_res *header, zval *value TSRMLS_DC)
 {
     PCBC_ZVAL error;
 
     object_init_ex(return_value, pcbc_document_fragment_ce);
     PCBC_ZVAL_ALLOC(error);
-    pcbc_exception_init_lcb(PCBC_P(error), err, NULL TSRMLS_CC);
+    pcbc_exception_init_lcb(PCBC_P(error), header->err, NULL, header->err_ctx, header->err_ref TSRMLS_CC);
     zend_update_property(pcbc_document_fragment_ce, return_value, "error", sizeof("error") - 1,
                          PCBC_P(error) TSRMLS_CC);
     if (value) {
