@@ -27,6 +27,8 @@ Couchbase PHP client generally available through PECL: http://pecl.php.net/packa
 pecl install couchbase
 ```
 
+RPM packages available for Fedora 24-27 and RHEL 6-7 linux on https://rpms.remirepo.net/.
+
 Additionally Windows builds available from [Release Notes and Archives](http://developer.couchbase.com/server/other-products/release-notes-archives/php-sdk) page.
 
 On MacOS platform, the library could be installed via Homebrew:
