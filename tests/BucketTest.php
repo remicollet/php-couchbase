@@ -451,6 +451,30 @@ class BucketTest extends CouchbaseTestCase {
     }
 
     /**
+     * @depends testConnect
+     */
+    function testGetCount($b) {
+        if (!getenv('CB_SPOCK')) {
+            $this->markTestSkipped("Subdoc GET_COUNT not available for {$this->serverVersion}");
+            return;
+        }
+
+        $key = $this->makeKey('get_count');
+        $b->upsert($key, ['list' => [1, 2, 42], 'object' => ['foo' => 42]]);
+
+        # Try existence
+        $result = $b->lookupIn($key)
+                ->getCount('list')
+                ->getCount('object')
+                ->execute();
+        $this->assertEquals(2, count($result->value));
+        $this->assertEquals(COUCHBASE_SUCCESS, $result->value[0]['code']);
+        $this->assertEquals(3, $result->value[0]['value']);
+        $this->assertEquals(COUCHBASE_SUCCESS, $result->value[1]['code']);
+        $this->assertEquals(1, $result->value[1]['value']);
+    }
+
+    /**
      * @expectedException \Couchbase\Exception
      * @expectedExceptionMessageRegExp /EMPTY_PATH/
      * @depends testConnect

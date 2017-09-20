@@ -2069,6 +2069,19 @@ namespace Couchbase {
         final public function get($path, $options = []) {}
 
         /**
+         * Get a count of values inside the JSON document.
+         *
+         * This method is only available with Couchbase Server 5.0 and later.
+         *
+         * @param string $path the path inside the document where to get the count from.
+         * @param array $options the array with command modificators. Supported values are
+         *   * "xattr" (default: false) if true, the path refers to a location
+         *     within the document's extended attributes, not the document body.
+         * @return LookupInBuilder
+         */
+        final public function getCount($path, $options = []) {}
+
+        /**
          * Check if a value exists inside the document.
          *
          * This doesn't transmit the value on the wire if it exists, saving the corresponding byte overhead.

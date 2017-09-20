@@ -102,6 +102,40 @@ PHP_METHOD(LookupInBuilder, exists)
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
 
+/* {{{ proto \Couchbase\LookupInBuilder LookupInBuilder::getCount(string $path, array $options = []) */
+PHP_METHOD(LookupInBuilder, getCount)
+{
+    pcbc_lookup_in_builder_t *obj;
+    const char *path = NULL;
+    pcbc_str_arg_size path_len = 0;
+    int rv;
+    zval *options = NULL;
+    pcbc_sd_spec_t *spec;
+
+    obj = Z_LOOKUP_IN_BUILDER_OBJ_P(getThis());
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|z", &path, &path_len, &options);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+
+    spec = ecalloc(1, sizeof(pcbc_sd_spec_t));
+    spec->next = NULL;
+    spec->s.sdcmd = LCB_SDCMD_GET_COUNT;
+    spec->s.options = pcbc_subdoc_options_to_flags(1, 1, options TSRMLS_CC);
+    PCBC_SDSPEC_COPY_PATH(spec, path, path_len);
+    if (obj->tail) {
+        obj->tail->next = spec;
+    }
+    obj->tail = spec;
+    if (obj->head == NULL) {
+        obj->head = obj->tail;
+    }
+    obj->nspecs++;
+
+    RETURN_ZVAL(getThis(), 1, 0);
+} /* }}} */
+
 /* {{{ proto \Couchbase\LookupInBuilder LookupInBuilder::execute() */
 PHP_METHOD(LookupInBuilder, execute)
 {
@@ -130,6 +164,7 @@ ZEND_END_ARG_INFO()
 zend_function_entry lookup_in_builder_methods[] = {
     PHP_ME(LookupInBuilder, __construct, ai_LookupInBuilder_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
     PHP_ME(LookupInBuilder, get, ai_LookupInBuilder_get, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(LookupInBuilder, getCount, ai_LookupInBuilder_get, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(LookupInBuilder, exists, ai_LookupInBuilder_get, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(LookupInBuilder, execute, ai_LookupInBuilder_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_FE_END
