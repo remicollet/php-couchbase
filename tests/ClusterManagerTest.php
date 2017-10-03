@@ -7,6 +7,9 @@ class ClusterManagerTest extends CouchbaseTestCase {
      * Test that a connection works and return manager instance.
      */
     function testConnect() {
+        if ($this->usingMock()) {
+            $this->markTestSkipped('Cluster management is not supported by the CouchbaseMock');
+        }
         $h = new \Couchbase\Cluster($this->testDsn);
         $this->assertNotNull($this->testAdminUser);
         $this->assertNotNull($this->testAdminPassword);

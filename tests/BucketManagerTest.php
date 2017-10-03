@@ -19,6 +19,9 @@ class BucketManagerTest extends CouchbaseTestCase {
      * @expectedExceptionMessageRegExp /EEXISTS/
      */
     function testIndexCreateDuplicates($m) {
+        if ($this->usingMock()) {
+            $this->markTestSkipped('N1QL indexes are not supported by the CouchbaseMock');
+        }
         $m->createN1qlPrimaryIndex();
         $m->createN1qlPrimaryIndex();
     }
@@ -29,6 +32,9 @@ class BucketManagerTest extends CouchbaseTestCase {
      * @expectedExceptionMessageRegExp /ENOENT/
      */
     function testIndexDropMissing($m) {
+        if ($this->usingMock()) {
+            $this->markTestSkipped('N1QL indexes are not supported by the CouchbaseMock');
+        }
         $m->dropN1qlPrimaryIndex();
         $m->dropN1qlPrimaryIndex();
     }
@@ -37,6 +43,9 @@ class BucketManagerTest extends CouchbaseTestCase {
      * @depends testConnect
      */
     function testBasicIndexLifecycle($m) {
+        if ($this->usingMock()) {
+            $this->markTestSkipped('N1QL indexes are not supported by the CouchbaseMock');
+        }
         $name = $this->makeKey('user_name');
         $m->createN1qlIndex($name, array('`user.first_name`', '`user.last_name`'),
                             '`state` = "active"', false, false);

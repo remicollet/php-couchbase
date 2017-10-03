@@ -1,5 +1,7 @@
 <?php
 
+require_once('CouchbaseMock.php');
+
 class CouchbaseTestCase extends \PHPUnit_Framework_TestCase {
     public $testDsn;
     public $testBucket;
@@ -8,36 +10,50 @@ class CouchbaseTestCase extends \PHPUnit_Framework_TestCase {
     public $testUser;
     public $testPassword;
     public $testAuthenticator;
+    public $mock = null;
 
-    public function __construct() {
-        $this->testDsn = getenv('CB_DSN');
-        if ($this->testDsn === FALSE) {
-            $this->testDsn = 'couchbase://localhost/default';
-        }
+    protected function setUp() {
+        if (getenv('CB_MOCK')) {
+            $this->mock = new \CouchbaseMock();
+            $this->mock->start();
+            $this->mock->setCCCP(true);
 
-        $this->testBucket = getenv('CB_BUCKET');
-        if ($this->testBucket === FALSE) {
+            $this->testDsn = $this->mock->connectionString();
             $this->testBucket = 'default';
-        }
-
-        $this->testAdminUser = getenv('CB_ADMIN_USER');
-        if ($this->testAdminUser === FALSE) {
             $this->testAdminUser = 'Administrator';
-        }
-
-        $this->testAdminPassword = getenv('CB_ADMIN_PASSWORD');
-        if ($this->testAdminPassword === FALSE) {
             $this->testAdminPassword = 'password';
-        }
-
-        $this->testUser = getenv('CB_USER');
-        if ($this->testUser === FALSE) {
             $this->testUser = 'default';
-        }
-
-        $this->testPassword = getenv('CB_PASSWORD');
-        if ($this->testPassword === FALSE) {
             $this->testPassword = '';
+        } else {
+            $this->testDsn = getenv('CB_DSN');
+            if ($this->testDsn === FALSE) {
+                $this->testDsn = 'couchbase://localhost/default';
+            }
+
+            $this->testBucket = getenv('CB_BUCKET');
+            if ($this->testBucket === FALSE) {
+                $this->testBucket = 'default';
+            }
+
+            $this->testAdminUser = getenv('CB_ADMIN_USER');
+            if ($this->testAdminUser === FALSE) {
+                $this->testAdminUser = 'Administrator';
+            }
+
+            $this->testAdminPassword = getenv('CB_ADMIN_PASSWORD');
+            if ($this->testAdminPassword === FALSE) {
+                $this->testAdminPassword = 'password';
+            }
+
+            $this->testUser = getenv('CB_USER');
+            if ($this->testUser === FALSE) {
+                $this->testUser = 'default';
+            }
+
+            $this->testPassword = getenv('CB_PASSWORD');
+            if ($this->testPassword === FALSE) {
+                $this->testPassword = '';
+            }
         }
         if (getenv('CB_SPOCK')) {
             $this->testAuthenticator = new \Couchbase\PasswordAuthenticator();
@@ -46,6 +62,10 @@ class CouchbaseTestCase extends \PHPUnit_Framework_TestCase {
             $this->testAuthenticator = new \Couchbase\ClassicAuthenticator();
             $this->testAuthenticator->bucket($this->testBucket, $this->testPassword);
         }
+    }
+
+    public function usingMock() {
+        return $this->mock != null;
     }
 
     function setTimeouts($bucket) {

@@ -114,7 +114,13 @@ Integration tests require some prerequisites, so once they met, you can run inte
 tests with:
 
 ```bash
-phpunit tests/
+phpunit integration/
+```
+
+It is also possible to run tests using [CouchbaseMock](https://github.com/couchbase/CouchbaseMock):
+
+```bash
+CB_MOCK=1 phpunit tests/
 ```
 
 

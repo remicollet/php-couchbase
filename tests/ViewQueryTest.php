@@ -3,6 +3,7 @@ require_once('CouchbaseTestCase.php');
 
 class ViewQueryTest extends CouchbaseTestCase {
     protected function setUp() {
+        parent::setUp();
         $this->cluster = new \Couchbase\Cluster($this->testDsn);
         $this->cluster->authenticate($this->testAuthenticator);
         $this->bucket = $this->cluster->openBucket($this->testBucket);
@@ -11,6 +12,9 @@ class ViewQueryTest extends CouchbaseTestCase {
     }
 
     function testConsistency() {
+        if ($this->usingMock()) {
+            $this->markTestSkipped('View consistency is not supported by the CouchbaseMock');
+        }
         $ddocName = $this->makeKey('testConsistency');
         $ddoc = [
             'views' => [

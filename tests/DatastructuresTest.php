@@ -6,6 +6,7 @@ class DatastructuresTest extends CouchbaseTestCase {
     private $bucket;
 
     protected function setUp() {
+        parent::setUp();
         $this->cluster = new \Couchbase\Cluster($this->testDsn);
         $this->cluster->authenticate($this->testAuthenticator);
         $this->bucket = $this->cluster->openBucket($this->testBucket);
@@ -70,12 +71,12 @@ class DatastructuresTest extends CouchbaseTestCase {
         $this->bucket->setAdd($key, "world");
         $this->assertEquals(2, $this->bucket->setSize($key));
         $doc = $this->bucket->get($key);
-        $this->assertEquals(["hello", "world"], $doc->value);
+        $this->assertEquals(["hello", "world"], $doc->value, 'Sets must be equal', 0.0, 1, true);
 
         $this->bucket->setAdd($key, "hello");
         $this->assertEquals(2, $this->bucket->setSize($key));
         $doc = $this->bucket->get($key);
-        $this->assertEquals(["hello", "world"], $doc->value);
+        $this->assertEquals(["hello", "world"], $doc->value, 'Sets must be equal', 0.0, 1, true);
 
         $res = $this->bucket->setExists($key, "hello");
         $this->assertTrue($res, "Expected set to contain \"hello\"");

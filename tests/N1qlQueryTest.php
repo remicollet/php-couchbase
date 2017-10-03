@@ -6,6 +6,7 @@ class N1qlQueryTest extends CouchbaseTestCase {
     private $bucket;
 
     protected function setUp() {
+        parent::setUp();
         $this->cluster = new \Couchbase\Cluster($this->testDsn);
         $this->cluster->authenticate($this->testAuthenticator);
         $this->bucket = $this->cluster->openBucket($this->testBucket);
@@ -13,11 +14,17 @@ class N1qlQueryTest extends CouchbaseTestCase {
     }
 
     function testAlreadyHaveCreatedIndex() {
+        if ($this->usingMock()) {
+            $this->markTestSkipped('N1QL indexes are not supported by the CouchbaseMock');
+        }
         $this->bucket->manager()->dropN1qlPrimaryIndex('', true);
         $this->bucket->manager()->createN1qlPrimaryIndex();
     }
 
     function testResponseProperties() {
+        if ($this->usingMock()) {
+            $this->markTestSkipped('N1QL queries are not supported by the CouchbaseMock');
+        }
         $key = $this->makeKey("n1qlResponseProperties");
         $this->bucket->upsert($key, ["bar" => 42]);
         $query = \Couchbase\N1qlQuery::fromString("SELECT * FROM `{$this->testBucket}` USE KEYS \"$key\"");
@@ -36,6 +43,9 @@ class N1qlQueryTest extends CouchbaseTestCase {
     }
 
     function testParameters() {
+        if ($this->usingMock()) {
+            $this->markTestSkipped('N1QL queries are not supported by the CouchbaseMock');
+        }
         $key = $this->makeKey("n1qlParameters");
         $bucketName = $this->testBucket;
         $this->bucket->upsert($key, ["bar" => 42]);
@@ -64,6 +74,9 @@ class N1qlQueryTest extends CouchbaseTestCase {
     }
 
     function testAtPlus() {
+        if ($this->usingMock()) {
+            $this->markTestSkipped('N1QL queries are not supported by the CouchbaseMock');
+        }
         $bucketName = $this->testBucket;
         $cluster = new \Couchbase\Cluster($this->testDsn . '?fetch_mutation_tokens=true');
         $cluster->authenticate($this->testAuthenticator);

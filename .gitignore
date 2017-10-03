@@ -40,3 +40,4 @@ mkinstalldirs
 modules/
 package.xml
 run-tests.php
+tests/CouchbaseMock.jar
