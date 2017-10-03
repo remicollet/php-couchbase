@@ -454,9 +454,8 @@ class BucketTest extends CouchbaseTestCase {
      * @depends testConnect
      */
     function testGetCount($b) {
-        if (!getenv('CB_SPOCK')) {
-            $this->markTestSkipped("Subdoc GET_COUNT not available for {$this->serverVersion}");
-            return;
+        if ($this->serverVersion() < 5) {
+            $this->markTestSkipped("Subdoc GET_COUNT not available for {$this->serverVersion()}");
         }
 
         $key = $this->makeKey('get_count');
@@ -720,9 +719,8 @@ class BucketTest extends CouchbaseTestCase {
      * @depends testConnect
      */
     function testSubdocAttributes($b) {
-        if (!getenv('CB_SPOCK')) {
+        if ($this->serverVersion() < 5) {
             $this->markTestSkipped("Subdoc attributes are not supported, skipping the test");
-            return;
         }
         $key = $this->makeKey('subdoc_attributes');
         $b->upsert($key, ['foo' => 'bar']);

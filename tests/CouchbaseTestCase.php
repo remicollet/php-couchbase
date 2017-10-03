@@ -55,7 +55,7 @@ class CouchbaseTestCase extends \PHPUnit_Framework_TestCase {
                 $this->testPassword = '';
             }
         }
-        if (getenv('CB_SPOCK')) {
+        if ($this->serverVersion() >= 5.0) {
             $this->testAuthenticator = new \Couchbase\PasswordAuthenticator();
             $this->testAuthenticator->username($this->testUser)->password($this->testPassword);
         } else {
@@ -66,6 +66,14 @@ class CouchbaseTestCase extends \PHPUnit_Framework_TestCase {
 
     public function usingMock() {
         return $this->mock != null;
+    }
+
+    public function serverVersion() {
+        $version = getenv('CB_VERSION');
+        if ($version === FALSE) {
+            $version = '4.6';
+        }
+        return floatval($version);
     }
 
     function setTimeouts($bucket) {

@@ -123,6 +123,8 @@ It is also possible to run tests using [CouchbaseMock](https://github.com/couchb
 CB_MOCK=1 phpunit tests/
 ```
 
+Server version guard might be specified by `CB_VERSION` (default is `4.6`). The tests which depend on functionality,
+which is not supported by `CB_VERSION`, will be skipped automatically.
 
 ## License
 Copyright 2016-2017 Couchbase Inc.

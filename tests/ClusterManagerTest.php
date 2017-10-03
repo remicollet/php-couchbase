@@ -13,7 +13,7 @@ class ClusterManagerTest extends CouchbaseTestCase {
         $h = new \Couchbase\Cluster($this->testDsn);
         $this->assertNotNull($this->testAdminUser);
         $this->assertNotNull($this->testAdminPassword);
-        if (getenv('CB_SPOCK')) {
+        if ($this->serverVersion() >= 5) {
             $authenticator = new \Couchbase\PasswordAuthenticator();
             $authenticator->username($this->testAdminUser)->password($this->testAdminPassword);
             $h->authenticate($authenticator);
@@ -62,10 +62,8 @@ class ClusterManagerTest extends CouchbaseTestCase {
      * @depends testConnect
      */
     function testEphemeralBucketCRUD($m) {
-        $serverVersion = $m->info()['nodes'][0]['version'];
-        if ($serverVersion < 5) {
-            $this->markTestSkipped("Ephemeral buckets are not available for $serverVersion");
-            return;
+        if ($this->serverVersion() < 5) {
+            $this->markTestSkipped("Ephemeral buckets are not available for {$this->serverVersion()}");
         }
 
         $name = $this->makeKey('newEphemeralBucket');
