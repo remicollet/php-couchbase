@@ -103,6 +103,7 @@ char *enc_cmpr;
 int enc_format_i;
 int enc_cmpr_i;
 long enc_cmpr_threshold;
+long pool_max_idle_time;
 double enc_cmpr_factor;
 zend_bool dec_json_array;
 ZEND_END_MODULE_GLOBALS(couchbase)

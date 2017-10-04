@@ -183,6 +183,7 @@ STD_PHP_INI_ENTRY("couchbase.encoder.compression",           "off",  PHP_INI_ALL
 STD_PHP_INI_ENTRY("couchbase.encoder.compression_threshold", "0",    PHP_INI_ALL, OnUpdateLongGEZero, enc_cmpr_threshold,  zend_couchbase_globals, couchbase_globals)
 STD_PHP_INI_ENTRY("couchbase.encoder.compression_factor",    "0.0",  PHP_INI_ALL, OnUpdateReal,       enc_cmpr_factor,     zend_couchbase_globals, couchbase_globals)
 STD_PHP_INI_ENTRY("couchbase.decoder.json_arrays",           "0",    PHP_INI_ALL, OnUpdateBool,       dec_json_array,      zend_couchbase_globals, couchbase_globals)
+STD_PHP_INI_ENTRY("couchbase.pool.max_idle_time_sec",        "60",   PHP_INI_ALL, OnUpdateLongGEZero, pool_max_idle_time,  zend_couchbase_globals, couchbase_globals)
 PHP_INI_END()
 // clang-format on
 
@@ -212,6 +213,7 @@ static void php_extname_init_globals(zend_couchbase_globals *couchbase_globals)
     couchbase_globals->enc_cmpr_threshold = 0;
     couchbase_globals->enc_cmpr_factor = 0.0;
     couchbase_globals->dec_json_array = 0;
+    couchbase_globals->pool_max_idle_time = 60;
 }
 
 PHP_MINIT_FUNCTION(couchbase)

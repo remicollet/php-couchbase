@@ -44,6 +44,12 @@
  *   controls the form of the documents, returned by the server if they were in JSON format. When true, it will generate
  *   arrays of arrays, otherwise instances of stdClass.
  *
+ * * `couchbase.pool.max_idle_time_sec` (long), default: `60`
+ *
+ *   controls the maximum interval the underlying connection object could be idle, i.e. without any data/query
+ *   operations. All connections which idle more than this interval will be closed automatically. Cleanup function
+ *   executed after each request using RSHUTDOWN hook.
+ *
  * @package Couchbase
  */
 namespace Couchbase {
