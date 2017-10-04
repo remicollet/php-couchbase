@@ -24,9 +24,9 @@
         <active>yes</active>
     </lead>
 
-    <date>2017-09-05</date>
+    <date>2017-10-05</date>
     <version>
-        <release>2.4.0</release>
+        <release>2.4.1</release>
         <api>2.3.0</api>
     </version>
     <stability>
@@ -36,10 +36,10 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        * Add more examples (XATTRs and RBAC user management).
-        * PCBC-505: Enable error maps for libcouchbase 2.8.0. For higher versions it will be enabled by libcouchbase.
-        * PCBC-499: Expose more query options on N1QL query for advanced tuning query performance
-        * PCBC-485: Expose enhanced error message. The server might fill properties "context" and "ref" of the error.
+        * PCBC-493: Implement subdoc GET_COUNT API.
+        * Update AnalyticsQuery API: removed experimental hostname() method as it derived from cluster config now.
+        * Allow to override default pool connectime idle time with `couchbase.pool.max_idle_time_sec` INI setting.
+        * PCBC-503, PCBC-504: Improve running tests.
     </notes>
 
     <contents>
@@ -141,19 +141,22 @@
             <file role="src" name="src/couchbase/view_query.c" />
             <file role="src" name="src/couchbase/view_query_encodable.c" />
             <file role="src" name="transcoding.c" />
-            <file role="test" name="integration/MockTest.php" />
             <file role="test" name="integration/CrossBucketN1qlQueryTest.php" />
             <file role="test" name="integration/DnsSrvTest.php" />
+            <file role="test" name="integration/MockTest.php" />
             <file role="test" name="integration/SearchTest.php" />
             <file role="test" name="tests/AliasesTest.php" />
             <file role="test" name="tests/BucketManagerTest.php" />
             <file role="test" name="tests/BucketTest.php" />
             <file role="test" name="tests/ClusterManagerTest.php" />
             <file role="test" name="tests/ClusterTest.php" />
+            <file role="test" name="tests/CouchbaseMock.php" />
             <file role="test" name="tests/CouchbaseTestCase.php" />
             <file role="test" name="tests/DatastructuresTest.php" />
             <file role="test" name="tests/N1qlQueryTest.php" />
+            <file role="test" name="tests/SearchQueryTest.php" />
             <file role="test" name="tests/TranscoderTest.php" />
+            <file role="test" name="tests/ViewQueryTest.php" />
         </dir>
     </contents>
     <dependencies>
@@ -176,6 +179,25 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2017-09-05</date>
+            <version>
+                <release>2.4.0</release>
+                <api>2.3.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
+            </license>
+            <notes>
+                * Add more examples (XATTRs and RBAC user management).
+                * PCBC-505: Enable error maps for libcouchbase 2.8.0. For higher versions it will be enabled by libcouchbase.
+                * PCBC-499: Expose more query options on N1QL query for advanced tuning query performance
+                * PCBC-485: Expose enhanced error message. The server might fill properties "context" and "ref" of the error.
+            </notes>
+        </release>
         <release>
             <date>2017-07-19</date>
             <version>
