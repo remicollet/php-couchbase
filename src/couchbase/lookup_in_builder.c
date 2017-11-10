@@ -34,9 +34,13 @@ int pcbc_lookup_in_builder_get(pcbc_lookup_in_builder_t *builder, char *path, in
 
     spec = ecalloc(1, sizeof(pcbc_sd_spec_t));
     spec->next = NULL;
-    spec->s.sdcmd = LCB_SDCMD_GET;
-    spec->s.options = pcbc_subdoc_options_to_flags(1, 1, options TSRMLS_CC);
-    PCBC_SDSPEC_COPY_PATH(spec, path, path_len);
+    if (path) {
+        spec->s.sdcmd = LCB_SDCMD_GET;
+        spec->s.options = pcbc_subdoc_options_to_flags(1, 1, options TSRMLS_CC);
+        PCBC_SDSPEC_COPY_PATH(spec, path, path_len);
+    } else {
+        spec->s.sdcmd = LCB_SDCMD_GET_FULLDOC;
+    }
     if (builder->tail) {
         builder->tail->next = spec;
     }
@@ -57,7 +61,7 @@ PHP_METHOD(LookupInBuilder, get)
     zval *options = NULL;
     int rv;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|z", &path, &path_len, &options);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|sz", &path, &path_len, &options);
     if (rv == FAILURE) {
         RETURN_NULL();
     }

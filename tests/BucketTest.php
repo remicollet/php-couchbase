@@ -404,6 +404,28 @@ class BucketTest extends CouchbaseTestCase {
     /**
      * @depends testConnect
      */
+    function testLookupInFulldoc($b) {
+        if ($this->serverVersion() < 5) {
+            $this->markTestSkipped("Subdoc FullDocument not available for {$this->serverVersion()}");
+        }
+        $key = $this->makeKey('lookup_in_fulldoc');
+        $b->upsert($key, ['path1' => 42, 'path2' => 'foo']);
+
+        $result = $b->lookupIn($key)
+                ->get()
+                ->get('path2')
+                ->execute();
+        $this->assertNull($result->error);
+        $this->assertEquals(2, count($result->value));
+        $this->assertEquals(COUCHBASE_SUCCESS, $result->value[0]['code']);
+        $this->assertEquals(['path1' => 42, 'path2' => 'foo'], $result->value[0]['value']);
+        $this->assertEquals(COUCHBASE_SUCCESS, $result->value[1]['code']);
+        $this->assertEquals('foo', $result->value[1]['value']);
+    }
+
+    /**
+     * @depends testConnect
+     */
     function testLookupIn($b) {
         $key = $this->makeKey('lookup_in');
         $b->upsert($key, array('path1' => 'value1'));
