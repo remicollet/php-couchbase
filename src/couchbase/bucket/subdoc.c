@@ -151,6 +151,17 @@ void pcbc_bucket_subdoc_request(pcbc_bucket_t *obj, void *builder, int is_lookup
         if (((pcbc_mutate_in_builder_t *)builder)->expiry) {
             cmd.exptime = ((pcbc_mutate_in_builder_t *)builder)->expiry;
         }
+        switch (((pcbc_mutate_in_builder_t *)builder)->fulldoc) {
+        case PCBC_SUBDOC_FULLDOC_INSERT:
+            cmd.cmdflags |= LCB_CMDSUBDOC_F_INSERT_DOC;
+            break;
+        case PCBC_SUBDOC_FULLDOC_UPSERT:
+            cmd.cmdflags |= LCB_CMDSUBDOC_F_UPSERT_DOC;
+            break;
+        case PCBC_SUBDOC_FULLDOC_REPLACE:
+        default:
+            break;
+        }
     }
 #undef COPY_SPEC
 

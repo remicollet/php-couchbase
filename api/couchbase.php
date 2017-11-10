@@ -2120,6 +2120,10 @@ namespace Couchbase {
      *   Sub-Document Operations
      */
     final class MutateInBuilder {
+        const FULLDOC_REPLACE = 0;
+        const FULLDOC_UPSERT = 1;
+        const FULLDOC_INSERT = 2;
+
         /** @ignore */
         final private function __construct() {}
 
@@ -2137,8 +2141,25 @@ namespace Couchbase {
          */
         final public function insert($path, $value, $options = []) {}
 
+
         /**
-         * Insert a fragment, replacing the old value if the path exists
+         * Select mode for new full-document operations.
+         *
+         * It defines behaviour of MutateInBuilder#upsert() method. The $mode
+         * could take one of three modes:
+         *  * FULLDOC_REPLACE: complain when document does not exist
+         *  * FULLDOC_INSERT: complain when document does exist
+         *  * FULLDOC_UPSERT: unconditionally set value for the document
+         *
+         * @param int $mode operation mode
+         */
+        final public function modeDocument($mode) {}
+
+        /**
+         * Insert a fragment, replacing the old value if the path exists.
+         *
+         * When only one argument supplied, the library will handle it as full-document
+         * upsert, and treat this argument as value. See MutateInBuilder#modeDocument()
          *
          * @param string $path the path where to insert (or replace) a dictionary value
          * @param mixed $value the new dictionary value to be applied.

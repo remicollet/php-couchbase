@@ -519,6 +519,42 @@ class BucketTest extends CouchbaseTestCase {
     /**
      * @depends testConnect
      */
+    function testMutateInFulldoc($b) {
+        if ($this->serverVersion() < 5) {
+            $this->markTestSkipped("Subdoc FullDocument not available for {$this->serverVersion()}");
+        }
+        $key = $this->makeKey('mutate_in_fulldoc');
+
+        $result = $b->mutateIn($key)
+                ->upsert('created_at', time(), ['xattr' => true, 'createPath' => true])
+                ->upsert(["new" => "yes"])
+                ->modeDocument(\Couchbase\MutateInBuilder::FULLDOC_UPSERT)
+                ->execute();
+        $this->assertNull($result->error);
+        $result = $b->retrieveIn($key, 'new');
+        $this->assertEquals("yes", $result->value[0]['value']);
+
+        $result = $b->mutateIn($key)
+                ->upsert('created_at', time(), ['xattr' => true, 'createPath' => true])
+                ->upsert(["duplicate" => "yes"])
+                ->modeDocument(\Couchbase\MutateInBuilder::FULLDOC_INSERT)
+                ->execute();
+        $this->assertNotNull($result->error);
+        $this->assertEquals(COUCHBASE_KEY_EEXISTS, $result->error->getCode());
+
+        $result = $b->mutateIn($key)
+                ->upsert('updated_at', time(), ['xattr' => true, 'createPath' => true])
+                ->upsert(["updated" => "yes"])
+                ->modeDocument(\Couchbase\MutateInBuilder::FULLDOC_REPLACE)
+                ->execute();
+        $this->assertNull($result->error);
+        $result = $b->retrieveIn($key, 'updated');
+        $this->assertEquals("yes", $result->value[0]['value']);
+    }
+
+    /**
+     * @depends testConnect
+     */
     function testMutateIn($b) {
         $key = $this->makeKey('mutate_in');
         $b->upsert($key, new stdClass());

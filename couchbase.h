@@ -590,6 +590,10 @@ typedef struct {
     PCBC_ZEND_OBJECT_POST
 } pcbc_lookup_in_builder_t;
 
+#define PCBC_SUBDOC_FULLDOC_REPLACE 1
+#define PCBC_SUBDOC_FULLDOC_INSERT 2
+#define PCBC_SUBDOC_FULLDOC_UPSERT 3
+
 typedef struct {
     PCBC_ZEND_OBJECT_PRE
     pcbc_bucket_t *bucket;
@@ -599,6 +603,7 @@ typedef struct {
     lcb_cas_t cas;
     long expiry;
     int nspecs;
+    int fulldoc;
     pcbc_sd_spec_t *head;
     pcbc_sd_spec_t *tail;
     PCBC_ZEND_OBJECT_POST

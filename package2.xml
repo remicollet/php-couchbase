@@ -37,6 +37,7 @@
     </license>
     <notes>
         * PCBC-515: allow to specify expiration for subdocument mutations
+        * PCBC-509: implement fulldoc operations for subdoc API
     </notes>
 
     <contents>

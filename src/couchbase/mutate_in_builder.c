@@ -171,9 +171,13 @@ int pcbc_mutate_in_builder_upsert(pcbc_mutate_in_builder_t *builder, char *path,
 
     spec = ecalloc(1, sizeof(pcbc_sd_spec_t));
     spec->next = NULL;
-    spec->s.sdcmd = LCB_SDCMD_DICT_UPSERT;
-    spec->s.options = flags;
-    PCBC_SDSPEC_COPY_PATH(spec, path, path_len);
+    if (path) {
+        spec->s.sdcmd = LCB_SDCMD_DICT_UPSERT;
+        spec->s.options = flags;
+        PCBC_SDSPEC_COPY_PATH(spec, path, path_len);
+    } else {
+        spec->s.sdcmd = LCB_SDCMD_SET_FULLDOC;
+    }
     {
         smart_str buf = {0};
         int last_error;
@@ -201,25 +205,58 @@ int pcbc_mutate_in_builder_upsert(pcbc_mutate_in_builder_t *builder, char *path,
     return SUCCESS;
 }
 
+/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::modeDocument(long $mode)
+ */
+PHP_METHOD(MutateInBuilder, modeDocument)
+{
+    pcbc_mutate_in_builder_t *obj;
+    int rv;
+    long mode;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &mode);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    obj = Z_MUTATE_IN_BUILDER_OBJ_P(getThis());
+    switch (mode) {
+    case PCBC_SUBDOC_FULLDOC_REPLACE:
+    case PCBC_SUBDOC_FULLDOC_INSERT:
+    case PCBC_SUBDOC_FULLDOC_UPSERT:
+        obj->fulldoc = mode;
+        break;
+    }
+
+    RETURN_ZVAL(getThis(), 1, 0);
+} /* }}} */
+
 /* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::upsert(string $path, mixed $value, array $options = [])
  */
 PHP_METHOD(MutateInBuilder, upsert)
 {
     pcbc_mutate_in_builder_t *obj;
-    char *path = NULL;
+    char *path_str = NULL;
     pcbc_str_arg_size path_len = 0;
     zval *options = NULL;
     int rv;
-    zval *value;
+    zval *value = NULL, *path = NULL;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz|z", &path, &path_len, &value, &options);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|zz", &path, &value, &options);
     if (rv == FAILURE) {
         RETURN_NULL();
+    }
+    if (value == NULL && options == NULL) {
+        // consider call as full-doc upsert
+        value = path;
+    } else {
+        // regular subdoc with path
+        path_str = PCBC_STRVAL_ZP(path);
+        path_len = PCBC_STRLEN_ZP(path);
     }
 
     obj = Z_MUTATE_IN_BUILDER_OBJ_P(getThis());
 
-    rv = pcbc_mutate_in_builder_upsert(obj, path, path_len, value, pcbc_subdoc_options_to_flags(1, 0, options TSRMLS_CC) TSRMLS_CC);
+    rv = pcbc_mutate_in_builder_upsert(obj, path_str, path_len, value,
+                                       pcbc_subdoc_options_to_flags(1, 0, options TSRMLS_CC) TSRMLS_CC);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -817,11 +854,16 @@ ZEND_BEGIN_ARG_INFO_EX(ai_MutateInBuilder_withExpiry, 0, 0, 1)
 ZEND_ARG_INFO(0, expiry)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(ai_MutateInBuilder_modeDocument, 0, 0, 1)
+ZEND_ARG_INFO(0, mode)
+ZEND_END_ARG_INFO()
+
 // clang-format off
 zend_function_entry mutate_in_builder_methods[] = {
     PHP_ME(MutateInBuilder, __construct, ai_MutateInBuilder_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
     PHP_ME(MutateInBuilder, insert, ai_MutateInBuilder_mutatePathValueParents, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(MutateInBuilder, upsert, ai_MutateInBuilder_mutatePathValueParents, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(MutateInBuilder, modeDocument, ai_MutateInBuilder_modeDocument, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(MutateInBuilder, replace, ai_MutateInBuilder_mutatePathValue, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(MutateInBuilder, remove, ai_MutateInBuilder_remove, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(MutateInBuilder, arrayPrepend, ai_MutateInBuilder_mutatePathValueParents, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
@@ -1035,6 +1077,13 @@ PHP_MINIT_FUNCTION(MutateInBuilder)
     pcbc_mutate_in_builder_ce->create_object = mutate_in_builder_create_object;
     PCBC_CE_FLAGS_FINAL(pcbc_mutate_in_builder_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_mutate_in_builder_ce);
+
+    zend_declare_class_constant_long(pcbc_mutate_in_builder_ce, ZEND_STRL("FULLDOC_REPLACE"),
+                                     PCBC_SUBDOC_FULLDOC_REPLACE TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_mutate_in_builder_ce, ZEND_STRL("FULLDOC_INSERT"),
+                                     PCBC_SUBDOC_FULLDOC_INSERT TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_mutate_in_builder_ce, ZEND_STRL("FULLDOC_UPSERT"),
+                                     PCBC_SUBDOC_FULLDOC_UPSERT TSRMLS_CC);
 
     memcpy(&pcbc_mutate_in_builder_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     pcbc_mutate_in_builder_handlers.get_debug_info = mutate_in_builder_get_debug_info;
