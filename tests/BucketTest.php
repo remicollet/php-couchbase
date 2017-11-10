@@ -10,7 +10,15 @@ class BucketTest extends CouchbaseTestCase {
         $h = new \Couchbase\Cluster($this->testDsn);
 
         $this->wrapException(function() use($h) {
-            $h->openBucket('default', 'bad_pass');
+            if ($this->serverVersion() >= 5.0) {
+                $auth = new \Couchbase\PasswordAuthenticator();
+                $auth->username($this->testBucket)->password('bad_pass');
+            } else {
+                $auth = new \Couchbase\ClassicAuthenticator();
+                $auth->bucket($this->testBucket, 'bad_pass');
+            }
+            $h->authenticate($auth);
+            $h->openBucket('default');
         }, '\Couchbase\Exception', 2);
     }
 
@@ -19,6 +27,7 @@ class BucketTest extends CouchbaseTestCase {
      */
     function testBadBucket() {
         $h = new \Couchbase\Cluster($this->testDsn);
+        $h->authenticate($this->testAuthenticator);
 
         $this->wrapException(function() use($h) {
             $h->openBucket('bad_bucket');

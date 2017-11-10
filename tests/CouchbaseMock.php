@@ -1,7 +1,7 @@
 <?php
 
 class CouchbaseMock {
-    const VERSION = '1.5.11';
+    const VERSION = '1.5.12';
 
     private $jarPath;
     private $ctlServer;
