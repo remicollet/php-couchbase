@@ -2307,6 +2307,14 @@ namespace Couchbase {
         final public function counter($path, $delta, $options = []) {}
 
         /**
+         * Change the expiry of the enclosing document as part of the mutation.
+         *
+         * @param expiry the new expiry to apply (or 0 to avoid changing the expiry)
+         * @return MutateInBuilder
+         */
+        final public function withExpiry($expiry) {}
+
+        /**
          * Perform several mutation operations inside a single existing JSON document.
          * @return DocumentFragment
          *

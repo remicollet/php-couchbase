@@ -738,6 +738,30 @@ PHP_METHOD(MutateInBuilder, arrayAppendAll)
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
 
+/* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::withExpiry(int $expiry)
+ */
+PHP_METHOD(MutateInBuilder, withExpiry)
+{
+    pcbc_mutate_in_builder_t *obj;
+    char *path = NULL;
+    pcbc_str_arg_size path_len = 0;
+    zval *options = NULL;
+    int rv;
+    pcbc_sd_spec_t *spec;
+    zval *value;
+    long expiry = 0;
+
+    obj = Z_MUTATE_IN_BUILDER_OBJ_P(getThis());
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &expiry);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    obj->expiry = expiry;
+
+    RETURN_ZVAL(getThis(), 1, 0);
+} /* }}} */
+
 /* {{{ proto \Couchbase\MutateInBuilder MutateInBuilder::execute() */
 PHP_METHOD(MutateInBuilder, execute)
 {
@@ -789,6 +813,10 @@ ZEND_ARG_INFO(0, delta)
 ZEND_ARG_INFO(0, createParents)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(ai_MutateInBuilder_withExpiry, 0, 0, 1)
+ZEND_ARG_INFO(0, expiry)
+ZEND_END_ARG_INFO()
+
 // clang-format off
 zend_function_entry mutate_in_builder_methods[] = {
     PHP_ME(MutateInBuilder, __construct, ai_MutateInBuilder_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
@@ -804,6 +832,7 @@ zend_function_entry mutate_in_builder_methods[] = {
     PHP_ME(MutateInBuilder, arrayInsertAll, ai_MutateInBuilder_mutatePathValues, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(MutateInBuilder, arrayAddUnique, ai_MutateInBuilder_mutatePathValueParents, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(MutateInBuilder, counter, ai_MutateInBuilder_counter, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(MutateInBuilder, withExpiry, ai_MutateInBuilder_withExpiry, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_ME(MutateInBuilder, execute, ai_MutateInBuilder_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
     PHP_FE_END
 };
@@ -901,6 +930,9 @@ static HashTable *mutate_in_builder_get_debug_info(zval *object, int *is_temp TS
     PCBC_ZVAL_ALLOC(cas);
     pcbc_cas_encode(PCBC_P(cas), obj->cas TSRMLS_CC);
     ADD_ASSOC_ZVAL_EX(&retval, "cas", PCBC_P(cas));
+    if (obj->expiry) {
+        ADD_ASSOC_LONG_EX(&retval, "expiry", obj->expiry);
+    }
 
     PCBC_ZVAL_ALLOC(specs);
     array_init_size(PCBC_P(specs), obj->nspecs);

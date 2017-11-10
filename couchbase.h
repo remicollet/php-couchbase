@@ -597,6 +597,7 @@ typedef struct {
     char *id;
     int id_len;
     lcb_cas_t cas;
+    long expiry;
     int nspecs;
     pcbc_sd_spec_t *head;
     pcbc_sd_spec_t *tail;

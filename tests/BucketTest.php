@@ -488,6 +488,28 @@ class BucketTest extends CouchbaseTestCase {
     /**
      * @depends testConnect
      */
+    function testMutateInWithExpiry($b) {
+        $key = $this->makeKey('mutate_in_with_expiry');
+        $key = 'mutate_in_with_expiry';
+        $b->upsert($key, new stdClass());
+        $result = $b->mutateIn($key)
+                ->withExpiry(1) // should expire in one second
+                ->upsert('foo', 'bar')
+                ->execute();
+        $this->assertNull($result->error);
+
+        sleep(2);
+
+        $this->wrapException(function() use($b, $key) {
+            $res = $b->get($key);
+            var_dump($res);
+            var_dump($b);
+        }, '\Couchbase\Exception', COUCHBASE_KEYNOTFOUND);
+    }
+
+    /**
+     * @depends testConnect
+     */
     function testMutateIn($b) {
         $key = $this->makeKey('mutate_in');
         $b->upsert($key, new stdClass());

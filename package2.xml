@@ -24,9 +24,9 @@
         <active>yes</active>
     </lead>
 
-    <date>2017-10-05</date>
+    <date>2017-11-10</date>
     <version>
-        <release>2.4.1</release>
+        <release>2.4.2</release>
         <api>2.3.0</api>
     </version>
     <stability>
@@ -36,10 +36,7 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        * PCBC-493: Implement subdoc GET_COUNT API.
-        * Update AnalyticsQuery API: removed experimental hostname() method as it derived from cluster config now.
-        * Allow to override default pool connectime idle time with `couchbase.pool.max_idle_time_sec` INI setting.
-        * PCBC-503, PCBC-504: Improve running tests.
+        * PCBC-515: allow to specify expiration for subdocument mutations
     </notes>
 
     <contents>
@@ -179,6 +176,23 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <date>2017-10-05</date>
+        <version>
+            <release>2.4.1</release>
+            <api>2.3.0</api>
+        </version>
+        <stability>
+            <release>stable</release>
+            <api>stable</api>
+        </stability>
+        <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
+        </license>
+        <notes>
+            * PCBC-493: Implement subdoc GET_COUNT API.
+            * Update AnalyticsQuery API: removed experimental hostname() method as it derived from cluster config now.
+            * Allow to override default pool connectime idle time with `couchbase.pool.max_idle_time_sec` INI setting.
+            * PCBC-503, PCBC-504: Improve running tests.
+        </notes>
         <release>
             <date>2017-09-05</date>
             <version>

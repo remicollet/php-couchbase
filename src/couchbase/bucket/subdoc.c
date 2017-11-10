@@ -148,6 +148,9 @@ void pcbc_bucket_subdoc_request(pcbc_bucket_t *obj, void *builder, int is_lookup
     } else {
         COPY_SPEC((pcbc_mutate_in_builder_t *)builder);
         cmd.cas = ((pcbc_mutate_in_builder_t *)builder)->cas;
+        if (((pcbc_mutate_in_builder_t *)builder)->expiry) {
+            cmd.exptime = ((pcbc_mutate_in_builder_t *)builder)->expiry;
+        }
     }
 #undef COPY_SPEC
 
