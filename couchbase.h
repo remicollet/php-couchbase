@@ -492,6 +492,7 @@ typedef struct {
     pcbc_connection_t *conn;
     PCBC_ZVAL encoder;
     PCBC_ZVAL decoder;
+    lcb_BTYPE type;
     PCBC_ZEND_OBJECT_POST
 } pcbc_bucket_t;
 

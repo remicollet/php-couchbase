@@ -340,6 +340,10 @@ PHP_METHOD(Bucket, query)
         PCBC_ZVAL retval;
         PCBC_ZVAL fname;
 
+        if (obj->type == LCB_BTYPE_EPHEMERAL) {
+            throw_pcbc_exception("Ephemeral bucket do not support Couchbase Views", LCB_EINVAL);
+            RETURN_NULL();
+        }
         PCBC_ZVAL_ALLOC(fname);
         PCBC_STRING(fname, "encode");
         rv = call_user_function_ex(EG(function_table), PCBC_CP(query), PCBC_P(fname), &retval, 0, NULL, 1,
@@ -1195,6 +1199,21 @@ static HashTable *pcbc_bucket_get_debug_info(zval *object, int *is_temp TSRMLS_D
     obj = Z_BUCKET_OBJ_P(object);
 
     array_init(&retval);
+    switch (obj->type) {
+    case LCB_BTYPE_COUCHBASE:
+        ADD_ASSOC_STRING(&retval, "type", "couchbase");
+        break;
+    case LCB_BTYPE_MEMCACHED:
+        ADD_ASSOC_STRING(&retval, "type", "memcached");
+        break;
+    case LCB_BTYPE_EPHEMERAL:
+        ADD_ASSOC_STRING(&retval, "type", "ephemeral");
+        break;
+    case LCB_BTYPE_UNSPEC:
+    default:
+        ADD_ASSOC_STRING(&retval, "type", "unknown");
+        break;
+    }
     ADD_ASSOC_STRING(&retval, "connstr", obj->conn->connstr);
     ADD_ASSOC_STRING(&retval, "bucket", obj->conn->bucketname);
     ADD_ASSOC_STRING(&retval, "auth", obj->conn->auth_hash);
@@ -1247,6 +1266,7 @@ void pcbc_bucket_init(zval *return_value, pcbc_cluster_t *cluster, const char *b
     object_init_ex(return_value, pcbc_bucket_ce);
     bucket = Z_BUCKET_OBJ_P(return_value);
     bucket->conn = conn;
+    lcb_cntl(conn->lcb, LCB_CNTL_GET, LCB_CNTL_BUCKETTYPE, &bucket->type);
     PCBC_ZVAL_ALLOC(bucket->encoder);
     PCBC_ZVAL_ALLOC(bucket->decoder);
     PCBC_STRING(bucket->encoder, "\\Couchbase\\defaultEncoder");

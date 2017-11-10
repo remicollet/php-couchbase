@@ -38,6 +38,7 @@
     <notes>
         * PCBC-515: allow to specify expiration for subdocument mutations
         * PCBC-509: implement fulldoc operations for subdoc API
+        * PCBC-442: fail fast view requests on ephemeral buckets
     </notes>
 
     <contents>
