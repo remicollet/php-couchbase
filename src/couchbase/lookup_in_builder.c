@@ -167,10 +167,10 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry lookup_in_builder_methods[] = {
     PHP_ME(LookupInBuilder, __construct, ai_LookupInBuilder_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(LookupInBuilder, get, ai_LookupInBuilder_get, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(LookupInBuilder, getCount, ai_LookupInBuilder_get, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(LookupInBuilder, exists, ai_LookupInBuilder_get, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(LookupInBuilder, execute, ai_LookupInBuilder_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(LookupInBuilder, get, ai_LookupInBuilder_get, ZEND_ACC_PUBLIC)
+    PHP_ME(LookupInBuilder, getCount, ai_LookupInBuilder_get, ZEND_ACC_PUBLIC)
+    PHP_ME(LookupInBuilder, exists, ai_LookupInBuilder_get, ZEND_ACC_PUBLIC)
+    PHP_ME(LookupInBuilder, execute, ai_LookupInBuilder_none, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -325,7 +325,6 @@ PHP_MINIT_FUNCTION(LookupInBuilder)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "LookupInBuilder", lookup_in_builder_methods);
     pcbc_lookup_in_builder_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_lookup_in_builder_ce->create_object = lookup_in_builder_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_lookup_in_builder_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_lookup_in_builder_ce);
 
     memcpy(&pcbc_lookup_in_builder_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));

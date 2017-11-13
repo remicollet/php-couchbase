@@ -394,17 +394,17 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry spatial_view_query_methods[] = {
     PHP_ME(SpatialViewQuery, __construct, ai_SpatialViewQuery_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(SpatialViewQuery, from, ai_SpatialViewQuery_from, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(SpatialViewQuery, encode, ai_SpatialViewQuery_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(SpatialViewQuery, limit, ai_SpatialViewQuery_limit, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(SpatialViewQuery, skip, ai_SpatialViewQuery_skip, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(SpatialViewQuery, consistency, ai_SpatialViewQuery_consistency, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_MALIAS(SpatialViewQuery, stale, consistency, ai_SpatialViewQuery_consistency, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL) // ZEND_ACC_DEPRECATED
-    PHP_ME(SpatialViewQuery, bbox, ai_SpatialViewQuery_bbox, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(SpatialViewQuery, startRange, ai_SpatialViewQuery_range, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(SpatialViewQuery, endRange, ai_SpatialViewQuery_range, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(SpatialViewQuery, custom, ai_SpatialViewQuery_custom, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    /* PHP_ME(SpatialViewQuery, includeDocuments, ai_SpatialViewQuery_includeDocuments, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL) */
+    PHP_ME(SpatialViewQuery, from, ai_SpatialViewQuery_from, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC)
+    PHP_ME(SpatialViewQuery, encode, ai_SpatialViewQuery_none, ZEND_ACC_PUBLIC)
+    PHP_ME(SpatialViewQuery, limit, ai_SpatialViewQuery_limit, ZEND_ACC_PUBLIC)
+    PHP_ME(SpatialViewQuery, skip, ai_SpatialViewQuery_skip, ZEND_ACC_PUBLIC)
+    PHP_ME(SpatialViewQuery, consistency, ai_SpatialViewQuery_consistency, ZEND_ACC_PUBLIC)
+    PHP_MALIAS(SpatialViewQuery, stale, consistency, ai_SpatialViewQuery_consistency, ZEND_ACC_PUBLIC) // ZEND_ACC_DEPRECATED
+    PHP_ME(SpatialViewQuery, bbox, ai_SpatialViewQuery_bbox, ZEND_ACC_PUBLIC)
+    PHP_ME(SpatialViewQuery, startRange, ai_SpatialViewQuery_range, ZEND_ACC_PUBLIC)
+    PHP_ME(SpatialViewQuery, endRange, ai_SpatialViewQuery_range, ZEND_ACC_PUBLIC)
+    PHP_ME(SpatialViewQuery, custom, ai_SpatialViewQuery_custom, ZEND_ACC_PUBLIC)
+    /* PHP_ME(SpatialViewQuery, includeDocuments, ai_SpatialViewQuery_includeDocuments, ZEND_ACC_PUBLIC) */
     PHP_FE_END
 };
 // clang-format on
@@ -486,7 +486,6 @@ PHP_MINIT_FUNCTION(SpatialViewQuery)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "SpatialViewQuery", spatial_view_query_methods);
     pcbc_spatial_view_query_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_spatial_view_query_ce->create_object = spatial_view_query_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_spatial_view_query_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_spatial_view_query_ce);
 
     zend_class_implements(pcbc_spatial_view_query_ce TSRMLS_CC, 1, pcbc_view_query_encodable_ce);

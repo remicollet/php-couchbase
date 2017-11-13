@@ -265,12 +265,12 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry date_range_search_query_methods[] = {
     PHP_ME(DateRangeSearchQuery, __construct, ai_DateRangeSearchQuery_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(DateRangeSearchQuery, jsonSerialize, ai_DateRangeSearchQuery_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(DateRangeSearchQuery, boost, ai_DateRangeSearchQuery_boost, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(DateRangeSearchQuery, field, ai_DateRangeSearchQuery_field, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(DateRangeSearchQuery, start, ai_DateRangeSearchQuery_start, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(DateRangeSearchQuery, end, ai_DateRangeSearchQuery_end, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(DateRangeSearchQuery, dateTimeParser, ai_DateRangeSearchQuery_dateTimeParser, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(DateRangeSearchQuery, jsonSerialize, ai_DateRangeSearchQuery_none, ZEND_ACC_PUBLIC)
+    PHP_ME(DateRangeSearchQuery, boost, ai_DateRangeSearchQuery_boost, ZEND_ACC_PUBLIC)
+    PHP_ME(DateRangeSearchQuery, field, ai_DateRangeSearchQuery_field, ZEND_ACC_PUBLIC)
+    PHP_ME(DateRangeSearchQuery, start, ai_DateRangeSearchQuery_start, ZEND_ACC_PUBLIC)
+    PHP_ME(DateRangeSearchQuery, end, ai_DateRangeSearchQuery_end, ZEND_ACC_PUBLIC)
+    PHP_ME(DateRangeSearchQuery, dateTimeParser, ai_DateRangeSearchQuery_dateTimeParser, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -373,7 +373,6 @@ PHP_MINIT_FUNCTION(DateRangeSearchQuery)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "DateRangeSearchQuery", date_range_search_query_methods);
     pcbc_date_range_search_query_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_date_range_search_query_ce->create_object = date_range_search_query_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_date_range_search_query_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_date_range_search_query_ce);
 
     zend_class_implements(pcbc_date_range_search_query_ce TSRMLS_CC, 1, pcbc_json_serializable_ce);

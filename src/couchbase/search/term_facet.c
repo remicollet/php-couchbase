@@ -74,7 +74,7 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry term_search_facet_methods[] = {
     PHP_ME(TermSearchFacet, __construct, ai_TermSearchFacet_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(TermSearchFacet, jsonSerialize, ai_TermSearchFacet_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(TermSearchFacet, jsonSerialize, ai_TermSearchFacet_none, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -153,7 +153,6 @@ PHP_MINIT_FUNCTION(TermSearchFacet)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "TermSearchFacet", term_search_facet_methods);
     pcbc_term_search_facet_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_term_search_facet_ce->create_object = term_search_facet_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_term_search_facet_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_term_search_facet_ce);
 
     zend_class_implements(pcbc_term_search_facet_ce TSRMLS_CC, 1, pcbc_json_serializable_ce);

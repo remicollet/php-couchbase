@@ -861,21 +861,21 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry mutate_in_builder_methods[] = {
     PHP_ME(MutateInBuilder, __construct, ai_MutateInBuilder_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(MutateInBuilder, insert, ai_MutateInBuilder_mutatePathValueParents, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MutateInBuilder, upsert, ai_MutateInBuilder_mutatePathValueParents, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MutateInBuilder, modeDocument, ai_MutateInBuilder_modeDocument, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MutateInBuilder, replace, ai_MutateInBuilder_mutatePathValue, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MutateInBuilder, remove, ai_MutateInBuilder_remove, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MutateInBuilder, arrayPrepend, ai_MutateInBuilder_mutatePathValueParents, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MutateInBuilder, arrayAppend, ai_MutateInBuilder_mutatePathValueParents, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MutateInBuilder, arrayInsert, ai_MutateInBuilder_mutatePathValue, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MutateInBuilder, arrayPrependAll, ai_MutateInBuilder_mutatePathValuesParents, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MutateInBuilder, arrayAppendAll, ai_MutateInBuilder_mutatePathValuesParents, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MutateInBuilder, arrayInsertAll, ai_MutateInBuilder_mutatePathValues, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MutateInBuilder, arrayAddUnique, ai_MutateInBuilder_mutatePathValueParents, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MutateInBuilder, counter, ai_MutateInBuilder_counter, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MutateInBuilder, withExpiry, ai_MutateInBuilder_withExpiry, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MutateInBuilder, execute, ai_MutateInBuilder_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(MutateInBuilder, insert, ai_MutateInBuilder_mutatePathValueParents, ZEND_ACC_PUBLIC)
+    PHP_ME(MutateInBuilder, upsert, ai_MutateInBuilder_mutatePathValueParents, ZEND_ACC_PUBLIC)
+    PHP_ME(MutateInBuilder, modeDocument, ai_MutateInBuilder_modeDocument, ZEND_ACC_PUBLIC)
+    PHP_ME(MutateInBuilder, replace, ai_MutateInBuilder_mutatePathValue, ZEND_ACC_PUBLIC)
+    PHP_ME(MutateInBuilder, remove, ai_MutateInBuilder_remove, ZEND_ACC_PUBLIC)
+    PHP_ME(MutateInBuilder, arrayPrepend, ai_MutateInBuilder_mutatePathValueParents, ZEND_ACC_PUBLIC)
+    PHP_ME(MutateInBuilder, arrayAppend, ai_MutateInBuilder_mutatePathValueParents, ZEND_ACC_PUBLIC)
+    PHP_ME(MutateInBuilder, arrayInsert, ai_MutateInBuilder_mutatePathValue, ZEND_ACC_PUBLIC)
+    PHP_ME(MutateInBuilder, arrayPrependAll, ai_MutateInBuilder_mutatePathValuesParents, ZEND_ACC_PUBLIC)
+    PHP_ME(MutateInBuilder, arrayAppendAll, ai_MutateInBuilder_mutatePathValuesParents, ZEND_ACC_PUBLIC)
+    PHP_ME(MutateInBuilder, arrayInsertAll, ai_MutateInBuilder_mutatePathValues, ZEND_ACC_PUBLIC)
+    PHP_ME(MutateInBuilder, arrayAddUnique, ai_MutateInBuilder_mutatePathValueParents, ZEND_ACC_PUBLIC)
+    PHP_ME(MutateInBuilder, counter, ai_MutateInBuilder_counter, ZEND_ACC_PUBLIC)
+    PHP_ME(MutateInBuilder, withExpiry, ai_MutateInBuilder_withExpiry, ZEND_ACC_PUBLIC)
+    PHP_ME(MutateInBuilder, execute, ai_MutateInBuilder_none, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -1075,7 +1075,6 @@ PHP_MINIT_FUNCTION(MutateInBuilder)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "MutateInBuilder", mutate_in_builder_methods);
     pcbc_mutate_in_builder_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_mutate_in_builder_ce->create_object = mutate_in_builder_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_mutate_in_builder_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_mutate_in_builder_ce);
 
     zend_declare_class_constant_long(pcbc_mutate_in_builder_ce, ZEND_STRL("FULLDOC_REPLACE"),

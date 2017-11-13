@@ -377,14 +377,14 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry cluster_manager_methods[] = {
     PHP_ME(ClusterManager, __construct, ai_ClusterManager_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(ClusterManager, listBuckets, ai_ClusterManager_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ClusterManager, createBucket, ai_ClusterManager_createBucket, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ClusterManager, removeBucket, ai_ClusterManager_removeBucket, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ClusterManager, listUsers, ai_ClusterManager_listUsers, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ClusterManager, upsertUser, ai_ClusterManager_upsertUser, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ClusterManager, getUser, ai_ClusterManager_getUser, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ClusterManager, removeUser, ai_ClusterManager_removeUser, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ClusterManager, info, ai_ClusterManager_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(ClusterManager, listBuckets, ai_ClusterManager_none, ZEND_ACC_PUBLIC)
+    PHP_ME(ClusterManager, createBucket, ai_ClusterManager_createBucket, ZEND_ACC_PUBLIC)
+    PHP_ME(ClusterManager, removeBucket, ai_ClusterManager_removeBucket, ZEND_ACC_PUBLIC)
+    PHP_ME(ClusterManager, listUsers, ai_ClusterManager_listUsers, ZEND_ACC_PUBLIC)
+    PHP_ME(ClusterManager, upsertUser, ai_ClusterManager_upsertUser, ZEND_ACC_PUBLIC)
+    PHP_ME(ClusterManager, getUser, ai_ClusterManager_getUser, ZEND_ACC_PUBLIC)
+    PHP_ME(ClusterManager, removeUser, ai_ClusterManager_removeUser, ZEND_ACC_PUBLIC)
+    PHP_ME(ClusterManager, info, ai_ClusterManager_none, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -485,7 +485,6 @@ PHP_MINIT_FUNCTION(ClusterManager)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "ClusterManager", cluster_manager_methods);
     pcbc_cluster_manager_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_cluster_manager_ce->create_object = pcbc_cluster_manager_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_cluster_manager_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_cluster_manager_ce);
 
     memcpy(&pcbc_cluster_manager_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));

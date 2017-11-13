@@ -548,25 +548,25 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry view_query_methods[] = {
     PHP_ME(ViewQuery, __construct, ai_ViewQuery_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(ViewQuery, from, ai_ViewQuery_from, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ViewQuery, fromSpatial, ai_ViewQuery_from, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ViewQuery, encode, ai_ViewQuery_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ViewQuery, limit, ai_ViewQuery_limit, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ViewQuery, skip, ai_ViewQuery_skip, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ViewQuery, consistency, ai_ViewQuery_consistency, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_MALIAS(ViewQuery, stale, consistency, ai_ViewQuery_consistency, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL) // ZEND_ACC_DEPRECATED
-    PHP_ME(ViewQuery, custom, ai_ViewQuery_custom, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ViewQuery, order, ai_ViewQuery_order, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ViewQuery, reduce, ai_ViewQuery_reduce, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ViewQuery, group, ai_ViewQuery_group, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ViewQuery, groupLevel, ai_ViewQuery_groupLevel, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_MALIAS(ViewQuery, group_level, groupLevel, ai_ViewQuery_groupLevel, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL) // ZEND_ACC_DEPRECATED
-    PHP_ME(ViewQuery, key, ai_ViewQuery_key, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ViewQuery, keys, ai_ViewQuery_keys, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ViewQuery, range, ai_ViewQuery_range, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ViewQuery, idRange, ai_ViewQuery_idRange, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_MALIAS(ViewQuery, id_range, idRange, ai_ViewQuery_idRange, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL) // ZEND_ACC_DEPRECATED
-    /* PHP_ME(ViewQuery, includeDocuments, ai_ViewQuery_includeDocuments, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL) */
+    PHP_ME(ViewQuery, from, ai_ViewQuery_from, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC)
+    PHP_ME(ViewQuery, fromSpatial, ai_ViewQuery_from, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC)
+    PHP_ME(ViewQuery, encode, ai_ViewQuery_none, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewQuery, limit, ai_ViewQuery_limit, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewQuery, skip, ai_ViewQuery_skip, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewQuery, consistency, ai_ViewQuery_consistency, ZEND_ACC_PUBLIC)
+    PHP_MALIAS(ViewQuery, stale, consistency, ai_ViewQuery_consistency, ZEND_ACC_PUBLIC) // ZEND_ACC_DEPRECATED
+    PHP_ME(ViewQuery, custom, ai_ViewQuery_custom, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewQuery, order, ai_ViewQuery_order, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewQuery, reduce, ai_ViewQuery_reduce, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewQuery, group, ai_ViewQuery_group, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewQuery, groupLevel, ai_ViewQuery_groupLevel, ZEND_ACC_PUBLIC)
+    PHP_MALIAS(ViewQuery, group_level, groupLevel, ai_ViewQuery_groupLevel, ZEND_ACC_PUBLIC) // ZEND_ACC_DEPRECATED
+    PHP_ME(ViewQuery, key, ai_ViewQuery_key, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewQuery, keys, ai_ViewQuery_keys, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewQuery, range, ai_ViewQuery_range, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewQuery, idRange, ai_ViewQuery_idRange, ZEND_ACC_PUBLIC)
+    PHP_MALIAS(ViewQuery, id_range, idRange, ai_ViewQuery_idRange, ZEND_ACC_PUBLIC) // ZEND_ACC_DEPRECATED
+    /* PHP_ME(ViewQuery, includeDocuments, ai_ViewQuery_includeDocuments, ZEND_ACC_PUBLIC) */
     PHP_FE_END
 };
 // clang-format on
@@ -654,7 +654,6 @@ PHP_MINIT_FUNCTION(ViewQuery)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "ViewQuery", view_query_methods);
     pcbc_view_query_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_view_query_ce->create_object = view_query_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_view_query_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_view_query_ce);
 
     zend_declare_class_constant_long(pcbc_view_query_ce, ZEND_STRL("UPDATE_BEFORE"), UPDATE_BEFORE TSRMLS_CC);

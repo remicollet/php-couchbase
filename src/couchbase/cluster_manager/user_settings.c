@@ -134,10 +134,10 @@ ZEND_END_ARG_INFO()
 
 // clang-format off
 zend_function_entry user_settings_methods[] = {
-    PHP_ME(UserSettings, __construct, ai_UserSettings_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(UserSettings, fullName, ai_UserSettings_fullName, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(UserSettings, password, ai_UserSettings_password, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(UserSettings, role, ai_UserSettings_role, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(UserSettings, __construct, ai_UserSettings_none, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    PHP_ME(UserSettings, fullName, ai_UserSettings_fullName, ZEND_ACC_PUBLIC)
+    PHP_ME(UserSettings, password, ai_UserSettings_password, ZEND_ACC_PUBLIC)
+    PHP_ME(UserSettings, role, ai_UserSettings_role, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -216,7 +216,6 @@ PHP_MINIT_FUNCTION(UserSettings)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "UserSettings", user_settings_methods);
     pcbc_user_settings_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_user_settings_ce->create_object = user_settings_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_user_settings_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_user_settings_ce);
 
     memcpy(&user_settings_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));

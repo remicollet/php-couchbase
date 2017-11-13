@@ -367,18 +367,18 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry n1ql_query_methods[] = {
     PHP_ME(N1qlQuery, __construct, ai_N1qlQuery_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(N1qlQuery, fromString, ai_N1qlQuery_fromString, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(N1qlQuery, adhoc, ai_N1qlQuery_adhoc, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(N1qlQuery, crossBucket, ai_N1qlQuery_crossBucket, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(N1qlQuery, positionalParams, ai_N1qlQuery_params, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(N1qlQuery, namedParams, ai_N1qlQuery_params, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(N1qlQuery, consistency, ai_N1qlQuery_consistency, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(N1qlQuery, consistentWith, ai_N1qlQuery_consistentWith, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(N1qlQuery, scanCap, ai_N1qlQuery_scanCap, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(N1qlQuery, pipelineBatch, ai_N1qlQuery_pipelineBatch, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(N1qlQuery, pipelineCap, ai_N1qlQuery_pipelineCap, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(N1qlQuery, maxParallelism, ai_N1qlQuery_maxParallelism, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(N1qlQuery, readonly, ai_N1qlQuery_readonly, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(N1qlQuery, fromString, ai_N1qlQuery_fromString, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC)
+    PHP_ME(N1qlQuery, adhoc, ai_N1qlQuery_adhoc, ZEND_ACC_PUBLIC)
+    PHP_ME(N1qlQuery, crossBucket, ai_N1qlQuery_crossBucket, ZEND_ACC_PUBLIC)
+    PHP_ME(N1qlQuery, positionalParams, ai_N1qlQuery_params, ZEND_ACC_PUBLIC)
+    PHP_ME(N1qlQuery, namedParams, ai_N1qlQuery_params, ZEND_ACC_PUBLIC)
+    PHP_ME(N1qlQuery, consistency, ai_N1qlQuery_consistency, ZEND_ACC_PUBLIC)
+    PHP_ME(N1qlQuery, consistentWith, ai_N1qlQuery_consistentWith, ZEND_ACC_PUBLIC)
+    PHP_ME(N1qlQuery, scanCap, ai_N1qlQuery_scanCap, ZEND_ACC_PUBLIC)
+    PHP_ME(N1qlQuery, pipelineBatch, ai_N1qlQuery_pipelineBatch, ZEND_ACC_PUBLIC)
+    PHP_ME(N1qlQuery, pipelineCap, ai_N1qlQuery_pipelineCap, ZEND_ACC_PUBLIC)
+    PHP_ME(N1qlQuery, maxParallelism, ai_N1qlQuery_maxParallelism, ZEND_ACC_PUBLIC)
+    PHP_ME(N1qlQuery, readonly, ai_N1qlQuery_readonly, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -464,7 +464,6 @@ PHP_MINIT_FUNCTION(N1qlQuery)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "N1qlQuery", n1ql_query_methods);
     pcbc_n1ql_query_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_n1ql_query_ce->create_object = n1ql_query_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_n1ql_query_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_n1ql_query_ce);
 
     memcpy(&pcbc_n1ql_query_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));

@@ -219,9 +219,9 @@ ZEND_END_ARG_INFO()
 
 // clang-format off
 zend_function_entry classic_authenticator_methods[] = {
-    PHP_ME(ClassicAuthenticator, __construct, ai_ClassicAuthenticator_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(ClassicAuthenticator, cluster, ai_ClassicAuthenticator_cluster, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(ClassicAuthenticator, bucket, ai_ClassicAuthenticator_bucket, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(ClassicAuthenticator, __construct, ai_ClassicAuthenticator_none, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    PHP_ME(ClassicAuthenticator, cluster, ai_ClassicAuthenticator_cluster, ZEND_ACC_PUBLIC)
+    PHP_ME(ClassicAuthenticator, bucket, ai_ClassicAuthenticator_bucket, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -319,7 +319,6 @@ PHP_MINIT_FUNCTION(ClassicAuthenticator)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "ClassicAuthenticator", classic_authenticator_methods);
     pcbc_classic_authenticator_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_classic_authenticator_ce->create_object = authenticator_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_classic_authenticator_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_classic_authenticator_ce);
 
     zend_class_implements(pcbc_classic_authenticator_ce TSRMLS_CC, 1, pcbc_authenticator_ce);

@@ -144,9 +144,9 @@ ZEND_END_ARG_INFO()
 
 // clang-format off
 zend_function_entry password_authenticator_methods[] = {
-    PHP_ME(PasswordAuthenticator, __construct, ai_PasswordAuthenticator_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(PasswordAuthenticator, username, ai_PasswordAuthenticator_username, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(PasswordAuthenticator, password, ai_PasswordAuthenticator_password, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(PasswordAuthenticator, __construct, ai_PasswordAuthenticator_none, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    PHP_ME(PasswordAuthenticator, username, ai_PasswordAuthenticator_username, ZEND_ACC_PUBLIC)
+    PHP_ME(PasswordAuthenticator, password, ai_PasswordAuthenticator_password, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -219,7 +219,6 @@ PHP_MINIT_FUNCTION(PasswordAuthenticator)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "PasswordAuthenticator", password_authenticator_methods);
     pcbc_password_authenticator_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_password_authenticator_ce->create_object = authenticator_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_password_authenticator_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_password_authenticator_ce);
 
     zend_class_implements(pcbc_password_authenticator_ce TSRMLS_CC, 1, pcbc_authenticator_ce);

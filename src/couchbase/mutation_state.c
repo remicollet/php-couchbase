@@ -247,8 +247,8 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry mutation_state_methods[] = {
     PHP_ME(MutationState, __construct, ai_MutationState_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(MutationState, from, ai_MutationState_add, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MutationState, add, ai_MutationState_add, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(MutationState, from, ai_MutationState_add, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC)
+    PHP_ME(MutationState, add, ai_MutationState_add, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -352,7 +352,6 @@ PHP_MINIT_FUNCTION(MutationState)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "MutationState", mutation_state_methods);
     pcbc_mutation_state_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_mutation_state_ce->create_object = mutation_state_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_mutation_state_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_mutation_state_ce);
 
     memcpy(&pcbc_mutation_state_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));

@@ -215,12 +215,12 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry match_search_query_methods[] = {
     PHP_ME(MatchSearchQuery, __construct, ai_MatchSearchQuery_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(MatchSearchQuery, jsonSerialize, ai_MatchSearchQuery_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MatchSearchQuery, boost, ai_MatchSearchQuery_boost, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MatchSearchQuery, field, ai_MatchSearchQuery_field, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MatchSearchQuery, analyzer, ai_MatchSearchQuery_analyzer, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MatchSearchQuery, prefixLength, ai_MatchSearchQuery_prefixLength, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MatchSearchQuery, fuzziness, ai_MatchSearchQuery_fuzziness, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(MatchSearchQuery, jsonSerialize, ai_MatchSearchQuery_none, ZEND_ACC_PUBLIC)
+    PHP_ME(MatchSearchQuery, boost, ai_MatchSearchQuery_boost, ZEND_ACC_PUBLIC)
+    PHP_ME(MatchSearchQuery, field, ai_MatchSearchQuery_field, ZEND_ACC_PUBLIC)
+    PHP_ME(MatchSearchQuery, analyzer, ai_MatchSearchQuery_analyzer, ZEND_ACC_PUBLIC)
+    PHP_ME(MatchSearchQuery, prefixLength, ai_MatchSearchQuery_prefixLength, ZEND_ACC_PUBLIC)
+    PHP_ME(MatchSearchQuery, fuzziness, ai_MatchSearchQuery_fuzziness, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -323,7 +323,6 @@ PHP_MINIT_FUNCTION(MatchSearchQuery)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "MatchSearchQuery", match_search_query_methods);
     pcbc_match_search_query_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_match_search_query_ce->create_object = match_search_query_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_match_search_query_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_match_search_query_ce);
 
     zend_class_implements(pcbc_match_search_query_ce TSRMLS_CC, 1, pcbc_json_serializable_ce);

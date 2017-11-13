@@ -53,7 +53,7 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry analytics_query_methods[] = {
     PHP_ME(AnalyticsQuery, __construct, ai_AnalyticsQuery_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(AnalyticsQuery, fromString, ai_AnalyticsQuery_fromString, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(AnalyticsQuery, fromString, ai_AnalyticsQuery_fromString, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -136,7 +136,6 @@ PHP_MINIT_FUNCTION(AnalyticsQuery)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "AnalyticsQuery", analytics_query_methods);
     pcbc_analytics_query_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_analytics_query_ce->create_object = analytics_query_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_analytics_query_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_analytics_query_ce);
 
     memcpy(&pcbc_analytics_query_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));

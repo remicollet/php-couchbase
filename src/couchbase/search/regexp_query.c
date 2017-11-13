@@ -129,9 +129,9 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry regexp_search_query_methods[] = {
     PHP_ME(RegexpSearchQuery, __construct, ai_RegexpSearchQuery_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(RegexpSearchQuery, jsonSerialize, ai_RegexpSearchQuery_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(RegexpSearchQuery, boost, ai_RegexpSearchQuery_boost, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(RegexpSearchQuery, field, ai_RegexpSearchQuery_field, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(RegexpSearchQuery, jsonSerialize, ai_RegexpSearchQuery_none, ZEND_ACC_PUBLIC)
+    PHP_ME(RegexpSearchQuery, boost, ai_RegexpSearchQuery_boost, ZEND_ACC_PUBLIC)
+    PHP_ME(RegexpSearchQuery, field, ai_RegexpSearchQuery_field, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -219,7 +219,6 @@ PHP_MINIT_FUNCTION(RegexpSearchQuery)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "RegexpSearchQuery", regexp_search_query_methods);
     pcbc_regexp_search_query_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_regexp_search_query_ce->create_object = regexp_search_query_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_regexp_search_query_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_regexp_search_query_ce);
 
     zend_class_implements(pcbc_regexp_search_query_ce TSRMLS_CC, 1, pcbc_json_serializable_ce);

@@ -466,19 +466,19 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry bucket_manager_methods[] = {
     PHP_ME(BucketManager, __construct, ai_BucketManager_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(BucketManager, info, ai_BucketManager_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(BucketManager, flush, ai_BucketManager_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(BucketManager, listDesignDocuments, ai_BucketManager_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_MALIAS(BucketManager, getDesignDocuments, listDesignDocuments, ai_BucketManager_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL | ZEND_ACC_DEPRECATED)
-    PHP_ME(BucketManager, getDesignDocument, ai_BucketManager_getDesignDocument, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(BucketManager, removeDesignDocument, ai_BucketManager_getDesignDocument, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(BucketManager, upsertDesignDocument, ai_BucketManager_upsertDesignDocument, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(BucketManager, insertDesignDocument, ai_BucketManager_upsertDesignDocument, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(BucketManager, listN1qlIndexes, ai_BucketManager_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(BucketManager, createN1qlPrimaryIndex, ai_BucketManager_createN1qlPrimaryIndex, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(BucketManager, createN1qlIndex, ai_BucketManager_createN1qlIndex, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(BucketManager, dropN1qlPrimaryIndex, ai_BucketManager_dropN1qlPrimaryIndex, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(BucketManager, dropN1qlIndex, ai_BucketManager_dropN1qlIndex, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(BucketManager, info, ai_BucketManager_none, ZEND_ACC_PUBLIC)
+    PHP_ME(BucketManager, flush, ai_BucketManager_none, ZEND_ACC_PUBLIC)
+    PHP_ME(BucketManager, listDesignDocuments, ai_BucketManager_none, ZEND_ACC_PUBLIC)
+    PHP_MALIAS(BucketManager, getDesignDocuments, listDesignDocuments, ai_BucketManager_none, ZEND_ACC_PUBLIC | ZEND_ACC_DEPRECATED)
+    PHP_ME(BucketManager, getDesignDocument, ai_BucketManager_getDesignDocument, ZEND_ACC_PUBLIC)
+    PHP_ME(BucketManager, removeDesignDocument, ai_BucketManager_getDesignDocument, ZEND_ACC_PUBLIC)
+    PHP_ME(BucketManager, upsertDesignDocument, ai_BucketManager_upsertDesignDocument, ZEND_ACC_PUBLIC)
+    PHP_ME(BucketManager, insertDesignDocument, ai_BucketManager_upsertDesignDocument, ZEND_ACC_PUBLIC)
+    PHP_ME(BucketManager, listN1qlIndexes, ai_BucketManager_none, ZEND_ACC_PUBLIC)
+    PHP_ME(BucketManager, createN1qlPrimaryIndex, ai_BucketManager_createN1qlPrimaryIndex, ZEND_ACC_PUBLIC)
+    PHP_ME(BucketManager, createN1qlIndex, ai_BucketManager_createN1qlIndex, ZEND_ACC_PUBLIC)
+    PHP_ME(BucketManager, dropN1qlPrimaryIndex, ai_BucketManager_dropN1qlPrimaryIndex, ZEND_ACC_PUBLIC)
+    PHP_ME(BucketManager, dropN1qlIndex, ai_BucketManager_dropN1qlIndex, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -555,7 +555,6 @@ PHP_MINIT_FUNCTION(BucketManager)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "BucketManager", bucket_manager_methods);
     pcbc_bucket_manager_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_bucket_manager_ce->create_object = pcbc_bucket_manager_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_bucket_manager_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_bucket_manager_ce);
 
     memcpy(&pcbc_bucket_manager_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));

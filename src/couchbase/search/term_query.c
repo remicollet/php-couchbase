@@ -183,11 +183,11 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry term_search_query_methods[] = {
     PHP_ME(TermSearchQuery, __construct, ai_TermSearchQuery_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(TermSearchQuery, jsonSerialize, ai_TermSearchQuery_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(TermSearchQuery, boost, ai_TermSearchQuery_boost, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(TermSearchQuery, field, ai_TermSearchQuery_field, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(TermSearchQuery, prefixLength, ai_TermSearchQuery_prefixLength, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(TermSearchQuery, fuzziness, ai_TermSearchQuery_fuzziness, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(TermSearchQuery, jsonSerialize, ai_TermSearchQuery_none, ZEND_ACC_PUBLIC)
+    PHP_ME(TermSearchQuery, boost, ai_TermSearchQuery_boost, ZEND_ACC_PUBLIC)
+    PHP_ME(TermSearchQuery, field, ai_TermSearchQuery_field, ZEND_ACC_PUBLIC)
+    PHP_ME(TermSearchQuery, prefixLength, ai_TermSearchQuery_prefixLength, ZEND_ACC_PUBLIC)
+    PHP_ME(TermSearchQuery, fuzziness, ai_TermSearchQuery_fuzziness, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -283,7 +283,6 @@ PHP_MINIT_FUNCTION(TermSearchQuery)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "TermSearchQuery", term_search_query_methods);
     pcbc_term_search_query_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_term_search_query_ce->create_object = term_search_query_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_term_search_query_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_term_search_query_ce);
 
     zend_class_implements(pcbc_term_search_query_ce TSRMLS_CC, 1, pcbc_json_serializable_ce);

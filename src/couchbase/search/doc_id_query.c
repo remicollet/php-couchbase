@@ -181,10 +181,10 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry doc_id_search_query_methods[] = {
     PHP_ME(DocIdSearchQuery, __construct, ai_DocIdSearchQuery_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(DocIdSearchQuery, jsonSerialize, ai_DocIdSearchQuery_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(DocIdSearchQuery, boost, ai_DocIdSearchQuery_boost, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(DocIdSearchQuery, field, ai_DocIdSearchQuery_field, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(DocIdSearchQuery, docIds, ai_DocIdSearchQuery_docIds, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(DocIdSearchQuery, jsonSerialize, ai_DocIdSearchQuery_none, ZEND_ACC_PUBLIC)
+    PHP_ME(DocIdSearchQuery, boost, ai_DocIdSearchQuery_boost, ZEND_ACC_PUBLIC)
+    PHP_ME(DocIdSearchQuery, field, ai_DocIdSearchQuery_field, ZEND_ACC_PUBLIC)
+    PHP_ME(DocIdSearchQuery, docIds, ai_DocIdSearchQuery_docIds, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -297,7 +297,6 @@ PHP_MINIT_FUNCTION(DocIdSearchQuery)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "DocIdSearchQuery", doc_id_search_query_methods);
     pcbc_doc_id_search_query_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_doc_id_search_query_ce->create_object = doc_id_search_query_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_doc_id_search_query_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_doc_id_search_query_ce);
 
     zend_class_implements(pcbc_doc_id_search_query_ce TSRMLS_CC, 1, pcbc_json_serializable_ce);

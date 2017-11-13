@@ -296,18 +296,6 @@ typedef int pcbc_str_arg_size;
 #define PCBC_ALLOC_OBJECT_T(obj_t, class_type) (obj_t *)ecalloc(1, sizeof(obj_t))
 #endif
 
-#if PHP_VERSION_ID >= 70000
-#define PCBC_CE_FLAGS_FINAL(ce)                                                                                        \
-    do {                                                                                                               \
-        ce->ce_flags |= ZEND_ACC_FINAL;                                                                                \
-    } while (0);
-#else
-#define PCBC_CE_FLAGS_FINAL(ce)                                                                                        \
-    do {                                                                                                               \
-        ce->ce_flags |= ZEND_ACC_FINAL_CLASS;                                                                          \
-    } while (0);
-#endif
-
 #define PCBC_CE_DISABLE_SERIALIZATION(ce)                                                                              \
     do {                                                                                                               \
         ce->serialize = zend_class_serialize_deny;                                                                     \

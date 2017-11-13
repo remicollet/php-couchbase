@@ -159,8 +159,8 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry date_search_facet_methods[] = {
     PHP_ME(DateRangeSearchFacet, __construct, ai_DateRangeSearchFacet_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(DateRangeSearchFacet, jsonSerialize, ai_DateRangeSearchFacet_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(DateRangeSearchFacet, addRange, ai_DateRangeSearchFacet_addRange, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(DateRangeSearchFacet, jsonSerialize, ai_DateRangeSearchFacet_none, ZEND_ACC_PUBLIC)
+    PHP_ME(DateRangeSearchFacet, addRange, ai_DateRangeSearchFacet_addRange, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -245,7 +245,6 @@ PHP_MINIT_FUNCTION(DateRangeSearchFacet)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "DateRangeSearchFacet", date_search_facet_methods);
     date_range_search_facet_ce = zend_register_internal_class(&ce TSRMLS_CC);
     date_range_search_facet_ce->create_object = date_search_facet_create_object;
-    PCBC_CE_FLAGS_FINAL(date_range_search_facet_ce);
     PCBC_CE_DISABLE_SERIALIZATION(date_range_search_facet_ce);
 
     zend_class_implements(date_range_search_facet_ce TSRMLS_CC, 1, pcbc_json_serializable_ce);

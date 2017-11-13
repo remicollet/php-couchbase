@@ -265,11 +265,11 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry boolean_search_query_methods[] = {
     PHP_ME(BooleanSearchQuery, __construct, ai_BooleanSearchQuery_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(BooleanSearchQuery, jsonSerialize, ai_BooleanSearchQuery_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(BooleanSearchQuery, boost, ai_BooleanSearchQuery_boost, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(BooleanSearchQuery, must, ai_BooleanSearchQuery_queries, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(BooleanSearchQuery, mustNot, ai_BooleanSearchQuery_queries, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(BooleanSearchQuery, should, ai_BooleanSearchQuery_queries, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(BooleanSearchQuery, jsonSerialize, ai_BooleanSearchQuery_none, ZEND_ACC_PUBLIC)
+    PHP_ME(BooleanSearchQuery, boost, ai_BooleanSearchQuery_boost, ZEND_ACC_PUBLIC)
+    PHP_ME(BooleanSearchQuery, must, ai_BooleanSearchQuery_queries, ZEND_ACC_PUBLIC)
+    PHP_ME(BooleanSearchQuery, mustNot, ai_BooleanSearchQuery_queries, ZEND_ACC_PUBLIC)
+    PHP_ME(BooleanSearchQuery, should, ai_BooleanSearchQuery_queries, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -369,7 +369,6 @@ PHP_MINIT_FUNCTION(BooleanSearchQuery)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "BooleanSearchQuery", boolean_search_query_methods);
     pcbc_boolean_search_query_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_boolean_search_query_ce->create_object = boolean_search_query_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_boolean_search_query_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_boolean_search_query_ce);
 
     zend_class_implements(pcbc_boolean_search_query_ce TSRMLS_CC, 1, pcbc_json_serializable_ce);

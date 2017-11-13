@@ -138,11 +138,11 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry mutation_token_methods[] = {
     PHP_ME(MutationToken, __construct, ai_MutationToken_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(MutationToken, from, ai_MutationToken_from, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MutationToken, bucketName, ai_MutationToken_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MutationToken, vbucketId, ai_MutationToken_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MutationToken, vbucketUuid, ai_MutationToken_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
-    PHP_ME(MutationToken, sequenceNumber, ai_MutationToken_none, ZEND_ACC_PUBLIC | ZEND_ACC_FINAL)
+    PHP_ME(MutationToken, from, ai_MutationToken_from, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC)
+    PHP_ME(MutationToken, bucketName, ai_MutationToken_none, ZEND_ACC_PUBLIC)
+    PHP_ME(MutationToken, vbucketId, ai_MutationToken_none, ZEND_ACC_PUBLIC)
+    PHP_ME(MutationToken, vbucketUuid, ai_MutationToken_none, ZEND_ACC_PUBLIC)
+    PHP_ME(MutationToken, sequenceNumber, ai_MutationToken_none, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -237,7 +237,6 @@ PHP_MINIT_FUNCTION(MutationToken)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "MutationToken", mutation_token_methods);
     pcbc_mutation_token_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_mutation_token_ce->create_object = mutation_token_create_object;
-    PCBC_CE_FLAGS_FINAL(pcbc_mutation_token_ce);
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_mutation_token_ce);
 
     memcpy(&pcbc_mutation_token_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
