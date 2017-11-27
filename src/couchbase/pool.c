@@ -22,7 +22,13 @@ static int pcbc_res_couchbase;
 extern struct pcbc_logger_st pcbc_logger;
 #define LOGARGS(conn, lvl) LCB_LOG_##lvl, conn, "pcbc/pool", __FILE__, __LINE__
 
-char *pcbc_client_string = "PCBC/" PHP_COUCHBASE_VERSION;
+char *pcbc_client_string = "PCBC/" PHP_COUCHBASE_VERSION " (PHP/" PHP_VERSION
+#if ZTS
+                           " ZTS"
+#else
+                           " NTS"
+#endif
+                           ")";
 
 void get_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
 void store_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
