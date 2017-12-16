@@ -187,18 +187,20 @@ void pcbc_generate_classic_lcb_auth(pcbc_classic_authenticator_t *auth, lcb_AUTH
         pass = password;
         pass_len = strlen(pass);
     }
-    if (type == LCB_TYPE_BUCKET) {
-        if (password || (password == NULL && write_null_password)) {
-            lcbauth_add_pass(*result, name, pass, LCBAUTH_F_BUCKET);
+    if (name && pass) {
+        if (type == LCB_TYPE_BUCKET) {
+            if (password || (password == NULL && write_null_password)) {
+                lcbauth_add_pass(*result, name, pass, LCBAUTH_F_BUCKET);
+                lcbauth_add_pass(*result, name, pass, LCBAUTH_F_CLUSTER);
+                PHP_MD5Update(&md5, "extra-bucket", sizeof("extra-bucket"));
+            }
+        } else {
             lcbauth_add_pass(*result, name, pass, LCBAUTH_F_CLUSTER);
-            PHP_MD5Update(&md5, "extra-bucket", sizeof("extra-bucket"));
+            PHP_MD5Update(&md5, "extra-cluster", sizeof("extra-cluster"));
         }
-    } else {
-        lcbauth_add_pass(*result, name, pass, LCBAUTH_F_CLUSTER);
-        PHP_MD5Update(&md5, "extra-cluster", sizeof("extra-cluster"));
+        PHP_MD5Update(&md5, name, strlen(name));
+        PHP_MD5Update(&md5, pass, pass_len);
     }
-    PHP_MD5Update(&md5, name, strlen(name));
-    PHP_MD5Update(&md5, pass, pass_len);
     PHP_MD5Final(digest, &md5);
     *hash = ecalloc(sizeof(char), 33);
     make_digest(*hash, digest);
