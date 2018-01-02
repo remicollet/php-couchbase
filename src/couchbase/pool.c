@@ -39,6 +39,8 @@ void counter_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
 void subdoc_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
 void http_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
 void durability_callback(lcb_t instance, const void *cookie, lcb_error_t error, const lcb_durability_resp_t *resp);
+void ping_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
+void diag_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
 
 static lcb_error_t pcbc_establish_connection(lcb_type_t type, lcb_t *result, const char *connstr,
                                              lcb_AUTHENTICATOR *auth, char *auth_hash TSRMLS_DC)
@@ -97,6 +99,8 @@ static lcb_error_t pcbc_establish_connection(lcb_type_t type, lcb_t *result, con
     lcb_install_callback3(conn, LCB_CALLBACK_SDLOOKUP, subdoc_callback);
     lcb_install_callback3(conn, LCB_CALLBACK_SDMUTATE, subdoc_callback);
     lcb_install_callback3(conn, LCB_CALLBACK_HTTP, http_callback);
+    lcb_install_callback3(conn, LCB_CALLBACK_PING, ping_callback);
+    lcb_install_callback3(conn, LCB_CALLBACK_DIAG, diag_callback);
 
     err = lcb_connect(conn);
     if (err != LCB_SUCCESS) {

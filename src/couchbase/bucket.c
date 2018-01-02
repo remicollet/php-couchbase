@@ -42,6 +42,8 @@ PHP_METHOD(Bucket, n1ix_create);
 PHP_METHOD(Bucket, n1ix_drop);
 PHP_METHOD(Bucket, http_request);
 PHP_METHOD(Bucket, durability);
+PHP_METHOD(Bucket, ping);
+PHP_METHOD(Bucket, diag);
 
 /* {{{ proto void Bucket::__construct()
    Should not be called directly */
@@ -1094,6 +1096,15 @@ ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_queueRemove, 0, 0, 1)
 ZEND_ARG_INFO(0, id)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_ping, 0, 0, 2)
+ZEND_ARG_INFO(0, services)
+ZEND_ARG_INFO(0, reportId)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_diag, 0, 0, 1)
+ZEND_ARG_INFO(0, reportId)
+ZEND_END_ARG_INFO()
+
 // clang-format off
 zend_function_entry bucket_methods[] = {
     PHP_ME(Bucket, __construct, ai_Bucket_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
@@ -1137,6 +1148,8 @@ zend_function_entry bucket_methods[] = {
     PHP_MALIAS(Bucket, queueAdd, listShift, ai_Bucket_listShift, ZEND_ACC_PUBLIC)
     PHP_MALIAS(Bucket, queueExists, setExists, ai_Bucket_setExists, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, queueRemove, ai_Bucket_queueRemove, ZEND_ACC_PUBLIC)
+    PHP_ME(Bucket, ping, ai_Bucket_ping, ZEND_ACC_PUBLIC)
+    PHP_ME(Bucket, diag, ai_Bucket_diag, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -1308,6 +1321,11 @@ PHP_MINIT_FUNCTION(Bucket)
     pcbc_bucket_handlers.free_obj = pcbc_bucket_free_object;
     pcbc_bucket_handlers.offset = XtOffsetOf(pcbc_bucket_t, std);
 #endif
+
+    zend_declare_class_constant_long(pcbc_bucket_ce, ZEND_STRL("PINGSVC_KV"), LCB_PINGSVC_F_KV TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_bucket_ce, ZEND_STRL("PINGSVC_N1QL"), LCB_PINGSVC_F_N1QL TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_bucket_ce, ZEND_STRL("PINGSVC_VIEWS"), LCB_PINGSVC_F_VIEWS TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_bucket_ce, ZEND_STRL("PINGSVC_FTS"), LCB_PINGSVC_F_FTS TSRMLS_CC);
 
     zend_register_class_alias("\\CouchbaseBucket", pcbc_bucket_ce);
     return SUCCESS;

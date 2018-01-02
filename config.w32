@@ -52,6 +52,7 @@ if (PHP_COUCHBASE != "no") {
             "counter.c " +
             "durability.c " +
             "get.c " +
+            "health.c " +
             "http.c " +
             "n1ql.c " +
             "remove.c " +

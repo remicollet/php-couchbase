@@ -65,6 +65,7 @@ COUCHBASE_FILES=" \
     src/couchbase/bucket/counter.c \
     src/couchbase/bucket/durability.c \
     src/couchbase/bucket/get.c \
+    src/couchbase/bucket/health.c \
     src/couchbase/bucket/http.c \
     src/couchbase/bucket/n1ql.c \
     src/couchbase/bucket/remove.c \

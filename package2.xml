@@ -90,6 +90,7 @@
             <file role="src" name="src/couchbase/bucket/counter.c" />
             <file role="src" name="src/couchbase/bucket/durability.c" />
             <file role="src" name="src/couchbase/bucket/get.c" />
+            <file role="src" name="src/couchbase/bucket/health.c" />
             <file role="src" name="src/couchbase/bucket/http.c" />
             <file role="src" name="src/couchbase/bucket/n1ql.c" />
             <file role="src" name="src/couchbase/bucket/remove.c" />
