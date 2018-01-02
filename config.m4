@@ -24,7 +24,7 @@ if test "$PHP_COUCHBASE" != "no"; then
                  libcouchbase.a should be in <libcouchbase-dir>/lib)
   fi
 
-  AC_MSG_CHECKING([for libcouchbase version >= 2.8.3])
+  AC_MSG_CHECKING([for libcouchbase version >= 2.8.4])
   LCB_VERSION=$($EGREP "define LCB_VERSION " $LIBCOUCHBASE_DIR/include/libcouchbase/configuration.h | $SED -e 's/[[^0-9x]]//g')
   AC_MSG_RESULT([$LCB_VERSION])
   if test "x$LCB_VERSION" = "x0x000000"; then
