@@ -134,9 +134,8 @@ PHP_METHOD(Cluster, authenticateAs)
         ZVAL_UNDEF(PCBC_P(obj->auth));
     }
 #if PHP_VERSION_ID >= 70000
-    ZVAL_ZVAL(&obj->auth, PCBC_P(authenticator), 1, 0);
+    ZVAL_ZVAL(&obj->auth, PCBC_P(authenticator), 0, 0);
 #else
-    PCBC_ADDREF_P(PCBC_P(authenticator));
     obj->auth = authenticator;
 #endif
 

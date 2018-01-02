@@ -29,6 +29,7 @@ config.status
 config.sub
 configure
 configure.in
+configure.ac
 couchbase.la
 docs/
 include/
