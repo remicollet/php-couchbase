@@ -299,7 +299,10 @@ PHP_METHOD(Bucket, query)
         if (Z_N1QL_QUERY_OBJ_P(query)->cross_bucket) {
             cmd.cmdflags |= LCB_CMD_F_MULTIAUTH;
         }
-        pcbc_log(LOGARGS(obj, TRACE), "N1QL: %*s", PCBC_SMARTSTR_TRACE(buf));
+        pcbc_log(LOGARGS(obj, TRACE), "N1QL: " LCB_LOG_SPEC("%.*s"),
+                 lcb_is_redacting_logs(obj->conn->lcb) ? LCB_LOG_UD_OTAG : "",
+                 PCBC_SMARTSTR_TRACE(buf),
+                 lcb_is_redacting_logs(obj->conn->lcb) ? LCB_LOG_UD_CTAG : "");
         pcbc_bucket_n1ql_request(obj, &cmd, 1, json_options, 0, return_value TSRMLS_CC);
         smart_str_free(&buf);
     } else if (instanceof_function(Z_OBJCE_P(query), pcbc_search_query_ce TSRMLS_CC)) {
@@ -315,7 +318,10 @@ PHP_METHOD(Bucket, query)
         }
         smart_str_0(&buf);
         PCBC_SMARTSTR_SET(buf, cmd.query, cmd.nquery);
-        pcbc_log(LOGARGS(obj, TRACE), "FTS: %*s", PCBC_SMARTSTR_TRACE(buf));
+        pcbc_log(LOGARGS(obj, TRACE), "FTS: " LCB_LOG_SPEC("%.*s"),
+                 lcb_is_redacting_logs(obj->conn->lcb) ? LCB_LOG_UD_OTAG : "",
+                 PCBC_SMARTSTR_TRACE(buf),
+                 lcb_is_redacting_logs(obj->conn->lcb) ? LCB_LOG_UD_CTAG : "");
         pcbc_bucket_cbft_request(obj, &cmd, 1, json_options, return_value TSRMLS_CC);
         smart_str_free(&buf);
     } else if (instanceof_function(Z_OBJCE_P(query), pcbc_analytics_query_ce TSRMLS_CC)) {
@@ -335,7 +341,10 @@ PHP_METHOD(Bucket, query)
         smart_str_0(&buf);
         cmd.cmdflags |= LCB_CMDN1QL_F_CBASQUERY;
         PCBC_SMARTSTR_SET(buf, cmd.query, cmd.nquery);
-        pcbc_log(LOGARGS(obj, TRACE), "ANALYTICS: %*s", PCBC_SMARTSTR_TRACE(buf));
+        pcbc_log(LOGARGS(obj, TRACE), "ANALYTICS: " LCB_LOG_SPEC("%.*s"),
+                 lcb_is_redacting_logs(obj->conn->lcb) ? LCB_LOG_UD_OTAG : "",
+                 PCBC_SMARTSTR_TRACE(buf),
+                 lcb_is_redacting_logs(obj->conn->lcb) ? LCB_LOG_UD_CTAG : "");
         pcbc_bucket_n1ql_request(obj, &cmd, 1, json_options, 1, return_value TSRMLS_CC);
         smart_str_free(&buf);
     } else if (instanceof_function(Z_OBJCE_P(query), pcbc_view_query_encodable_ce TSRMLS_CC)) {
