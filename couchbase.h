@@ -163,6 +163,11 @@ PHP_MINIT_FUNCTION(SearchFacet);
 PHP_MINIT_FUNCTION(TermSearchFacet);
 PHP_MINIT_FUNCTION(DateRangeSearchFacet);
 PHP_MINIT_FUNCTION(NumericRangeSearchFacet);
+PHP_MINIT_FUNCTION(SearchSort);
+PHP_MINIT_FUNCTION(SearchSortField);
+PHP_MINIT_FUNCTION(SearchSortGeoDistance);
+PHP_MINIT_FUNCTION(SearchSortId);
+PHP_MINIT_FUNCTION(SearchSortScore);
 
 zval *bop_get_return_doc(zval *return_value, const char *key, int key_len, int is_mapped TSRMLS_DC);
 
@@ -179,6 +184,7 @@ extern zend_class_entry *pcbc_mutation_state_ce;
 extern zend_class_entry *pcbc_exception_ce;
 extern zend_class_entry *pcbc_search_query_ce;
 extern zend_class_entry *pcbc_search_query_part_ce;
+extern zend_class_entry *pcbc_search_sort_ce;
 extern zend_class_entry *pcbc_search_facet_ce;
 extern zend_class_entry *pcbc_view_query_encodable_ce;
 extern zend_class_entry *pcbc_json_serializable_ce;
@@ -817,6 +823,11 @@ void pcbc_geo_distance_search_query_init(zval *return_value, double longitude, d
 void pcbc_term_search_facet_init(zval *return_value, char *field, int field_len, int limit TSRMLS_DC);
 void pcbc_date_range_search_facet_init(zval *return_value, char *field, int field_len, int limit TSRMLS_DC);
 void pcbc_numeric_range_search_facet_init(zval *return_value, char *field, int field_len, int limit TSRMLS_DC);
+
+void pcbc_search_sort_id_init(zval *return_value TSRMLS_DC);
+void pcbc_search_sort_score_init(zval *return_value TSRMLS_DC);
+void pcbc_search_sort_field_init(zval *return_value, const char *field, int field_len TSRMLS_DC);
+void pcbc_search_sort_geo_distance_init(zval *return_value, const char *field, int field_len, double lon, double lat TSRMLS_DC);
 
 #if PHP_VERSION_ID >= 70000
 void pcbc_lookup_in_builder_init(zval *return_value, zval *bucket, const char *id, int id_len, zval *args,

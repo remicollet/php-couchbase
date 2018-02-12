@@ -91,6 +91,11 @@ COUCHBASE_FILES=" \
     src/couchbase/n1ql_query.c \
     src/couchbase/search_query.c \
     src/couchbase/search/query_part.c \
+    src/couchbase/search/sort.c \
+    src/couchbase/search/sort_field.c \
+    src/couchbase/search/sort_geo.c \
+    src/couchbase/search/sort_id.c \
+    src/couchbase/search/sort_score.c \
     src/couchbase/search/boolean_field_query.c \
     src/couchbase/search/boolean_query.c \
     src/couchbase/search/conjunction_query.c \

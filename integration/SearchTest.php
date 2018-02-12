@@ -16,8 +16,8 @@ class SearchTest extends PHPUnit_Framework_TestCase {
         if ($this->testDsn === FALSE) {
             $this->testDsn = 'couchbase://localhost/';
         }
-        $this->authenticator = \Couchbase\ClassicAuthenticator();
-        $this->authenticator->bucket('beer-sample', getenv('CB_USER_PASSWORD'));
+        $this->authenticator = new \Couchbase\PasswordAuthenticator();
+        $this->authenticator->username(getenv('CB_USER'))->password(getenv('CB_PASSWORD'));
     }
 
     protected function setUp() {
@@ -59,7 +59,7 @@ class SearchTest extends PHPUnit_Framework_TestCase {
 
     function testSearchWithConsistency() {
         $cluster = new \Couchbase\Cluster($this->testDsn . '?fetch_mutation_tokens=true');
-        $this->cluster->authenticate($this->authenticator);
+        $cluster->authenticate($this->authenticator);
         $bucket = $cluster->openBucket('beer-sample');
 
         $id = uniqid('testSearchWithConsistency');

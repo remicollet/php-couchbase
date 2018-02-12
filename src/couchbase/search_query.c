@@ -631,7 +631,7 @@ PHP_METHOD(SearchQuery, fields)
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
 
-/* {{{ proto \Couchbase\SearchQuery SearchQuery::sort(string ...$sort) */
+/* {{{ proto \Couchbase\SearchQuery SearchQuery::sort(string|SearchSort ...$sort) */
 PHP_METHOD(SearchQuery, sort)
 {
     pcbc_search_query_t *obj;
@@ -662,8 +662,10 @@ PHP_METHOD(SearchQuery, sort)
 #else
             field = args[i];
 #endif
-            if (Z_TYPE_P(PCBC_P(*field)) != IS_STRING) {
-                pcbc_log(LOGARGS(WARN), "field has to be a string (skipping argument #%d)", i);
+            if (Z_TYPE_P(PCBC_P(*field)) != IS_STRING &&
+                (Z_TYPE_P(PCBC_P(*field)) != IS_OBJECT ||
+                 !instanceof_function(Z_OBJCE_P(PCBC_P(*field)), pcbc_search_sort_ce TSRMLS_CC))) {
+                pcbc_log(LOGARGS(WARN), "field has to be a string or SearchSort (skipping argument #%d)", i);
                 continue;
             }
             add_next_index_zval(PCBC_P(obj->sort), PCBC_P(*field));

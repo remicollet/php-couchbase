@@ -126,9 +126,9 @@
             <file role="src" name="src/couchbase/search/date_range_query.c" />
             <file role="src" name="src/couchbase/search/disjunction_query.c" />
             <file role="src" name="src/couchbase/search/doc_id_query.c" />
+            <file role="src" name="src/couchbase/search/facet.c" />
             <file role="src" name="src/couchbase/search/geo_bounding_box_query.c" />
             <file role="src" name="src/couchbase/search/geo_distance_query.c" />
-            <file role="src" name="src/couchbase/search/facet.c" />
             <file role="src" name="src/couchbase/search/match_all_query.c" />
             <file role="src" name="src/couchbase/search/match_none_query.c" />
             <file role="src" name="src/couchbase/search/match_phrase_query.c" />
@@ -140,6 +140,11 @@
             <file role="src" name="src/couchbase/search/query_part.c" />
             <file role="src" name="src/couchbase/search/query_string_query.c" />
             <file role="src" name="src/couchbase/search/regexp_query.c" />
+            <file role="src" name="src/couchbase/search/sort.c" />
+            <file role="src" name="src/couchbase/search/sort_field.c" />
+            <file role="src" name="src/couchbase/search/sort_geo.c" />
+            <file role="src" name="src/couchbase/search/sort_id.c" />
+            <file role="src" name="src/couchbase/search/sort_score.c" />
             <file role="src" name="src/couchbase/search/term_facet.c" />
             <file role="src" name="src/couchbase/search/term_query.c" />
             <file role="src" name="src/couchbase/search/term_range_query.c" />

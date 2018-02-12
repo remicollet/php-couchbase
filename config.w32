@@ -68,6 +68,11 @@ if (PHP_COUCHBASE != "no") {
         src_couchbase_cluster_manager_sources =
             "user_settings.c ";
         src_couchbase_search_sources =
+            "sort.c " +
+            "sort_field.c " +
+            "sort_geo.c " +
+            "sort_id.c " +
+            "sort_score.c " +
             "boolean_field_query.c " +
             "boolean_query.c " +
             "conjunction_query.c " +
