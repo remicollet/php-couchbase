@@ -24,9 +24,9 @@
         <active>yes</active>
     </lead>
 
-    <date>2018-01-04</date>
+    <date>2018-02-12</date>
     <version>
-        <release>2.4.3</release>
+        <release>2.4.4</release>
         <api>2.3.0</api>
     </version>
     <stability>
@@ -36,15 +36,8 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        * PCBC-518: Detect and cleanup connections left in bad state
-        * PCBC-525: Fix memory leak for schemaless connspec
-        * PCBC-497: Add health check functions
-        * PCBC-524: Fix memory leak when using authenticateAs()
-        * PCBC-520: Add example for authentication with x.509 certificate
-        * PCBC-522: Check username/password for NULL in Classic Authenticator
-        * PCBC-516: Append information about runtime to HELLO string
+        * PCBC-508: Add support for FTS advanced sorting
     </notes>
-
     <contents>
         <dir name="/">
             <file role="doc" name="LICENSE" />
@@ -192,6 +185,28 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2018-01-04</date>
+            <version>
+                <release>2.4.3</release>
+                <api>2.3.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
+            </license>
+            <notes>
+                * PCBC-518: Detect and cleanup connections left in bad state
+                * PCBC-525: Fix memory leak for schemaless connspec
+                * PCBC-497: Add health check functions
+                * PCBC-524: Fix memory leak when using authenticateAs()
+                * PCBC-520: Add example for authentication with x.509 certificate
+                * PCBC-522: Check username/password for NULL in Classic Authenticator
+                * PCBC-516: Append information about runtime to HELLO string
+            </notes>
+        </release>
         <release>
             <date>2017-11-13</date>
             <version>
