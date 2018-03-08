@@ -142,7 +142,7 @@ PHP_METHOD(DateRangeSearchQuery, start)
     }
 
     obj = Z_DATE_RANGE_SEARCH_QUERY_OBJ_P(getThis());
-    obj->inclusive_end = inclusive;
+    obj->inclusive_start = inclusive;
     switch (Z_TYPE_P(start)) {
     case IS_STRING:
         obj->start = estrndup(Z_STRVAL_P(start), Z_STRLEN_P(start));
