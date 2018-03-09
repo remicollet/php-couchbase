@@ -12,21 +12,15 @@
         The PHP client library provides fast access to documents stored in a Couchbase Server.
     </description>
     <lead>
-        <name>Brett Lawson</name>
-        <user>brett19</user>
-        <email>brett@couchbase.com</email>
-        <active>no</active>
-    </lead>
-    <lead>
         <name>Sergey Avseyev</name>
         <user>avsej</user>
         <email>sergey@couchbase.com</email>
         <active>yes</active>
     </lead>
 
-    <date>2018-02-12</date>
+    <date>2018-03-09</date>
     <version>
-        <release>2.4.4</release>
+        <release>2.4.5</release>
         <api>2.3.0</api>
     </version>
     <stability>
@@ -36,7 +30,8 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        * PCBC-508: Add support for FTS advanced sorting
+        * PCBC-527: Initial tracing implementation. The extension checks if libcouchbase has tracing support, and sets up hooks for fetch/persist operations to report encoding/decoding times. This functionality is preview and is not enabled by default.
+        * PCBC-519: Implement log redaction. When `log_redaction=on` is specified in the connection string, the library will wrap sensitive data in the logs in special tags, which can be processed by the `cblogredaction` tool from the server distribution.
     </notes>
     <contents>
         <dir name="/">
@@ -185,6 +180,22 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2018-02-12</date>
+            <version>
+                <release>2.4.4</release>
+                <api>2.3.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
+            </license>
+            <notes>
+                * PCBC-508: Add support for FTS advanced sorting
+            </notes>
+        </release>
         <release>
             <date>2018-01-04</date>
             <version>
