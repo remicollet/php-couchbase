@@ -173,6 +173,7 @@ zval *bop_get_return_doc(zval *return_value, const char *key, int key_len, int i
 
 #define PCBC_DATE_FORMAT_RFC3339 "Y-m-d\\TH:i:sP"
 
+extern char *pcbc_client_string;
 extern zend_class_entry *pcbc_analytics_query_ce;
 extern zend_class_entry *pcbc_n1ql_query_ce;
 extern zend_class_entry *pcbc_cluster_ce;
@@ -983,6 +984,9 @@ typedef struct {
     int json_options;
     int is_cbas; // FIXME: convert to bit-flags
     PCBC_ZVAL exc;
+#ifdef LCB_TRACING
+    lcbtrace_SPAN *span;
+#endif
 } opcookie;
 
 opcookie *opcookie_init();
