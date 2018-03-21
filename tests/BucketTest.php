@@ -476,7 +476,7 @@ class BucketTest extends CouchbaseTestCase {
         # Try on non-existing document. Should fail
         $key = $this->makeKey('lookup_in_with_missing_key');
         $result = $b->lookupIn($key)->exists('path')->execute();
-        $this->assertEquals(0, count($result->value));
+        $this->assertEquals(NULL, $result->value);
         $this->assertInstanceOf('\Couchbase\Exception', $result->error);
         $this->assertEquals(COUCHBASE_KEY_ENOENT, $result->error->getCode());
     }
@@ -603,7 +603,7 @@ class BucketTest extends CouchbaseTestCase {
 
         $result = $b->mutateIn($key, $cas . 'X')->upsert('newDict', 'withWrongCAS')->execute();
         $this->assertEquals(COUCHBASE_KEY_EEXISTS, $result->error->getCode());
-        $this->assertEquals(0, count($result->value));
+        $this->assertEquals(NULL, $result->value);
         # once again with correct CAS
         $result = $b->mutateIn($key, $cas)->upsert('newDict', 'withCorrectCAS')->execute();
         $this->assertNull($result->error);

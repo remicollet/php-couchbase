@@ -18,6 +18,12 @@
 #define COUCHBASE_H_
 
 // clang-format off
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <php.h>
+
 #include <libcouchbase/couchbase.h>
 #include <libcouchbase/auth.h>
 #include <libcouchbase/api3.h>
@@ -25,10 +31,8 @@
 #include <libcouchbase/n1ql.h>
 #include <libcouchbase/cbft.h>
 #include <libcouchbase/ixmgmt.h>
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-#include <php.h>
+#include <libcouchbase/crypto.h>
+
 #include <ext/standard/php_var.h>
 #if PHP_VERSION_ID >= 70000
 #include <zend_smart_str.h>
@@ -168,6 +172,7 @@ PHP_MINIT_FUNCTION(SearchSortField);
 PHP_MINIT_FUNCTION(SearchSortGeoDistance);
 PHP_MINIT_FUNCTION(SearchSortId);
 PHP_MINIT_FUNCTION(SearchSortScore);
+PHP_MINIT_FUNCTION(CryptoProvider);
 
 zval *bop_get_return_doc(zval *return_value, const char *key, int key_len, int is_mapped TSRMLS_DC);
 
@@ -190,6 +195,7 @@ extern zend_class_entry *pcbc_search_facet_ce;
 extern zend_class_entry *pcbc_view_query_encodable_ce;
 extern zend_class_entry *pcbc_json_serializable_ce;
 extern zend_class_entry *pcbc_user_settings_ce;
+extern zend_class_entry *pcbc_crypto_provider_ce;
 
 #if PHP_VERSION_ID >= 70000
 #define PCBC_ZVAL_ALLOC(__pcbc_val) ZVAL_UNDEF(&(__pcbc_val))
@@ -256,8 +262,8 @@ typedef int pcbc_str_arg_size;
 #endif
 
 #if PHP_VERSION_ID < 70000
-#define Z_ISUNDEF_P(x) !x
-#define Z_ISUNDEF(x) !x
+#define Z_ISUNDEF_P(x) !(x)
+#define Z_ISUNDEF(x) !(x)
 #define ZVAL_UNDEF(x)                                                                                                  \
     do {                                                                                                               \
         x = NULL;                                                                                                      \
@@ -285,6 +291,7 @@ typedef int pcbc_str_arg_size;
 #define ADD_ASSOC_ZVAL_EX(zv, key, value) add_assoc_zval_ex(zv, ZEND_STRL(key), value);
 #define ADD_ASSOC_NULL_EX(zv, key) add_assoc_null_ex(zv, ZEND_STRL(key));
 #define ADD_NEXT_INDEX_STRING(zv, value) add_next_index_string(zv, value);
+#define ADD_NEXT_INDEX_STRINGL(zv, value, len) add_next_index_stringl(zv, value, len);
 #else
 #define ADD_ASSOC_STRING(zv, key, value) add_assoc_string_ex(zv, ZEND_STRS(key), (char *)(value), 1);
 #define ADD_ASSOC_STRINGL(zv, key, value, len) add_assoc_stringl_ex(zv, ZEND_STRS(key), (char *)(value), len, 1);
@@ -294,6 +301,7 @@ typedef int pcbc_str_arg_size;
 #define ADD_ASSOC_ZVAL_EX(zv, key, value) add_assoc_zval_ex(zv, ZEND_STRS(key), value);
 #define ADD_ASSOC_NULL_EX(zv, key) add_assoc_null_ex(zv, ZEND_STRS(key));
 #define ADD_NEXT_INDEX_STRING(zv, value) add_next_index_string(zv, value, 1);
+#define ADD_NEXT_INDEX_STRINGL(zv, value, len) add_next_index_stringl(zv, value, len, 1);
 #endif
 
 #if PHP_VERSION_ID >= 70000
@@ -482,12 +490,21 @@ typedef struct {
     PCBC_ZEND_OBJECT_POST
 } pcbc_cluster_manager_t;
 
+struct pcbc_crypto_id {
+    char *name;
+    int name_len;
+    struct pcbc_crypto_id *next;
+};
+typedef struct pcbc_crypto_id pcbc_crypto_id_t;
+
 typedef struct {
     PCBC_ZEND_OBJECT_PRE
     pcbc_connection_t *conn;
     PCBC_ZVAL encoder;
     PCBC_ZVAL decoder;
     lcb_BTYPE type;
+    pcbc_crypto_id_t *crypto_head; /* registered crypto providers */
+    pcbc_crypto_id_t *crypto_tail; /* registered crypto providers */
     PCBC_ZEND_OBJECT_POST
 } pcbc_bucket_t;
 
@@ -852,6 +869,11 @@ void pcbc_generate_password_lcb_auth(pcbc_password_authenticator_t *auth, lcb_AU
 void pcbc_password_authenticator_init(zval *return_value, char *username, int username_len, char *password,
                                       int password_len TSRMLS_DC);
 
+void pcbc_crypto_register(pcbc_bucket_t *obj, const char *name, int name_len, zval *provider TSRMLS_DC);
+void pcbc_crypto_unregister(pcbc_bucket_t *obj, const char *name, int name_len TSRMLS_DC);
+void pcbc_crypto_encrypt_document(pcbc_bucket_t *obj, zval *document, zval *options, const char *prefix, zval *return_value TSRMLS_DC);
+void pcbc_crypto_decrypt_document(pcbc_bucket_t *obj, zval *document, const char *prefix, zval *return_value TSRMLS_DC);
+
 #if PHP_VERSION_ID >= 70000
 static inline pcbc_cluster_t *pcbc_cluster_fetch_object(zend_object *obj)
 {
@@ -1021,6 +1043,12 @@ lcb_error_t proc_store_results(pcbc_bucket_t *bucket, zval *return_value, opcook
 #define PCBC_ADDREF_P(__pcbc_zval) Z_TRY_ADDREF_P((__pcbc_zval))
 #else
 #define PCBC_ADDREF_P(__pcbc_zval) Z_ADDREF_P((__pcbc_zval))
+#endif
+
+#if PHP_VERSION_ID >= 70000
+#define PCBC_DELREF_P(__pcbc_zval) Z_TRY_DELREF_P((__pcbc_zval))
+#else
+#define PCBC_DELREF_P(__pcbc_zval) Z_DELREF_P((__pcbc_zval))
 #endif
 
 #endif /* COUCHBASE_H_ */

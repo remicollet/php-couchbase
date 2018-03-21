@@ -976,6 +976,113 @@ PHP_METHOD(Bucket, queueRemove)
     RETURN_ZVAL(val, 1, 0);
 } /* }}} */
 
+/* {{{ proto Bucket::registerCryptoProvider(string $name, \Couchbase\CryptoProvider $provider) */
+PHP_METHOD(Bucket, registerCryptoProvider)
+{
+    pcbc_bucket_t *obj;
+    char *name = NULL;
+    pcbc_str_arg_size name_len = 0;
+    zval *provider;
+    int rv;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sO", &name, &name_len, &provider, pcbc_crypto_provider_ce);
+    if (rv == FAILURE) {
+        return;
+    }
+    obj = Z_BUCKET_OBJ_P(getThis());
+    pcbc_crypto_register(obj, name, name_len, provider TSRMLS_CC);
+
+    {
+        pcbc_crypto_id_t *crypto = NULL;
+        crypto = ecalloc(1, sizeof(pcbc_crypto_id_t));
+        crypto->name = estrndup(name, name_len);
+        crypto->name_len = name_len;
+        if (obj->crypto_tail == NULL) {
+            obj->crypto_tail = crypto;
+            obj->crypto_head = obj->crypto_tail;
+        } else {
+            obj->crypto_tail->next = crypto;
+            obj->crypto_tail = crypto;
+        }
+    }
+
+    RETURN_NULL();
+} /* }}} */
+
+/* {{{ proto Bucket::unregisterCryptoProvider(string $name) */
+PHP_METHOD(Bucket, unregisterCryptoProvider)
+{
+    pcbc_bucket_t *obj;
+    char *name = NULL;
+    pcbc_str_arg_size name_len = 0;
+    int rv;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &name, &name_len);
+    if (rv == FAILURE) {
+        return;
+    }
+    obj = Z_BUCKET_OBJ_P(getThis());
+    pcbc_crypto_unregister(obj, name, name_len TSRMLS_CC);
+    {
+        pcbc_crypto_id_t *cur, *prev = NULL;
+        for (cur = obj->crypto_head; cur != NULL; prev = cur, cur = cur->next) {
+            if (name_len == cur->name_len && strncmp(cur->name, name, name_len) == 0) {
+                break;
+            }
+        }
+        if (cur) {
+            efree(cur->name);
+            if (prev) {
+                prev->next = cur->next;
+            } else {
+                obj->crypto_head = cur->next;
+            }
+            if (obj->crypto_tail == cur) {
+                obj->crypto_tail = prev;
+            }
+            efree(cur);
+        }
+    }
+    RETURN_NULL();
+} /* }}} */
+
+/* {{{ proto Bucket::encryptDocument(array $document, array $options, string $prefix = NULL) */
+PHP_METHOD(Bucket, encryptDocument)
+{
+    pcbc_bucket_t *obj;
+    char *prefix = NULL;
+    pcbc_str_arg_size prefix_len = 0;
+    zval *document = NULL, *options = NULL;
+    int rv;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Aa|s", &document, &options, &prefix, &prefix_len);
+    if (rv == FAILURE) {
+        return;
+    }
+    if (!options || Z_TYPE_P(options) != IS_ARRAY || php_array_count(options) == 0) {
+        RETURN_NULL();
+    }
+    obj = Z_BUCKET_OBJ_P(getThis());
+    pcbc_crypto_encrypt_document(obj, document, options, prefix, return_value TSRMLS_CC);
+} /* }}} */
+
+/* {{{ proto Bucket::decryptDocument(array $document, string $prefix = NULL) */
+PHP_METHOD(Bucket, decryptDocument)
+{
+    pcbc_bucket_t *obj;
+    char *prefix = NULL;
+    pcbc_str_arg_size prefix_len = 0;
+    zval *document = NULL;
+    int rv;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "A|s", &document, &prefix, &prefix_len);
+    if (rv == FAILURE) {
+        return;
+    }
+    obj = Z_BUCKET_OBJ_P(getThis());
+    pcbc_crypto_decrypt_document(obj, document, prefix, return_value TSRMLS_CC);
+} /* }}} */
+
 ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_none, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
@@ -1136,6 +1243,26 @@ ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_diag, 0, 0, 1)
 ZEND_ARG_INFO(0, reportId)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_registerCryptoProvider, 0, 0, 2)
+ZEND_ARG_TYPE_INFO(0, name, IS_STRING, 0)
+ZEND_ARG_OBJ_INFO(0, provider, Couchbase\\CryptoProvider, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_unregisterCryptoProvider, 0, 0, 1)
+ZEND_ARG_TYPE_INFO(0, name, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_encryptDocument, 0, 0, 2)
+ZEND_ARG_INFO(0, document)
+ZEND_ARG_TYPE_INFO(0, options, IS_ARRAY, 0)
+ZEND_ARG_TYPE_INFO(0, prefix, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_decryptDocument, 0, 0, 1)
+ZEND_ARG_INFO(0, document)
+ZEND_ARG_TYPE_INFO(0, prefix, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
 // clang-format off
 zend_function_entry bucket_methods[] = {
     PHP_ME(Bucket, __construct, ai_Bucket_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
@@ -1182,6 +1309,10 @@ zend_function_entry bucket_methods[] = {
     PHP_ME(Bucket, queueRemove, ai_Bucket_queueRemove, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, ping, ai_Bucket_ping, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, diag, ai_Bucket_diag, ZEND_ACC_PUBLIC)
+    PHP_ME(Bucket, registerCryptoProvider, ai_Bucket_registerCryptoProvider, ZEND_ACC_PUBLIC)
+    PHP_ME(Bucket, unregisterCryptoProvider, ai_Bucket_unregisterCryptoProvider, ZEND_ACC_PUBLIC)
+    PHP_ME(Bucket, encryptDocument, ai_Bucket_encryptDocument, ZEND_ACC_PUBLIC)
+    PHP_ME(Bucket, decryptDocument, ai_Bucket_decryptDocument, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -1192,6 +1323,18 @@ static void pcbc_bucket_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {
 {
     pcbc_bucket_t *obj = Z_BUCKET_OBJ(object);
 
+    if (obj->crypto_head) {
+        pcbc_crypto_id_t *ptr, *cur;
+        for (ptr = obj->crypto_head; ptr;) {
+            cur = ptr;
+            if (cur->name) {
+                pcbc_crypto_unregister(obj, cur->name, cur->name_len TSRMLS_CC);
+                efree(cur->name);
+            }
+            ptr = ptr->next;
+            efree(ptr);
+        }
+    }
     pcbc_connection_delref(obj->conn TSRMLS_CC);
     if (!Z_ISUNDEF(obj->encoder)) {
         zval_ptr_dtor(&obj->encoder);

@@ -26,6 +26,7 @@ if (PHP_COUCHBASE != "no") {
         src_couchbase_sources  =
             "analytics_query.c " +
             "authenticator.c " +
+            "crypto.c " +
             "classic_authenticator.c " +
             "password_authenticator.c " +
             "base36.c " +

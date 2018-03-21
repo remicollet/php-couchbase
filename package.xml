@@ -73,6 +73,7 @@
             <file role="src" name="php_couchbase.h" />
             <file role="src" name="src/couchbase/analytics_query.c" />
             <file role="src" name="src/couchbase/authenticator.c" />
+            <file role="src" name="src/couchbase/crypto.c" />
             <file role="src" name="src/couchbase/classic_authenticator.c" />
             <file role="src" name="src/couchbase/password_authenticator.c" />
             <file role="src" name="src/couchbase/base36.c" />
