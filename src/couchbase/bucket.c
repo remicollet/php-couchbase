@@ -248,6 +248,28 @@ PHP_METHOD(Bucket, __get)
     RETURN_LONG(lcbval);
 }
 
+/* {{{ proto \Couchbase\BucketManager Bucket::getName() */
+PHP_METHOD(Bucket, getName)
+{
+    int rv;
+    pcbc_bucket_t *obj;
+
+    rv = zend_parse_parameters_none();
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    obj = Z_BUCKET_OBJ_P(getThis());
+
+    if (obj->conn && obj->conn->bucketname) {
+#if PHP_VERSION_ID >= 70000
+        RETURN_STRING(obj->conn->bucketname);
+#else
+        RETURN_STRING(obj->conn->bucketname, 1);
+#endif
+    }
+    RETURN_NULL();
+} /* }}} */
+
 /* {{{ proto \Couchbase\BucketManager Bucket::manager() */
 PHP_METHOD(Bucket, manager)
 {
@@ -1120,6 +1142,7 @@ zend_function_entry bucket_methods[] = {
     PHP_ME(Bucket, __get, ai_Bucket___get, ZEND_ACC_PRIVATE)
     PHP_ME(Bucket, __set, ai_Bucket___set, ZEND_ACC_PRIVATE)
     PHP_ME(Bucket, setTranscoder, ai_Bucket_setTranscoder, ZEND_ACC_PUBLIC)
+    PHP_ME(Bucket, getName, ai_Bucket_none, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, get, ai_Bucket_get, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, getAndLock, ai_Bucket_getAndLock, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, getAndTouch, ai_Bucket_getAndTouch, ZEND_ACC_PUBLIC)

@@ -615,6 +615,13 @@ namespace Couchbase {
         final private function __set($name, $value) {}
 
         /**
+         * Returns the name of the bucket for current connection
+         *
+         * @return string
+         */
+        public function getName() {}
+
+        /**
          * Returns an instance of a CouchbaseBucketManager for performing management operations against a bucket.
          *
          * @return BucketManager
