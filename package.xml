@@ -18,9 +18,9 @@
         <active>yes</active>
     </lead>
 
-    <date>2018-03-09</date>
+    <date>2018-04-13</date>
     <version>
-        <release>2.4.5</release>
+        <release>2.4.6</release>
         <api>2.3.0</api>
     </version>
     <stability>
@@ -30,8 +30,10 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        * PCBC-527: Initial tracing implementation. The extension checks if libcouchbase has tracing support, and sets up hooks for fetch/persist operations to report encoding/decoding times. This functionality is preview and is not enabled by default.
-        * PCBC-519: Implement log redaction. When `log_redaction=on` is specified in the connection string, the library will wrap sensitive data in the logs in special tags, which can be processed by the `cblogredaction` tool from the server distribution.
+        * PCBC-523: Add tracing support for queries and the rest of KV commands.
+        * PCBC-536: Make it clear that timeout properties use microseconds.
+        * PCBC-531: Field encryption (See https://packagist.org/packages/couchbase/couchbase-encryption).
+        * PCBC-537: Implement Bucket#getName() returning bucket name.
     </notes>
     <contents>
         <dir name="/">
@@ -181,6 +183,23 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2018-03-09</date>
+            <version>
+                <release>2.4.5</release>
+                <api>2.3.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
+            </license>
+            <notes>
+                * PCBC-527: Initial tracing implementation. The extension checks if libcouchbase has tracing support, and sets up hooks for fetch/persist operations to report encoding/decoding times. This functionality is preview and is not enabled by default.
+                * PCBC-519: Implement log redaction. When `log_redaction=on` is specified in the connection string, the library will wrap sensitive data in the logs in special tags, which can be processed by the `cblogredaction` tool from the server distribution.
+            </notes>
+        </release>
         <release>
             <date>2018-02-12</date>
             <version>
