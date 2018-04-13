@@ -106,8 +106,9 @@ PHP_METHOD(Bucket, insert)
 #ifdef LCB_TRACING
     tracer = lcb_get_tracer(obj->conn->lcb);
     if (tracer) {
-        cookie->span = lcbtrace_span_start(tracer, "insert", 0, NULL);
+        cookie->span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_INSERT, 0, NULL);
         lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
     }
 #endif
 
@@ -133,8 +134,9 @@ PHP_METHOD(Bucket, insert)
             lcbtrace_REF ref;
             ref.type = LCBTRACE_REF_CHILD_OF;
             ref.span = cookie->span;
-            span = lcbtrace_span_start(tracer, LCBTRACE_OP_REQUEST_ENCODING, LCBTRACE_NOW, &ref);
+            span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_REQUEST_ENCODING, LCBTRACE_NOW, &ref);
             lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+            lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
         }
 #endif
         rc = pcbc_encode_value(obj, zvalue, &bytes, &nbytes, &cmd.flags, &cmd.datatype TSRMLS_CC);
@@ -228,8 +230,9 @@ PHP_METHOD(Bucket, upsert)
 #ifdef LCB_TRACING
     tracer = lcb_get_tracer(obj->conn->lcb);
     if (tracer) {
-        cookie->span = lcbtrace_span_start(tracer, "upsert", 0, NULL);
+        cookie->span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_UPSERT, 0, NULL);
         lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
     }
 #endif
 
@@ -257,8 +260,9 @@ PHP_METHOD(Bucket, upsert)
             lcbtrace_REF ref;
             ref.type = LCBTRACE_REF_CHILD_OF;
             ref.span = cookie->span;
-            span = lcbtrace_span_start(tracer, LCBTRACE_OP_REQUEST_ENCODING, LCBTRACE_NOW, &ref);
+            span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_REQUEST_ENCODING, LCBTRACE_NOW, &ref);
             lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+            lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
         }
 #endif
         rc = pcbc_encode_value(obj, zvalue, &bytes, &nbytes, &cmd.flags, &cmd.datatype TSRMLS_CC);
@@ -352,8 +356,9 @@ PHP_METHOD(Bucket, replace)
 #ifdef LCB_TRACING
     tracer = lcb_get_tracer(obj->conn->lcb);
     if (tracer) {
-        cookie->span = lcbtrace_span_start(tracer, "replace", 0, NULL);
+        cookie->span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_REPLACE, 0, NULL);
         lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
     }
 #endif
 
@@ -382,8 +387,9 @@ PHP_METHOD(Bucket, replace)
             lcbtrace_REF ref;
             ref.type = LCBTRACE_REF_CHILD_OF;
             ref.span = cookie->span;
-            span = lcbtrace_span_start(tracer, LCBTRACE_OP_REQUEST_ENCODING, LCBTRACE_NOW, &ref);
+            span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_REQUEST_ENCODING, LCBTRACE_NOW, &ref);
             lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+            lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
         }
 #endif
         rc = pcbc_encode_value(obj, zvalue, &bytes, &nbytes, &cmd.flags, &cmd.datatype TSRMLS_CC);
@@ -480,8 +486,9 @@ PHP_METHOD(Bucket, append)
 #ifdef LCB_TRACING
     tracer = lcb_get_tracer(obj->conn->lcb);
     if (tracer) {
-        cookie->span = lcbtrace_span_start(tracer, "append", 0, NULL);
+        cookie->span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_APPEND, 0, NULL);
         lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
     }
 #endif
 
@@ -508,8 +515,9 @@ PHP_METHOD(Bucket, append)
             lcbtrace_REF ref;
             ref.type = LCBTRACE_REF_CHILD_OF;
             ref.span = cookie->span;
-            span = lcbtrace_span_start(tracer, LCBTRACE_OP_REQUEST_ENCODING, LCBTRACE_NOW, &ref);
+            span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_REQUEST_ENCODING, LCBTRACE_NOW, &ref);
             lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+            lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
         }
 #endif
         rc = pcbc_encode_value(obj, zvalue, &bytes, &nbytes, &cmd.flags, &cmd.datatype TSRMLS_CC);
@@ -603,8 +611,9 @@ PHP_METHOD(Bucket, prepend)
 #ifdef LCB_TRACING
     tracer = lcb_get_tracer(obj->conn->lcb);
     if (tracer) {
-        cookie->span = lcbtrace_span_start(tracer, "prepend", 0, NULL);
+        cookie->span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_PREPEND, 0, NULL);
         lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
     }
 #endif
 
@@ -631,8 +640,9 @@ PHP_METHOD(Bucket, prepend)
             lcbtrace_REF ref;
             ref.type = LCBTRACE_REF_CHILD_OF;
             ref.span = cookie->span;
-            span = lcbtrace_span_start(tracer, LCBTRACE_OP_REQUEST_ENCODING, LCBTRACE_NOW, &ref);
+            span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_REQUEST_ENCODING, LCBTRACE_NOW, &ref);
             lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+            lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
         }
 #endif
         rc = pcbc_encode_value(obj, zvalue, &bytes, &nbytes, &cmd.flags, &cmd.datatype TSRMLS_CC);

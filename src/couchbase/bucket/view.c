@@ -177,13 +177,31 @@ void pcbc_bucket_view_request(pcbc_bucket_t *bucket, lcb_CMDVIEWQUERY *cmd, int 
 {
     opcookie *cookie;
     lcb_error_t err;
+#ifdef LCB_TRACING
+    lcbtrace_TRACER *tracer = NULL;
+    lcb_VIEWHANDLE handle = NULL;
+#endif
 
     cmd->callback = viewrow_callback;
     cookie = opcookie_init();
     cookie->json_response = json_response;
     cookie->json_options = json_options;
+#ifdef LCB_TRACING
+    tracer = lcb_get_tracer(bucket->conn->lcb);
+    if (tracer) {
+        cookie->span = lcbtrace_span_start(tracer, "php/view", 0, NULL);
+        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_VIEW);
+        cmd->handle = &handle;
+    }
+#endif
     err = lcb_view_query(bucket->conn->lcb, cookie, cmd);
     if (err == LCB_SUCCESS) {
+#ifdef LCB_TRACING
+        if (cookie->span) {
+            lcb_view_set_parent_span(bucket->conn->lcb, handle, cookie->span);
+        }
+#endif
         lcb_wait(bucket->conn->lcb);
         err = proc_viewrow_results(return_value, cookie TSRMLS_CC);
     }
@@ -194,5 +212,10 @@ void pcbc_bucket_view_request(pcbc_bucket_t *bucket, lcb_CMDVIEWQUERY *cmd, int 
             zend_throw_exception_object(PCBC_P(cookie->exc) TSRMLS_CC);
         }
     }
+#ifdef LCB_TRACING
+    if (cookie->span) {
+        lcbtrace_span_finish(cookie->span, LCBTRACE_NOW);
+    }
+#endif
     opcookie_destroy(cookie);
 }

@@ -147,6 +147,10 @@ void pcbc_bucket_n1ql_request(pcbc_bucket_t *bucket, lcb_CMDN1QL *cmd, int json_
 {
     opcookie *cookie;
     lcb_error_t err;
+#ifdef LCB_TRACING
+    lcbtrace_TRACER *tracer = NULL;
+    lcb_N1QLHANDLE handle = NULL;
+#endif
 
     cmd->callback = n1qlrow_callback;
     cmd->content_type = PCBC_CONTENT_TYPE_JSON;
@@ -154,8 +158,23 @@ void pcbc_bucket_n1ql_request(pcbc_bucket_t *bucket, lcb_CMDN1QL *cmd, int json_
     cookie->json_response = json_response;
     cookie->json_options = json_options;
     cookie->is_cbas = is_cbas;
+#ifdef LCB_TRACING
+    tracer = lcb_get_tracer(bucket->conn->lcb);
+    if (tracer) {
+        cookie->span = lcbtrace_span_start(tracer, is_cbas ? "php/analytics" : "php/n1ql", 0, NULL);
+        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE,
+                                  is_cbas ? LCBTRACE_TAG_SERVICE_ANALYTICS : LCBTRACE_TAG_SERVICE_N1QL);
+        cmd->handle = &handle;
+    }
+#endif
     err = lcb_n1ql_query(bucket->conn->lcb, cookie, cmd);
     if (err == LCB_SUCCESS) {
+#ifdef LCB_TRACING
+        if (cookie->span) {
+            lcb_n1ql_set_parent_span(bucket->conn->lcb, handle, cookie->span);
+        }
+#endif
         lcb_wait(bucket->conn->lcb);
         err = proc_n1qlrow_results(return_value, cookie TSRMLS_CC);
     }
@@ -166,5 +185,10 @@ void pcbc_bucket_n1ql_request(pcbc_bucket_t *bucket, lcb_CMDN1QL *cmd, int json_
             zend_throw_exception_object(PCBC_P(cookie->exc) TSRMLS_CC);
         }
     }
+#ifdef LCB_TRACING
+    if (cookie->span) {
+        lcbtrace_span_finish(cookie->span, LCBTRACE_NOW);
+    }
+#endif
     opcookie_destroy(cookie);
 }

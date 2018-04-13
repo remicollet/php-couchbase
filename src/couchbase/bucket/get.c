@@ -78,8 +78,9 @@ static lcb_error_t proc_get_results(pcbc_bucket_t *bucket, zval *return_value, o
                     lcbtrace_REF ref;
                     ref.type = LCBTRACE_REF_CHILD_OF;
                     ref.span = parent;
-                    span = lcbtrace_span_start(tracer, LCBTRACE_OP_RESPONSE_DECODING, LCBTRACE_NOW, &ref);
+                    span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_RESPONSE_DECODING, LCBTRACE_NOW, &ref);
                     lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+                    lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
                 }
 #endif
                 pcbc_document_init_decode(doc, bucket, res->bytes, res->bytes_len, res->flags, res->datatype, res->cas,
@@ -125,8 +126,9 @@ void pcbc_bucket_get(pcbc_bucket_t *obj, pcbc_pp_state *pp_state, pcbc_pp_id *id
 #ifdef LCB_TRACING
     tracer = lcb_get_tracer(obj->conn->lcb);
     if (tracer) {
-        cookie->span = lcbtrace_span_start(tracer, "get", 0, NULL);
+        cookie->span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_GET, 0, NULL);
         lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
     }
 #endif
 
@@ -263,8 +265,9 @@ PHP_METHOD(Bucket, getFromReplica)
 #ifdef LCB_TRACING
     tracer = lcb_get_tracer(obj->conn->lcb);
     if (tracer) {
-        cookie->span = lcbtrace_span_start(tracer, "get_from_replica", 0, NULL);
+        cookie->span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_GET_FROM_REPLICA, 0, NULL);
         lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
     }
 #endif
 
