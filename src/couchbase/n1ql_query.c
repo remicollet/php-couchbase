@@ -25,6 +25,10 @@ zend_class_entry *pcbc_n1ql_query_ce;
 #define PCBC_N1QL_CONSISTENCY_REQUEST_PLUS 2
 #define PCBC_N1QL_CONSISTENCY_STATEMENT_PLUS 3
 
+#define PCBC_N1QL_PROFILE_NONE "off"
+#define PCBC_N1QL_PROFILE_PHASES "phases"
+#define PCBC_N1QL_PROFILE_TIMINGS "timings"
+
 /* {{{ proto void N1qlQuery::__construct() Should not be called directly */
 PHP_METHOD(N1qlQuery, __construct)
 {
@@ -289,6 +293,24 @@ PHP_METHOD(N1qlQuery, consistency)
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
 
+/* {{{ proto \Couchbase\N1qlQuery N1qlQuery::profile(string $profileType) */
+PHP_METHOD(N1qlQuery, profile)
+{
+    char *profile_type = NULL;
+    pcbc_str_arg_size profile_type_len = 0;
+    int rv;
+    zval *options;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &profile_type, &profile_type_len);
+    if (rv == FAILURE || profile_type == NULL) {
+        RETURN_NULL();
+    }
+
+    PCBC_READ_PROPERTY(options, pcbc_n1ql_query_ce, getThis(), "options", 0);
+    ADD_ASSOC_STRING(options, "profile", profile_type);
+    RETURN_ZVAL(getThis(), 1, 0);
+} /* }}} */
+
 /* {{{ proto \Couchbase\N1qlQuery N1qlQuery::consistentWith(\Couchbase\MutationState $mutationState) */
 PHP_METHOD(N1qlQuery, consistentWith)
 {
@@ -336,6 +358,10 @@ ZEND_BEGIN_ARG_INFO_EX(ai_N1qlQuery_consistency, 0, 0, 1)
 ZEND_ARG_INFO(0, consistency)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(ai_N1qlQuery_profile, 0, 0, 1)
+ZEND_ARG_INFO(0, profileType)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(ai_N1qlQuery_params, 0, 0, 1)
 ZEND_ARG_INFO(0, params)
 ZEND_END_ARG_INFO()
@@ -373,6 +399,7 @@ zend_function_entry n1ql_query_methods[] = {
     PHP_ME(N1qlQuery, positionalParams, ai_N1qlQuery_params, ZEND_ACC_PUBLIC)
     PHP_ME(N1qlQuery, namedParams, ai_N1qlQuery_params, ZEND_ACC_PUBLIC)
     PHP_ME(N1qlQuery, consistency, ai_N1qlQuery_consistency, ZEND_ACC_PUBLIC)
+    PHP_ME(N1qlQuery, profile, ai_N1qlQuery_profile, ZEND_ACC_PUBLIC)
     PHP_ME(N1qlQuery, consistentWith, ai_N1qlQuery_consistentWith, ZEND_ACC_PUBLIC)
     PHP_ME(N1qlQuery, scanCap, ai_N1qlQuery_scanCap, ZEND_ACC_PUBLIC)
     PHP_ME(N1qlQuery, pipelineBatch, ai_N1qlQuery_pipelineBatch, ZEND_ACC_PUBLIC)
@@ -480,6 +507,12 @@ PHP_MINIT_FUNCTION(N1qlQuery)
                                      PCBC_N1QL_CONSISTENCY_REQUEST_PLUS TSRMLS_CC);
     zend_declare_class_constant_long(pcbc_n1ql_query_ce, ZEND_STRL("STATEMENT_PLUS"),
                                      PCBC_N1QL_CONSISTENCY_STATEMENT_PLUS TSRMLS_CC);
+
+    zend_declare_class_constant_string(pcbc_n1ql_query_ce, ZEND_STRL("PROFILE_NONE"), PCBC_N1QL_PROFILE_NONE TSRMLS_CC);
+    zend_declare_class_constant_string(pcbc_n1ql_query_ce, ZEND_STRL("PROFILE_PHASES"),
+                                       PCBC_N1QL_PROFILE_PHASES TSRMLS_CC);
+    zend_declare_class_constant_string(pcbc_n1ql_query_ce, ZEND_STRL("PROFILE_TIMINGS"),
+                                       PCBC_N1QL_PROFILE_TIMINGS TSRMLS_CC);
 
     zend_register_class_alias("\\CouchbaseN1qlQuery", pcbc_n1ql_query_ce);
     return SUCCESS;

@@ -1900,6 +1900,19 @@ namespace Couchbase {
          */
         const STATEMENT_PLUS = 3;
 
+        /**
+         * Disables profiling. This is the default
+         */
+        const PROFILE_NONE = 'off';
+        /**
+         * Enables phase profiling.
+         */
+        const PROFILE_PHASES = 'phases';
+        /**
+         * Enables general timing profiling.
+         */
+        const PROFILE_TIMINGS = 'timings';
+
         /** @ignore */
         final private function __construct() {}
 
@@ -1979,6 +1992,16 @@ namespace Couchbase {
          */
         public function consistency($consistency) {}
 
+        /**
+         * Controls the profiling mode used during query execution
+         *
+         * @param string $profileType
+         * @returns N1qlQuery
+         * @see \Couchbase\N1qlQuery::PROFILE_NONE
+         * @see \Couchbase\N1qlQuery::PROFILE_PHASES
+         * @see \Couchbase\N1qlQuery::PROFILE_TIMINGS
+         */
+        public function profile($profileType) {}
         /**
          * Sets mutation state the query should be consistent with
          *
