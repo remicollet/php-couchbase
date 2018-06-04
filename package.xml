@@ -18,9 +18,9 @@
         <active>yes</active>
     </lead>
 
-    <date>2018-04-13</date>
+    <date>2018-06-07</date>
     <version>
-        <release>2.4.6</release>
+        <release>2.4.7</release>
         <api>2.3.0</api>
     </version>
     <stability>
@@ -30,10 +30,9 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        * PCBC-523: Add tracing support for queries and the rest of KV commands.
-        * PCBC-536: Make it clear that timeout properties use microseconds.
-        * PCBC-531: Field encryption (See https://packagist.org/packages/couchbase/couchbase-encryption).
-        * PCBC-537: Implement Bucket#getName() returning bucket name.
+        * PCBC-534: Add profile N1QL query parameter.
+        * PCBC-538: do not dereference NULL values after encoding.
+        * PCBC-549, PCBC-541: Update crypto interfaces.
     </notes>
     <contents>
         <dir name="/">
@@ -183,6 +182,25 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2018-04-13</date>
+            <version>
+                <release>2.4.6</release>
+                <api>2.3.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
+            </license>
+            <notes>
+                * PCBC-523: Add tracing support for queries and the rest of KV commands.
+                * PCBC-536: Make it clear that timeout properties use microseconds.
+                * PCBC-531: Field encryption (See https://packagist.org/packages/couchbase/couchbase-encryption).
+                * PCBC-537: Implement Bucket#getName() returning bucket name.
+            </notes>
+        </release>
         <release>
             <date>2018-03-09</date>
             <version>
