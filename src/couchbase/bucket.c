@@ -322,8 +322,7 @@ PHP_METHOD(Bucket, query)
             cmd.cmdflags |= LCB_CMD_F_MULTIAUTH;
         }
         pcbc_log(LOGARGS(obj, TRACE), "N1QL: " LCB_LOG_SPEC("%.*s"),
-                 lcb_is_redacting_logs(obj->conn->lcb) ? LCB_LOG_UD_OTAG : "",
-                 PCBC_SMARTSTR_TRACE(buf),
+                 lcb_is_redacting_logs(obj->conn->lcb) ? LCB_LOG_UD_OTAG : "", PCBC_SMARTSTR_TRACE(buf),
                  lcb_is_redacting_logs(obj->conn->lcb) ? LCB_LOG_UD_CTAG : "");
         pcbc_bucket_n1ql_request(obj, &cmd, 1, json_options, 0, return_value TSRMLS_CC);
         smart_str_free(&buf);
@@ -341,8 +340,7 @@ PHP_METHOD(Bucket, query)
         smart_str_0(&buf);
         PCBC_SMARTSTR_SET(buf, cmd.query, cmd.nquery);
         pcbc_log(LOGARGS(obj, TRACE), "FTS: " LCB_LOG_SPEC("%.*s"),
-                 lcb_is_redacting_logs(obj->conn->lcb) ? LCB_LOG_UD_OTAG : "",
-                 PCBC_SMARTSTR_TRACE(buf),
+                 lcb_is_redacting_logs(obj->conn->lcb) ? LCB_LOG_UD_OTAG : "", PCBC_SMARTSTR_TRACE(buf),
                  lcb_is_redacting_logs(obj->conn->lcb) ? LCB_LOG_UD_CTAG : "");
         pcbc_bucket_cbft_request(obj, &cmd, 1, json_options, return_value TSRMLS_CC);
         smart_str_free(&buf);
@@ -364,8 +362,7 @@ PHP_METHOD(Bucket, query)
         cmd.cmdflags |= LCB_CMDN1QL_F_CBASQUERY;
         PCBC_SMARTSTR_SET(buf, cmd.query, cmd.nquery);
         pcbc_log(LOGARGS(obj, TRACE), "ANALYTICS: " LCB_LOG_SPEC("%.*s"),
-                 lcb_is_redacting_logs(obj->conn->lcb) ? LCB_LOG_UD_OTAG : "",
-                 PCBC_SMARTSTR_TRACE(buf),
+                 lcb_is_redacting_logs(obj->conn->lcb) ? LCB_LOG_UD_OTAG : "", PCBC_SMARTSTR_TRACE(buf),
                  lcb_is_redacting_logs(obj->conn->lcb) ? LCB_LOG_UD_CTAG : "");
         pcbc_bucket_n1ql_request(obj, &cmd, 1, json_options, 1, return_value TSRMLS_CC);
         smart_str_free(&buf);
@@ -1046,8 +1043,8 @@ PHP_METHOD(Bucket, unregisterCryptoProvider)
     RETURN_NULL();
 } /* }}} */
 
-/* {{{ proto Bucket::encryptDocument(array $document, array $options, string $prefix = NULL) */
-PHP_METHOD(Bucket, encryptDocument)
+/* {{{ proto Bucket::encryptFields(array $document, array $options, string $prefix = NULL) */
+PHP_METHOD(Bucket, encryptFields)
 {
     pcbc_bucket_t *obj;
     char *prefix = NULL;
@@ -1063,24 +1060,36 @@ PHP_METHOD(Bucket, encryptDocument)
         RETURN_NULL();
     }
     obj = Z_BUCKET_OBJ_P(getThis());
-    pcbc_crypto_encrypt_document(obj, document, options, prefix, return_value TSRMLS_CC);
+    pcbc_crypto_encrypt_fields(obj, document, options, prefix, return_value TSRMLS_CC);
+} /* }}} */
+
+/* {{{ proto Bucket::decryptFields(array $document, array $options, string $prefix = NULL) */
+PHP_METHOD(Bucket, decryptFields)
+{
+    pcbc_bucket_t *obj;
+    char *prefix = NULL;
+    pcbc_str_arg_size prefix_len = 0;
+    zval *document = NULL, *options = NULL;
+    int rv;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Aa|s", &document, &options, &prefix, &prefix_len);
+    if (rv == FAILURE) {
+        return;
+    }
+    obj = Z_BUCKET_OBJ_P(getThis());
+    pcbc_crypto_decrypt_fields(obj, document, options, prefix, return_value TSRMLS_CC);
+} /* }}} */
+
+/* {{{ proto Bucket::encryptDocument(array $document, array $options, string $prefix = NULL) */
+PHP_METHOD(Bucket, encryptDocument)
+{
+    throw_pcbc_exception("Bucket::encryptDocument is deprected, use Bucket::encryptFields instead.", LCB_EINVAL);
 } /* }}} */
 
 /* {{{ proto Bucket::decryptDocument(array $document, string $prefix = NULL) */
 PHP_METHOD(Bucket, decryptDocument)
 {
-    pcbc_bucket_t *obj;
-    char *prefix = NULL;
-    pcbc_str_arg_size prefix_len = 0;
-    zval *document = NULL;
-    int rv;
-
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "A|s", &document, &prefix, &prefix_len);
-    if (rv == FAILURE) {
-        return;
-    }
-    obj = Z_BUCKET_OBJ_P(getThis());
-    pcbc_crypto_decrypt_document(obj, document, prefix, return_value TSRMLS_CC);
+    throw_pcbc_exception("Bucket::decryptDocument is deprected, use Bucket::decryptFields instead.", LCB_EINVAL);
 } /* }}} */
 
 ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_none, 0, 0, 0)
@@ -1252,6 +1261,18 @@ ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_unregisterCryptoProvider, 0, 0, 1)
 ZEND_ARG_TYPE_INFO(0, name, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_encryptFields, 0, 0, 2)
+ZEND_ARG_INFO(0, document)
+ZEND_ARG_TYPE_INFO(0, options, IS_ARRAY, 0)
+ZEND_ARG_TYPE_INFO(0, prefix, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_decryptFields, 0, 0, 2)
+ZEND_ARG_INFO(0, document)
+ZEND_ARG_TYPE_INFO(0, options, IS_ARRAY, 0)
+ZEND_ARG_TYPE_INFO(0, prefix, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_encryptDocument, 0, 0, 2)
 ZEND_ARG_INFO(0, document)
 ZEND_ARG_TYPE_INFO(0, options, IS_ARRAY, 0)
@@ -1311,8 +1332,10 @@ zend_function_entry bucket_methods[] = {
     PHP_ME(Bucket, diag, ai_Bucket_diag, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, registerCryptoProvider, ai_Bucket_registerCryptoProvider, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, unregisterCryptoProvider, ai_Bucket_unregisterCryptoProvider, ZEND_ACC_PUBLIC)
-    PHP_ME(Bucket, encryptDocument, ai_Bucket_encryptDocument, ZEND_ACC_PUBLIC)
-    PHP_ME(Bucket, decryptDocument, ai_Bucket_decryptDocument, ZEND_ACC_PUBLIC)
+    PHP_ME(Bucket, encryptFields, ai_Bucket_encryptFields, ZEND_ACC_PUBLIC)
+    PHP_ME(Bucket, decryptFields, ai_Bucket_decryptFields, ZEND_ACC_PUBLIC)
+    PHP_ME(Bucket, encryptDocument, ai_Bucket_encryptDocument, ZEND_ACC_PUBLIC | ZEND_ACC_DEPRECATED)
+    PHP_ME(Bucket, decryptDocument, ai_Bucket_decryptDocument, ZEND_ACC_PUBLIC | ZEND_ACC_DEPRECATED)
     PHP_FE_END
 };
 // clang-format on

@@ -871,8 +871,8 @@ void pcbc_password_authenticator_init(zval *return_value, char *username, int us
 
 void pcbc_crypto_register(pcbc_bucket_t *obj, const char *name, int name_len, zval *provider TSRMLS_DC);
 void pcbc_crypto_unregister(pcbc_bucket_t *obj, const char *name, int name_len TSRMLS_DC);
-void pcbc_crypto_encrypt_document(pcbc_bucket_t *obj, zval *document, zval *options, const char *prefix, zval *return_value TSRMLS_DC);
-void pcbc_crypto_decrypt_document(pcbc_bucket_t *obj, zval *document, const char *prefix, zval *return_value TSRMLS_DC);
+void pcbc_crypto_encrypt_fields(pcbc_bucket_t *obj, zval *document, zval *options, const char *prefix, zval *return_value TSRMLS_DC);
+void pcbc_crypto_decrypt_fields(pcbc_bucket_t *obj, zval *document, zval *options, const char *prefix, zval *return_value TSRMLS_DC);
 
 #if PHP_VERSION_ID >= 70000
 static inline pcbc_cluster_t *pcbc_cluster_fetch_object(zend_object *obj)
