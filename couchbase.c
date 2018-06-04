@@ -584,6 +584,9 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
 
     do {
         size_t datalen = 0;
+        if (Z_TYPE_P(PCBC_P(res)) == IS_NULL) {
+            break;
+        }
         datalen = PCBC_STRLEN_P(res);
         if (datalen < cmprthresh) {
             cmprtype = COUCHBASE_CMPRTYPE_NONE;
