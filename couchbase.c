@@ -423,14 +423,12 @@ PHP_MINIT_FUNCTION(couchbase)
     REGISTER_NS_LONG_CONSTANT("Couchbase", "HAVE_IGBINARY", 1, CONST_CS | CONST_PERSISTENT);
 #else
     REGISTER_NS_LONG_CONSTANT("Couchbase", "HAVE_IGBINARY", 0, CONST_CS | CONST_PERSISTENT);
-    pcbc_log(LOGARGS(WARN), "igbinary serializer is not found");
 #endif
 
 #ifdef HAVE_COUCHBASE_ZLIB
     REGISTER_NS_LONG_CONSTANT("Couchbase", "HAVE_ZLIB", 1, CONST_CS | CONST_PERSISTENT);
 #else
     REGISTER_NS_LONG_CONSTANT("Couchbase", "HAVE_ZLIB", 0, CONST_CS | CONST_PERSISTENT);
-    pcbc_log(LOGARGS(WARN), "zlib compressor is not found");
 #endif
     return SUCCESS;
 }
