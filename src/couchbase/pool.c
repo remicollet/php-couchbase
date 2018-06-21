@@ -50,9 +50,10 @@ static lcb_error_t pcbc_establish_connection(lcb_type_t type, lcb_t *result, con
     lcb_t conn;
 
     memset(&create_options, 0, sizeof(create_options));
-    create_options.version = 3;
-    create_options.v.v3.connstr = connstr;
-    create_options.v.v3.type = type;
+    create_options.version = 4;
+    create_options.v.v4.connstr = connstr;
+    create_options.v.v4.type = type;
+    create_options.v.v4.logger = &pcbc_logger;
     err = lcb_create(&conn, &create_options);
     if (err != LCB_SUCCESS) {
         pcbc_log(LOGARGS(NULL, ERROR), "Failed to initialize LCB connection: %s", pcbc_lcb_strerror(err));
@@ -62,12 +63,6 @@ static lcb_error_t pcbc_establish_connection(lcb_type_t type, lcb_t *result, con
     lcb_set_auth(conn, auth);
     lcbauth_unref(auth);
     pcbc_log(LOGARGS(conn, INFO), "Using authenticator. md5=\"%s\"", auth_hash);
-    err = lcb_cntl(conn, LCB_CNTL_SET, LCB_CNTL_LOGGER, &pcbc_logger);
-    if (err != LCB_SUCCESS) {
-        pcbc_log(LOGARGS(conn, ERROR), "Failed to configure LCB logging hook: %s", pcbc_lcb_strerror(err));
-        lcb_destroy(conn);
-        return err;
-    }
     err = lcb_cntl(conn, LCB_CNTL_SET, LCB_CNTL_CLIENT_STRING, pcbc_client_string);
     if (err != LCB_SUCCESS) {
         pcbc_log(LOGARGS(conn, ERROR), "Failed to configure LCB client string: %s", pcbc_lcb_strerror(err));
