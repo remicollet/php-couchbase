@@ -224,7 +224,7 @@ static lcb_error_t pcbc_crypto_decrypt(struct lcbcrypto_PROVIDER *provider, cons
 {
     zval *zprovider = (zval *)provider->cookie;
     int rv;
-    PCBC_ZVAL params[3];
+    PCBC_ZVAL params[2];
     PCBC_ZVAL fname;
     PCBC_ZVAL retval;
     TSRMLS_FETCH();
@@ -266,12 +266,35 @@ void pcbc_crypto_register(pcbc_bucket_t *obj, const char *name, int name_len, zv
     provider->version = 1;
     provider->destructor = pcbc_crypto_destructor;
     provider->v.v1.release_bytes = pcbc_crypto_release_bytes;
-    provider->v.v1.generate_iv = pcbc_crypto_generate_iv;
-    provider->v.v1.sign = pcbc_crypto_sign;
-    provider->v.v1.verify_signature = pcbc_crypto_verify_signature;
     provider->v.v1.encrypt = pcbc_crypto_encrypt;
     provider->v.v1.decrypt = pcbc_crypto_decrypt;
     provider->v.v1.get_key_id = pcbc_crypto_get_key_id;
+
+    {
+        PCBC_ZVAL fname;
+        zend_fcall_info_cache fcc;
+        PCBC_ZVAL param;
+        PCBC_ZVAL retval;
+        int rv;
+
+        PCBC_ZVAL_ALLOC(fname);
+
+        PCBC_STRING(fname, "generateIV");
+        rv = call_user_function_ex(EG(function_table), PCBC_CP(zprovider), PCBC_P(fname), &retval, 0, NULL, 1,
+                                   NULL TSRMLS_CC);
+        if (!(rv == FAILURE || EG(exception) || Z_ISUNDEF(retval) || Z_TYPE_P(PCBC_P(retval)) == IS_NULL)) {
+            provider->v.v1.generate_iv = pcbc_crypto_generate_iv;
+        }
+
+        PCBC_STRING(fname, "sign");
+        array_init_size(PCBC_P(param), 0);
+        rv = call_user_function_ex(EG(function_table), PCBC_CP(zprovider), PCBC_P(fname), &retval, 1, &param, 1,
+                                   NULL TSRMLS_CC);
+        if (!(rv == FAILURE || EG(exception) || Z_ISUNDEF(retval) || Z_TYPE_P(PCBC_P(retval)) == IS_NULL)) {
+            provider->v.v1.sign = pcbc_crypto_sign;
+            provider->v.v1.verify_signature = pcbc_crypto_verify_signature;
+        }
+    }
 
 #if PHP_VERSION_ID >= 70000
     {
@@ -362,7 +385,8 @@ void pcbc_crypto_encrypt_fields(pcbc_bucket_t *obj, zval *document, zval *option
     }
 }
 
-void pcbc_crypto_decrypt_fields(pcbc_bucket_t *obj, zval *document, zval *options, const char *prefix, zval *return_value TSRMLS_DC)
+void pcbc_crypto_decrypt_fields(pcbc_bucket_t *obj, zval *document, zval *options, const char *prefix,
+                                zval *return_value TSRMLS_DC)
 {
     smart_str buf = {0};
     int last_error;
