@@ -53,7 +53,7 @@ static lcb_error_t pcbc_establish_connection(lcb_type_t type, lcb_t *result, con
     create_options.version = 4;
     create_options.v.v4.connstr = connstr;
     create_options.v.v4.type = type;
-    create_options.v.v4.logger = &pcbc_logger;
+    create_options.v.v4.logger = (struct lcb_logprocs_st *)&pcbc_logger;
     err = lcb_create(&conn, &create_options);
     if (err != LCB_SUCCESS) {
         pcbc_log(LOGARGS(NULL, ERROR), "Failed to initialize LCB connection: %s", pcbc_lcb_strerror(err));
