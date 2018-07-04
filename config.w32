@@ -27,6 +27,7 @@ if (PHP_COUCHBASE != "no") {
             "analytics_query.c " +
             "authenticator.c " +
             "crypto.c " +
+            "cert_authenticator.c " +
             "classic_authenticator.c " +
             "password_authenticator.c " +
             "base36.c " +

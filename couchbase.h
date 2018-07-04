@@ -129,6 +129,7 @@ PHP_MINIT_FUNCTION(UserSettings);
 PHP_MINIT_FUNCTION(Bucket);
 PHP_MINIT_FUNCTION(BucketManager);
 PHP_MINIT_FUNCTION(Authenticator);
+PHP_MINIT_FUNCTION(CertAuthenticator);
 PHP_MINIT_FUNCTION(ClassicAuthenticator);
 PHP_MINIT_FUNCTION(PasswordAuthenticator);
 PHP_MINIT_FUNCTION(MutationToken);
@@ -476,6 +477,11 @@ typedef struct {
     int password_len;
     PCBC_ZEND_OBJECT_POST
 } pcbc_password_authenticator_t;
+
+typedef struct {
+    PCBC_ZEND_OBJECT_PRE
+    PCBC_ZEND_OBJECT_POST
+} pcbc_cert_authenticator_t;
 
 typedef struct {
     PCBC_ZEND_OBJECT_PRE
@@ -931,6 +937,10 @@ static inline pcbc_password_authenticator_t *pcbc_password_authenticator_fetch_o
 {
     return (pcbc_password_authenticator_t *)((char *)obj - XtOffsetOf(pcbc_password_authenticator_t, std));
 }
+static inline pcbc_cert_authenticator_t *pcbc_cert_authenticator_fetch_object(zend_object *obj)
+{
+    return (pcbc_cert_authenticator_t *)((char *)obj - XtOffsetOf(pcbc_cert_authenticator_t, std));
+}
 static inline pcbc_user_settings_t *pcbc_user_settings_fetch_object(zend_object *obj)
 {
     return (pcbc_user_settings_t *)((char *)obj - XtOffsetOf(pcbc_user_settings_t, std));
@@ -963,6 +973,8 @@ static inline pcbc_user_settings_t *pcbc_user_settings_fetch_object(zend_object 
 #define Z_CLASSIC_AUTHENTICATOR_OBJ_P(zv) (pcbc_classic_authenticator_fetch_object(Z_OBJ_P(zv)))
 #define Z_PASSWORD_AUTHENTICATOR_OBJ(zo) (pcbc_password_authenticator_fetch_object(zo))
 #define Z_PASSWORD_AUTHENTICATOR_OBJ_P(zv) (pcbc_password_authenticator_fetch_object(Z_OBJ_P(zv)))
+#define Z_CERT_AUTHENTICATOR_OBJ(zo) (pcbc_cert_authenticator_fetch_object(zo))
+#define Z_CERT_AUTHENTICATOR_OBJ_P(zv) (pcbc_cert_authenticator_fetch_object(Z_OBJ_P(zv)))
 #define Z_USER_SETTINGS_OBJ(zo) (pcbc_user_settings_fetch_object(zo))
 #define Z_USER_SETTINGS_OBJ_P(zv) (pcbc_user_settings_fetch_object(Z_OBJ_P(zv)))
 #else
@@ -994,6 +1006,8 @@ static inline pcbc_user_settings_t *pcbc_user_settings_fetch_object(zend_object 
 #define Z_CLASSIC_AUTHENTICATOR_OBJ_P(zv) ((pcbc_classic_authenticator_t *)zend_object_store_get_object(zv TSRMLS_CC))
 #define Z_PASSWORD_AUTHENTICATOR_OBJ(zo) ((pcbc_password_authenticator_t *)zo)
 #define Z_PASSWORD_AUTHENTICATOR_OBJ_P(zv) ((pcbc_password_authenticator_t *)zend_object_store_get_object(zv TSRMLS_CC))
+#define Z_CERT_AUTHENTICATOR_OBJ(zo) ((pcbc_cert_authenticator_t *)zo)
+#define Z_CERT_AUTHENTICATOR_OBJ_P(zv) ((pcbc_cert_authenticator_t *)zend_object_store_get_object(zv TSRMLS_CC))
 #define Z_USER_SETTINGS_OBJ(zo) ((pcbc_user_settings_t *)zo)
 #define Z_USER_SETTINGS_OBJ_P(zv) ((pcbc_user_settings_t *)zend_object_store_get_object(zv TSRMLS_CC))
 #endif

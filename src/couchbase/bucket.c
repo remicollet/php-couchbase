@@ -21,6 +21,7 @@
 zend_class_entry *pcbc_bucket_ce;
 extern zend_class_entry *pcbc_classic_authenticator_ce;
 extern zend_class_entry *pcbc_password_authenticator_ce;
+extern zend_class_entry *pcbc_cert_authenticator_ce;
 
 PHP_METHOD(Bucket, get);
 PHP_METHOD(Bucket, getAndLock);
@@ -1444,6 +1445,41 @@ static HashTable *pcbc_bucket_get_debug_info(zval *object, int *is_temp TSRMLS_D
     return Z_ARRVAL(retval);
 }
 
+#define LOGARGS_(lvl) LCB_LOG_##lvl, NULL, "pcbc/bucket", __FILE__, __LINE__
+
+static int is_cert_auth_good(pcbc_cluster_t *cluster, const char *password TSRMLS_DC)
+{
+    if (!Z_ISUNDEF(cluster->auth) &&
+        instanceof_function(Z_OBJCE_P(PCBC_P(cluster->auth)), pcbc_cert_authenticator_ce TSRMLS_CC)) {
+        if (password) {
+            pcbc_log(LOGARGS_(DEBUG), "mixed-auth: bucket password set with CertAuthenticator");
+            return 0;
+        }
+        if (!cluster->connstr) {
+            pcbc_log(LOGARGS_(DEBUG), "mixed-auth: connection string is not set with CertAuthenticator");
+            return 0;
+        }
+        if (strstr(cluster->connstr, "keypath") == NULL) {
+            pcbc_log(LOGARGS_(DEBUG), "mixed-auth: keypath must be in connection string with CertAuthenticator");
+            return 0;
+        }
+        if (strstr(cluster->connstr, "certpath") == NULL) {
+            pcbc_log(LOGARGS_(DEBUG), "mixed-auth: certpath must be in connection string with CertAuthenticator");
+            return 0;
+        }
+    } else if (cluster->connstr) {
+        if (strstr(cluster->connstr, "keypath") != NULL) {
+            pcbc_log(LOGARGS_(DEBUG), "mixed-auth: keypath in connection string requires CertAuthenticator");
+            return 0;
+        }
+        if (strstr(cluster->connstr, "certpath") != NULL) {
+            pcbc_log(LOGARGS_(DEBUG), "mixed-auth: certpath in connection string requires CertAuthenticator");
+            return 0;
+        }
+    }
+    return 1;
+}
+
 void pcbc_bucket_init(zval *return_value, pcbc_cluster_t *cluster, const char *bucketname,
                       const char *password TSRMLS_DC)
 {
@@ -1454,6 +1490,13 @@ void pcbc_bucket_init(zval *return_value, pcbc_cluster_t *cluster, const char *b
     pcbc_credential_t extra_creds = {0};
     lcb_AUTHENTICATOR *auth = NULL;
     char *auth_hash = NULL;
+
+    if (!is_cert_auth_good(cluster, password TSRMLS_CC)) {
+        throw_pcbc_exception(
+            "Mixed authentication detected. Make sure CertAuthenticator used, and no other credentials supplied",
+            LCB_EINVAL);
+        return;
+    }
 
     if (!Z_ISUNDEF(cluster->auth)) {
         if (instanceof_function(Z_OBJCE_P(PCBC_P(cluster->auth)), pcbc_classic_authenticator_ce TSRMLS_CC)) {
