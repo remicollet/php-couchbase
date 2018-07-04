@@ -113,7 +113,7 @@ PHP_METHOD(SearchSortGeoDistance, jsonSerialize)
     obj = Z_SEARCH_SORT_GEO_DISTANCE_OBJ_P(getThis());
     array_init(return_value);
     ADD_ASSOC_STRING(return_value, "by", "geo_distance");
-    ADD_ASSOC_BOOL_EX(return_value, "descending", obj->descending);
+    ADD_ASSOC_BOOL_EX(return_value, "desc", obj->descending);
     ADD_ASSOC_STRING(return_value, "field", obj->field);
     {
         PCBC_ZVAL location;
@@ -219,7 +219,7 @@ static HashTable *pcbc_search_sort_geo_distance_get_debug_info(zval *object, int
 
     array_init(&retval);
     ADD_ASSOC_STRING(&retval, "by", "field");
-    ADD_ASSOC_BOOL_EX(&retval, "descending", obj->descending);
+    ADD_ASSOC_BOOL_EX(&retval, "desc", obj->descending);
     ADD_ASSOC_STRING(&retval, "field", obj->field);
     ADD_ASSOC_DOUBLE_EX(&retval, "lat", obj->lat);
     ADD_ASSOC_DOUBLE_EX(&retval, "lon", obj->lon);

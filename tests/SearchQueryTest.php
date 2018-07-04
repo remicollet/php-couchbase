@@ -67,10 +67,10 @@ class SearchQueryTest extends CouchbaseTestCase {
         $this->assertEquals(JSON_ERROR_NONE, json_last_error());
         $this->assertEquals(
             '{"indexName":"search","sort":["hello",' .
-                '{"by":"id","descending":true},' .
-                '{"by":"score","descending":false},' .
-                '{"by":"geo_distance","descending":false,"field":"foo","location":[27.4395527,53.8835622]},' .
-                '{"by":"field","descending":false,"field":"bar","type":"number","missing":"first"}],"query":{"match":"foo"}}',
+                '{"by":"id","desc":true},' .
+                '{"by":"score","desc":false},' .
+                '{"by":"geo_distance","desc":false,"field":"foo","location":[27.4395527,53.8835622]},' .
+                '{"by":"field","desc":false,"field":"bar","type":"number","missing":"first"}],"query":{"match":"foo"}}',
                                 $result);
 
     }

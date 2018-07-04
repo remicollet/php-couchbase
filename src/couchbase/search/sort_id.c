@@ -82,7 +82,7 @@ PHP_METHOD(SearchSortId, jsonSerialize)
     obj = Z_SEARCH_SORT_ID_OBJ_P(getThis());
     array_init(return_value);
     ADD_ASSOC_STRING(return_value, "by", "id");
-    ADD_ASSOC_BOOL_EX(return_value, "descending", obj->descending);
+    ADD_ASSOC_BOOL_EX(return_value, "desc", obj->descending);
 } /* }}} */
 
 ZEND_BEGIN_ARG_INFO_EX(ai_SearchSortId_none, 0, 0, 0)
@@ -159,7 +159,7 @@ static HashTable *pcbc_search_sort_id_get_debug_info(zval *object, int *is_temp 
 
     array_init(&retval);
     ADD_ASSOC_STRING(&retval, "by", "id");
-    ADD_ASSOC_BOOL_EX(&retval, "descending", obj->descending);
+    ADD_ASSOC_BOOL_EX(&retval, "desc", obj->descending);
     return Z_ARRVAL(retval);
 } /* }}} */
 

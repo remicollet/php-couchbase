@@ -164,7 +164,7 @@ PHP_METHOD(SearchSortField, jsonSerialize)
     obj = Z_SEARCH_SORT_FIELD_OBJ_P(getThis());
     array_init(return_value);
     ADD_ASSOC_STRING(return_value, "by", "field");
-    ADD_ASSOC_BOOL_EX(return_value, "descending", obj->descending);
+    ADD_ASSOC_BOOL_EX(return_value, "desc", obj->descending);
     ADD_ASSOC_STRING(return_value, "field", obj->field);
     if (obj->type != NULL) {
         ADD_ASSOC_STRING(return_value, "type", obj->type);
@@ -282,7 +282,7 @@ static HashTable *pcbc_search_sort_field_get_debug_info(zval *object, int *is_te
 
     array_init(&retval);
     ADD_ASSOC_STRING(&retval, "by", "field");
-    ADD_ASSOC_BOOL_EX(&retval, "descending", obj->descending);
+    ADD_ASSOC_BOOL_EX(&retval, "desc", obj->descending);
     ADD_ASSOC_STRING(&retval, "field", obj->field);
     if (obj->type != NULL) {
         ADD_ASSOC_STRING(&retval, "type", obj->type);
