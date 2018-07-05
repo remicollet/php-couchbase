@@ -1472,10 +1472,6 @@ static int is_cert_auth_good(pcbc_cluster_t *cluster, const char *password TSRML
             pcbc_log(LOGARGS_(DEBUG), "mixed-auth: keypath in connection string requires CertAuthenticator");
             return 0;
         }
-        if (strstr(cluster->connstr, "certpath") != NULL) {
-            pcbc_log(LOGARGS_(DEBUG), "mixed-auth: certpath in connection string requires CertAuthenticator");
-            return 0;
-        }
     }
     return 1;
 }

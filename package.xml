@@ -18,9 +18,9 @@
         <active>yes</active>
     </lead>
 
-    <date>2018-06-07</date>
+    <date>2018-07-05</date>
     <version>
-        <release>2.4.7</release>
+        <release>2.5.0</release>
         <api>2.3.0</api>
     </version>
     <stability>
@@ -30,9 +30,12 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        * PCBC-534: Add profile N1QL query parameter.
-        * PCBC-538: do not dereference NULL values after encoding.
-        * PCBC-549, PCBC-541: Update crypto interfaces.
+        * PCBC-551: Do not complain about missing igbinary on start
+        * PCBC-552: Pass logger to lcb_create to catch all log messages
+        * PCBC-553: Check if crypto provider implements IV and signatures
+        * PCBC-554: Fix search query descending order to use "desc"
+        * PCBC-544: Implement CertAuthenticator for extra checks
+        * Fixes for PHP 7.3
     </notes>
     <contents>
         <dir name="/">
@@ -75,6 +78,7 @@
             <file role="src" name="src/couchbase/analytics_query.c" />
             <file role="src" name="src/couchbase/authenticator.c" />
             <file role="src" name="src/couchbase/crypto.c" />
+            <file role="src" name="src/couchbase/cert_authenticator.c" />
             <file role="src" name="src/couchbase/classic_authenticator.c" />
             <file role="src" name="src/couchbase/password_authenticator.c" />
             <file role="src" name="src/couchbase/base36.c" />
@@ -182,6 +186,24 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2018-06-07</date>
+            <version>
+                <release>2.4.7</release>
+                <api>2.3.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
+            </license>
+            <notes>
+                * PCBC-534: Add profile N1QL query parameter.
+                * PCBC-538: do not dereference NULL values after encoding.
+                * PCBC-549, PCBC-541: Update crypto interfaces.
+            </notes>
+        </release>
         <release>
             <date>2018-04-13</date>
             <version>
