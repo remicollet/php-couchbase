@@ -696,7 +696,7 @@ PHP_METHOD(SearchQuery, highlight)
     int rv, num_args = 0;
     pcbc_str_arg_size style_len;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s+", &style, &style_len, &args, &num_args);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s*", &style, &style_len, &args, &num_args);
     if (rv == FAILURE) {
         return;
     }
@@ -801,7 +801,9 @@ PHP_METHOD(SearchQuery, jsonSerialize)
         ADD_ASSOC_ZVAL_EX(return_value, "highlight", PCBC_P(highlight));
 
         ADD_ASSOC_STRING(PCBC_P(highlight), "style", obj->highlight_style);
-        ADD_ASSOC_ZVAL_EX(PCBC_P(highlight), "fields", PCBC_P(obj->highlight_fields));
+        if (php_array_count(PCBC_P(obj->highlight_fields)) > 0) {
+            ADD_ASSOC_ZVAL_EX(PCBC_P(highlight), "fields", PCBC_P(obj->highlight_fields));
+        }
         PCBC_ADDREF_P(PCBC_P(obj->highlight_fields));
     }
     if (!Z_ISUNDEF(obj->query_part)) {
@@ -907,7 +909,7 @@ ZEND_BEGIN_ARG_INFO_EX(ai_SearchQuery_sort, 0, 0, 1)
 PCBC_ARG_VARIADIC_INFO(0, sort)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_SearchQuery_highlight, 0, 0, 2)
+ZEND_BEGIN_ARG_INFO_EX(ai_SearchQuery_highlight, 0, 0, 1)
 ZEND_ARG_INFO(0, style)
 PCBC_ARG_VARIADIC_INFO(0, fields)
 ZEND_END_ARG_INFO()
