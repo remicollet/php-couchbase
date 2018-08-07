@@ -268,7 +268,8 @@ PHP_METHOD(ClusterManager, removeUser)
     }
 } /* }}} */
 
-/* {{{ proto array ClusterManager::upsertUser(string $name, \Couchbase\UserSettings $settings, $domain = ClusterManager::RBAC_DOMAIN_LOCAL) */
+/* {{{ proto array ClusterManager::upsertUser(string $name, \Couchbase\UserSettings $settings, $domain =
+ * ClusterManager::RBAC_DOMAIN_LOCAL) */
 PHP_METHOD(ClusterManager, upsertUser)
 {
     pcbc_cluster_manager_t *obj;
@@ -285,7 +286,8 @@ PHP_METHOD(ClusterManager, upsertUser)
 
     obj = Z_CLUSTER_MANAGER_OBJ_P(getThis());
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sO|l", &name, &name_len, &settings, pcbc_user_settings_ce, &domain);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sO|l", &name, &name_len, &settings, pcbc_user_settings_ce,
+                               &domain);
     if (rv == FAILURE) {
         return;
     }
@@ -372,7 +374,6 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(ai_ClusterManager_listUsers, 0, 0, 1)
 ZEND_ARG_INFO(0, domain)
 ZEND_END_ARG_INFO()
-
 
 // clang-format off
 zend_function_entry cluster_manager_methods[] = {

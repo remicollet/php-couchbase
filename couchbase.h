@@ -174,6 +174,7 @@ PHP_MINIT_FUNCTION(SearchSortGeoDistance);
 PHP_MINIT_FUNCTION(SearchSortId);
 PHP_MINIT_FUNCTION(SearchSortScore);
 PHP_MINIT_FUNCTION(CryptoProvider);
+PHP_MINIT_FUNCTION(SearchIndexManager);
 
 zval *bop_get_return_doc(zval *return_value, const char *key, int key_len, int is_mapped TSRMLS_DC);
 
@@ -495,6 +496,12 @@ typedef struct {
     pcbc_connection_t *conn;
     PCBC_ZEND_OBJECT_POST
 } pcbc_cluster_manager_t;
+
+typedef struct {
+    PCBC_ZEND_OBJECT_PRE
+    pcbc_connection_t *conn;
+    PCBC_ZEND_OBJECT_POST
+} pcbc_search_index_manager_t;
 
 struct pcbc_crypto_id {
     char *name;
@@ -825,6 +832,7 @@ void pcbc_bucket_view_request(pcbc_bucket_t *bucket, lcb_CMDVIEWQUERY *cmd, int 
                               zval *return_value TSRMLS_DC);
 void pcbc_spatial_view_query_init(zval *return_value, char *design_document, int design_document_len, char *view_name,
                                   int view_name_len TSRMLS_DC);
+void pcbc_search_index_manager_init(zval *return_value, pcbc_bucket_manager_t *bucket_manager TSRMLS_DC);
 
 void pcbc_boolean_field_search_query_init(zval *return_value, zend_bool value TSRMLS_DC);
 void pcbc_boolean_search_query_init(zval *return_value TSRMLS_DC);
@@ -851,7 +859,8 @@ void pcbc_numeric_range_search_facet_init(zval *return_value, char *field, int f
 void pcbc_search_sort_id_init(zval *return_value TSRMLS_DC);
 void pcbc_search_sort_score_init(zval *return_value TSRMLS_DC);
 void pcbc_search_sort_field_init(zval *return_value, const char *field, int field_len TSRMLS_DC);
-void pcbc_search_sort_geo_distance_init(zval *return_value, const char *field, int field_len, double lon, double lat TSRMLS_DC);
+void pcbc_search_sort_geo_distance_init(zval *return_value, const char *field, int field_len, double lon,
+                                        double lat TSRMLS_DC);
 
 #if PHP_VERSION_ID >= 70000
 void pcbc_lookup_in_builder_init(zval *return_value, zval *bucket, const char *id, int id_len, zval *args,
@@ -877,8 +886,10 @@ void pcbc_password_authenticator_init(zval *return_value, char *username, int us
 
 void pcbc_crypto_register(pcbc_bucket_t *obj, const char *name, int name_len, zval *provider TSRMLS_DC);
 void pcbc_crypto_unregister(pcbc_bucket_t *obj, const char *name, int name_len TSRMLS_DC);
-void pcbc_crypto_encrypt_fields(pcbc_bucket_t *obj, zval *document, zval *options, const char *prefix, zval *return_value TSRMLS_DC);
-void pcbc_crypto_decrypt_fields(pcbc_bucket_t *obj, zval *document, zval *options, const char *prefix, zval *return_value TSRMLS_DC);
+void pcbc_crypto_encrypt_fields(pcbc_bucket_t *obj, zval *document, zval *options, const char *prefix,
+                                zval *return_value TSRMLS_DC);
+void pcbc_crypto_decrypt_fields(pcbc_bucket_t *obj, zval *document, zval *options, const char *prefix,
+                                zval *return_value TSRMLS_DC);
 
 #if PHP_VERSION_ID >= 70000
 static inline pcbc_cluster_t *pcbc_cluster_fetch_object(zend_object *obj)
@@ -945,6 +956,10 @@ static inline pcbc_user_settings_t *pcbc_user_settings_fetch_object(zend_object 
 {
     return (pcbc_user_settings_t *)((char *)obj - XtOffsetOf(pcbc_user_settings_t, std));
 }
+static inline pcbc_search_index_manager_t *pcbc_search_index_manager_fetch_object(zend_object *obj)
+{
+    return (pcbc_search_index_manager_t *)((char *)obj - XtOffsetOf(pcbc_search_index_manager_t, std));
+}
 #define Z_CLUSTER_OBJ(zo) (pcbc_cluster_fetch_object(zo))
 #define Z_CLUSTER_OBJ_P(zv) (pcbc_cluster_fetch_object(Z_OBJ_P(zv)))
 #define Z_CLUSTER_MANAGER_OBJ(zo) (pcbc_cluster_manager_fetch_object(zo))
@@ -977,6 +992,8 @@ static inline pcbc_user_settings_t *pcbc_user_settings_fetch_object(zend_object 
 #define Z_CERT_AUTHENTICATOR_OBJ_P(zv) (pcbc_cert_authenticator_fetch_object(Z_OBJ_P(zv)))
 #define Z_USER_SETTINGS_OBJ(zo) (pcbc_user_settings_fetch_object(zo))
 #define Z_USER_SETTINGS_OBJ_P(zv) (pcbc_user_settings_fetch_object(Z_OBJ_P(zv)))
+#define Z_SEARCH_INDEX_MANAGER_OBJ(zo) (pcbc_search_index_manager_fetch_object(zo))
+#define Z_SEARCH_INDEX_MANAGER_OBJ_P(zv) (pcbc_search_index_manager_fetch_object(Z_OBJ_P(zv)))
 #else
 #define Z_CLUSTER_OBJ(zo) ((pcbc_cluster_t *)zo)
 #define Z_CLUSTER_OBJ_P(zv) ((pcbc_cluster_t *)zend_object_store_get_object(zv TSRMLS_CC))
@@ -1010,6 +1027,8 @@ static inline pcbc_user_settings_t *pcbc_user_settings_fetch_object(zend_object 
 #define Z_CERT_AUTHENTICATOR_OBJ_P(zv) ((pcbc_cert_authenticator_t *)zend_object_store_get_object(zv TSRMLS_CC))
 #define Z_USER_SETTINGS_OBJ(zo) ((pcbc_user_settings_t *)zo)
 #define Z_USER_SETTINGS_OBJ_P(zv) ((pcbc_user_settings_t *)zend_object_store_get_object(zv TSRMLS_CC))
+#define Z_SEARCH_INDEX_MANAGER_OBJ(zo) ((pcbc_search_index_manager_t *)zo)
+#define Z_SEARCH_INDEX_MANAGER_OBJ_P(zv) ((pcbc_search_index_manager_t *)zend_object_store_get_object(zv TSRMLS_CC))
 #endif
 
 typedef struct {

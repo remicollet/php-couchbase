@@ -126,6 +126,7 @@ COUCHBASE_FILES=" \
     src/couchbase/view_query_encodable.c \
     src/couchbase/spatial_view_query.c \
     transcoding.c \
+    src/couchbase/search_index_manager.c \
 "
 
   AC_CHECK_HEADERS([zlib.h])

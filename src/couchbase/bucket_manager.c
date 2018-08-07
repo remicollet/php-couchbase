@@ -425,6 +425,20 @@ PHP_METHOD(BucketManager, dropN1qlIndex)
     pcbc_n1ix_drop(obj, &cmd, ignore_if_not_exist, return_value TSRMLS_CC);
 } /* }}} */
 
+/* {{{ proto \Couchbase\SearchIndexManager Cluster::searchIndexManager() */
+PHP_METHOD(BucketManager, searchIndexManager)
+{
+    pcbc_bucket_manager_t *obj;
+    int rv;
+
+    rv = zend_parse_parameters_none();
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    obj = Z_BUCKET_MANAGER_OBJ_P(getThis());
+    pcbc_search_index_manager_init(return_value, obj TSRMLS_CC);
+} /* }}} */
+
 ZEND_BEGIN_ARG_INFO_EX(ai_BucketManager_none, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
@@ -479,6 +493,7 @@ zend_function_entry bucket_manager_methods[] = {
     PHP_ME(BucketManager, createN1qlIndex, ai_BucketManager_createN1qlIndex, ZEND_ACC_PUBLIC)
     PHP_ME(BucketManager, dropN1qlPrimaryIndex, ai_BucketManager_dropN1qlPrimaryIndex, ZEND_ACC_PUBLIC)
     PHP_ME(BucketManager, dropN1qlIndex, ai_BucketManager_dropN1qlIndex, ZEND_ACC_PUBLIC)
+    PHP_ME(BucketManager, searchIndexManager, ai_BucketManager_none, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
