@@ -18,9 +18,9 @@
         <active>yes</active>
     </lead>
 
-    <date>2018-07-05</date>
+    <date>2018-08-10</date>
     <version>
-        <release>2.5.0</release>
+        <release>2.5.1</release>
         <api>2.3.0</api>
     </version>
     <stability>
@@ -30,12 +30,8 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        * PCBC-551: Do not complain about missing igbinary on start
-        * PCBC-552: Pass logger to lcb_create to catch all log messages
-        * PCBC-553: Check if crypto provider implements IV and signatures
-        * PCBC-554: Fix search query descending order to use "desc"
-        * PCBC-544: Implement CertAuthenticator for extra checks
-        * Fixes for PHP 7.3
+        * PCBC-557: Better FTS example
+        * PCBC-533: Implement experimental FTS index management API
     </notes>
     <contents>
         <dir name="/">
@@ -58,6 +54,8 @@
             <file role="doc" name="examples/certauth/certauth.php" />
             <file role="doc" name="examples/managers/UserManagement.php" />
             <file role="doc" name="examples/scan_consistency/request_plus.php" />
+            <file role="doc" name="examples/search/index_management.php" />
+            <file role="doc" name="examples/search/search.php" />
             <file role="doc" name="examples/subdoc/xattrs.php" />
             <file role="doc" name="examples/transcoders/index.php" />
             <file role="doc" name="fastlz/LICENSE.txt" />
@@ -103,6 +101,7 @@
             <file role="src" name="src/couchbase/cluster.c" />
             <file role="src" name="src/couchbase/cluster_manager.c" />
             <file role="src" name="src/couchbase/cluster_manager/user_settings.c" />
+            <file role="src" name="src/couchbase/search_index_manager.c" />
             <file role="src" name="src/couchbase/document.c" />
             <file role="src" name="src/couchbase/document_fragment.c" />
             <file role="src" name="src/couchbase/log_formatter.c" />
@@ -186,6 +185,27 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2018-07-05</date>
+            <version>
+                <release>2.5.0</release>
+                <api>2.3.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
+            </license>
+            <notes>
+                * PCBC-551: Do not complain about missing igbinary on start
+                * PCBC-552: Pass logger to lcb_create to catch all log messages
+                * PCBC-553: Check if crypto provider implements IV and signatures
+                * PCBC-554: Fix search query descending order to use "desc"
+                * PCBC-544: Implement CertAuthenticator for extra checks
+                * Fixes for PHP 7.3
+            </notes>
+        </release>
         <release>
             <date>2018-06-07</date>
             <version>
