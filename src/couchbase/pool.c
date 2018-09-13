@@ -465,7 +465,7 @@ static int pcbc_destroy_idle_connections(
             return 0;
         }
         now = time(NULL);
-        if ((now - conn->idle_at) > PCBCG(pool_max_idle_time)) {
+        if ((now - conn->idle_at) >= PCBCG(pool_max_idle_time)) {
             pcbc_destroy_connection_resource(res);
         }
     }
