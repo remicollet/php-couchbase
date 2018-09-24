@@ -1994,6 +1994,20 @@ namespace Couchbase {
         public function namedParams($params) {}
 
         /**
+         * Specify custom parameter for query
+         *
+         * This function exists as escape hatch for cases when the Server has
+         * implemented some new query feature, while the SDK hasn't yet exposed
+         * the API on query object yet. The key must be a string, and param is
+         * JSON-serializable object.
+         *
+         * @param string $key
+         * @param mixed $param
+         * @return AnalyticsQuery
+         */
+        public function rawParam($key, $value) {}
+
+        /**
          * Specifies the consistency level for this query
          *
          * @param int $consistency consistency level

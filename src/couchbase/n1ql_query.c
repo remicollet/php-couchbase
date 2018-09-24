@@ -124,6 +124,26 @@ PHP_METHOD(N1qlQuery, namedParams)
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
 
+PHP_METHOD(N1qlQuery, rawParam)
+{
+    zval *value;
+    zval *options;
+    char *name = NULL;
+    pcbc_str_arg_size name_len = 0;
+    int rv;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz", &name, &name_len, &value);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+
+    PCBC_READ_PROPERTY(options, pcbc_n1ql_query_ce, getThis(), "options", 0);
+    PCBC_ADDREF_P(value);
+    add_assoc_zval_ex(options, name, name_len, value);
+
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
 /* {{{ proto \Couchbase\N1qlQuery N1qlQuery::adhoc(boolean $adhoc) */
 PHP_METHOD(N1qlQuery, adhoc)
 {
@@ -390,6 +410,11 @@ ZEND_BEGIN_ARG_INFO_EX(ai_N1qlQuery_readonly, 0, 0, 1)
 ZEND_ARG_INFO(0, readonly)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(ai_N1qlQuery_rawParam, 0, 0, 2)
+ZEND_ARG_INFO(0, key)
+ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
 // clang-format off
 zend_function_entry n1ql_query_methods[] = {
     PHP_ME(N1qlQuery, __construct, ai_N1qlQuery_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
@@ -406,6 +431,7 @@ zend_function_entry n1ql_query_methods[] = {
     PHP_ME(N1qlQuery, pipelineCap, ai_N1qlQuery_pipelineCap, ZEND_ACC_PUBLIC)
     PHP_ME(N1qlQuery, maxParallelism, ai_N1qlQuery_maxParallelism, ZEND_ACC_PUBLIC)
     PHP_ME(N1qlQuery, readonly, ai_N1qlQuery_readonly, ZEND_ACC_PUBLIC)
+    PHP_ME(N1qlQuery, rawParam, ai_N1qlQuery_rawParam, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
