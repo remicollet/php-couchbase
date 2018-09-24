@@ -357,7 +357,7 @@ PHP_METHOD(Bucket, query)
             RETURN_NULL();
         }
         smart_str_0(&buf);
-        cmd.cmdflags |= LCB_CMDN1QL_F_CBASQUERY;
+        cmd.cmdflags |= LCB_CMDN1QL_F_ANALYTICSQUERY;
         PCBC_SMARTSTR_SET(buf, cmd.query, cmd.nquery);
         pcbc_log(LOGARGS(obj, TRACE), "ANALYTICS: " LCB_LOG_SPEC("%.*s"),
                  lcb_is_redacting_logs(obj->conn->lcb) ? LCB_LOG_UD_OTAG : "", PCBC_SMARTSTR_TRACE(buf),
