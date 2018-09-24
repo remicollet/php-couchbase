@@ -43,6 +43,97 @@ PHP_METHOD(AnalyticsQuery, fromString)
     pcbc_analytics_query_init(return_value, statement, statement_len TSRMLS_CC);
 } /* }}} */
 
+PHP_METHOD(AnalyticsQuery, rawParam)
+{
+    zval *value;
+    zval *options;
+    char *name = NULL;
+    pcbc_str_arg_size name_len = 0;
+    int rv;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz", &name, &name_len, &value);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+
+    PCBC_READ_PROPERTY(options, pcbc_analytics_query_ce, getThis(), "options", 0);
+    PCBC_ADDREF_P(value);
+    add_assoc_zval_ex(options, name, name_len, value);
+
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(AnalyticsQuery, positionalParams)
+{
+    zval *params;
+    zval *options;
+    int rv;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "a", &params);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+
+    PCBC_READ_PROPERTY(options, pcbc_analytics_query_ce, getThis(), "options", 0);
+    PCBC_ADDREF_P(params);
+    add_assoc_zval(options, "args", params);
+
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(AnalyticsQuery, namedParams)
+{
+    zval *params;
+    zval *options;
+    int rv;
+
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "a", &params);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+
+    PCBC_READ_PROPERTY(options, pcbc_analytics_query_ce, getThis(), "options", 0);
+    {
+#if PHP_VERSION_ID >= 70000
+        HashTable *ht;
+        zend_ulong num_key;
+        zend_string *string_key = NULL;
+        zval *entry;
+
+        ht = HASH_OF(params);
+        ZEND_HASH_FOREACH_KEY_VAL(ht, num_key, string_key, entry)
+        {
+            if (string_key) {
+                char *prefixed_key = NULL;
+                spprintf(&prefixed_key, 0, "$%s", ZSTR_VAL(string_key));
+                add_assoc_zval(options, prefixed_key, entry);
+                PCBC_ADDREF_P(entry);
+                efree(prefixed_key);
+            }
+        }
+        ZEND_HASH_FOREACH_END();
+#else
+        HashPosition pos;
+        zval **entry;
+
+        zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(params), &pos);
+        while (zend_hash_get_current_data_ex(Z_ARRVAL_P(params), (void **)&entry, &pos) == SUCCESS) {
+            if (zend_hash_get_current_key_type_ex(Z_ARRVAL_P(params), &pos) == HASH_KEY_IS_STRING) {
+                char *key = NULL, *prefixed_key = NULL;
+                uint key_len = 0;
+                zend_hash_get_current_key_ex(Z_ARRVAL_P(params), &key, &key_len, NULL, 0, &pos);
+                spprintf(&prefixed_key, 0, "$%s", key);
+                add_assoc_zval(options, prefixed_key, *entry);
+                PCBC_ADDREF_P(*entry);
+                efree(prefixed_key);
+            }
+            zend_hash_move_forward_ex(Z_ARRVAL_P(params), &pos);
+        }
+#endif
+    }
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
 ZEND_BEGIN_ARG_INFO_EX(ai_AnalyticsQuery_none, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
@@ -50,10 +141,22 @@ ZEND_BEGIN_ARG_INFO_EX(ai_AnalyticsQuery_fromString, 0, 0, 1)
 ZEND_ARG_INFO(0, statement)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(ai_AnalyticsQuery_params, 0, 0, 1)
+ZEND_ARG_INFO(0, params)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_AnalyticsQuery_rawParam, 0, 0, 2)
+ZEND_ARG_INFO(0, name)
+ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
 // clang-format off
 zend_function_entry analytics_query_methods[] = {
     PHP_ME(AnalyticsQuery, __construct, ai_AnalyticsQuery_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
     PHP_ME(AnalyticsQuery, fromString, ai_AnalyticsQuery_fromString, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC)
+    PHP_ME(AnalyticsQuery, positionalParams, ai_AnalyticsQuery_params, ZEND_ACC_PUBLIC)
+    PHP_ME(AnalyticsQuery, namedParams, ai_AnalyticsQuery_params, ZEND_ACC_PUBLIC)
+    PHP_ME(AnalyticsQuery, rawParam, ai_AnalyticsQuery_rawParam, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
