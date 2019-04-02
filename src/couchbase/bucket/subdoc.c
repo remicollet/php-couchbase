@@ -123,9 +123,7 @@ void pcbc_bucket_subdoc_request(pcbc_bucket_t *obj, void *builder, int is_lookup
     pcbc_sd_spec_t *spec;
     lcb_error_t err;
     int i;
-#ifdef LCB_TRACING
     lcbtrace_TRACER *tracer = NULL;
-#endif
 
 #define COPY_SPEC(b)                                                                                                   \
     do {                                                                                                               \
@@ -145,14 +143,12 @@ void pcbc_bucket_subdoc_request(pcbc_bucket_t *obj, void *builder, int is_lookup
     } while (0);
 
     cookie = opcookie_init();
-#ifdef LCB_TRACING
     tracer = lcb_get_tracer(obj->conn->lcb);
     if (tracer) {
         cookie->span = lcbtrace_span_start(tracer, "php/subdoc", 0, NULL);
         lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
         lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
     }
-#endif
 
     if (is_lookup) {
         COPY_SPEC((pcbc_lookup_in_builder_t *)builder);
@@ -176,11 +172,9 @@ void pcbc_bucket_subdoc_request(pcbc_bucket_t *obj, void *builder, int is_lookup
     }
 #undef COPY_SPEC
 
-#ifdef LCB_TRACING
     if (cookie->span) {
         LCB_CMD_SET_TRACESPAN(&cmd, cookie->span);
     }
-#endif
     err = lcb_subdoc3(obj->conn->lcb, cookie, &cmd);
 
     if (err == LCB_SUCCESS) {
@@ -189,11 +183,9 @@ void pcbc_bucket_subdoc_request(pcbc_bucket_t *obj, void *builder, int is_lookup
         err = proc_subdoc_results(return_value, cookie TSRMLS_CC);
     }
 
-#ifdef LCB_TRACING
     if (cookie->span) {
         lcbtrace_span_finish(cookie->span, LCBTRACE_NOW);
     }
-#endif
     opcookie_destroy(cookie);
     efree((void *)cmd.specs);
 

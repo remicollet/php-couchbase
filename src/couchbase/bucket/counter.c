@@ -95,9 +95,7 @@ PHP_METHOD(Bucket, counter)
     zval *zdelta, *zinitial, *zexpiry, *zgroupid;
     opcookie *cookie;
     lcb_error_t err = LCB_SUCCESS;
-#ifdef LCB_TRACING
     lcbtrace_TRACER *tracer = NULL;
-#endif
 
     // Note that groupid is experimental here and should not be used.
     if (pcbc_pp_begin(ZEND_NUM_ARGS() TSRMLS_CC, &pp_state, "id|delta|initial,expiry,groupid", &id, &zdelta, &zinitial,
@@ -108,14 +106,12 @@ PHP_METHOD(Bucket, counter)
 
     ncmds = pcbc_pp_keycount(&pp_state);
     cookie = opcookie_init();
-#ifdef LCB_TRACING
     tracer = lcb_get_tracer(obj->conn->lcb);
     if (tracer) {
         cookie->span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_COUNTER, 0, NULL);
         lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
         lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
     }
-#endif
 
     nscheduled = 0;
     for (ii = 0; pcbc_pp_next(&pp_state); ++ii) {
@@ -141,11 +137,9 @@ PHP_METHOD(Bucket, counter)
         if (zgroupid) {
             LCB_KREQ_SIMPLE(&cmd._hashkey, Z_STRVAL_P(zgroupid), Z_STRLEN_P(zgroupid));
         }
-#ifdef LCB_TRACING
         if (cookie->span) {
             LCB_CMD_SET_TRACESPAN(&cmd, cookie->span);
         }
-#endif
 
         err = lcb_counter3(obj->conn->lcb, cookie, &cmd);
         if (err != LCB_SUCCESS) {
@@ -161,11 +155,9 @@ PHP_METHOD(Bucket, counter)
         err = proc_arithmetic_results(obj, return_value, cookie, pcbc_pp_ismapped(&pp_state) TSRMLS_CC);
     }
 
-#ifdef LCB_TRACING
     if (cookie->span) {
         lcbtrace_span_finish(cookie->span, LCBTRACE_NOW);
     }
-#endif
     opcookie_destroy(cookie);
 
     if (err != LCB_SUCCESS) {

@@ -144,16 +144,13 @@ void pcbc_bucket_cbft_request(pcbc_bucket_t *bucket, lcb_CMDFTS *cmd, int json_r
 {
     opcookie *cookie;
     lcb_error_t err;
-#ifdef LCB_TRACING
     lcbtrace_TRACER *tracer = NULL;
     lcb_FTSHANDLE handle = NULL;
-#endif
 
     cmd->callback = ftsrow_callback;
     cookie = opcookie_init();
     cookie->json_response = json_response;
     cookie->json_options = json_options;
-#ifdef LCB_TRACING
     tracer = lcb_get_tracer(bucket->conn->lcb);
     if (tracer) {
         cookie->span = lcbtrace_span_start(tracer, "php/search", 0, NULL);
@@ -161,14 +158,11 @@ void pcbc_bucket_cbft_request(pcbc_bucket_t *bucket, lcb_CMDFTS *cmd, int json_r
         lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_SEARCH);
         cmd->handle = &handle;
     }
-#endif
     err = lcb_fts_query(bucket->conn->lcb, cookie, cmd);
     if (err == LCB_SUCCESS) {
-#ifdef LCB_TRACING
         if (cookie->span) {
             lcb_fts_set_parent_span(bucket->conn->lcb, handle, cookie->span);
         }
-#endif
         lcb_wait(bucket->conn->lcb);
         err = proc_ftsrow_results(bucket, return_value, cookie TSRMLS_CC);
     }
@@ -179,10 +173,8 @@ void pcbc_bucket_cbft_request(pcbc_bucket_t *bucket, lcb_CMDFTS *cmd, int json_r
             zend_throw_exception_object(&cookie->exc TSRMLS_CC);
         }
     }
-#ifdef LCB_TRACING
     if (cookie->span) {
         lcbtrace_span_finish(cookie->span, LCBTRACE_NOW);
     }
-#endif
     opcookie_destroy(cookie);
 }

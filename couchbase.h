@@ -791,9 +791,7 @@ typedef struct {
     int json_options;
     int is_cbas; // FIXME: convert to bit-flags
     zval exc;
-#ifdef LCB_TRACING
     lcbtrace_SPAN *span;
-#endif
 } opcookie;
 
 opcookie *opcookie_init();

@@ -56,10 +56,8 @@ static lcb_error_t proc_get_results(pcbc_bucket_t *bucket, zval *return_value, o
 {
     opcookie_get_res *res;
     lcb_error_t err = LCB_SUCCESS;
-#ifdef LCB_TRACING
     lcbtrace_SPAN *parent = cookie->span;
     lcbtrace_TRACER *tracer = lcb_get_tracer(bucket->conn->lcb);
-#endif
 
     // If we are not mapped, we need to throw any op errors
     if (is_mapped == 0) {
@@ -72,7 +70,6 @@ static lcb_error_t proc_get_results(pcbc_bucket_t *bucket, zval *return_value, o
             zval *doc = bop_get_return_doc(return_value, res->key, res->key_len, is_mapped TSRMLS_CC);
 
             if (res->header.err == LCB_SUCCESS) {
-#ifdef LCB_TRACING
                 lcbtrace_SPAN *span = NULL;
                 if (parent) {
                     lcbtrace_REF ref;
@@ -82,14 +79,11 @@ static lcb_error_t proc_get_results(pcbc_bucket_t *bucket, zval *return_value, o
                     lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
                     lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
                 }
-#endif
                 pcbc_document_init_decode(doc, bucket, res->bytes, res->bytes_len, res->flags, res->datatype, res->cas,
                                           NULL TSRMLS_CC);
-#ifdef LCB_TRACING
                 if (span) {
                     lcbtrace_span_finish(span, LCBTRACE_NOW);
                 }
-#endif
             } else {
                 pcbc_document_init_error(doc, &res->header TSRMLS_CC);
             }
@@ -116,21 +110,17 @@ void pcbc_bucket_get(pcbc_bucket_t *obj, pcbc_pp_state *pp_state, pcbc_pp_id *id
     int ii, ncmds, nscheduled;
     opcookie *cookie;
     lcb_error_t err = LCB_SUCCESS;
-#ifdef LCB_TRACING
     lcbtrace_TRACER *tracer = NULL;
-#endif
 
     ncmds = pcbc_pp_keycount(pp_state);
     cookie = opcookie_init();
 
-#ifdef LCB_TRACING
     tracer = lcb_get_tracer(obj->conn->lcb);
     if (tracer) {
         cookie->span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_GET, 0, NULL);
         lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
         lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
     }
-#endif
 
     nscheduled = 0;
     for (ii = 0; pcbc_pp_next(pp_state); ++ii) {
@@ -147,11 +137,9 @@ void pcbc_bucket_get(pcbc_bucket_t *obj, pcbc_pp_state *pp_state, pcbc_pp_id *id
         }
 
         LCB_CMD_SET_KEY(&cmd, id->str, id->len);
-#ifdef LCB_TRACING
         if (cookie->span) {
             LCB_CMD_SET_TRACESPAN(&cmd, cookie->span);
         }
-#endif
         if (expiry && *expiry) {
             cmd.lock = 0;
             cmd.exptime = Z_LVAL_P(*expiry);
@@ -176,11 +164,9 @@ void pcbc_bucket_get(pcbc_bucket_t *obj, pcbc_pp_state *pp_state, pcbc_pp_id *id
         err = proc_get_results(obj, return_value, cookie, pcbc_pp_ismapped(pp_state) TSRMLS_CC);
     }
 
-#ifdef LCB_TRACING
     if (cookie->span) {
         lcbtrace_span_finish(cookie->span, LCBTRACE_NOW);
     }
-#endif
     opcookie_destroy(cookie);
 
     if (err != LCB_SUCCESS) {
@@ -250,9 +236,7 @@ PHP_METHOD(Bucket, getFromReplica)
     zval *zindex, *zgroupid;
     opcookie *cookie;
     lcb_error_t err = LCB_SUCCESS;
-#ifdef LCB_TRACING
     lcbtrace_TRACER *tracer = NULL;
-#endif
 
     // Note that groupid is experimental here and should not be used.
     if (pcbc_pp_begin(ZEND_NUM_ARGS() TSRMLS_CC, &pp_state, "id||index,groupid", &id, &zindex, &zgroupid) != SUCCESS) {
@@ -262,14 +246,12 @@ PHP_METHOD(Bucket, getFromReplica)
 
     ncmds = pcbc_pp_keycount(&pp_state);
     cookie = opcookie_init();
-#ifdef LCB_TRACING
     tracer = lcb_get_tracer(obj->conn->lcb);
     if (tracer) {
         cookie->span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_GET_FROM_REPLICA, 0, NULL);
         lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
         lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
     }
-#endif
 
     nscheduled = 0;
     for (ii = 0; pcbc_pp_next(&pp_state); ++ii) {
@@ -279,11 +261,9 @@ PHP_METHOD(Bucket, getFromReplica)
         PCBC_CHECK_ZVAL_STRING(zgroupid, "groupid must be a string");
 
         LCB_CMD_SET_KEY(&cmd, id.str, id.len);
-#ifdef LCB_TRACING
         if (cookie->span) {
             LCB_CMD_SET_TRACESPAN(&cmd, cookie->span);
         }
-#endif
         if (zindex) {
             cmd.index = Z_LVAL_P(zindex);
             if (cmd.index >= 0) {
@@ -310,11 +290,9 @@ PHP_METHOD(Bucket, getFromReplica)
         err = proc_get_results(obj, return_value, cookie, pcbc_pp_ismapped(&pp_state) TSRMLS_CC);
     }
 
-#ifdef LCB_TRACING
     if (cookie->span) {
         lcbtrace_span_finish(cookie->span, LCBTRACE_NOW);
     }
-#endif
     opcookie_destroy(cookie);
 
     if (err != LCB_SUCCESS) {
