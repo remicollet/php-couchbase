@@ -1,5 +1,5 @@
 /**
- *     Copyright 2017 Couchbase, Inc.
+ *     Copyright 2017-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -21,9 +21,9 @@
 typedef struct {
     opcookie_res header;
     lcb_U16 rflags;
-    PCBC_ZVAL id;
-    PCBC_ZVAL key;
-    PCBC_ZVAL value;
+    zval id;
+    zval key;
+    zval value;
 } opcookie_viewrow_res;
 
 static void viewrow_callback(lcb_t instance, int ignoreme, const lcb_RESPVIEWQUERY *resp)
@@ -33,13 +33,13 @@ static void viewrow_callback(lcb_t instance, int ignoreme, const lcb_RESPVIEWQUE
     int last_error;
     TSRMLS_FETCH();
 
-    PCBC_ZVAL_ALLOC(result->id);
-    PCBC_ZVAL_ALLOC(result->key);
-    PCBC_ZVAL_ALLOC(result->value);
+    ZVAL_UNDEF(&result->id);
+    ZVAL_UNDEF(&result->key);
+    ZVAL_UNDEF(&result->value);
 
-    ZVAL_NULL(PCBC_P(result->id));
-    ZVAL_NULL(PCBC_P(result->key));
-    ZVAL_NULL(PCBC_P(result->value));
+    ZVAL_NULL(&result->id);
+    ZVAL_NULL(&result->key);
+    ZVAL_NULL(&result->value);
 
     result->header.err = resp->rc;
     result->rflags = resp->rflags;
@@ -54,7 +54,7 @@ static void viewrow_callback(lcb_t instance, int ignoreme, const lcb_RESPVIEWQUE
             }
 
             if (resp->nvalue) {
-                PCBC_JSON_COPY_DECODE(PCBC_P(result->value), resp->value, resp->nvalue, json_options, last_error);
+                PCBC_JSON_COPY_DECODE(&result->value, resp->value, resp->nvalue, json_options, last_error);
                 if (last_error != 0) {
                     pcbc_log(LOGARGS(instance, WARN), "Failed to decode VIEW value as JSON: json_last_error=%d",
                              last_error);
@@ -64,7 +64,7 @@ static void viewrow_callback(lcb_t instance, int ignoreme, const lcb_RESPVIEWQUE
 
             if (resp->nkey) {
                 if ((resp->rflags & LCB_RESP_F_FINAL) == 0) {
-                    PCBC_JSON_COPY_DECODE(PCBC_P(result->key), resp->key, resp->nkey, json_options, last_error);
+                    PCBC_JSON_COPY_DECODE(&result->key, resp->key, resp->nkey, json_options, last_error);
                     if (last_error != 0) {
                         pcbc_log(LOGARGS(instance, WARN), "Failed to decode VIEW key as JSON: json_last_error=%d",
                                  last_error);
@@ -78,12 +78,12 @@ static void viewrow_callback(lcb_t instance, int ignoreme, const lcb_RESPVIEWQUE
         }
     } else {
         if (resp->htresp->nbody) {
-            PCBC_ZVAL errval;
+            zval errval;
             char *errbody = (char *)resp->htresp->body;
             int errbody_len = resp->htresp->nbody;
 
-            PCBC_ZVAL_ALLOC(errval);
-            PCBC_JSON_COPY_DECODE(PCBC_P(errval), errbody, errbody_len, PHP_JSON_OBJECT_AS_ARRAY, last_error);
+            ZVAL_UNDEF(&errval);
+            PCBC_JSON_COPY_DECODE(&errval, errbody, errbody_len, PHP_JSON_OBJECT_AS_ARRAY, last_error);
             if (last_error != 0) {
                 pcbc_log(LOGARGS(instance, ERROR), "Failed to perform VIEW query. %d: %.*s",
                          (int)resp->htresp->htstatus, errbody_len, errbody);
@@ -92,14 +92,14 @@ static void viewrow_callback(lcb_t instance, int ignoreme, const lcb_RESPVIEWQUE
                 int error_len = 0, reason_len = 0;
                 zend_bool error_free = 0, reason_free = 0;
 
-                error = php_array_fetch_string(PCBC_P(errval), "error", &error_len, &error_free);
-                reason = php_array_fetch_string(PCBC_P(errval), "reason", &reason_len, &reason_free);
+                error = php_array_fetch_string(&errval, "error", &error_len, &error_free);
+                reason = php_array_fetch_string(&errval, "reason", &reason_len, &reason_free);
                 if (error && reason) {
                     char *m = NULL;
                     spprintf(&m, 0, "Failed to perform VIEW query. error: %*s: reason: \"%*s\"", error_len, error,
                              reason_len, reason);
-                    PCBC_ZVAL_ALLOC(cookie->exc);
-                    pcbc_exception_init(PCBC_P(cookie->exc), resp->rc, m TSRMLS_CC);
+                    ZVAL_UNDEF(&cookie->exc);
+                    pcbc_exception_init(&cookie->exc, resp->rc, m TSRMLS_CC);
                     if (m) {
                         efree(m);
                     }
@@ -130,34 +130,34 @@ static lcb_error_t proc_viewrow_results(zval *return_value, opcookie *cookie TSR
     err = opcookie_get_first_error(cookie);
 
     if (err == LCB_SUCCESS) {
-        PCBC_ZVAL rows;
+        zval rows;
 
-        PCBC_ZVAL_ALLOC(rows);
-        array_init(PCBC_P(rows));
+        ZVAL_UNDEF(&rows);
+        array_init(&rows);
 
         object_init(return_value);
-        add_property_zval(return_value, "rows", PCBC_P(rows));
-        Z_DELREF_P(PCBC_P(rows));
+        add_property_zval(return_value, "rows", &rows);
+        Z_DELREF_P(&rows);
 
         FOREACH_OPCOOKIE_RES(opcookie_viewrow_res, res, cookie)
         {
             if (res->rflags & LCB_RESP_F_FINAL) {
-                if (Z_TYPE_P(PCBC_P(res->value)) == IS_ARRAY) {
+                if (Z_TYPE_P(&res->value) == IS_ARRAY) {
                     zval *val;
-                    val = php_array_fetch(PCBC_P(res->value), "total_rows");
+                    val = php_array_fetch(&res->value, "total_rows");
                     if (val) {
                         add_property_zval(return_value, "total_rows", val);
                     }
                 }
             } else {
-                PCBC_ZVAL row;
+                zval row;
 
-                PCBC_ZVAL_ALLOC(row);
-                object_init(PCBC_P(row));
-                add_property_zval(PCBC_P(row), "id", PCBC_P(res->id));
-                add_property_zval(PCBC_P(row), "key", PCBC_P(res->key));
-                add_property_zval(PCBC_P(row), "value", PCBC_P(res->value));
-                add_next_index_zval(PCBC_P(rows), PCBC_P(row));
+                ZVAL_UNDEF(&row);
+                object_init(&row);
+                add_property_zval(&row, "id", &res->id);
+                add_property_zval(&row, "key", &res->key);
+                add_property_zval(&row, "value", &res->value);
+                add_next_index_zval(&rows, &row);
             }
         }
     }
@@ -209,7 +209,7 @@ void pcbc_bucket_view_request(pcbc_bucket_t *bucket, lcb_CMDVIEWQUERY *cmd, int 
         if (Z_ISUNDEF(cookie->exc)) {
             throw_lcb_exception(err);
         } else {
-            zend_throw_exception_object(PCBC_P(cookie->exc) TSRMLS_CC);
+            zend_throw_exception_object(&cookie->exc TSRMLS_CC);
         }
     }
 #ifdef LCB_TRACING

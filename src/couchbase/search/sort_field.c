@@ -1,5 +1,5 @@
 /**
- *     Copyright 2018 Couchbase, Inc.
+ *     Copyright 2018-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -20,26 +20,21 @@
 #include "couchbase.h"
 
 typedef struct {
-    PCBC_ZEND_OBJECT_PRE
+
     zend_bool descending;
     char *field;
     char *type;
     char *mode;
     char *missing;
-    PCBC_ZEND_OBJECT_POST
+    zend_object std;
 } pcbc_search_sort_field_t;
 
-#if PHP_VERSION_ID >= 70000
 static inline pcbc_search_sort_field_t *pcbc_search_sort_field_fetch_object(zend_object *obj)
 {
     return (pcbc_search_sort_field_t *)((char *)obj - XtOffsetOf(pcbc_search_sort_field_t, std));
 }
 #define Z_SEARCH_SORT_FIELD_OBJ(zo) (pcbc_search_sort_field_fetch_object(zo))
 #define Z_SEARCH_SORT_FIELD_OBJ_P(zv) (pcbc_search_sort_field_fetch_object(Z_OBJ_P(zv)))
-#else
-#define Z_SEARCH_SORT_FIELD_OBJ(zo) ((pcbc_search_sort_field_t *)zo)
-#define Z_SEARCH_SORT_FIELD_OBJ_P(zv) ((pcbc_search_sort_field_t *)zend_object_store_get_object(zv TSRMLS_CC))
-#endif
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/search_sort_field", __FILE__, __LINE__
 
@@ -77,7 +72,7 @@ PHP_METHOD(SearchSortField, type)
 {
     pcbc_search_sort_field_t *obj;
     char *type = NULL;
-    pcbc_str_arg_size type_len;
+    size_t type_len;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &type, &type_len);
@@ -103,7 +98,7 @@ PHP_METHOD(SearchSortField, mode)
 {
     pcbc_search_sort_field_t *obj;
     char *mode = NULL;
-    pcbc_str_arg_size mode_len;
+    size_t mode_len;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &mode, &mode_len);
@@ -129,7 +124,7 @@ PHP_METHOD(SearchSortField, missing)
 {
     pcbc_search_sort_field_t *obj;
     char *missing = NULL;
-    pcbc_str_arg_size missing_len;
+    size_t missing_len;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &missing, &missing_len);
@@ -223,7 +218,7 @@ void pcbc_search_sort_field_init(zval *return_value, const char *field, int fiel
 
 zend_object_handlers search_sort_field_handlers;
 
-static void search_sort_field_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
+static void search_sort_field_free_object(zend_object *object TSRMLS_DC) /* {{{ */
 {
     pcbc_search_sort_field_t *obj = Z_SEARCH_SORT_FIELD_OBJ(object);
 
@@ -240,12 +235,9 @@ static void search_sort_field_free_object(pcbc_free_object_arg *object TSRMLS_DC
         efree(obj->missing);
     }
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    efree(obj);
-#endif
 } /* }}} */
 
-static pcbc_create_object_retval search_sort_field_create_object(zend_class_entry *class_type TSRMLS_DC)
+static zend_object *search_sort_field_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
     pcbc_search_sort_field_t *obj = NULL;
 
@@ -254,28 +246,14 @@ static pcbc_create_object_retval search_sort_field_create_object(zend_class_entr
     zend_object_std_init(&obj->std, class_type TSRMLS_CC);
     object_properties_init(&obj->std, class_type);
 
-#if PHP_VERSION_ID >= 70000
     obj->std.handlers = &search_sort_field_handlers;
     return &obj->std;
-#else
-    {
-        zend_object_value ret;
-        ret.handle = zend_objects_store_put(obj, (zend_objects_store_dtor_t)zend_objects_destroy_object,
-                                            search_sort_field_free_object, NULL TSRMLS_CC);
-        ret.handlers = &search_sort_field_handlers;
-        return ret;
-    }
-#endif
 }
 
 static HashTable *pcbc_search_sort_field_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
 {
     pcbc_search_sort_field_t *obj = NULL;
-#if PHP_VERSION_ID >= 70000
     zval retval;
-#else
-    zval retval = zval_used_for_init;
-#endif
 
     *is_temp = 1;
     obj = Z_SEARCH_SORT_FIELD_OBJ_P(object);
@@ -301,12 +279,7 @@ PHP_MINIT_FUNCTION(SearchSortField)
     zend_class_entry ce;
 
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "SearchSortField", search_sort_field_methods);
-    pcbc_search_sort_field_ce = zend_register_internal_class_ex(&ce, pcbc_search_sort_ce
-#if PHP_VERSION_ID < 70000
-                                                                ,
-                                                                NULL
-#endif
-                                                                    TSRMLS_CC);
+    pcbc_search_sort_field_ce = zend_register_internal_class_ex(&ce, pcbc_search_sort_ce TSRMLS_CC);
     pcbc_search_sort_field_ce->create_object = search_sort_field_create_object;
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_search_sort_field_ce);
 
@@ -331,9 +304,7 @@ PHP_MINIT_FUNCTION(SearchSortField)
 
     memcpy(&search_sort_field_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     search_sort_field_handlers.get_debug_info = pcbc_search_sort_field_get_debug_info;
-#if PHP_VERSION_ID >= 70000
     search_sort_field_handlers.free_obj = search_sort_field_free_object;
     search_sort_field_handlers.offset = XtOffsetOf(pcbc_search_sort_field_t, std);
-#endif
     return SUCCESS;
 }

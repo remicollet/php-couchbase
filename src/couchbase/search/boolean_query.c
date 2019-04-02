@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -20,25 +20,20 @@
 #include "couchbase.h"
 
 typedef struct {
-    PCBC_ZEND_OBJECT_PRE
+
     double boost;
-    PCBC_ZVAL must;
-    PCBC_ZVAL must_not;
-    PCBC_ZVAL should;
-    PCBC_ZEND_OBJECT_POST
+    zval must;
+    zval must_not;
+    zval should;
+    zend_object std;
 } pcbc_boolean_search_query_t;
 
-#if PHP_VERSION_ID >= 70000
 static inline pcbc_boolean_search_query_t *pcbc_boolean_search_query_fetch_object(zend_object *obj)
 {
     return (pcbc_boolean_search_query_t *)((char *)obj - XtOffsetOf(pcbc_boolean_search_query_t, std));
 }
 #define Z_BOOLEAN_SEARCH_QUERY_OBJ(zo) (pcbc_boolean_search_query_fetch_object(zo))
 #define Z_BOOLEAN_SEARCH_QUERY_OBJ_P(zv) (pcbc_boolean_search_query_fetch_object(Z_OBJ_P(zv)))
-#else
-#define Z_BOOLEAN_SEARCH_QUERY_OBJ(zo) ((pcbc_boolean_search_query_t *)zo)
-#define Z_BOOLEAN_SEARCH_QUERY_OBJ_P(zv) ((pcbc_boolean_search_query_t *)zend_object_store_get_object(zv TSRMLS_CC))
-#endif
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/boolean_search_query", __FILE__, __LINE__
 
@@ -75,11 +70,7 @@ PHP_METHOD(BooleanSearchQuery, boost)
 PHP_METHOD(BooleanSearchQuery, must)
 {
     pcbc_boolean_search_query_t *obj;
-#if PHP_VERSION_ID >= 70000
     zval *args = NULL;
-#else
-    zval ***args = NULL;
-#endif
     int num_args = 0;
     int rv;
 
@@ -90,32 +81,23 @@ PHP_METHOD(BooleanSearchQuery, must)
 
     obj = Z_BOOLEAN_SEARCH_QUERY_OBJ_P(getThis());
 
-    PCBC_ZVAL_ALLOC(obj->must);
-    array_init(PCBC_P(obj->must));
+    ZVAL_UNDEF(&obj->must);
+    array_init(&obj->must);
 
     if (num_args && args) {
         int i;
         for (i = 0; i < num_args; ++i) {
-            PCBC_ZVAL *query;
-#if PHP_VERSION_ID >= 70000
+            zval *query;
             query = &args[i];
-#else
-            query = args[i];
-#endif
-            if (Z_TYPE_P(PCBC_P(*query)) != IS_OBJECT ||
-                !instanceof_function(Z_OBJCE_P(PCBC_P(*query)), pcbc_search_query_part_ce TSRMLS_CC)) {
+            if (Z_TYPE_P(query) != IS_OBJECT ||
+                !instanceof_function(Z_OBJCE_P(query), pcbc_search_query_part_ce TSRMLS_CC)) {
                 pcbc_log(LOGARGS(WARN), "query has to implement SearchQueryPart interface (skipping argument #%d)", i);
                 continue;
             }
-            add_next_index_zval(PCBC_P(obj->must), PCBC_P(*query));
-            PCBC_ADDREF_P(PCBC_P(*query));
+            add_next_index_zval(&obj->must, query);
+            PCBC_ADDREF_P(query);
         }
     }
-#if PHP_VERSION_ID < 70000
-    if (args) {
-        efree(args);
-    }
-#endif
 
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
@@ -125,11 +107,7 @@ PHP_METHOD(BooleanSearchQuery, must)
 PHP_METHOD(BooleanSearchQuery, mustNot)
 {
     pcbc_boolean_search_query_t *obj;
-#if PHP_VERSION_ID >= 70000
     zval *args = NULL;
-#else
-    zval ***args = NULL;
-#endif
     int num_args = 0;
     int rv;
 
@@ -140,32 +118,23 @@ PHP_METHOD(BooleanSearchQuery, mustNot)
 
     obj = Z_BOOLEAN_SEARCH_QUERY_OBJ_P(getThis());
 
-    PCBC_ZVAL_ALLOC(obj->must_not);
-    array_init(PCBC_P(obj->must_not));
+    ZVAL_UNDEF(&obj->must_not);
+    array_init(&obj->must_not);
 
     if (num_args && args) {
         int i;
         for (i = 0; i < num_args; ++i) {
-            PCBC_ZVAL *query;
-#if PHP_VERSION_ID >= 70000
+            zval *query;
             query = &args[i];
-#else
-            query = args[i];
-#endif
-            if (Z_TYPE_P(PCBC_P(*query)) != IS_OBJECT ||
-                !instanceof_function(Z_OBJCE_P(PCBC_P(*query)), pcbc_search_query_part_ce TSRMLS_CC)) {
+            if (Z_TYPE_P(query) != IS_OBJECT ||
+                !instanceof_function(Z_OBJCE_P(query), pcbc_search_query_part_ce TSRMLS_CC)) {
                 pcbc_log(LOGARGS(WARN), "query has to implement SearchQueryPart interface (skipping argument #%d)", i);
                 continue;
             }
-            add_next_index_zval(PCBC_P(obj->must_not), PCBC_P(*query));
-            PCBC_ADDREF_P(PCBC_P(*query));
+            add_next_index_zval(&obj->must_not, query);
+            PCBC_ADDREF_P(query);
         }
     }
-#if PHP_VERSION_ID < 70000
-    if (args) {
-        efree(args);
-    }
-#endif
 
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
@@ -175,11 +144,7 @@ PHP_METHOD(BooleanSearchQuery, mustNot)
 PHP_METHOD(BooleanSearchQuery, should)
 {
     pcbc_boolean_search_query_t *obj;
-#if PHP_VERSION_ID >= 70000
     zval *args = NULL;
-#else
-    zval ***args = NULL;
-#endif
     int num_args = 0;
     int rv;
 
@@ -190,32 +155,23 @@ PHP_METHOD(BooleanSearchQuery, should)
 
     obj = Z_BOOLEAN_SEARCH_QUERY_OBJ_P(getThis());
 
-    PCBC_ZVAL_ALLOC(obj->should);
-    array_init(PCBC_P(obj->should));
+    ZVAL_UNDEF(&obj->should);
+    array_init(&obj->should);
 
     if (num_args && args) {
         int i;
         for (i = 0; i < num_args; ++i) {
-            PCBC_ZVAL *query;
-#if PHP_VERSION_ID >= 70000
+            zval *query;
             query = &args[i];
-#else
-            query = args[i];
-#endif
-            if (Z_TYPE_P(PCBC_P(*query)) != IS_OBJECT ||
-                !instanceof_function(Z_OBJCE_P(PCBC_P(*query)), pcbc_search_query_part_ce TSRMLS_CC)) {
+            if (Z_TYPE_P(query) != IS_OBJECT ||
+                !instanceof_function(Z_OBJCE_P(query), pcbc_search_query_part_ce TSRMLS_CC)) {
                 pcbc_log(LOGARGS(WARN), "query has to implement SearchQueryPart interface (skipping argument #%d)", i);
                 continue;
             }
-            add_next_index_zval(PCBC_P(obj->should), PCBC_P(*query));
-            PCBC_ADDREF_P(PCBC_P(*query));
+            add_next_index_zval(&obj->should, query);
+            PCBC_ADDREF_P(query);
         }
     }
-#if PHP_VERSION_ID < 70000
-    if (args) {
-        efree(args);
-    }
-#endif
 
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
@@ -235,16 +191,16 @@ PHP_METHOD(BooleanSearchQuery, jsonSerialize)
     obj = Z_BOOLEAN_SEARCH_QUERY_OBJ_P(getThis());
     array_init(return_value);
     if (!Z_ISUNDEF(obj->must)) {
-        ADD_ASSOC_ZVAL_EX(return_value, "must", PCBC_P(obj->must));
-        PCBC_ADDREF_P(PCBC_P(obj->must));
+        ADD_ASSOC_ZVAL_EX(return_value, "must", &obj->must);
+        PCBC_ADDREF_P(&obj->must);
     }
     if (!Z_ISUNDEF(obj->must_not)) {
-        ADD_ASSOC_ZVAL_EX(return_value, "must_not", PCBC_P(obj->must_not));
-        PCBC_ADDREF_P(PCBC_P(obj->must_not));
+        ADD_ASSOC_ZVAL_EX(return_value, "must_not", &obj->must_not);
+        PCBC_ADDREF_P(&obj->must_not);
     }
     if (!Z_ISUNDEF(obj->should)) {
-        ADD_ASSOC_ZVAL_EX(return_value, "should", PCBC_P(obj->should));
-        PCBC_ADDREF_P(PCBC_P(obj->should));
+        ADD_ASSOC_ZVAL_EX(return_value, "should", &obj->should);
+        PCBC_ADDREF_P(&obj->should);
     }
     if (obj->boost >= 0) {
         ADD_ASSOC_DOUBLE_EX(return_value, "boost", obj->boost);
@@ -281,14 +237,14 @@ void pcbc_boolean_search_query_init(zval *return_value TSRMLS_DC)
     object_init_ex(return_value, pcbc_boolean_search_query_ce);
     obj = Z_BOOLEAN_SEARCH_QUERY_OBJ_P(return_value);
     obj->boost = -1;
-    ZVAL_UNDEF(PCBC_P(obj->must));
-    ZVAL_UNDEF(PCBC_P(obj->must_not));
-    ZVAL_UNDEF(PCBC_P(obj->should));
+    ZVAL_UNDEF(&obj->must);
+    ZVAL_UNDEF(&obj->must_not);
+    ZVAL_UNDEF(&obj->should);
 }
 
 zend_object_handlers boolean_search_query_handlers;
 
-static void boolean_search_query_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
+static void boolean_search_query_free_object(zend_object *object TSRMLS_DC) /* {{{ */
 {
     pcbc_boolean_search_query_t *obj = Z_BOOLEAN_SEARCH_QUERY_OBJ(object);
 
@@ -303,12 +259,9 @@ static void boolean_search_query_free_object(pcbc_free_object_arg *object TSRMLS
     }
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    efree(obj);
-#endif
 } /* }}} */
 
-static pcbc_create_object_retval boolean_search_query_create_object(zend_class_entry *class_type TSRMLS_DC)
+static zend_object *boolean_search_query_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
     pcbc_boolean_search_query_t *obj = NULL;
 
@@ -317,44 +270,30 @@ static pcbc_create_object_retval boolean_search_query_create_object(zend_class_e
     zend_object_std_init(&obj->std, class_type TSRMLS_CC);
     object_properties_init(&obj->std, class_type);
 
-#if PHP_VERSION_ID >= 70000
     obj->std.handlers = &boolean_search_query_handlers;
     return &obj->std;
-#else
-    {
-        zend_object_value ret;
-        ret.handle = zend_objects_store_put(obj, (zend_objects_store_dtor_t)zend_objects_destroy_object,
-                                            boolean_search_query_free_object, NULL TSRMLS_CC);
-        ret.handlers = &boolean_search_query_handlers;
-        return ret;
-    }
-#endif
 }
 
 static HashTable *pcbc_boolean_search_query_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
 {
     pcbc_boolean_search_query_t *obj = NULL;
-#if PHP_VERSION_ID >= 70000
     zval retval;
-#else
-    zval retval = zval_used_for_init;
-#endif
 
     *is_temp = 1;
     obj = Z_BOOLEAN_SEARCH_QUERY_OBJ_P(object);
 
     array_init(&retval);
     if (!Z_ISUNDEF(obj->must)) {
-        ADD_ASSOC_ZVAL_EX(&retval, "must", PCBC_P(obj->must));
-        PCBC_ADDREF_P(PCBC_P(obj->must));
+        ADD_ASSOC_ZVAL_EX(&retval, "must", &obj->must);
+        PCBC_ADDREF_P(&obj->must);
     }
     if (!Z_ISUNDEF(obj->must_not)) {
-        ADD_ASSOC_ZVAL_EX(&retval, "mustNot", PCBC_P(obj->must_not));
-        PCBC_ADDREF_P(PCBC_P(obj->must_not));
+        ADD_ASSOC_ZVAL_EX(&retval, "mustNot", &obj->must_not);
+        PCBC_ADDREF_P(&obj->must_not);
     }
     if (!Z_ISUNDEF(obj->should)) {
-        ADD_ASSOC_ZVAL_EX(&retval, "should", PCBC_P(obj->should));
-        PCBC_ADDREF_P(PCBC_P(obj->should));
+        ADD_ASSOC_ZVAL_EX(&retval, "should", &obj->should);
+        PCBC_ADDREF_P(&obj->should);
     }
     if (obj->boost >= 0) {
         ADD_ASSOC_DOUBLE_EX(&retval, "boost", obj->boost);
@@ -376,10 +315,8 @@ PHP_MINIT_FUNCTION(BooleanSearchQuery)
 
     memcpy(&boolean_search_query_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     boolean_search_query_handlers.get_debug_info = pcbc_boolean_search_query_get_debug_info;
-#if PHP_VERSION_ID >= 70000
     boolean_search_query_handlers.free_obj = boolean_search_query_free_object;
     boolean_search_query_handlers.offset = XtOffsetOf(pcbc_boolean_search_query_t, std);
-#endif
 
     zend_register_class_alias("\\CouchbaseBooleanSearchQuery", pcbc_boolean_search_query_ce);
     return SUCCESS;

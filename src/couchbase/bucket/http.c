@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 
 typedef struct {
     opcookie_res header;
-    PCBC_ZVAL bytes;
+    zval bytes;
 } opcookie_http_res;
 
 void http_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
@@ -34,21 +34,21 @@ void http_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
         pcbc_log(LOGARGS(instance, WARN), "Failed to perform HTTP request: rc=%d", (int)resp->rc);
     }
 
-    PCBC_ZVAL_ALLOC(result->bytes);
+    ZVAL_UNDEF(&result->bytes);
     if (resp->nbody) {
         if (((opcookie *)rb->cookie)->json_response) {
             int last_error;
 
-            PCBC_JSON_COPY_DECODE(PCBC_P(result->bytes), resp->body, resp->nbody, PHP_JSON_OBJECT_AS_ARRAY, last_error);
+            PCBC_JSON_COPY_DECODE(&result->bytes, resp->body, resp->nbody, PHP_JSON_OBJECT_AS_ARRAY, last_error);
             if (last_error != 0) {
                 pcbc_log(LOGARGS(instance, WARN), "Failed to decode value as JSON: json_last_error=%d", last_error);
-                ZVAL_NULL(PCBC_P(result->bytes));
+                ZVAL_NULL(&result->bytes);
             }
         } else {
             PCBC_STRINGL(result->bytes, resp->body, resp->nbody);
         }
     } else {
-        ZVAL_NULL(PCBC_P(result->bytes));
+        ZVAL_NULL(&result->bytes);
     }
 
     opcookie_push((opcookie *)rb->cookie, &result->header);
@@ -67,7 +67,7 @@ static lcb_error_t proc_http_results(zval *return_value, opcookie *cookie TSRMLS
         FOREACH_OPCOOKIE_RES(opcookie_http_res, res, cookie)
         {
             if (has_value == 0) {
-                ZVAL_ZVAL(return_value, PCBC_P(res->bytes), 1, 0);
+                ZVAL_ZVAL(return_value, &res->bytes, 1, 0);
                 has_value = 1;
             } else {
                 err = LCB_ERROR;

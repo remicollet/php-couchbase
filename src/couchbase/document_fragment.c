@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -43,13 +43,12 @@ int pcbc_document_fragment_init(zval *return_value, zval *value, zval *cas, zval
 
 int pcbc_document_fragment_init_error(zval *return_value, opcookie_res *header, zval *value TSRMLS_DC)
 {
-    PCBC_ZVAL error;
+    zval error;
 
     object_init_ex(return_value, pcbc_document_fragment_ce);
-    PCBC_ZVAL_ALLOC(error);
-    pcbc_exception_init_lcb(PCBC_P(error), header->err, NULL, header->err_ctx, header->err_ref TSRMLS_CC);
-    zend_update_property(pcbc_document_fragment_ce, return_value, "error", sizeof("error") - 1,
-                         PCBC_P(error) TSRMLS_CC);
+    ZVAL_UNDEF(&error);
+    pcbc_exception_init_lcb(&error, header->err, NULL, header->err_ctx, header->err_ref TSRMLS_CC);
+    zend_update_property(pcbc_document_fragment_ce, return_value, "error", sizeof("error") - 1, &error TSRMLS_CC);
     if (value) {
         zend_update_property(pcbc_document_fragment_ce, return_value, "value", sizeof("value") - 1, value TSRMLS_CC);
     }

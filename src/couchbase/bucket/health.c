@@ -1,5 +1,5 @@
 /**
- *     Copyright 2018 Couchbase, Inc.
+ *     Copyright 2018-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 
 typedef struct {
     opcookie_res header;
-    PCBC_ZVAL val;
+    zval val;
 } opcookie_health_res;
 
 static lcb_error_t proc_health_results(zval *return_value, opcookie *cookie TSRMLS_DC)
@@ -33,7 +33,7 @@ static lcb_error_t proc_health_results(zval *return_value, opcookie *cookie TSRM
     if (err == LCB_SUCCESS) {
         FOREACH_OPCOOKIE_RES(opcookie_health_res, res, cookie)
         {
-            ZVAL_ZVAL(return_value, PCBC_P(res->val), 1, 0);
+            ZVAL_ZVAL(return_value, &res->val, 1, 0);
         }
     }
 
@@ -54,8 +54,8 @@ void ping_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
     result->header.err = resp->rc;
     if (resp->rc == LCB_SUCCESS) {
         int last_error = 0;
-        PCBC_ZVAL_ALLOC(result->val);
-        PCBC_JSON_COPY_DECODE(PCBC_P(result->val), resp->json, resp->njson, PHP_JSON_OBJECT_AS_ARRAY, last_error);
+        ZVAL_UNDEF(&result->val);
+        PCBC_JSON_COPY_DECODE(&result->val, resp->json, resp->njson, PHP_JSON_OBJECT_AS_ARRAY, last_error);
         if (last_error != 0) {
             pcbc_log(LOGARGS(instance, WARN), "Failed to decode PING response as JSON: json_last_error=%d", last_error);
         }
@@ -69,7 +69,7 @@ PHP_METHOD(Bucket, ping)
 {
     pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
     char *report_id = NULL;
-    pcbc_str_arg_size report_id_len = 0;
+    size_t report_id_len = 0;
     opcookie *cookie;
     lcb_CMDPING cmd = {0};
     long services = LCB_PINGSVC_F_KV | LCB_PINGSVC_F_N1QL | LCB_PINGSVC_F_VIEWS | LCB_PINGSVC_F_FTS;
@@ -107,8 +107,8 @@ void diag_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
     result->header.err = resp->rc;
     if (resp->rc == LCB_SUCCESS) {
         int last_error = 0;
-        PCBC_ZVAL_ALLOC(result->val);
-        PCBC_JSON_COPY_DECODE(PCBC_P(result->val), resp->json, resp->njson, PHP_JSON_OBJECT_AS_ARRAY, last_error);
+        ZVAL_UNDEF(&result->val);
+        PCBC_JSON_COPY_DECODE(&result->val, resp->json, resp->njson, PHP_JSON_OBJECT_AS_ARRAY, last_error);
         if (last_error != 0) {
             pcbc_log(LOGARGS(instance, WARN), "Failed to decode PING response as JSON: json_last_error=%d", last_error);
         }
@@ -122,7 +122,7 @@ PHP_METHOD(Bucket, diag)
 {
     pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
     char *report_id = NULL;
-    pcbc_str_arg_size report_id_len = 0;
+    size_t report_id_len = 0;
     opcookie *cookie;
     lcb_CMDDIAG cmd = {0};
     int rv;

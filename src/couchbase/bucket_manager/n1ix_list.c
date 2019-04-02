@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 
 typedef struct {
     opcookie_res header;
-    PCBC_ZVAL *specs;
+    zval *specs;
     int nspecs;
 } opcookie_n1ix_list_res;
 
@@ -36,20 +36,20 @@ static void n1ix_list_callback(lcb_t instance, int cbtype, const lcb_RESPN1XMGMT
                  (int)resp->inner->nrow, (char *)resp->inner->row);
     }
     result->nspecs = resp->nspecs;
-    result->specs = ecalloc(result->nspecs, sizeof(PCBC_ZVAL));
+    result->specs = ecalloc(result->nspecs, sizeof(zval));
     for (i = 0; i < result->nspecs; ++i) {
         const lcb_N1XSPEC *spec = resp->specs[i];
         int last_error;
-        PCBC_ZVAL value, json;
+        zval value, json;
 
-        PCBC_ZVAL_ALLOC(value);
-        PCBC_ZVAL_ALLOC(json);
-        PCBC_JSON_COPY_DECODE(PCBC_P(json), spec->rawjson, spec->nrawjson, PHP_JSON_OBJECT_AS_ARRAY, last_error);
+        ZVAL_UNDEF(&value);
+        ZVAL_UNDEF(&json);
+        PCBC_JSON_COPY_DECODE(&json, spec->rawjson, spec->nrawjson, PHP_JSON_OBJECT_AS_ARRAY, last_error);
         if (last_error != 0) {
             pcbc_log(LOGARGS(instance, WARN), "Failed to decode value as JSON: json_last_error=%d", last_error);
-            ZVAL_NULL(PCBC_P(value));
+            ZVAL_NULL(&value);
         } else {
-            pcbc_n1ix_init(PCBC_P(value), PCBC_P(json) TSRMLS_CC);
+            pcbc_n1ix_init(&value, &json TSRMLS_CC);
         }
 
         zval_ptr_dtor(&json);
@@ -69,7 +69,7 @@ static lcb_error_t proc_n1ix_list_results(zval *return_value, opcookie *cookie T
         if (err == LCB_SUCCESS) {
             array_init(return_value);
             for (i = 0; i < result->nspecs; ++i) {
-                add_index_zval(return_value, i, PCBC_P(result->specs[i]));
+                add_index_zval(return_value, i, &result->specs[i]);
             }
         }
         efree(result->specs);

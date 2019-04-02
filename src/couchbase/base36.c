@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -70,10 +70,6 @@ void pcbc_cas_encode(zval *return_value, lcb_cas_t cas TSRMLS_DC)
 {
     char *str = pcbc_base36_encode_str(cas);
 
-#if PHP_VERSION_ID >= 70000
     ZVAL_STRING(return_value, str);
     efree(str);
-#else
-    ZVAL_STRING(return_value, str, 0);
-#endif
 }

@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -21,25 +21,19 @@
 #include "couchbase.h"
 
 typedef struct {
-    PCBC_ZEND_OBJECT_PRE
+
     double boost;
     int min;
-    PCBC_ZVAL queries;
-    PCBC_ZEND_OBJECT_POST
+    zval queries;
+    zend_object std;
 } pcbc_disjunction_search_query_t;
 
-#if PHP_VERSION_ID >= 70000
 static inline pcbc_disjunction_search_query_t *pcbc_disjunction_search_query_fetch_object(zend_object *obj)
 {
     return (pcbc_disjunction_search_query_t *)((char *)obj - XtOffsetOf(pcbc_disjunction_search_query_t, std));
 }
 #define Z_DISJUNCTION_SEARCH_QUERY_OBJ(zo) (pcbc_disjunction_search_query_fetch_object(zo))
 #define Z_DISJUNCTION_SEARCH_QUERY_OBJ_P(zv) (pcbc_disjunction_search_query_fetch_object(Z_OBJ_P(zv)))
-#else
-#define Z_DISJUNCTION_SEARCH_QUERY_OBJ(zo) ((pcbc_disjunction_search_query_t *)zo)
-#define Z_DISJUNCTION_SEARCH_QUERY_OBJ_P(zv)                                                                           \
-    ((pcbc_disjunction_search_query_t *)zend_object_store_get_object(zv TSRMLS_CC))
-#endif
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/disjunction_search_query", __FILE__, __LINE__
 
@@ -95,11 +89,7 @@ PHP_METHOD(DisjunctionSearchQuery, boost)
 PHP_METHOD(DisjunctionSearchQuery, either)
 {
     pcbc_disjunction_search_query_t *obj;
-#if PHP_VERSION_ID >= 70000
     zval *args = NULL;
-#else
-    zval ***args = NULL;
-#endif
     int num_args = 0;
     int rv;
 
@@ -113,26 +103,17 @@ PHP_METHOD(DisjunctionSearchQuery, either)
     if (num_args && args) {
         int i;
         for (i = 0; i < num_args; ++i) {
-            PCBC_ZVAL *query;
-#if PHP_VERSION_ID >= 70000
+            zval *query;
             query = &args[i];
-#else
-            query = args[i];
-#endif
-            if (Z_TYPE_P(PCBC_P(*query)) != IS_OBJECT ||
-                !instanceof_function(Z_OBJCE_P(PCBC_P(*query)), pcbc_search_query_part_ce TSRMLS_CC)) {
+            if (Z_TYPE_P(query) != IS_OBJECT ||
+                !instanceof_function(Z_OBJCE_P(query), pcbc_search_query_part_ce TSRMLS_CC)) {
                 pcbc_log(LOGARGS(WARN), "query has to implement SearchQueryPart interface (skipping argument #%d)", i);
                 continue;
             }
-            add_next_index_zval(PCBC_P(obj->queries), PCBC_P(*query));
-            PCBC_ADDREF_P(PCBC_P(*query));
+            add_next_index_zval(&obj->queries, query);
+            PCBC_ADDREF_P(query);
         }
     }
-#if PHP_VERSION_ID < 70000
-    if (args) {
-        efree(args);
-    }
-#endif
 
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
@@ -151,8 +132,8 @@ PHP_METHOD(DisjunctionSearchQuery, jsonSerialize)
 
     obj = Z_DISJUNCTION_SEARCH_QUERY_OBJ_P(getThis());
     array_init(return_value);
-    ADD_ASSOC_ZVAL_EX(return_value, "disjuncts", PCBC_P(obj->queries));
-    PCBC_ADDREF_P(PCBC_P(obj->queries));
+    ADD_ASSOC_ZVAL_EX(return_value, "disjuncts", &obj->queries);
+    PCBC_ADDREF_P(&obj->queries);
     if (obj->min >= 0) {
         ADD_ASSOC_LONG_EX(return_value, "min", obj->min);
     }
@@ -187,13 +168,7 @@ zend_function_entry disjunction_search_query_methods[] = {
 };
 // clang-format on
 
-void pcbc_disjunction_search_query_init(zval *return_value,
-#if PHP_VERSION_ID >= 70000
-                                        zval *args,
-#else
-                                        zval ***args,
-#endif
-                                        int num_args TSRMLS_DC)
+void pcbc_disjunction_search_query_init(zval *return_value, zval *args, int num_args TSRMLS_DC)
 {
     pcbc_disjunction_search_query_t *obj;
 
@@ -202,44 +177,37 @@ void pcbc_disjunction_search_query_init(zval *return_value,
     obj->boost = -1;
     obj->min = -1;
 
-    PCBC_ZVAL_ALLOC(obj->queries);
-    array_init(PCBC_P(obj->queries));
+    ZVAL_UNDEF(&obj->queries);
+    array_init(&obj->queries);
 
     if (num_args && args) {
         int i;
         for (i = 0; i < num_args; ++i) {
-            PCBC_ZVAL *query;
-#if PHP_VERSION_ID >= 70000
+            zval *query;
             query = &args[i];
-#else
-            query = args[i];
-#endif
-            if (Z_TYPE_P(PCBC_P(*query)) != IS_OBJECT ||
-                !instanceof_function(Z_OBJCE_P(PCBC_P(*query)), pcbc_search_query_part_ce TSRMLS_CC)) {
+            if (Z_TYPE_P(query) != IS_OBJECT ||
+                !instanceof_function(Z_OBJCE_P(query), pcbc_search_query_part_ce TSRMLS_CC)) {
                 pcbc_log(LOGARGS(WARN), "query has to implement SearchQueryPart interface (skipping argument #%d)", i);
                 continue;
             }
-            add_next_index_zval(PCBC_P(obj->queries), PCBC_P(*query));
-            PCBC_ADDREF_P(PCBC_P(*query));
+            add_next_index_zval(&obj->queries, query);
+            PCBC_ADDREF_P(query);
         }
     }
 }
 
 zend_object_handlers disjunction_search_query_handlers;
 
-static void disjunction_search_query_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
+static void disjunction_search_query_free_object(zend_object *object TSRMLS_DC) /* {{{ */
 {
     pcbc_disjunction_search_query_t *obj = Z_DISJUNCTION_SEARCH_QUERY_OBJ(object);
 
     zval_ptr_dtor(&obj->queries);
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    efree(obj);
-#endif
 } /* }}} */
 
-static pcbc_create_object_retval disjunction_search_query_create_object(zend_class_entry *class_type TSRMLS_DC)
+static zend_object *disjunction_search_query_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
     pcbc_disjunction_search_query_t *obj = NULL;
 
@@ -248,35 +216,21 @@ static pcbc_create_object_retval disjunction_search_query_create_object(zend_cla
     zend_object_std_init(&obj->std, class_type TSRMLS_CC);
     object_properties_init(&obj->std, class_type);
 
-#if PHP_VERSION_ID >= 70000
     obj->std.handlers = &disjunction_search_query_handlers;
     return &obj->std;
-#else
-    {
-        zend_object_value ret;
-        ret.handle = zend_objects_store_put(obj, (zend_objects_store_dtor_t)zend_objects_destroy_object,
-                                            disjunction_search_query_free_object, NULL TSRMLS_CC);
-        ret.handlers = &disjunction_search_query_handlers;
-        return ret;
-    }
-#endif
 }
 
 static HashTable *pcbc_disjunction_search_query_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
 {
     pcbc_disjunction_search_query_t *obj = NULL;
-#if PHP_VERSION_ID >= 70000
     zval retval;
-#else
-    zval retval = zval_used_for_init;
-#endif
 
     *is_temp = 1;
     obj = Z_DISJUNCTION_SEARCH_QUERY_OBJ_P(object);
 
     array_init(&retval);
-    ADD_ASSOC_ZVAL_EX(&retval, "queries", PCBC_P(obj->queries));
-    PCBC_ADDREF_P(PCBC_P(obj->queries));
+    ADD_ASSOC_ZVAL_EX(&retval, "queries", &obj->queries);
+    PCBC_ADDREF_P(&obj->queries);
     if (obj->min >= 0) {
         ADD_ASSOC_LONG_EX(&retval, "min", obj->min);
     }
@@ -300,10 +254,8 @@ PHP_MINIT_FUNCTION(DisjunctionSearchQuery)
 
     memcpy(&disjunction_search_query_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     disjunction_search_query_handlers.get_debug_info = pcbc_disjunction_search_query_get_debug_info;
-#if PHP_VERSION_ID >= 70000
     disjunction_search_query_handlers.free_obj = disjunction_search_query_free_object;
     disjunction_search_query_handlers.offset = XtOffsetOf(pcbc_disjunction_search_query_t, std);
-#endif
 
     zend_register_class_alias("\\CouchbaseDisjunctionSearchQuery", pcbc_disjunction_search_query_ce);
     return SUCCESS;

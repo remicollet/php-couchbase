@@ -1,5 +1,5 @@
 /**
- *     Copyright 2018 Couchbase, Inc.
+ *     Copyright 2018-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -28,9 +28,7 @@ static void pcbc_crypto_destructor(lcbcrypto_PROVIDER *provider)
             if (!Z_ISUNDEF_P(zprovider)) {
                 PCBC_DELREF_P(zprovider);
             }
-#if PHP_VERSION_ID >= 70000
             efree(provider->cookie);
-#endif
         }
         provider->cookie = NULL;
         efree(provider);
@@ -49,19 +47,18 @@ static const char *pcbc_crypto_get_key_id(struct lcbcrypto_PROVIDER *provider)
 {
     zval *zprovider = (zval *)provider->cookie;
     int rv;
-    PCBC_ZVAL fname;
-    PCBC_ZVAL retval;
+    zval fname;
+    zval retval;
     TSRMLS_FETCH();
 
-    PCBC_ZVAL_ALLOC(fname);
+    ZVAL_UNDEF(&fname);
     PCBC_STRING(fname, "getKeyId");
 
-    rv = call_user_function_ex(EG(function_table), PCBC_CP(zprovider), PCBC_P(fname), &retval, 0, NULL, 1,
-                               NULL TSRMLS_CC);
+    rv = call_user_function_ex(EG(function_table), zprovider, &fname, &retval, 0, NULL, 1, NULL TSRMLS_CC);
     if (rv == FAILURE || EG(exception) || Z_ISUNDEF(retval)) {
         return NULL;
     }
-    if (Z_TYPE_P(PCBC_P(retval)) == IS_STRING && PCBC_STRLEN_P(retval)) {
+    if (Z_TYPE_P(&retval) == IS_STRING && PCBC_STRLEN_P(retval)) {
         return PCBC_STRVAL_P(retval);
     }
 
@@ -72,19 +69,18 @@ static lcb_error_t pcbc_crypto_generate_iv(struct lcbcrypto_PROVIDER *provider, 
 {
     zval *zprovider = (zval *)provider->cookie;
     int rv;
-    PCBC_ZVAL fname;
-    PCBC_ZVAL retval;
+    zval fname;
+    zval retval;
     TSRMLS_FETCH();
 
-    PCBC_ZVAL_ALLOC(fname);
+    ZVAL_UNDEF(&fname);
     PCBC_STRING(fname, "generateIV");
 
-    rv = call_user_function_ex(EG(function_table), PCBC_CP(zprovider), PCBC_P(fname), &retval, 0, NULL, 1,
-                               NULL TSRMLS_CC);
+    rv = call_user_function_ex(EG(function_table), zprovider, &fname, &retval, 0, NULL, 1, NULL TSRMLS_CC);
     if (rv == FAILURE || EG(exception) || Z_ISUNDEF(retval)) {
         return LCB_EINVAL;
     }
-    if (Z_TYPE_P(PCBC_P(retval)) == IS_STRING && PCBC_STRLEN_P(retval)) {
+    if (Z_TYPE_P(&retval) == IS_STRING && PCBC_STRLEN_P(retval)) {
         *iv_len = PCBC_STRLEN_P(retval);
         *iv = (uint8_t *)(estrndup(PCBC_STRVAL_P(retval), *iv_len));
         return LCB_SUCCESS;
@@ -99,29 +95,28 @@ static lcb_error_t pcbc_crypto_sign(struct lcbcrypto_PROVIDER *provider, const l
     zval *zprovider = (zval *)provider->cookie;
     int rv;
     size_t ii;
-    PCBC_ZVAL param;
-    PCBC_ZVAL fname;
-    PCBC_ZVAL retval;
+    zval param;
+    zval fname;
+    zval retval;
     TSRMLS_FETCH();
 
-    PCBC_ZVAL_ALLOC(fname);
-    PCBC_ZVAL_ALLOC(param);
+    ZVAL_UNDEF(&fname);
+    ZVAL_UNDEF(&param);
 
-    array_init_size(PCBC_P(param), inputs_num);
+    array_init_size(&param, inputs_num);
     for (ii = 0; ii < inputs_num; ii++) {
-        ADD_NEXT_INDEX_STRINGL(PCBC_P(param), inputs[ii].data, inputs[ii].len);
+        ADD_NEXT_INDEX_STRINGL(&param, inputs[ii].data, inputs[ii].len);
     }
     PCBC_STRING(fname, "sign");
 
-    rv = call_user_function_ex(EG(function_table), PCBC_CP(zprovider), PCBC_P(fname), &retval, 1, &param, 1,
-                               NULL TSRMLS_CC);
+    rv = call_user_function_ex(EG(function_table), zprovider, &fname, &retval, 1, &param, 1, NULL TSRMLS_CC);
 
     zval_ptr_dtor(&param);
     if (rv == FAILURE || EG(exception) || Z_ISUNDEF(retval)) {
         return LCB_EINVAL;
     }
 
-    if (Z_TYPE_P(PCBC_P(retval)) == IS_STRING && PCBC_STRLEN_P(retval)) {
+    if (Z_TYPE_P(&retval) == IS_STRING && PCBC_STRLEN_P(retval)) {
         *sig_len = PCBC_STRLEN_P(retval);
         *sig = (uint8_t *)(estrndup(PCBC_STRVAL_P(retval), *sig_len));
         return LCB_SUCCESS;
@@ -136,24 +131,23 @@ static lcb_error_t pcbc_crypto_verify_signature(struct lcbcrypto_PROVIDER *provi
     zval *zprovider = (zval *)provider->cookie;
     int rv;
     size_t ii;
-    PCBC_ZVAL params[2];
-    PCBC_ZVAL fname;
-    PCBC_ZVAL retval;
+    zval params[2];
+    zval fname;
+    zval retval;
     TSRMLS_FETCH();
 
-    PCBC_ZVAL_ALLOC(fname);
-    PCBC_ZVAL_ALLOC(params[0]);
-    PCBC_ZVAL_ALLOC(params[1]);
+    ZVAL_UNDEF(&fname);
+    ZVAL_UNDEF(&params[0]);
+    ZVAL_UNDEF(&params[1]);
 
-    array_init_size(PCBC_P(params[0]), inputs_num);
+    array_init_size(&params[0], inputs_num);
     for (ii = 0; ii < inputs_num; ii++) {
-        ADD_NEXT_INDEX_STRINGL(PCBC_P(params[0]), inputs[ii].data, inputs[ii].len);
+        ADD_NEXT_INDEX_STRINGL(&params[0], inputs[ii].data, inputs[ii].len);
     }
     PCBC_STRINGL(params[1], sig, sig_len);
     PCBC_STRING(fname, "verifySignature");
 
-    rv = call_user_function_ex(EG(function_table), PCBC_CP(zprovider), PCBC_P(fname), &retval, 2, params, 1,
-                               NULL TSRMLS_CC);
+    rv = call_user_function_ex(EG(function_table), zprovider, &fname, &retval, 2, params, 1, NULL TSRMLS_CC);
 
     zval_ptr_dtor(&params[0]);
     zval_ptr_dtor(&params[1]);
@@ -161,20 +155,11 @@ static lcb_error_t pcbc_crypto_verify_signature(struct lcbcrypto_PROVIDER *provi
         return LCB_EINVAL;
     }
 
-    switch (Z_TYPE_P(PCBC_P(retval))) {
-#if PHP_VERSION_ID >= 70000
+    switch (Z_TYPE_P(&retval)) {
     case IS_TRUE:
         return LCB_SUCCESS;
     case IS_FALSE:
         return LCB_EINVAL;
-#else
-    case IS_BOOL:
-        if (Z_BVAL_P(retval)) {
-            return LCB_SUCCESS;
-        } else {
-            return LCB_EINVAL;
-        }
-#endif
     }
     return LCB_EINVAL;
 }
@@ -184,25 +169,24 @@ static lcb_error_t pcbc_crypto_encrypt(struct lcbcrypto_PROVIDER *provider, cons
 {
     zval *zprovider = (zval *)provider->cookie;
     int rv;
-    PCBC_ZVAL params[2];
-    PCBC_ZVAL fname;
-    PCBC_ZVAL retval;
+    zval params[2];
+    zval fname;
+    zval retval;
     TSRMLS_FETCH();
 
-    PCBC_ZVAL_ALLOC(fname);
-    PCBC_ZVAL_ALLOC(params[0]);
-    PCBC_ZVAL_ALLOC(params[1]);
+    ZVAL_UNDEF(&fname);
+    ZVAL_UNDEF(&params[0]);
+    ZVAL_UNDEF(&params[1]);
 
     PCBC_STRINGL(params[0], input, input_len);
     if (iv) {
         PCBC_STRINGL(params[1], iv, iv_len);
     } else {
-        ZVAL_NULL(PCBC_P(params[1]));
+        ZVAL_NULL(&params[1]);
     }
     PCBC_STRING(fname, "encrypt");
 
-    rv = call_user_function_ex(EG(function_table), PCBC_CP(zprovider), PCBC_P(fname), &retval, 2, params, 1,
-                               NULL TSRMLS_CC);
+    rv = call_user_function_ex(EG(function_table), zprovider, &fname, &retval, 2, params, 1, NULL TSRMLS_CC);
 
     zval_ptr_dtor(&params[0]);
     zval_ptr_dtor(&params[1]);
@@ -210,7 +194,7 @@ static lcb_error_t pcbc_crypto_encrypt(struct lcbcrypto_PROVIDER *provider, cons
         return LCB_EINVAL;
     }
 
-    if (Z_TYPE_P(PCBC_P(retval)) == IS_STRING && PCBC_STRLEN_P(retval)) {
+    if (Z_TYPE_P(&retval) == IS_STRING && PCBC_STRLEN_P(retval)) {
         *output_len = PCBC_STRLEN_P(retval);
         *output = (uint8_t *)(estrndup(PCBC_STRVAL_P(retval), *output_len));
         return LCB_SUCCESS;
@@ -224,25 +208,24 @@ static lcb_error_t pcbc_crypto_decrypt(struct lcbcrypto_PROVIDER *provider, cons
 {
     zval *zprovider = (zval *)provider->cookie;
     int rv;
-    PCBC_ZVAL params[2];
-    PCBC_ZVAL fname;
-    PCBC_ZVAL retval;
+    zval params[2];
+    zval fname;
+    zval retval;
     TSRMLS_FETCH();
 
-    PCBC_ZVAL_ALLOC(fname);
-    PCBC_ZVAL_ALLOC(params[0]);
-    PCBC_ZVAL_ALLOC(params[1]);
+    ZVAL_UNDEF(&fname);
+    ZVAL_UNDEF(&params[0]);
+    ZVAL_UNDEF(&params[1]);
 
     PCBC_STRINGL(params[0], input, input_len);
     if (iv) {
         PCBC_STRINGL(params[1], iv, iv_len);
     } else {
-        ZVAL_NULL(PCBC_P(params[1]));
+        ZVAL_NULL(&params[1]);
     }
     PCBC_STRING(fname, "decrypt");
 
-    rv = call_user_function_ex(EG(function_table), PCBC_CP(zprovider), PCBC_P(fname), &retval, 2, params, 1,
-                               NULL TSRMLS_CC);
+    rv = call_user_function_ex(EG(function_table), zprovider, &fname, &retval, 2, params, 1, NULL TSRMLS_CC);
 
     zval_ptr_dtor(&params[0]);
     zval_ptr_dtor(&params[1]);
@@ -250,7 +233,7 @@ static lcb_error_t pcbc_crypto_decrypt(struct lcbcrypto_PROVIDER *provider, cons
         return LCB_EINVAL;
     }
 
-    if (Z_TYPE_P(PCBC_P(retval)) == IS_STRING && PCBC_STRLEN_P(retval)) {
+    if (Z_TYPE_P(&retval) == IS_STRING && PCBC_STRLEN_P(retval)) {
         *output_len = PCBC_STRLEN_P(retval);
         *output = (uint8_t *)(estrndup(PCBC_STRVAL_P(retval), *output_len));
         return LCB_SUCCESS;
@@ -271,41 +254,34 @@ void pcbc_crypto_register(pcbc_bucket_t *obj, const char *name, int name_len, zv
     provider->v.v1.get_key_id = pcbc_crypto_get_key_id;
 
     {
-        PCBC_ZVAL fname;
+        zval fname;
         zend_fcall_info_cache fcc;
-        PCBC_ZVAL param;
-        PCBC_ZVAL retval;
+        zval param;
+        zval retval;
         int rv;
 
-        PCBC_ZVAL_ALLOC(fname);
+        ZVAL_UNDEF(&fname);
 
         PCBC_STRING(fname, "generateIV");
-        rv = call_user_function_ex(EG(function_table), PCBC_CP(zprovider), PCBC_P(fname), &retval, 0, NULL, 1,
-                                   NULL TSRMLS_CC);
-        if (!(rv == FAILURE || EG(exception) || Z_ISUNDEF(retval) || Z_TYPE_P(PCBC_P(retval)) == IS_NULL)) {
+        rv = call_user_function_ex(EG(function_table), zprovider, &fname, &retval, 0, NULL, 1, NULL TSRMLS_CC);
+        if (!(rv == FAILURE || EG(exception) || Z_ISUNDEF(retval) || Z_TYPE_P(&retval) == IS_NULL)) {
             provider->v.v1.generate_iv = pcbc_crypto_generate_iv;
         }
 
         PCBC_STRING(fname, "sign");
-        array_init_size(PCBC_P(param), 0);
-        rv = call_user_function_ex(EG(function_table), PCBC_CP(zprovider), PCBC_P(fname), &retval, 1, &param, 1,
-                                   NULL TSRMLS_CC);
-        if (!(rv == FAILURE || EG(exception) || Z_ISUNDEF(retval) || Z_TYPE_P(PCBC_P(retval)) == IS_NULL)) {
+        array_init_size(&param, 0);
+        rv = call_user_function_ex(EG(function_table), zprovider, &fname, &retval, 1, &param, 1, NULL TSRMLS_CC);
+        if (!(rv == FAILURE || EG(exception) || Z_ISUNDEF(retval) || Z_TYPE_P(&retval) == IS_NULL)) {
             provider->v.v1.sign = pcbc_crypto_sign;
             provider->v.v1.verify_signature = pcbc_crypto_verify_signature;
         }
     }
 
-#if PHP_VERSION_ID >= 70000
     {
         zval *tmp = ecalloc(1, sizeof(zval));
         ZVAL_ZVAL(tmp, zprovider, 1, 0);
         provider->cookie = tmp;
     }
-#else
-    PCBC_ADDREF_P(zprovider);
-    provider->cookie = zprovider;
-#endif
 
     lcbcrypto_register(obj->conn->lcb, name, provider);
 }
@@ -373,7 +349,7 @@ void pcbc_crypto_encrypt_fields(pcbc_bucket_t *obj, zval *document, zval *option
         return;
     }
     if (ecmd.out) {
-        PCBC_ZVAL_ALLOC(PCBC_D(return_value));
+        ZVAL_UNDEF(return_value);
         PCBC_JSON_COPY_DECODE(return_value, ecmd.out, ecmd.nout, PHP_JSON_OBJECT_AS_ARRAY, last_error);
         free(ecmd.out);
         ecmd.out = NULL;
@@ -443,7 +419,7 @@ void pcbc_crypto_decrypt_fields(pcbc_bucket_t *obj, zval *document, zval *option
         return;
     }
     if (dcmd.out) {
-        PCBC_ZVAL_ALLOC(PCBC_D(return_value));
+        ZVAL_UNDEF(return_value);
         PCBC_JSON_COPY_DECODE(return_value, dcmd.out, dcmd.nout, PHP_JSON_OBJECT_AS_ARRAY, last_error);
         free(dcmd.out);
         dcmd.out = NULL;

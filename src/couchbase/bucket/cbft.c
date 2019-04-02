@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 typedef struct {
     opcookie_res header;
     lcb_U16 rflags;
-    PCBC_ZVAL row;
+    zval row;
 } opcookie_ftsrow_res;
 
 static void ftsrow_callback(lcb_t instance, int ignoreme, const lcb_RESPFTS *resp)
@@ -36,7 +36,7 @@ static void ftsrow_callback(lcb_t instance, int ignoreme, const lcb_RESPFTS *res
                  (int)resp->nrow, (char *)resp->row);
     }
     result->rflags = resp->rflags;
-    PCBC_ZVAL_ALLOC(result->row);
+    ZVAL_UNDEF(&result->row);
     if (cookie->json_response) {
         int last_error;
         int json_options = cookie->json_options;
@@ -45,7 +45,7 @@ static void ftsrow_callback(lcb_t instance, int ignoreme, const lcb_RESPFTS *res
             // parse meta into arrays
             json_options |= PHP_JSON_OBJECT_AS_ARRAY;
         }
-        PCBC_JSON_COPY_DECODE(PCBC_P(result->row), resp->row, resp->nrow, json_options, last_error);
+        PCBC_JSON_COPY_DECODE(&result->row, resp->row, resp->nrow, json_options, last_error);
         if (last_error != 0) {
             pcbc_log(LOGARGS(instance, WARN), "Failed to decode FTS row as JSON: json_last_error=%d", last_error);
             PCBC_STRINGL(result->row, resp->row, resp->nrow);
@@ -55,7 +55,7 @@ static void ftsrow_callback(lcb_t instance, int ignoreme, const lcb_RESPFTS *res
     }
     if (result->header.err != LCB_SUCCESS) {
         zval *val;
-        if (Z_TYPE_P(PCBC_P(result->row)) == IS_ARRAY && (val = php_array_fetch(PCBC_P(result->row), "errors"))) {
+        if (Z_TYPE_P(&result->row) == IS_ARRAY && (val = php_array_fetch(&result->row, "errors"))) {
             zval *err = php_array_fetch(val, "0");
             if (err) {
                 char *msg = NULL;
@@ -67,8 +67,8 @@ static void ftsrow_callback(lcb_t instance, int ignoreme, const lcb_RESPFTS *res
                     char *m = NULL;
                     spprintf(&m, 0, "Failed to perform FTS query. HTTP %d: code: %d, message: \"%*s\"",
                              (int)resp->htresp->htstatus, (int)code, msg_len, msg);
-                    PCBC_ZVAL_ALLOC(cookie->exc);
-                    pcbc_exception_init(PCBC_P(cookie->exc), code, m TSRMLS_CC);
+                    ZVAL_UNDEF(&cookie->exc);
+                    pcbc_exception_init(&cookie->exc, code, m TSRMLS_CC);
                     if (m) {
                         efree(m);
                     }
@@ -94,40 +94,39 @@ static lcb_error_t proc_ftsrow_results(pcbc_bucket_t *bucket, zval *return_value
     err = opcookie_get_first_error(cookie);
 
     if (err == LCB_SUCCESS) {
-        PCBC_ZVAL hits;
+        zval hits;
 
-        PCBC_ZVAL_ALLOC(hits);
-        array_init(PCBC_P(hits));
+        ZVAL_UNDEF(&hits);
+        array_init(&hits);
 
         object_init(return_value);
-        add_property_zval(return_value, "hits", PCBC_P(hits));
-        Z_DELREF_P(PCBC_P(hits));
+        add_property_zval(return_value, "hits", &hits);
+        Z_DELREF_P(&hits);
 
         FOREACH_OPCOOKIE_RES(opcookie_ftsrow_res, res, cookie)
         {
             if (res->rflags & LCB_RESP_F_FINAL) {
-                PCBC_ZVAL metrics;
+                zval metrics;
                 zval *val;
 
-                val = php_array_fetch(PCBC_P(res->row), "status");
+                val = php_array_fetch(&res->row, "status");
                 if (val) {
                     add_property_zval(return_value, "status", val);
                 }
-                val = php_array_fetch(PCBC_P(res->row), "facets");
+                val = php_array_fetch(&res->row, "facets");
                 if (val) {
                     add_property_zval(return_value, "facets", val);
                 }
-                PCBC_ZVAL_ALLOC(metrics);
-                array_init_size(PCBC_P(metrics), 3);
-                ADD_ASSOC_LONG_EX(PCBC_P(metrics), "total_hits", php_array_fetch_long(PCBC_P(res->row), "total_hits"));
-                ADD_ASSOC_DOUBLE_EX(PCBC_P(metrics), "max_score",
-                                    php_array_fetch_double(PCBC_P(res->row), "max_score"));
-                ADD_ASSOC_LONG_EX(PCBC_P(metrics), "took", php_array_fetch_long((PCBC_P(res->row)), "took"));
-                add_property_zval(return_value, "metrics", PCBC_P(metrics));
-                Z_DELREF_P(PCBC_P(metrics));
+                ZVAL_UNDEF(&metrics);
+                array_init_size(&metrics, 3);
+                ADD_ASSOC_LONG_EX(&metrics, "total_hits", php_array_fetch_long(&res->row, "total_hits"));
+                ADD_ASSOC_DOUBLE_EX(&metrics, "max_score", php_array_fetch_double(&res->row, "max_score"));
+                ADD_ASSOC_LONG_EX(&metrics, "took", php_array_fetch_long((&res->row), "took"));
+                add_property_zval(return_value, "metrics", &metrics);
+                Z_DELREF_P(&metrics);
             } else {
-                add_next_index_zval(PCBC_P(hits), PCBC_P(res->row));
-                PCBC_ADDREF_P(PCBC_P(res->row));
+                add_next_index_zval(&hits, &res->row);
+                PCBC_ADDREF_P(&res->row);
             }
         }
     }
@@ -177,7 +176,7 @@ void pcbc_bucket_cbft_request(pcbc_bucket_t *bucket, lcb_CMDFTS *cmd, int json_r
         if (Z_ISUNDEF(cookie->exc)) {
             throw_lcb_exception(err);
         } else {
-            zend_throw_exception_object(PCBC_P(cookie->exc) TSRMLS_CC);
+            zend_throw_exception_object(&cookie->exc TSRMLS_CC);
         }
     }
 #ifdef LCB_TRACING

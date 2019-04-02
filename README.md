@@ -143,7 +143,7 @@ Server version guard might be specified by `CB_VERSION` (default is `4.6`). The 
 which is not supported by `CB_VERSION`, will be skipped automatically.
 
 ## License
-Copyright 2016-2017 Couchbase Inc.
+Copyright 2016-2019 Couchbase Inc.
 
 Licensed under the Apache License, Version 2.0.
 

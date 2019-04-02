@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -86,12 +86,7 @@ extern struct pcbc_logger_st pcbc_logger;
 
 static PHP_INI_MH(OnUpdateLogLevel)
 {
-    const char *str_val =
-#if PHP_VERSION_ID >= 70000
-        ZSTR_VAL(new_value);
-#else
-        new_value;
-#endif
+    const char *str_val = ZSTR_VAL(new_value);
     if (!new_value) {
         pcbc_logger.minlevel = LCB_LOG_WARN;
     } else if (!strcmp(str_val, "TRACE") || !strcmp(str_val, "TRAC")) {
@@ -110,21 +105,12 @@ static PHP_INI_MH(OnUpdateLogLevel)
         return FAILURE;
     }
 
-#if PHP_VERSION_ID >= 70000
     return OnUpdateString(entry, new_value, mh_arg1, mh_arg2, mh_arg3, stage);
-#else
-    return OnUpdateString(entry, new_value, new_value_length, mh_arg1, mh_arg2, mh_arg3, stage TSRMLS_CC);
-#endif
 }
 
 static PHP_INI_MH(OnUpdateFormat)
 {
-    const char *str_val =
-#if PHP_VERSION_ID >= 70000
-        ZSTR_VAL(new_value);
-#else
-        new_value;
-#endif
+    const char *str_val = ZSTR_VAL(new_value);
     if (!new_value) {
         PCBCG(enc_format_i) = COUCHBASE_SERTYPE_JSON;
     } else if (!strcmp(str_val, "json") || !strcmp(str_val, "JSON")) {
@@ -139,21 +125,12 @@ static PHP_INI_MH(OnUpdateFormat)
         return FAILURE;
     }
 
-#if PHP_VERSION_ID >= 70000
     return OnUpdateString(entry, new_value, mh_arg1, mh_arg2, mh_arg3, stage);
-#else
-    return OnUpdateString(entry, new_value, new_value_length, mh_arg1, mh_arg2, mh_arg3, stage TSRMLS_CC);
-#endif
 }
 
 static PHP_INI_MH(OnUpdateCmpr)
 {
-    const char *str_val =
-#if PHP_VERSION_ID >= 70000
-        ZSTR_VAL(new_value);
-#else
-        new_value;
-#endif
+    const char *str_val = ZSTR_VAL(new_value);
     if (!new_value) {
         PCBCG(enc_cmpr_i) = COUCHBASE_CMPRTYPE_NONE;
     } else if (!strcmp(str_val, "off") || !strcmp(str_val, "none") || !strcmp(str_val, "OFF") ||
@@ -169,11 +146,7 @@ static PHP_INI_MH(OnUpdateCmpr)
         return FAILURE;
     }
 
-#if PHP_VERSION_ID >= 70000
     return OnUpdateString(entry, new_value, mh_arg1, mh_arg2, mh_arg3, stage);
-#else
-    return OnUpdateString(entry, new_value, new_value_length, mh_arg1, mh_arg2, mh_arg3, stage TSRMLS_CC);
-#endif
 }
 // clang-format off
 PHP_INI_BEGIN()
@@ -221,45 +194,12 @@ PHP_MINIT_FUNCTION(couchbase)
     ZEND_INIT_MODULE_GLOBALS(couchbase, php_extname_init_globals, NULL);
     REGISTER_INI_ENTRIES();
 
-#if PHP_VERSION_ID < 70000
-    {
-        int rv;
-        zend_module_entry *module;
-        rv = zend_hash_find(&module_registry, "json", sizeof("json"), (void **)&module);
-        if (rv != SUCCESS) {
-            pcbc_log(LOGARGS(FATAL), "json module is not loaded");
-            return FAILURE;
-        }
-#ifdef ZTS
-        pcbc_json_globals_id = module->globals_id_ptr;
-        rv = pcbc_json_globals_id != NULL;
-#else
-        pcbc_json_globals = module->globals_ptr;
-        rv = pcbc_json_globals != NULL;
-#endif
-        if (rv) {
-            pcbc_log(LOGARGS(DEBUG), "json module globals has been hijacked successfully");
-        } else {
-            pcbc_log(LOGARGS(FATAL), "failed to hijack json module globals");
-            return FAILURE;
-        }
-    }
-#endif
     pcbc_json_serializable_ce = NULL;
     {
-#if PHP_VERSION_ID >= 70000
         pcbc_json_serializable_ce = zend_hash_str_find_ptr(CG(class_table), ZEND_STRL("jsonserializable"));
-#else
-        zend_class_entry **pce;
-        int rv;
-
-        rv = zend_hash_find(CG(class_table), ZEND_STRS("jsonserializable"), (void **)&pce);
-        if (rv == SUCCESS) {
-            pcbc_json_serializable_ce = *pce;
-        }
-#endif
         if (pcbc_json_serializable_ce == NULL) {
-            pcbc_log(LOGARGS(FATAL), "failed to find JsonSerializable class. Make sure 'json' module is loaded before 'couchbase'");
+            pcbc_log(LOGARGS(FATAL),
+                     "failed to find JsonSerializable class. Make sure 'json' module is loaded before 'couchbase'");
             return FAILURE;
         }
     }
@@ -360,11 +300,7 @@ PHP_MINIT_FUNCTION(couchbase)
     {
         char buf[128];
 
-#if PHP_VERSION_ID >= 70000
 #define PCBC_CONST_LENGTH(buf) (strlen(buf))
-#else
-#define PCBC_CONST_LENGTH(buf) (strlen(buf) + 1)
-#endif
 #define X(name, value, cls, s)                                                                                         \
     {                                                                                                                  \
         ap_php_snprintf(buf, sizeof(buf), "COUCHBASE_%s", #name + 4);                                                  \
@@ -444,11 +380,7 @@ PHP_MSHUTDOWN_FUNCTION(couchbase)
 
 PHP_RSHUTDOWN_FUNCTION(couchbase)
 {
-#if PHP_VERSION_ID >= 70000
     pcbc_connection_cleanup();
-#else
-    pcbc_connection_cleanup(TSRMLS_C);
-#endif
     return SUCCESS;
 }
 
@@ -460,9 +392,9 @@ PHP_RINIT_FUNCTION(couchbase)
 static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprthresh, double cmprfactor,
                              zval *return_value TSRMLS_DC)
 {
-    PCBC_ZVAL res;
-    PCBC_ZVAL flg;
-    PCBC_ZVAL dtype;
+    zval res;
+    zval flg;
+    zval dtype;
     unsigned int flags = 0;
 
 #ifndef HAVE_COUCHBASE_IGBINARY
@@ -471,7 +403,7 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
         sertype = COUCHBASE_SERTYPE_JSON;
     }
 #endif
-    PCBC_ZVAL_ALLOC(res);
+    ZVAL_UNDEF(&res);
 
     switch (Z_TYPE_P(value)) {
     case IS_STRING:
@@ -506,7 +438,6 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
             }
         }
         break;
-#if PHP_VERSION_ID >= 70000
     case IS_TRUE:
         flags = COUCHBASE_VAL_IS_BOOL | COUCHBASE_CFFMT_JSON;
         PCBC_STRING(res, "true");
@@ -515,16 +446,6 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
         flags = COUCHBASE_VAL_IS_BOOL | COUCHBASE_CFFMT_JSON;
         PCBC_STRING(res, "false");
         break;
-#else
-    case IS_BOOL:
-        flags = COUCHBASE_VAL_IS_BOOL | COUCHBASE_CFFMT_JSON;
-        if (Z_BVAL_P(value)) {
-            PCBC_STRING(res, "true");
-        } else {
-            PCBC_STRING(res, "false");
-        }
-        break;
-#endif
     default:
         switch (sertype) {
         case COUCHBASE_SERTYPE_JSON:
@@ -536,7 +457,7 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
                 PCBC_JSON_ENCODE(&buf, value, 0, last_error);
                 if (last_error != 0) {
                     pcbc_log(LOGARGS(WARN), "Failed to encode value as JSON: json_last_error=%d", last_error);
-                    ZVAL_NULL(PCBC_P(res));
+                    ZVAL_NULL(&res);
                 } else {
                     smart_str_0(&buf);
                     PCBC_STRINGS(res, buf);
@@ -551,7 +472,7 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
                 smart_str buf = {0};
 
                 PHP_VAR_SERIALIZE_INIT(var_hash);
-                php_var_serialize(&buf, PCBC_CP(value), &var_hash TSRMLS_CC);
+                php_var_serialize(&buf, value, &var_hash TSRMLS_CC);
                 PHP_VAR_SERIALIZE_DESTROY(var_hash);
 
                 if (EG(exception)) {
@@ -584,7 +505,7 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
 
     do {
         size_t datalen = 0;
-        if (Z_TYPE_P(PCBC_P(res)) == IS_NULL) {
+        if (Z_TYPE_P(&res) == IS_NULL) {
             break;
         }
         datalen = PCBC_STRLEN_P(res);
@@ -593,7 +514,7 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
         }
         if (cmprtype != COUCHBASE_CMPRTYPE_NONE) {
             int cmprflags = COUCHBASE_COMPRESSION_NONE;
-            PCBC_ZVAL compressed;
+            zval compressed;
             if (cmprtype == COUCHBASE_CMPRTYPE_ZLIB) {
 #if HAVE_COUCHBASE_ZLIB
                 void *input, *output;
@@ -616,7 +537,7 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
                 output_size += 4;
                 *((uint8_t *)output + output_size) = '\0';
                 cmprflags = COUCHBASE_COMPRESSION_ZLIB;
-                PCBC_ZVAL_ALLOC(compressed);
+                ZVAL_UNDEF(&compressed);
                 PCBC_STRINGL(compressed, output, output_size);
                 efree(output);
 #else
@@ -640,7 +561,7 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
                 output_size += 4;
                 *((uint8_t *)output + output_size) = '\0';
                 cmprflags = COUCHBASE_COMPRESSION_FASTLZ;
-                PCBC_ZVAL_ALLOC(compressed);
+                ZVAL_UNDEF(&compressed);
                 PCBC_STRINGL(compressed, output, output_size);
                 efree(output);
             } else {
@@ -649,10 +570,7 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
             }
             if (cmprflags != COUCHBASE_COMPRESSION_NONE) {
                 if (PCBC_STRLEN_P(res) > PCBC_STRLEN_P(compressed) * cmprfactor) {
-                    zval_dtor(PCBC_P(res));
-#if PHP_VERSION_ID < 70000
-                    efree(res);
-#endif
+                    zval_dtor(&res);
                     res = compressed;
 
                     flags |= cmprflags;
@@ -662,31 +580,28 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
                     flags &= ~((unsigned int)COUCHBASE_CFFMT_MASK);
                     flags |= COUCHBASE_CFFMT_PRIVATE;
                 } else {
-                    zval_dtor(PCBC_P(compressed));
-#if PHP_VERSION_ID < 70000
-                    efree(compressed);
-#endif
+                    zval_dtor(&compressed);
                 }
             }
         }
     } while (0);
 
     array_init_size(return_value, 3);
-    add_index_zval(return_value, 0, PCBC_P(res));
+    add_index_zval(return_value, 0, &res);
 
-    PCBC_ZVAL_ALLOC(flg);
-    ZVAL_LONG(PCBC_P(flg), flags);
-    add_index_zval(return_value, 1, PCBC_P(flg));
+    ZVAL_UNDEF(&flg);
+    ZVAL_LONG(&flg, flags);
+    add_index_zval(return_value, 1, &flg);
 
-    PCBC_ZVAL_ALLOC(dtype);
-    ZVAL_LONG(PCBC_P(dtype), 0);
-    add_index_zval(return_value, 2, PCBC_P(dtype));
+    ZVAL_UNDEF(&dtype);
+    ZVAL_LONG(&dtype, 0);
+    add_index_zval(return_value, 2, &dtype);
 }
 
 static void basic_decoder_v1(char *bytes, int bytes_len, unsigned long flags, unsigned long datatype,
                              zend_bool jsonassoc, zval *return_value TSRMLS_DC)
 {
-    PCBC_ZVAL res;
+    zval res;
     int rv;
     unsigned int cffmt = 0; /* common flags */
     unsigned int sertype = 0;
@@ -697,7 +612,7 @@ static void basic_decoder_v1(char *bytes, int bytes_len, unsigned long flags, un
     sertype = flags & COUCHBASE_VAL_MASK;
     cmprtype = flags & COUCHBASE_COMPRESSION_MASK;
 
-    PCBC_ZVAL_ALLOC(res);
+    ZVAL_UNDEF(&res);
 
 #define DECODE_JSON                                                                                                    \
     do {                                                                                                               \
@@ -707,10 +622,10 @@ static void basic_decoder_v1(char *bytes, int bytes_len, unsigned long flags, un
         if (jsonassoc) {                                                                                               \
             options |= PHP_JSON_OBJECT_AS_ARRAY;                                                                       \
         }                                                                                                              \
-        PCBC_JSON_COPY_DECODE(PCBC_P(res), bytes, bytes_len, options, last_error);                                     \
+        PCBC_JSON_COPY_DECODE(&res, bytes, bytes_len, options, last_error);                                            \
         if (last_error != 0) {                                                                                         \
             pcbc_log(LOGARGS(WARN), "Failed to decode value as JSON: json_last_error=%d", last_error);                 \
-            ZVAL_NULL(PCBC_P(res));                                                                                    \
+            ZVAL_NULL(&res);                                                                                           \
         }                                                                                                              \
     } while (0)
 
@@ -763,7 +678,7 @@ static void basic_decoder_v1(char *bytes, int bytes_len, unsigned long flags, un
                 if (jsonassoc) {
                     options |= PHP_JSON_OBJECT_AS_ARRAY;
                 }
-                PCBC_JSON_COPY_DECODE(PCBC_P(res), bytes, bytes_len, options, last_error);
+                PCBC_JSON_COPY_DECODE(&res, bytes, bytes_len, options, last_error);
                 if (last_error == 0) {
                     break;
                 }
@@ -771,16 +686,16 @@ static void basic_decoder_v1(char *bytes, int bytes_len, unsigned long flags, un
             PCBC_STRINGL(res, bytes, bytes_len);
             break;
         case COUCHBASE_VAL_IS_LONG:
-            ZVAL_LONG(PCBC_P(res), strtol(bytes, NULL, 10));
+            ZVAL_LONG(&res, strtol(bytes, NULL, 10));
             break;
         case COUCHBASE_VAL_IS_DOUBLE:
-            ZVAL_DOUBLE(PCBC_P(res), zend_strtod(bytes, NULL));
+            ZVAL_DOUBLE(&res, zend_strtod(bytes, NULL));
             break;
         case COUCHBASE_VAL_IS_BOOL:
             if (bytes_len == 0) {
-                ZVAL_FALSE(PCBC_P(res));
+                ZVAL_FALSE(&res);
             } else {
-                ZVAL_TRUE(PCBC_P(res));
+                ZVAL_TRUE(&res);
             }
             break;
         case COUCHBASE_VAL_IS_JSON:
@@ -796,7 +711,7 @@ static void basic_decoder_v1(char *bytes, int bytes_len, unsigned long flags, un
                     pcbc_log(LOGARGS(WARN), "Failed to unserialize value at offset %ld of %d bytes",
                              (long)((char *)p - bytes), bytes_len);
                 }
-                ZVAL_NULL(PCBC_P(res));
+                ZVAL_NULL(&res);
             }
             PHP_VAR_UNSERIALIZE_DESTROY(var_hash);
         } break;
@@ -804,7 +719,7 @@ static void basic_decoder_v1(char *bytes, int bytes_len, unsigned long flags, un
 #if HAVE_COUCHBASE_IGBINARY
             if (igbinary_unserialize((uint8_t *)bytes, bytes_len, &res TSRMLS_CC)) {
                 pcbc_log(LOGARGS(WARN), "Failed to deserialize value with igbinary");
-                ZVAL_NULL(PCBC_P(res));
+                ZVAL_NULL(&res);
             }
             break;
 #else
@@ -813,7 +728,7 @@ static void basic_decoder_v1(char *bytes, int bytes_len, unsigned long flags, un
 #endif
         default:
             pcbc_log(LOGARGS(WARN), "Unknown serialization type: %d", cffmt);
-            ZVAL_NULL(PCBC_P(res));
+            ZVAL_NULL(&res);
         }
         break;
     case COUCHBASE_CFFMT_JSON:
@@ -825,14 +740,14 @@ static void basic_decoder_v1(char *bytes, int bytes_len, unsigned long flags, un
         break;
     default:
         pcbc_log(LOGARGS(WARN), "Unknown format specification: %d", cffmt);
-        ZVAL_NULL(PCBC_P(res));
+        ZVAL_NULL(&res);
     }
 #undef DECODE_JSON
     if (need_free) {
         efree(bytes);
     }
 
-    RETURN_ZVAL(PCBC_P(res), 1, 1);
+    RETURN_ZVAL(&res, 1, 1);
 }
 
 /* {{{ proto \Couchbase\couchbase_basic_encoder_v1(string $value, array $options = [
@@ -891,7 +806,7 @@ PHP_FUNCTION(basicEncoderV1)
 PHP_FUNCTION(basicDecoderV1)
 {
     char *bytes = NULL;
-    pcbc_str_arg_size bytes_len = -1;
+    size_t bytes_len = -1;
     unsigned long flags = 0, datatype = 0;
     zval *options = NULL;
     zend_bool json_array;
@@ -968,7 +883,7 @@ PHP_FUNCTION(defaultEncoder)
 PHP_FUNCTION(defaultDecoder)
 {
     char *bytes = NULL;
-    pcbc_str_arg_size bytes_len = -1;
+    size_t bytes_len = -1;
     unsigned long flags = 0, datatype = 0;
     zval *options = NULL;
     int rv;
@@ -999,11 +914,7 @@ PHP_FUNCTION(zlibCompress)
     compress((uint8_t *)dataOut + 4, &dataOutSize, dataIn, dataSize);
     *(uint32_t *)dataOut = dataSize;
 
-#if PHP_VERSION_ID >= 70000
     ZVAL_STRINGL(return_value, dataOut, 4 + dataOutSize);
-#else
-    ZVAL_STRINGL(return_value, dataOut, 4 + dataOutSize, 1);
-#endif
     efree(dataOut);
 #else
     zend_throw_exception(NULL, "The zlib library was not available when the couchbase extension was built.",
@@ -1028,11 +939,7 @@ PHP_FUNCTION(zlibDecompress)
     dataOut = emalloc(dataOutSize);
     uncompress(dataOut, &dataOutSize, (uint8_t *)dataIn + 4, dataSize - 4);
 
-#if PHP_VERSION_ID >= 70000
     ZVAL_STRINGL(return_value, dataOut, dataOutSize);
-#else
-    ZVAL_STRINGL(return_value, dataOut, dataOutSize, 1);
-#endif
     efree(dataOut);
 #else
     zend_throw_exception(NULL, "The zlib library was not available when the couchbase extension was built.",
@@ -1057,11 +964,7 @@ PHP_FUNCTION(fastlzCompress)
     dataOutSize = fastlz_compress(dataIn, dataSize, (uint8_t *)dataOut + 4);
     *(uint32_t *)dataOut = dataSize;
 
-#if PHP_VERSION_ID >= 70000
     ZVAL_STRINGL(return_value, dataOut, 4 + dataOutSize);
-#else
-    ZVAL_STRINGL(return_value, dataOut, 4 + dataOutSize, 1);
-#endif
 
     efree(dataOut);
 }
@@ -1082,11 +985,7 @@ PHP_FUNCTION(fastlzDecompress)
     dataOut = emalloc(dataOutSize);
     dataOutSize = fastlz_decompress((uint8_t *)dataIn + 4, dataSize - 4, dataOut, dataOutSize);
 
-#if PHP_VERSION_ID >= 70000
     ZVAL_STRINGL(return_value, dataOut, dataOutSize);
-#else
-    ZVAL_STRINGL(return_value, dataOut, dataOutSize, 1);
-#endif
 
     efree(dataOut);
 }

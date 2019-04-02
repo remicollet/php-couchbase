@@ -18,20 +18,19 @@
         <active>yes</active>
     </lead>
 
-    <date>2018-10-05</date>
+    <date>2019-05-01</date>
     <version>
-        <release>2.6.0</release>
-        <api>2.3.0</api>
+        <release>3.0.0.alpha.1</release>
+        <api>3.0.0</api>
     </version>
     <stability>
-        <release>stable</release>
-        <api>stable</api>
+        <release>alpha</release>
+        <api>alpha</api>
     </stability>
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        * PCBC-562: Allow disabling caching (persistent) connections by setting couchbase.pool.max_idle_time_sec to zero.
-        * PCBC-560: Positional, named and raw parameters for Analytics
+        * alpha release
     </notes>
     <contents>
         <dir name="/">
@@ -168,10 +167,10 @@
     <dependencies>
         <required>
             <php>
-                <min>5.6.0</min>
+                <min>7.1.0</min>
             </php>
             <pearinstaller>
-                <min>1.4.8</min>
+                <min>1.10.7</min>
             </pearinstaller>
         </required>
         <optional>
@@ -185,6 +184,23 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2018-10-05</date>
+            <version>
+                <release>2.6.0</release>
+                <api>2.3.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
+            </license>
+            <notes>
+                * PCBC-562: Allow disabling caching (persistent) connections by setting couchbase.pool.max_idle_time_sec to zero.
+                * PCBC-560: Positional, named and raw parameters for Analytics
+            </notes>
+        </release>
         <release>
             <date>2018-08-10</date>
             <version>

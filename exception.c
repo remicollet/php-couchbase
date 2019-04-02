@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -71,17 +71,9 @@ PHP_MINIT_FUNCTION(CouchbaseException)
 
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "Exception", NULL);
 
-#if ZEND_MODULE_API_NO >= 20060613
     default_exception_ce = (zend_class_entry *)zend_exception_get_default(TSRMLS_C);
-#else
-    default_exception_ce = zend_exception_get_default();
-#endif
 
-#if PHP_VERSION_ID >= 70000
     pcbc_exception_ce = zend_register_internal_class_ex(&ce, default_exception_ce TSRMLS_CC);
-#else
-    pcbc_exception_ce = zend_register_internal_class_ex(&ce, default_exception_ce, NULL TSRMLS_CC);
-#endif
 
     zend_register_class_alias("\\CouchbaseException", pcbc_exception_ce);
     return SUCCESS;

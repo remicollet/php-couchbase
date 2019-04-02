@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -105,7 +105,6 @@ PHP_METHOD(MutationState, from)
         ADD_TOKEN_FROM_ZVAL(source);
         break;
     case IS_ARRAY: {
-#if PHP_VERSION_ID >= 70000
         zval *entry;
 
         ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(source), entry)
@@ -113,16 +112,6 @@ PHP_METHOD(MutationState, from)
             ADD_TOKEN_FROM_ZVAL(entry);
         }
         ZEND_HASH_FOREACH_END();
-#else
-        HashPosition pos;
-        zval **entry;
-
-        zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(source), &pos);
-        while (zend_hash_get_current_data_ex(Z_ARRVAL_P(source), (void **)&entry, &pos) == SUCCESS) {
-            ADD_TOKEN_FROM_ZVAL(*entry);
-            zend_hash_move_forward_ex(Z_ARRVAL_P(source), &pos);
-        }
-#endif
     } break;
     default:
         throw_pcbc_exception(
@@ -148,7 +137,6 @@ PHP_METHOD(MutationState, add)
         ADD_TOKEN_FROM_ZVAL(source);
         break;
     case IS_ARRAY: {
-#if PHP_VERSION_ID >= 70000
         zval *entry;
 
         ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(source), entry)
@@ -156,16 +144,6 @@ PHP_METHOD(MutationState, add)
             ADD_TOKEN_FROM_ZVAL(entry);
         }
         ZEND_HASH_FOREACH_END();
-#else
-        HashPosition pos;
-        zval **entry;
-
-        zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(source), &pos);
-        while (zend_hash_get_current_data_ex(Z_ARRVAL_P(source), (void **)&entry, &pos) == SUCCESS) {
-            ADD_TOKEN_FROM_ZVAL(*entry);
-            zend_hash_move_forward_ex(Z_ARRVAL_P(source), &pos);
-        }
-#endif
     } break;
     default:
         throw_pcbc_exception(
@@ -183,34 +161,26 @@ void pcbc_mutation_state_export_for_n1ql(pcbc_mutation_state_t *obj, zval *scan_
     array_init(scan_vectors);
     token = obj->head;
     while (token) {
-        PCBC_ZVAL new_group;
+        zval new_group;
         zval *bucket_group;
         bucket_group = php_array_fetch(scan_vectors, token->bucket);
         if (!bucket_group) {
-            PCBC_ZVAL_ALLOC(new_group);
-            array_init(PCBC_P(new_group));
-#if PHP_VERSION_ID >= 70000
-            add_assoc_zval_ex(scan_vectors, token->bucket, strlen(token->bucket), PCBC_P(new_group));
-#else
-            add_assoc_zval_ex(scan_vectors, token->bucket, strlen(token->bucket) + 1, PCBC_P(new_group));
-#endif
-            bucket_group = PCBC_P(new_group);
+            ZVAL_UNDEF(&new_group);
+            array_init(&new_group);
+            add_assoc_zval_ex(scan_vectors, token->bucket, strlen(token->bucket), &new_group);
+            bucket_group = &new_group;
         }
         {
-            PCBC_ZVAL pair;
+            zval pair;
             char buf[22] = {0};
 
-            PCBC_ZVAL_ALLOC(pair);
-            array_init_size(PCBC_P(pair), 2);
-            add_next_index_long(PCBC_P(pair), PCBC_MUTATION_TOKEN_SEQ(token));
+            ZVAL_UNDEF(&pair);
+            array_init_size(&pair, 2);
+            add_next_index_long(&pair, PCBC_MUTATION_TOKEN_SEQ(token));
             snprintf(buf, 21, "%llu", (unsigned long long)PCBC_MUTATION_TOKEN_ID(token));
-            ADD_NEXT_INDEX_STRING(PCBC_P(pair), buf);
+            ADD_NEXT_INDEX_STRING(&pair, buf);
             snprintf(buf, 21, "%d", (int)PCBC_MUTATION_TOKEN_VB(token));
-#if PHP_VERSION_ID >= 70000
-            zend_hash_str_update(Z_ARRVAL_P(bucket_group), buf, strlen(buf), PCBC_P(pair) TSRMLS_CC);
-#else
-            zend_hash_update(Z_ARRVAL_P(bucket_group), buf, strlen(buf) + 1, &pair, sizeof(pair), NULL);
-#endif
+            zend_hash_str_update(Z_ARRVAL_P(bucket_group), buf, strlen(buf), &pair TSRMLS_CC);
         }
         token = token->next;
     }
@@ -266,7 +236,7 @@ void pcbc_mutation_state_init(zval *return_value, zval *source TSRMLS_DC)
     state->ntokens = 0;
 }
 
-static void mutation_state_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
+static void mutation_state_free_object(zend_object *object TSRMLS_DC) /* {{{ */
 {
     pcbc_mutation_state_t *obj = Z_MUTATION_STATE_OBJ(object);
     pcbc_mutation_token_t *token;
@@ -281,12 +251,9 @@ static void mutation_state_free_object(pcbc_free_object_arg *object TSRMLS_DC) /
     obj->head = obj->tail = NULL;
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    efree(obj);
-#endif
 } /* }}} */
 
-static pcbc_create_object_retval mutation_state_create_object(zend_class_entry *class_type TSRMLS_DC)
+static zend_object *mutation_state_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
     pcbc_mutation_state_t *obj = NULL;
 
@@ -295,28 +262,14 @@ static pcbc_create_object_retval mutation_state_create_object(zend_class_entry *
     zend_object_std_init(&obj->std, class_type TSRMLS_CC);
     object_properties_init(&obj->std, class_type);
 
-#if PHP_VERSION_ID >= 70000
     obj->std.handlers = &pcbc_mutation_state_handlers;
     return &obj->std;
-#else
-    {
-        zend_object_value ret;
-        ret.handle = zend_objects_store_put(obj, (zend_objects_store_dtor_t)zend_objects_destroy_object,
-                                            mutation_state_free_object, NULL TSRMLS_CC);
-        ret.handlers = &pcbc_mutation_state_handlers;
-        return ret;
-    }
-#endif
 }
 
 static HashTable *mutation_state_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
 {
     pcbc_mutation_state_t *obj = NULL;
-#if PHP_VERSION_ID >= 70000
     zval retval;
-#else
-    zval retval = zval_used_for_init;
-#endif
     pcbc_mutation_token_t *token;
 
     *is_temp = 1;
@@ -325,21 +278,21 @@ static HashTable *mutation_state_get_debug_info(zval *object, int *is_temp TSRML
     array_init_size(&retval, obj->ntokens);
     token = obj->head;
     while (token) {
-        PCBC_ZVAL t;
+        zval t;
         char *num36;
 
-        PCBC_ZVAL_ALLOC(t);
-        array_init_size(PCBC_P(t), 4);
+        ZVAL_UNDEF(&t);
+        array_init_size(&t, 4);
 
-        ADD_ASSOC_STRING(PCBC_P(t), "bucket", token->bucket);
-        ADD_ASSOC_LONG_EX(PCBC_P(t), "vbucketId", PCBC_MUTATION_TOKEN_VB(token));
+        ADD_ASSOC_STRING(&t, "bucket", token->bucket);
+        ADD_ASSOC_LONG_EX(&t, "vbucketId", PCBC_MUTATION_TOKEN_VB(token));
         num36 = pcbc_base36_encode_str(PCBC_MUTATION_TOKEN_ID(token));
-        ADD_ASSOC_STRING(PCBC_P(t), "vbucketUuid", num36);
+        ADD_ASSOC_STRING(&t, "vbucketUuid", num36);
         efree(num36);
         num36 = pcbc_base36_encode_str(PCBC_MUTATION_TOKEN_SEQ(token));
-        ADD_ASSOC_STRING(PCBC_P(t), "sequenceNumber", num36);
+        ADD_ASSOC_STRING(&t, "sequenceNumber", num36);
         efree(num36);
-        add_next_index_zval(&retval, PCBC_P(t));
+        add_next_index_zval(&retval, &t);
         token = token->next;
     }
     return Z_ARRVAL(retval);
@@ -356,10 +309,8 @@ PHP_MINIT_FUNCTION(MutationState)
 
     memcpy(&pcbc_mutation_state_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     pcbc_mutation_state_handlers.get_debug_info = mutation_state_get_debug_info;
-#if PHP_VERSION_ID >= 70000
     pcbc_mutation_state_handlers.free_obj = mutation_state_free_object;
     pcbc_mutation_state_handlers.offset = XtOffsetOf(pcbc_mutation_state_t, std);
-#endif
 
     zend_register_class_alias("\\CouchbaseMutationState", pcbc_mutation_state_ce);
     return SUCCESS;

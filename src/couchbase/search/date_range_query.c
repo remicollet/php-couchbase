@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 #include <ext/date/php_date.h>
 
 typedef struct {
-    PCBC_ZEND_OBJECT_PRE
+
     double boost;
     char *field;
     char *start;
@@ -32,21 +32,15 @@ typedef struct {
     char *date_time_parser;
     zend_bool inclusive_start;
     zend_bool inclusive_end;
-    PCBC_ZEND_OBJECT_POST
+    zend_object std;
 } pcbc_date_range_search_query_t;
 
-#if PHP_VERSION_ID >= 70000
 static inline pcbc_date_range_search_query_t *pcbc_date_range_search_query_fetch_object(zend_object *obj)
 {
     return (pcbc_date_range_search_query_t *)((char *)obj - XtOffsetOf(pcbc_date_range_search_query_t, std));
 }
 #define Z_DATE_RANGE_SEARCH_QUERY_OBJ(zo) (pcbc_date_range_search_query_fetch_object(zo))
 #define Z_DATE_RANGE_SEARCH_QUERY_OBJ_P(zv) (pcbc_date_range_search_query_fetch_object(Z_OBJ_P(zv)))
-#else
-#define Z_DATE_RANGE_SEARCH_QUERY_OBJ(zo) ((pcbc_date_range_search_query_t *)zo)
-#define Z_DATE_RANGE_SEARCH_QUERY_OBJ_P(zv)                                                                            \
-    ((pcbc_date_range_search_query_t *)zend_object_store_get_object(zv TSRMLS_CC))
-#endif
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/date_range_search_query", __FILE__, __LINE__
 
@@ -66,7 +60,7 @@ PHP_METHOD(DateRangeSearchQuery, field)
     pcbc_date_range_search_query_t *obj;
     char *field = NULL;
     int rv;
-    pcbc_str_arg_size field_len;
+    size_t field_len;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &field, &field_len);
     if (rv == FAILURE) {
@@ -89,7 +83,7 @@ PHP_METHOD(DateRangeSearchQuery, dateTimeParser)
     pcbc_date_range_search_query_t *obj;
     char *date_time_parser = NULL;
     int rv;
-    pcbc_str_arg_size date_time_parser_len;
+    size_t date_time_parser_len;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &date_time_parser, &date_time_parser_len);
     if (rv == FAILURE) {
@@ -148,13 +142,9 @@ PHP_METHOD(DateRangeSearchQuery, start)
         obj->start = estrndup(Z_STRVAL_P(start), Z_STRLEN_P(start));
         break;
     case IS_LONG: {
-#if PHP_VERSION_ID >= 70000
         zend_string *date_str = NULL;
         date_str = php_format_date(ZEND_STRL(PCBC_DATE_FORMAT_RFC3339), Z_LVAL_P(start), 1 TSRMLS_CC);
         obj->start = ZSTR_VAL(date_str);
-#else
-        obj->start = php_format_date(ZEND_STRL(PCBC_DATE_FORMAT_RFC3339), Z_LVAL_P(start), 1 TSRMLS_CC);
-#endif
     } break;
     default:
         throw_pcbc_exception("Date should be either formatted string or integer (Unix timestamp)", LCB_EINVAL);
@@ -188,13 +178,9 @@ PHP_METHOD(DateRangeSearchQuery, end)
         obj->end = estrndup(Z_STRVAL_P(end), Z_STRLEN_P(end));
         break;
     case IS_LONG: {
-#if PHP_VERSION_ID >= 70000
         zend_string *date_str = NULL;
         date_str = php_format_date(ZEND_STRL(PCBC_DATE_FORMAT_RFC3339), Z_LVAL_P(end), 1 TSRMLS_CC);
         obj->end = ZSTR_VAL(date_str);
-#else
-        obj->end = php_format_date(ZEND_STRL(PCBC_DATE_FORMAT_RFC3339), Z_LVAL_P(end), 1 TSRMLS_CC);
-#endif
     } break;
     default:
         throw_pcbc_exception("Date should be either formatted string or integer (Unix timestamp)", LCB_EINVAL);
@@ -287,7 +273,7 @@ void pcbc_date_range_search_query_init(zval *return_value TSRMLS_DC)
 
 zend_object_handlers date_range_search_query_handlers;
 
-static void date_range_search_query_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
+static void date_range_search_query_free_object(zend_object *object TSRMLS_DC) /* {{{ */
 {
     pcbc_date_range_search_query_t *obj = Z_DATE_RANGE_SEARCH_QUERY_OBJ(object);
 
@@ -305,12 +291,9 @@ static void date_range_search_query_free_object(pcbc_free_object_arg *object TSR
     }
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    efree(obj);
-#endif
 } /* }}} */
 
-static pcbc_create_object_retval date_range_search_query_create_object(zend_class_entry *class_type TSRMLS_DC)
+static zend_object *date_range_search_query_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
     pcbc_date_range_search_query_t *obj = NULL;
 
@@ -319,28 +302,14 @@ static pcbc_create_object_retval date_range_search_query_create_object(zend_clas
     zend_object_std_init(&obj->std, class_type TSRMLS_CC);
     object_properties_init(&obj->std, class_type);
 
-#if PHP_VERSION_ID >= 70000
     obj->std.handlers = &date_range_search_query_handlers;
     return &obj->std;
-#else
-    {
-        zend_object_value ret;
-        ret.handle = zend_objects_store_put(obj, (zend_objects_store_dtor_t)zend_objects_destroy_object,
-                                            date_range_search_query_free_object, NULL TSRMLS_CC);
-        ret.handlers = &date_range_search_query_handlers;
-        return ret;
-    }
-#endif
 }
 
 static HashTable *pcbc_date_range_search_query_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
 {
     pcbc_date_range_search_query_t *obj = NULL;
-#if PHP_VERSION_ID >= 70000
     zval retval;
-#else
-    zval retval = zval_used_for_init;
-#endif
 
     *is_temp = 1;
     obj = Z_DATE_RANGE_SEARCH_QUERY_OBJ_P(object);
@@ -380,10 +349,8 @@ PHP_MINIT_FUNCTION(DateRangeSearchQuery)
 
     memcpy(&date_range_search_query_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     date_range_search_query_handlers.get_debug_info = pcbc_date_range_search_query_get_debug_info;
-#if PHP_VERSION_ID >= 70000
     date_range_search_query_handlers.free_obj = date_range_search_query_free_object;
     date_range_search_query_handlers.offset = XtOffsetOf(pcbc_date_range_search_query_t, std);
-#endif
 
     zend_register_class_alias("\\CouchbaseDateRangeSearchQuery", pcbc_date_range_search_query_ce);
     return SUCCESS;

@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 typedef struct {
     opcookie_res header;
     lcb_U16 rflags;
-    PCBC_ZVAL row;
+    zval row;
 } opcookie_n1qlrow_res;
 
 static void n1qlrow_callback(lcb_t instance, int ignoreme, const lcb_RESPN1QL *resp)
@@ -32,8 +32,8 @@ static void n1qlrow_callback(lcb_t instance, int ignoreme, const lcb_RESPN1QL *r
 
     result->header.err = resp->rc;
     result->rflags = resp->rflags;
-    PCBC_ZVAL_ALLOC(result->row);
-    ZVAL_NULL(PCBC_P(result->row));
+    ZVAL_UNDEF(&result->row);
+    ZVAL_NULL(&result->row);
     if (cookie->json_response) {
         int last_error;
         int json_options = cookie->json_options;
@@ -42,7 +42,7 @@ static void n1qlrow_callback(lcb_t instance, int ignoreme, const lcb_RESPN1QL *r
             // parse meta into arrays
             json_options |= PHP_JSON_OBJECT_AS_ARRAY;
         }
-        PCBC_JSON_COPY_DECODE(PCBC_P(result->row), resp->row, resp->nrow, json_options, last_error);
+        PCBC_JSON_COPY_DECODE(&result->row, resp->row, resp->nrow, json_options, last_error);
         if (last_error != 0) {
             pcbc_log(LOGARGS(instance, WARN), "Failed to decode N1QL row as JSON: json_last_error=%d", last_error);
             PCBC_STRINGL(result->row, resp->row, resp->nrow);
@@ -52,9 +52,9 @@ static void n1qlrow_callback(lcb_t instance, int ignoreme, const lcb_RESPN1QL *r
     }
     if (result->header.err != LCB_SUCCESS) {
         int reported = 0;
-        if (Z_TYPE_P(PCBC_P(result->row)) == IS_ARRAY) {
+        if (Z_TYPE_P(&result->row) == IS_ARRAY) {
             zval *val;
-            val = php_array_fetch(PCBC_P(result->row), "errors");
+            val = php_array_fetch(&result->row, "errors");
             if (val) {
                 zval *err = php_array_fetch(val, "0");
                 if (err) {
@@ -67,8 +67,8 @@ static void n1qlrow_callback(lcb_t instance, int ignoreme, const lcb_RESPN1QL *r
                         char *m = NULL;
                         spprintf(&m, 0, "Failed to perform N1QL query. HTTP %d: code: %d, message: \"%*s\"",
                                  (int)resp->htresp->htstatus, (int)code, msg_len, msg);
-                        PCBC_ZVAL_ALLOC(cookie->exc);
-                        pcbc_exception_init(PCBC_P(cookie->exc), code, m TSRMLS_CC);
+                        ZVAL_UNDEF(&cookie->exc);
+                        pcbc_exception_init(&cookie->exc, code, m TSRMLS_CC);
                         reported = 1;
                         if (m) {
                             efree(m);
@@ -98,38 +98,38 @@ static lcb_error_t proc_n1qlrow_results(zval *return_value, opcookie *cookie TSR
     err = opcookie_get_first_error(cookie);
 
     if (err == LCB_SUCCESS) {
-        PCBC_ZVAL rows;
+        zval rows;
 
-        PCBC_ZVAL_ALLOC(rows);
-        array_init(PCBC_P(rows));
+        ZVAL_UNDEF(&rows);
+        array_init(&rows);
 
         object_init(return_value);
-        add_property_zval(return_value, "rows", PCBC_P(rows));
-        Z_DELREF_P(PCBC_P(rows));
+        add_property_zval(return_value, "rows", &rows);
+        Z_DELREF_P(&rows);
 
         FOREACH_OPCOOKIE_RES(opcookie_n1qlrow_res, res, cookie)
         {
             if (res->rflags & LCB_RESP_F_FINAL) {
                 zval *val;
-                val = php_array_fetch(PCBC_P(res->row), "requestID");
+                val = php_array_fetch(&res->row, "requestID");
                 if (val) {
                     add_property_zval(return_value, "requestId", val);
                 }
-                val = php_array_fetch(PCBC_P(res->row), "status");
+                val = php_array_fetch(&res->row, "status");
                 if (val) {
                     add_property_zval(return_value, "status", val);
                 }
-                val = php_array_fetch(PCBC_P(res->row), "signature");
+                val = php_array_fetch(&res->row, "signature");
                 if (val) {
                     add_property_zval(return_value, "signature", val);
                 }
-                val = php_array_fetch(PCBC_P(res->row), "metrics");
+                val = php_array_fetch(&res->row, "metrics");
                 if (val) {
                     add_property_zval(return_value, "metrics", val);
                 }
             } else {
-                add_next_index_zval(PCBC_P(rows), PCBC_P(res->row));
-                PCBC_ADDREF_P(PCBC_P(res->row));
+                add_next_index_zval(&rows, &res->row);
+                PCBC_ADDREF_P(&res->row);
             }
         }
     }
@@ -182,7 +182,7 @@ void pcbc_bucket_n1ql_request(pcbc_bucket_t *bucket, lcb_CMDN1QL *cmd, int json_
         if (Z_ISUNDEF(cookie->exc)) {
             throw_lcb_exception(err);
         } else {
-            zend_throw_exception_object(PCBC_P(cookie->exc) TSRMLS_CC);
+            zend_throw_exception_object(&cookie->exc TSRMLS_CC);
         }
     }
 #ifdef LCB_TRACING

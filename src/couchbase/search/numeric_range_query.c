@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 #include "couchbase.h"
 
 typedef struct {
-    PCBC_ZEND_OBJECT_PRE
+
     double boost;
     char *field;
     double min;
@@ -30,21 +30,15 @@ typedef struct {
     zend_bool inclusive_max;
     zend_bool min_set;
     zend_bool max_set;
-    PCBC_ZEND_OBJECT_POST
+    zend_object std;
 } pcbc_numeric_range_search_query_t;
 
-#if PHP_VERSION_ID >= 70000
 static inline pcbc_numeric_range_search_query_t *pcbc_numeric_range_search_query_fetch_object(zend_object *obj)
 {
     return (pcbc_numeric_range_search_query_t *)((char *)obj - XtOffsetOf(pcbc_numeric_range_search_query_t, std));
 }
 #define Z_NUMERIC_RANGE_SEARCH_QUERY_OBJ(zo) (pcbc_numeric_range_search_query_fetch_object(zo))
 #define Z_NUMERIC_RANGE_SEARCH_QUERY_OBJ_P(zv) (pcbc_numeric_range_search_query_fetch_object(Z_OBJ_P(zv)))
-#else
-#define Z_NUMERIC_RANGE_SEARCH_QUERY_OBJ(zo) ((pcbc_numeric_range_search_query_t *)zo)
-#define Z_NUMERIC_RANGE_SEARCH_QUERY_OBJ_P(zv)                                                                         \
-    ((pcbc_numeric_range_search_query_t *)zend_object_store_get_object(zv TSRMLS_CC))
-#endif
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/numeric_range_search_query", __FILE__, __LINE__
 
@@ -64,7 +58,7 @@ PHP_METHOD(NumericRangeSearchQuery, field)
     pcbc_numeric_range_search_query_t *obj;
     char *field = NULL;
     int rv;
-    pcbc_str_arg_size field_len;
+    size_t field_len;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &field, &field_len);
     if (rv == FAILURE) {
@@ -218,7 +212,7 @@ void pcbc_numeric_range_search_query_init(zval *return_value TSRMLS_DC)
 
 zend_object_handlers numeric_range_search_query_handlers;
 
-static void numeric_range_search_query_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
+static void numeric_range_search_query_free_object(zend_object *object TSRMLS_DC) /* {{{ */
 {
     pcbc_numeric_range_search_query_t *obj = Z_NUMERIC_RANGE_SEARCH_QUERY_OBJ(object);
 
@@ -227,12 +221,9 @@ static void numeric_range_search_query_free_object(pcbc_free_object_arg *object 
     }
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    efree(obj);
-#endif
 } /* }}} */
 
-static pcbc_create_object_retval numeric_range_search_query_create_object(zend_class_entry *class_type TSRMLS_DC)
+static zend_object *numeric_range_search_query_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
     pcbc_numeric_range_search_query_t *obj = NULL;
 
@@ -241,28 +232,14 @@ static pcbc_create_object_retval numeric_range_search_query_create_object(zend_c
     zend_object_std_init(&obj->std, class_type TSRMLS_CC);
     object_properties_init(&obj->std, class_type);
 
-#if PHP_VERSION_ID >= 70000
     obj->std.handlers = &numeric_range_search_query_handlers;
     return &obj->std;
-#else
-    {
-        zend_object_value ret;
-        ret.handle = zend_objects_store_put(obj, (zend_objects_store_dtor_t)zend_objects_destroy_object,
-                                            numeric_range_search_query_free_object, NULL TSRMLS_CC);
-        ret.handlers = &numeric_range_search_query_handlers;
-        return ret;
-    }
-#endif
 }
 
 static HashTable *pcbc_numeric_range_search_query_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
 {
     pcbc_numeric_range_search_query_t *obj = NULL;
-#if PHP_VERSION_ID >= 70000
     zval retval;
-#else
-    zval retval = zval_used_for_init;
-#endif
 
     *is_temp = 1;
     obj = Z_NUMERIC_RANGE_SEARCH_QUERY_OBJ_P(object);
@@ -299,10 +276,8 @@ PHP_MINIT_FUNCTION(NumericRangeSearchQuery)
 
     memcpy(&numeric_range_search_query_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     numeric_range_search_query_handlers.get_debug_info = pcbc_numeric_range_search_query_get_debug_info;
-#if PHP_VERSION_ID >= 70000
     numeric_range_search_query_handlers.free_obj = numeric_range_search_query_free_object;
     numeric_range_search_query_handlers.offset = XtOffsetOf(pcbc_numeric_range_search_query_t, std);
-#endif
 
     zend_register_class_alias("\\CouchbaseNumericRangeSearchQuery", pcbc_numeric_range_search_query_ce);
     return SUCCESS;

@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -19,6 +19,13 @@
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/search_query", __FILE__, __LINE__
 
+static inline pcbc_search_query_t *pcbc_search_query_fetch_object(zend_object *obj)
+{
+    return (pcbc_search_query_t *)((char *)obj - XtOffsetOf(pcbc_search_query_t, std));
+}
+#define Z_SEARCH_QUERY_OBJ(zo) (pcbc_search_query_fetch_object(zo))
+#define Z_SEARCH_QUERY_OBJ_P(zv) (pcbc_search_query_fetch_object(Z_OBJ_P(zv)))
+
 zend_class_entry *pcbc_search_query_ce;
 
 /* {{{ proto SearchQuery::__construct(string $indexName, \Couchbase\SearchQueryPart $queryPart) */
@@ -26,7 +33,7 @@ PHP_METHOD(SearchQuery, __construct)
 {
     pcbc_search_query_t *obj;
     char *index_name = NULL;
-    pcbc_str_arg_size index_name_len = 0;
+    size_t index_name_len = 0;
     zval *query_part;
     int rv;
 
@@ -44,17 +51,12 @@ PHP_METHOD(SearchQuery, __construct)
     obj->explain = 0;
     obj->highlight_style = NULL;
     obj->server_side_timeout = -1;
-#if PHP_VERSION_ID >= 70000
     ZVAL_ZVAL(&obj->query_part, query_part, 1, 0);
-#else
-    PCBC_ADDREF_P(query_part);
-    obj->query_part = query_part;
-#endif
-    ZVAL_UNDEF(PCBC_P(obj->consistency));
-    ZVAL_UNDEF(PCBC_P(obj->fields));
-    ZVAL_UNDEF(PCBC_P(obj->sort));
-    ZVAL_UNDEF(PCBC_P(obj->facets));
-    ZVAL_UNDEF(PCBC_P(obj->highlight_fields));
+    ZVAL_UNDEF(&obj->consistency);
+    ZVAL_UNDEF(&obj->fields);
+    ZVAL_UNDEF(&obj->sort);
+    ZVAL_UNDEF(&obj->facets);
+    ZVAL_UNDEF(&obj->highlight_fields);
 }
 /* }}} */
 
@@ -138,7 +140,7 @@ PHP_METHOD(SearchQuery, serverSideTimeout)
 PHP_METHOD(SearchQuery, match)
 {
     char *match = NULL;
-    pcbc_str_arg_size match_len = 0;
+    size_t match_len = 0;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &match, &match_len);
@@ -153,7 +155,7 @@ PHP_METHOD(SearchQuery, match)
 PHP_METHOD(SearchQuery, matchPhrase)
 {
     char *match_phrase = NULL;
-    pcbc_str_arg_size match_phrase_len = 0;
+    size_t match_phrase_len = 0;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &match_phrase, &match_phrase_len);
@@ -168,7 +170,7 @@ PHP_METHOD(SearchQuery, matchPhrase)
 PHP_METHOD(SearchQuery, queryString)
 {
     char *query_string = NULL;
-    pcbc_str_arg_size query_string_len = 0;
+    size_t query_string_len = 0;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &query_string, &query_string_len);
@@ -183,7 +185,7 @@ PHP_METHOD(SearchQuery, queryString)
 PHP_METHOD(SearchQuery, regexp)
 {
     char *regexp = NULL;
-    pcbc_str_arg_size regexp_len = 0;
+    size_t regexp_len = 0;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &regexp, &regexp_len);
@@ -211,11 +213,7 @@ PHP_METHOD(SearchQuery, booleanField)
 /* {{{ proto \Couchbase\DisjunctionSearchQuery SearchQuery::disjuncts(string ...$queries) */
 PHP_METHOD(SearchQuery, disjuncts)
 {
-#if PHP_VERSION_ID >= 70000
     zval *args = NULL;
-#else
-    zval ***args = NULL;
-#endif
     int rv, num_args = 0;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "+", &args, &num_args);
@@ -224,21 +222,12 @@ PHP_METHOD(SearchQuery, disjuncts)
     }
 
     pcbc_disjunction_search_query_init(return_value, args, num_args TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    if (args) {
-        efree(args);
-    }
-#endif
 } /* }}} */
 
 /* {{{ proto \Couchbase\ConjunctionSearchQuery SearchQuery::conjuncts(string ...$queries) */
 PHP_METHOD(SearchQuery, conjuncts)
 {
-#if PHP_VERSION_ID >= 70000
     zval *args = NULL;
-#else
-    zval ***args = NULL;
-#endif
     int rv, num_args = 0;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "+", &args, &num_args);
@@ -247,21 +236,12 @@ PHP_METHOD(SearchQuery, conjuncts)
     }
 
     pcbc_conjunction_search_query_init(return_value, args, num_args TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    if (args) {
-        efree(args);
-    }
-#endif
 } /* }}} */
 
 /* {{{ proto \Couchbase\PhraseSearchQuery SearchQuery::phrase(string ...$terms) */
 PHP_METHOD(SearchQuery, phrase)
 {
-#if PHP_VERSION_ID >= 70000
     zval *args = NULL;
-#else
-    zval ***args = NULL;
-#endif
     int rv, num_args = 0;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "+", &args, &num_args);
@@ -270,21 +250,12 @@ PHP_METHOD(SearchQuery, phrase)
     }
 
     pcbc_phrase_search_query_init(return_value, args, num_args TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    if (args) {
-        efree(args);
-    }
-#endif
 } /* }}} */
 
 /* {{{ proto \Couchbase\DocIdSearchQuery SearchQuery::docId(string ...$documentIds) */
 PHP_METHOD(SearchQuery, docId)
 {
-#if PHP_VERSION_ID >= 70000
     zval *args = NULL;
-#else
-    zval ***args = NULL;
-#endif
     int rv, num_args = 0;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "+", &args, &num_args);
@@ -293,18 +264,13 @@ PHP_METHOD(SearchQuery, docId)
     }
 
     pcbc_doc_id_search_query_init(return_value, args, num_args TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    if (args) {
-        efree(args);
-    }
-#endif
 } /* }}} */
 
 /* {{{ proto \Couchbase\WildcardSearchQuery SearchQuery::wildcard(string $wildcard) */
 PHP_METHOD(SearchQuery, wildcard)
 {
     char *wildcard = NULL;
-    pcbc_str_arg_size wildcard_len = 0;
+    size_t wildcard_len = 0;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &wildcard, &wildcard_len);
@@ -319,7 +285,7 @@ PHP_METHOD(SearchQuery, wildcard)
 PHP_METHOD(SearchQuery, term)
 {
     char *term = NULL;
-    pcbc_str_arg_size term_len = 0;
+    size_t term_len = 0;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &term, &term_len);
@@ -334,7 +300,7 @@ PHP_METHOD(SearchQuery, term)
 PHP_METHOD(SearchQuery, prefix)
 {
     char *prefix = NULL;
-    pcbc_str_arg_size prefix_len = 0;
+    size_t prefix_len = 0;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &prefix, &prefix_len);
@@ -430,7 +396,7 @@ PHP_METHOD(SearchQuery, geoDistance)
     double longitude = 0;
     double latitude = 0;
     char *distance = NULL;
-    pcbc_str_arg_size distance_len = 0;
+    size_t distance_len = 0;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "dds", &longitude, &latitude, &distance, &distance_len);
@@ -465,7 +431,7 @@ PHP_METHOD(SearchQuery, geoBoundingBox)
 PHP_METHOD(SearchQuery, termFacet)
 {
     char *field = NULL;
-    pcbc_str_arg_size field_len = 0;
+    size_t field_len = 0;
     long limit;
     int rv;
 
@@ -481,7 +447,7 @@ PHP_METHOD(SearchQuery, termFacet)
 PHP_METHOD(SearchQuery, dateRangeFacet)
 {
     char *field = NULL;
-    pcbc_str_arg_size field_len = 0;
+    size_t field_len = 0;
     long limit;
     int rv;
 
@@ -497,7 +463,7 @@ PHP_METHOD(SearchQuery, dateRangeFacet)
 PHP_METHOD(SearchQuery, numericRangeFacet)
 {
     char *field = NULL;
-    pcbc_str_arg_size field_len = 0;
+    size_t field_len = 0;
     long limit;
     int rv;
 
@@ -515,7 +481,7 @@ PHP_METHOD(SearchQuery, consistentWith)
     pcbc_search_query_t *obj;
     int rv;
     zval *mutation_state = NULL;
-    PCBC_ZVAL scan_vectors;
+    zval scan_vectors;
     pcbc_mutation_state_t *state;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "O", &mutation_state, pcbc_mutation_state_ce);
@@ -532,22 +498,22 @@ PHP_METHOD(SearchQuery, consistentWith)
     obj = Z_SEARCH_QUERY_OBJ_P(getThis());
     if (!Z_ISUNDEF(obj->consistency)) {
         zval_ptr_dtor(&obj->consistency);
-        ZVAL_UNDEF(PCBC_P(obj->consistency));
+        ZVAL_UNDEF(&obj->consistency);
     }
 
-    PCBC_ZVAL_ALLOC(scan_vectors);
-    pcbc_mutation_state_export_for_search(state, PCBC_P(scan_vectors) TSRMLS_CC);
+    ZVAL_UNDEF(&scan_vectors);
+    pcbc_mutation_state_export_for_search(state, &scan_vectors TSRMLS_CC);
 
-    PCBC_ZVAL_ALLOC(obj->consistency);
-    array_init_size(PCBC_P(obj->consistency), 2);
-    ADD_ASSOC_STRING(PCBC_P(obj->consistency), "level", "at_plus");
+    ZVAL_UNDEF(&obj->consistency);
+    array_init_size(&obj->consistency, 2);
+    ADD_ASSOC_STRING(&obj->consistency, "level", "at_plus");
     {
-        PCBC_ZVAL indexed_vectors;
+        zval indexed_vectors;
 
-        PCBC_ZVAL_ALLOC(indexed_vectors);
-        array_init_size(PCBC_P(indexed_vectors), 1);
-        add_assoc_zval_ex(PCBC_P(indexed_vectors), obj->index_name, strlen(obj->index_name) + 1, PCBC_P(scan_vectors));
-        ADD_ASSOC_ZVAL_EX(PCBC_P(obj->consistency), "vectors", PCBC_P(indexed_vectors));
+        ZVAL_UNDEF(&indexed_vectors);
+        array_init_size(&indexed_vectors, 1);
+        add_assoc_zval_ex(&indexed_vectors, obj->index_name, strlen(obj->index_name) + 1, &scan_vectors);
+        ADD_ASSOC_ZVAL_EX(&obj->consistency, "vectors", &indexed_vectors);
     }
 
     RETURN_ZVAL(getThis(), 1, 0);
@@ -558,7 +524,7 @@ PHP_METHOD(SearchQuery, addFacet)
 {
     pcbc_search_query_t *obj;
     char *name = NULL;
-    pcbc_str_arg_size name_len = 0;
+    size_t name_len = 0;
     zval *facet;
     int rv;
 
@@ -569,15 +535,11 @@ PHP_METHOD(SearchQuery, addFacet)
 
     obj = Z_SEARCH_QUERY_OBJ_P(getThis());
     if (Z_ISUNDEF(obj->facets)) {
-        PCBC_ZVAL_ALLOC(obj->facets);
-        array_init(PCBC_P(obj->facets));
+        ZVAL_UNDEF(&obj->facets);
+        array_init(&obj->facets);
     }
 
-#if PHP_VERSION_ID >= 70000
-    add_assoc_zval_ex(PCBC_P(obj->facets), name, name_len, facet);
-#else
-    add_assoc_zval_ex(PCBC_P(obj->facets), name, name_len + 1, facet);
-#endif
+    add_assoc_zval_ex(&obj->facets, name, name_len, facet);
     PCBC_ADDREF_P(facet);
 
     RETURN_ZVAL(getThis(), 1, 0);
@@ -587,11 +549,7 @@ PHP_METHOD(SearchQuery, addFacet)
 PHP_METHOD(SearchQuery, fields)
 {
     pcbc_search_query_t *obj;
-#if PHP_VERSION_ID >= 70000
     zval *args = NULL;
-#else
-    zval ***args = NULL;
-#endif
     int num_args = 0;
     int rv;
 
@@ -602,31 +560,22 @@ PHP_METHOD(SearchQuery, fields)
 
     obj = Z_SEARCH_QUERY_OBJ_P(getThis());
     if (Z_ISUNDEF(obj->fields)) {
-        PCBC_ZVAL_ALLOC(obj->fields);
-        array_init(PCBC_P(obj->fields));
+        ZVAL_UNDEF(&obj->fields);
+        array_init(&obj->fields);
     }
     if (num_args && args) {
         int i;
         for (i = 0; i < num_args; ++i) {
-            PCBC_ZVAL *field;
-#if PHP_VERSION_ID >= 70000
+            zval *field;
             field = &args[i];
-#else
-            field = args[i];
-#endif
-            if (Z_TYPE_P(PCBC_P(*field)) != IS_STRING) {
+            if (Z_TYPE_P(field) != IS_STRING) {
                 pcbc_log(LOGARGS(WARN), "field has to be a string (skipping argument #%d)", i);
                 continue;
             }
-            add_next_index_zval(PCBC_P(obj->fields), PCBC_P(*field));
-            PCBC_ADDREF_P(PCBC_P(*field));
+            add_next_index_zval(&obj->fields, field);
+            PCBC_ADDREF_P(field);
         }
     }
-#if PHP_VERSION_ID < 70000
-    if (args) {
-        efree(args);
-    }
-#endif
 
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
@@ -635,11 +584,7 @@ PHP_METHOD(SearchQuery, fields)
 PHP_METHOD(SearchQuery, sort)
 {
     pcbc_search_query_t *obj;
-#if PHP_VERSION_ID >= 70000
     zval *args = NULL;
-#else
-    zval ***args = NULL;
-#endif
     int num_args = 0;
     int rv;
 
@@ -650,33 +595,24 @@ PHP_METHOD(SearchQuery, sort)
 
     obj = Z_SEARCH_QUERY_OBJ_P(getThis());
     if (Z_ISUNDEF(obj->sort)) {
-        PCBC_ZVAL_ALLOC(obj->sort);
-        array_init(PCBC_P(obj->sort));
+        ZVAL_UNDEF(&obj->sort);
+        array_init(&obj->sort);
     }
     if (num_args && args) {
         int i;
         for (i = 0; i < num_args; ++i) {
-            PCBC_ZVAL *field;
-#if PHP_VERSION_ID >= 70000
+            zval *field;
             field = &args[i];
-#else
-            field = args[i];
-#endif
-            if (Z_TYPE_P(PCBC_P(*field)) != IS_STRING &&
-                (Z_TYPE_P(PCBC_P(*field)) != IS_OBJECT ||
-                 !instanceof_function(Z_OBJCE_P(PCBC_P(*field)), pcbc_search_sort_ce TSRMLS_CC))) {
+            if (Z_TYPE_P(field) != IS_STRING &&
+                (Z_TYPE_P(field) != IS_OBJECT ||
+                 !instanceof_function(Z_OBJCE_P(field), pcbc_search_sort_ce TSRMLS_CC))) {
                 pcbc_log(LOGARGS(WARN), "field has to be a string or SearchSort (skipping argument #%d)", i);
                 continue;
             }
-            add_next_index_zval(PCBC_P(obj->sort), PCBC_P(*field));
-            PCBC_ADDREF_P(PCBC_P(*field));
+            add_next_index_zval(&obj->sort, field);
+            PCBC_ADDREF_P(field);
         }
     }
-#if PHP_VERSION_ID < 70000
-    if (args) {
-        efree(args);
-    }
-#endif
 
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
@@ -688,13 +624,9 @@ PHP_METHOD(SearchQuery, highlight)
 {
     pcbc_search_query_t *obj;
     char *style = NULL;
-#if PHP_VERSION_ID >= 70000
     zval *args = NULL;
-#else
-    zval ***args = NULL;
-#endif
     int rv, num_args = 0;
-    pcbc_str_arg_size style_len;
+    size_t style_len;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s*", &style, &style_len, &args, &num_args);
     if (rv == FAILURE) {
@@ -707,37 +639,28 @@ PHP_METHOD(SearchQuery, highlight)
     }
     if (!Z_ISUNDEF(obj->highlight_fields)) {
         zval_ptr_dtor(&obj->highlight_fields);
-        ZVAL_UNDEF(PCBC_P(obj->highlight_fields));
+        ZVAL_UNDEF(&obj->highlight_fields);
     }
     if (style) {
         obj->highlight_style = estrndup(style, style_len);
         if (Z_ISUNDEF(obj->highlight_fields)) {
-            PCBC_ZVAL_ALLOC(obj->highlight_fields);
-            array_init(PCBC_P(obj->highlight_fields));
+            ZVAL_UNDEF(&obj->highlight_fields);
+            array_init(&obj->highlight_fields);
         }
         if (num_args && args) {
             int i;
             for (i = 0; i < num_args; ++i) {
-                PCBC_ZVAL *field;
-#if PHP_VERSION_ID >= 70000
+                zval *field;
                 field = &args[i];
-#else
-                field = args[i];
-#endif
-                if (Z_TYPE_P(PCBC_P(*field)) != IS_STRING) {
+                if (Z_TYPE_P(field) != IS_STRING) {
                     pcbc_log(LOGARGS(WARN), "field has to be a string (skipping argument #%d)", i);
                     continue;
                 }
-                add_next_index_zval(PCBC_P(obj->highlight_fields), PCBC_P(*field));
-                PCBC_ADDREF_P(PCBC_P(*field));
+                add_next_index_zval(&obj->highlight_fields, field);
+                PCBC_ADDREF_P(field);
             }
         }
     }
-#if PHP_VERSION_ID < 70000
-    if (args) {
-        efree(args);
-    }
-#endif
 
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
@@ -767,48 +690,48 @@ PHP_METHOD(SearchQuery, jsonSerialize)
         ADD_ASSOC_LONG_EX(return_value, "from", obj->skip);
     }
     if (obj->server_side_timeout >= 0 || !Z_ISUNDEF(obj->consistency)) {
-        PCBC_ZVAL control;
+        zval control;
 
-        PCBC_ZVAL_ALLOC(control);
-        array_init(PCBC_P(control));
-        ADD_ASSOC_ZVAL_EX(return_value, "ctl", PCBC_P(control));
+        ZVAL_UNDEF(&control);
+        array_init(&control);
+        ADD_ASSOC_ZVAL_EX(return_value, "ctl", &control);
 
         if (obj->server_side_timeout >= 0) {
-            ADD_ASSOC_LONG_EX(PCBC_P(control), "timeout", obj->server_side_timeout);
+            ADD_ASSOC_LONG_EX(&control, "timeout", obj->server_side_timeout);
         }
         if (!Z_ISUNDEF(obj->consistency)) {
-            ADD_ASSOC_ZVAL_EX(PCBC_P(control), "consistency", PCBC_P(obj->consistency));
-            PCBC_ADDREF_P(PCBC_P(obj->consistency));
+            ADD_ASSOC_ZVAL_EX(&control, "consistency", &obj->consistency);
+            PCBC_ADDREF_P(&obj->consistency);
         }
     }
     if (!Z_ISUNDEF(obj->fields)) {
-        ADD_ASSOC_ZVAL_EX(return_value, "fields", PCBC_P(obj->fields));
-        PCBC_ADDREF_P(PCBC_P(obj->fields));
+        ADD_ASSOC_ZVAL_EX(return_value, "fields", &obj->fields);
+        PCBC_ADDREF_P(&obj->fields);
     }
     if (!Z_ISUNDEF(obj->sort)) {
-        ADD_ASSOC_ZVAL_EX(return_value, "sort", PCBC_P(obj->sort));
-        PCBC_ADDREF_P(PCBC_P(obj->sort));
+        ADD_ASSOC_ZVAL_EX(return_value, "sort", &obj->sort);
+        PCBC_ADDREF_P(&obj->sort);
     }
     if (!Z_ISUNDEF(obj->facets)) {
-        ADD_ASSOC_ZVAL_EX(return_value, "facets", PCBC_P(obj->facets));
-        PCBC_ADDREF_P(PCBC_P(obj->facets));
+        ADD_ASSOC_ZVAL_EX(return_value, "facets", &obj->facets);
+        PCBC_ADDREF_P(&obj->facets);
     }
     if (obj->highlight_style != NULL && !Z_ISUNDEF(obj->highlight_fields)) {
-        PCBC_ZVAL highlight;
+        zval highlight;
 
-        PCBC_ZVAL_ALLOC(highlight);
-        array_init(PCBC_P(highlight));
-        ADD_ASSOC_ZVAL_EX(return_value, "highlight", PCBC_P(highlight));
+        ZVAL_UNDEF(&highlight);
+        array_init(&highlight);
+        ADD_ASSOC_ZVAL_EX(return_value, "highlight", &highlight);
 
-        ADD_ASSOC_STRING(PCBC_P(highlight), "style", obj->highlight_style);
-        if (php_array_count(PCBC_P(obj->highlight_fields)) > 0) {
-            ADD_ASSOC_ZVAL_EX(PCBC_P(highlight), "fields", PCBC_P(obj->highlight_fields));
+        ADD_ASSOC_STRING(&highlight, "style", obj->highlight_style);
+        if (php_array_count(&obj->highlight_fields) > 0) {
+            ADD_ASSOC_ZVAL_EX(&highlight, "fields", &obj->highlight_fields);
         }
-        PCBC_ADDREF_P(PCBC_P(obj->highlight_fields));
+        PCBC_ADDREF_P(&obj->highlight_fields);
     }
     if (!Z_ISUNDEF(obj->query_part)) {
-        ADD_ASSOC_ZVAL_EX(return_value, "query", PCBC_P(obj->query_part));
-        PCBC_ADDREF_P(PCBC_P(obj->query_part));
+        ADD_ASSOC_ZVAL_EX(return_value, "query", &obj->query_part);
+        PCBC_ADDREF_P(&obj->query_part);
     }
 } /* }}} */
 
@@ -966,7 +889,7 @@ zend_function_entry search_query_methods[] = {
 
 zend_object_handlers search_query_handlers;
 
-static void search_query_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
+static void search_query_free_object(zend_object *object TSRMLS_DC) /* {{{ */
 {
     pcbc_search_query_t *obj = Z_SEARCH_QUERY_OBJ(object);
 
@@ -978,36 +901,33 @@ static void search_query_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* 
     }
     if (!Z_ISUNDEF(obj->query_part)) {
         zval_ptr_dtor(&obj->query_part);
-        ZVAL_UNDEF(PCBC_P(obj->query_part));
+        ZVAL_UNDEF(&obj->query_part);
     }
     if (!Z_ISUNDEF(obj->consistency)) {
         zval_ptr_dtor(&obj->consistency);
-        ZVAL_UNDEF(PCBC_P(obj->consistency));
+        ZVAL_UNDEF(&obj->consistency);
     }
     if (!Z_ISUNDEF(obj->fields)) {
         zval_ptr_dtor(&obj->fields);
-        ZVAL_UNDEF(PCBC_P(obj->fields));
+        ZVAL_UNDEF(&obj->fields);
     }
     if (!Z_ISUNDEF(obj->sort)) {
         zval_ptr_dtor(&obj->sort);
-        ZVAL_UNDEF(PCBC_P(obj->sort));
+        ZVAL_UNDEF(&obj->sort);
     }
     if (!Z_ISUNDEF(obj->facets)) {
         zval_ptr_dtor(&obj->facets);
-        ZVAL_UNDEF(PCBC_P(obj->facets));
+        ZVAL_UNDEF(&obj->facets);
     }
     if (!Z_ISUNDEF(obj->highlight_fields)) {
         zval_ptr_dtor(&obj->highlight_fields);
-        ZVAL_UNDEF(PCBC_P(obj->highlight_fields));
+        ZVAL_UNDEF(&obj->highlight_fields);
     }
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    efree(obj);
-#endif
 } /* }}} */
 
-static pcbc_create_object_retval search_query_create_object(zend_class_entry *class_type TSRMLS_DC)
+static zend_object *search_query_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
     pcbc_search_query_t *obj = NULL;
 
@@ -1016,28 +936,14 @@ static pcbc_create_object_retval search_query_create_object(zend_class_entry *cl
     zend_object_std_init(&obj->std, class_type TSRMLS_CC);
     object_properties_init(&obj->std, class_type);
 
-#if PHP_VERSION_ID >= 70000
     obj->std.handlers = &search_query_handlers;
     return &obj->std;
-#else
-    {
-        zend_object_value ret;
-        ret.handle = zend_objects_store_put(obj, (zend_objects_store_dtor_t)zend_objects_destroy_object,
-                                            search_query_free_object, NULL TSRMLS_CC);
-        ret.handlers = &search_query_handlers;
-        return ret;
-    }
-#endif
 }
 
 static HashTable *pcbc_search_query_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
 {
     pcbc_search_query_t *obj = NULL;
-#if PHP_VERSION_ID >= 70000
     zval retval;
-#else
-    zval retval = zval_used_for_init;
-#endif
 
     *is_temp = 1;
     obj = Z_SEARCH_QUERY_OBJ_P(object);
@@ -1057,31 +963,31 @@ static HashTable *pcbc_search_query_get_debug_info(zval *object, int *is_temp TS
         ADD_ASSOC_LONG_EX(&retval, "serverSideTimeout", obj->server_side_timeout);
     }
     if (!Z_ISUNDEF(obj->fields)) {
-        ADD_ASSOC_ZVAL_EX(&retval, "fields", PCBC_P(obj->fields));
-        PCBC_ADDREF_P(PCBC_P(obj->fields));
+        ADD_ASSOC_ZVAL_EX(&retval, "fields", &obj->fields);
+        PCBC_ADDREF_P(&obj->fields);
     }
     if (!Z_ISUNDEF(obj->sort)) {
-        ADD_ASSOC_ZVAL_EX(&retval, "sort", PCBC_P(obj->sort));
-        PCBC_ADDREF_P(PCBC_P(obj->sort));
+        ADD_ASSOC_ZVAL_EX(&retval, "sort", &obj->sort);
+        PCBC_ADDREF_P(&obj->sort);
     }
     if (!Z_ISUNDEF(obj->facets)) {
-        ADD_ASSOC_ZVAL_EX(&retval, "facets", PCBC_P(obj->facets));
-        PCBC_ADDREF_P(PCBC_P(obj->facets));
+        ADD_ASSOC_ZVAL_EX(&retval, "facets", &obj->facets);
+        PCBC_ADDREF_P(&obj->facets);
     }
     if (obj->highlight_style != NULL) {
         ADD_ASSOC_STRING(&retval, "highlightStyle", obj->highlight_style);
     }
     if (!Z_ISUNDEF(obj->highlight_fields)) {
-        ADD_ASSOC_ZVAL_EX(&retval, "highlightFields", PCBC_P(obj->highlight_fields));
-        PCBC_ADDREF_P(PCBC_P(obj->highlight_fields));
+        ADD_ASSOC_ZVAL_EX(&retval, "highlightFields", &obj->highlight_fields);
+        PCBC_ADDREF_P(&obj->highlight_fields);
     }
     if (!Z_ISUNDEF(obj->consistency)) {
-        ADD_ASSOC_ZVAL_EX(&retval, "consistency", PCBC_P(obj->consistency));
-        PCBC_ADDREF_P(PCBC_P(obj->consistency));
+        ADD_ASSOC_ZVAL_EX(&retval, "consistency", &obj->consistency);
+        PCBC_ADDREF_P(&obj->consistency);
     }
     if (!Z_ISUNDEF(obj->query_part)) {
-        ADD_ASSOC_ZVAL_EX(&retval, "queryPart", PCBC_P(obj->query_part));
-        PCBC_ADDREF_P(PCBC_P(obj->query_part));
+        ADD_ASSOC_ZVAL_EX(&retval, "queryPart", &obj->query_part);
+        PCBC_ADDREF_P(&obj->query_part);
     } else {
         ADD_ASSOC_NULL_EX(&retval, "queryPart");
     }
@@ -1107,10 +1013,8 @@ PHP_MINIT_FUNCTION(SearchQuery)
 
     memcpy(&search_query_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     search_query_handlers.get_debug_info = pcbc_search_query_get_debug_info;
-#if PHP_VERSION_ID >= 70000
     search_query_handlers.free_obj = search_query_free_object;
     search_query_handlers.offset = XtOffsetOf(pcbc_search_query_t, std);
-#endif
 
     zend_register_class_alias("\\CouchbaseSearchQuery", pcbc_search_query_ce);
     return SUCCESS;

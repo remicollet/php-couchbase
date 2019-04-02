@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ PHP_METHOD(Cluster, __construct)
 {
     pcbc_cluster_t *obj;
     char *connstr;
-    pcbc_str_arg_size connstr_len = 0;
+    size_t connstr_len = 0;
     int rv;
 
     obj = Z_CLUSTER_OBJ_P(getThis());
@@ -43,7 +43,7 @@ PHP_METHOD(Cluster, __construct)
         connstr = DEFAULT_CONNECTION_STRING;
     }
     obj->connstr = estrdup(connstr);
-    ZVAL_UNDEF(PCBC_P(obj->auth));
+    ZVAL_UNDEF(&obj->auth);
     pcbc_log(LOGARGS(DEBUG), "Initialize Cluster. C=%p connstr=\"%s\"", (void *)obj, obj->connstr);
 }
 /* }}} */
@@ -54,7 +54,7 @@ PHP_METHOD(Cluster, openBucket)
 {
     pcbc_cluster_t *obj;
     const char *bucketname = NULL, *password = NULL;
-    pcbc_str_arg_size bucketname_len = 0, password_len = 0;
+    size_t bucketname_len = 0, password_len = 0;
     int rv;
 
     obj = Z_CLUSTER_OBJ_P(getThis());
@@ -76,7 +76,7 @@ PHP_METHOD(Cluster, manager)
 {
     pcbc_cluster_t *obj;
     const char *name = NULL, *password = NULL;
-    pcbc_str_arg_size name_len = 0, password_len = 0;
+    size_t name_len = 0, password_len = 0;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|ss", &name, &name_len, &password, &password_len);
@@ -101,14 +101,9 @@ PHP_METHOD(Cluster, authenticate)
     obj = Z_CLUSTER_OBJ_P(getThis());
     if (!Z_ISUNDEF(obj->auth)) {
         zval_ptr_dtor(&obj->auth);
-        ZVAL_UNDEF(PCBC_P(obj->auth));
+        ZVAL_UNDEF(&obj->auth);
     }
-#if PHP_VERSION_ID >= 70000
     ZVAL_ZVAL(&obj->auth, authenticator, 1, 0);
-#else
-    PCBC_ADDREF_P(authenticator);
-    obj->auth = authenticator;
-#endif
 
     RETURN_NULL();
 } /* }}} */
@@ -117,27 +112,23 @@ PHP_METHOD(Cluster, authenticate)
 PHP_METHOD(Cluster, authenticateAs)
 {
     pcbc_cluster_t *obj;
-    PCBC_ZVAL authenticator;
+    zval authenticator;
     char *username = NULL, *password = NULL;
-    pcbc_str_arg_size username_len = 0, password_len = 0;
+    size_t username_len = 0, password_len = 0;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &username, &username_len, &password, &password_len);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    PCBC_ZVAL_ALLOC(authenticator);
-    pcbc_password_authenticator_init(PCBC_P(authenticator), username, username_len, password, password_len TSRMLS_CC);
+    ZVAL_UNDEF(&authenticator);
+    pcbc_password_authenticator_init(&authenticator, username, username_len, password, password_len TSRMLS_CC);
     obj = Z_CLUSTER_OBJ_P(getThis());
     if (!Z_ISUNDEF(obj->auth)) {
         zval_ptr_dtor(&obj->auth);
-        ZVAL_UNDEF(PCBC_P(obj->auth));
+        ZVAL_UNDEF(&obj->auth);
     }
-#if PHP_VERSION_ID >= 70000
-    ZVAL_ZVAL(&obj->auth, PCBC_P(authenticator), 0, 0);
-#else
-    obj->auth = authenticator;
-#endif
+    ZVAL_ZVAL(&obj->auth, &authenticator, 0, 0);
 
     RETURN_NULL();
 } /* }}} */
@@ -178,25 +169,22 @@ zend_function_entry cluster_methods[] = {
 
 zend_object_handlers pcbc_cluster_handlers;
 
-static void pcbc_cluster_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
+static void pcbc_cluster_free_object(zend_object *object TSRMLS_DC) /* {{{ */
 {
     pcbc_cluster_t *obj = Z_CLUSTER_OBJ(object);
 
     if (!Z_ISUNDEF(obj->auth)) {
         zval_ptr_dtor(&obj->auth);
-        ZVAL_UNDEF(PCBC_P(obj->auth));
+        ZVAL_UNDEF(&obj->auth);
     }
     if (obj->connstr != NULL) {
         efree(obj->connstr);
     }
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    efree(obj);
-#endif
 } /* }}} */
 
-static pcbc_create_object_retval pcbc_cluster_create_object(zend_class_entry *class_type TSRMLS_DC)
+static zend_object *pcbc_cluster_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
     pcbc_cluster_t *obj = NULL;
 
@@ -205,28 +193,14 @@ static pcbc_create_object_retval pcbc_cluster_create_object(zend_class_entry *cl
     zend_object_std_init(&obj->std, class_type TSRMLS_CC);
     object_properties_init(&obj->std, class_type);
 
-#if PHP_VERSION_ID >= 70000
     obj->std.handlers = &pcbc_cluster_handlers;
     return &obj->std;
-#else
-    {
-        zend_object_value ret;
-        ret.handle = zend_objects_store_put(obj, (zend_objects_store_dtor_t)zend_objects_destroy_object,
-                                            pcbc_cluster_free_object, NULL TSRMLS_CC);
-        ret.handlers = &pcbc_cluster_handlers;
-        return ret;
-    }
-#endif
 }
 
 static HashTable *pcbc_cluster_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
 {
     pcbc_cluster_t *obj = NULL;
-#if PHP_VERSION_ID >= 70000
     zval retval;
-#else
-    zval retval = zval_used_for_init;
-#endif
 
     *is_temp = 1;
     obj = Z_CLUSTER_OBJ_P(object);
@@ -234,8 +208,8 @@ static HashTable *pcbc_cluster_get_debug_info(zval *object, int *is_temp TSRMLS_
     array_init(&retval);
     ADD_ASSOC_STRING(&retval, "connstr", obj->connstr);
     if (!Z_ISUNDEF(obj->auth)) {
-        ADD_ASSOC_ZVAL_EX(&retval, "authenticator", PCBC_P(obj->auth));
-        PCBC_ADDREF_P(PCBC_P(obj->auth));
+        ADD_ASSOC_ZVAL_EX(&retval, "authenticator", &obj->auth);
+        PCBC_ADDREF_P(&obj->auth);
     } else {
         ADD_ASSOC_NULL_EX(&retval, "authenticator");
     }
@@ -254,10 +228,8 @@ PHP_MINIT_FUNCTION(Cluster)
 
     memcpy(&pcbc_cluster_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     pcbc_cluster_handlers.get_debug_info = pcbc_cluster_get_debug_info;
-#if PHP_VERSION_ID >= 70000
     pcbc_cluster_handlers.free_obj = pcbc_cluster_free_object;
     pcbc_cluster_handlers.offset = XtOffsetOf(pcbc_cluster_t, std);
-#endif
 
     zend_register_class_alias("\\CouchbaseCluster", pcbc_cluster_ce);
     return SUCCESS;

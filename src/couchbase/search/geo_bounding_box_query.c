@@ -1,5 +1,5 @@
 /**
- *     Copyright 2017 Couchbase, Inc.
+ *     Copyright 2017-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -21,17 +21,16 @@
 #include "couchbase.h"
 
 typedef struct {
-    PCBC_ZEND_OBJECT_PRE
+
     double boost;
     char *field;
     double top_left_longitude;
     double top_left_latitude;
     double bottom_right_longitude;
     double bottom_right_latitude;
-    PCBC_ZEND_OBJECT_POST
+    zend_object std;
 } pcbc_geo_bounding_box_search_query_t;
 
-#if PHP_VERSION_ID >= 70000
 static inline pcbc_geo_bounding_box_search_query_t *pcbc_geo_bounding_box_search_query_fetch_object(zend_object *obj)
 {
     return (pcbc_geo_bounding_box_search_query_t *)((char *)obj -
@@ -39,11 +38,6 @@ static inline pcbc_geo_bounding_box_search_query_t *pcbc_geo_bounding_box_search
 }
 #define Z_GEO_BOUNDING_BOX_SEARCH_QUERY_OBJ(zo) (pcbc_geo_bounding_box_search_query_fetch_object(zo))
 #define Z_GEO_BOUNDING_BOX_SEARCH_QUERY_OBJ_P(zv) (pcbc_geo_bounding_box_search_query_fetch_object(Z_OBJ_P(zv)))
-#else
-#define Z_GEO_BOUNDING_BOX_SEARCH_QUERY_OBJ(zo) ((pcbc_geo_bounding_box_search_query_t *)zo)
-#define Z_GEO_BOUNDING_BOX_SEARCH_QUERY_OBJ_P(zv)                                                                      \
-    ((pcbc_geo_bounding_box_search_query_t *)zend_object_store_get_object(zv TSRMLS_CC))
-#endif
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/geo_bounding_box_search_query", __FILE__, __LINE__
 
@@ -63,7 +57,7 @@ PHP_METHOD(GeoBoundingBoxSearchQuery, field)
     pcbc_geo_bounding_box_search_query_t *obj;
     char *field = NULL;
     int rv;
-    pcbc_str_arg_size field_len;
+    size_t field_len;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &field, &field_len);
     if (rv == FAILURE) {
@@ -104,8 +98,8 @@ PHP_METHOD(GeoBoundingBoxSearchQuery, jsonSerialize)
 {
     pcbc_geo_bounding_box_search_query_t *obj;
     int rv;
-    PCBC_ZVAL top_left;
-    PCBC_ZVAL bottom_right;
+    zval top_left;
+    zval bottom_right;
 
     rv = zend_parse_parameters_none();
     if (rv == FAILURE) {
@@ -115,17 +109,17 @@ PHP_METHOD(GeoBoundingBoxSearchQuery, jsonSerialize)
     obj = Z_GEO_BOUNDING_BOX_SEARCH_QUERY_OBJ_P(getThis());
     array_init(return_value);
 
-    PCBC_ZVAL_ALLOC(top_left);
-    array_init(PCBC_P(top_left));
-    add_next_index_double(PCBC_P(top_left), obj->top_left_longitude);
-    add_next_index_double(PCBC_P(top_left), obj->top_left_latitude);
-    ADD_ASSOC_ZVAL_EX(return_value, "top_left", PCBC_P(top_left));
+    ZVAL_UNDEF(&top_left);
+    array_init(&top_left);
+    add_next_index_double(&top_left, obj->top_left_longitude);
+    add_next_index_double(&top_left, obj->top_left_latitude);
+    ADD_ASSOC_ZVAL_EX(return_value, "top_left", &top_left);
 
-    PCBC_ZVAL_ALLOC(bottom_right);
-    array_init(PCBC_P(bottom_right));
-    add_next_index_double(PCBC_P(bottom_right), obj->bottom_right_longitude);
-    add_next_index_double(PCBC_P(bottom_right), obj->bottom_right_latitude);
-    ADD_ASSOC_ZVAL_EX(return_value, "bottom_right", PCBC_P(bottom_right));
+    ZVAL_UNDEF(&bottom_right);
+    array_init(&bottom_right);
+    add_next_index_double(&bottom_right, obj->bottom_right_longitude);
+    add_next_index_double(&bottom_right, obj->bottom_right_latitude);
+    ADD_ASSOC_ZVAL_EX(return_value, "bottom_right", &bottom_right);
 
     if (obj->field) {
         ADD_ASSOC_STRING(return_value, "field", obj->field);
@@ -173,7 +167,7 @@ void pcbc_geo_bounding_box_search_query_init(zval *return_value, double top_left
 
 zend_object_handlers geo_bounding_box_search_query_handlers;
 
-static void geo_bounding_box_search_query_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
+static void geo_bounding_box_search_query_free_object(zend_object *object TSRMLS_DC) /* {{{ */
 {
     pcbc_geo_bounding_box_search_query_t *obj = Z_GEO_BOUNDING_BOX_SEARCH_QUERY_OBJ(object);
 
@@ -182,12 +176,9 @@ static void geo_bounding_box_search_query_free_object(pcbc_free_object_arg *obje
     }
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    efree(obj);
-#endif
 } /* }}} */
 
-static pcbc_create_object_retval geo_bounding_box_search_query_create_object(zend_class_entry *class_type TSRMLS_DC)
+static zend_object *geo_bounding_box_search_query_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
     pcbc_geo_bounding_box_search_query_t *obj = NULL;
 
@@ -196,28 +187,14 @@ static pcbc_create_object_retval geo_bounding_box_search_query_create_object(zen
     zend_object_std_init(&obj->std, class_type TSRMLS_CC);
     object_properties_init(&obj->std, class_type);
 
-#if PHP_VERSION_ID >= 70000
     obj->std.handlers = &geo_bounding_box_search_query_handlers;
     return &obj->std;
-#else
-    {
-        zend_object_value ret;
-        ret.handle = zend_objects_store_put(obj, (zend_objects_store_dtor_t)zend_objects_destroy_object,
-                                            geo_bounding_box_search_query_free_object, NULL TSRMLS_CC);
-        ret.handlers = &geo_bounding_box_search_query_handlers;
-        return ret;
-    }
-#endif
 }
 
 static HashTable *pcbc_geo_bounding_box_search_query_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
 {
     pcbc_geo_bounding_box_search_query_t *obj = NULL;
-#if PHP_VERSION_ID >= 70000
     zval retval;
-#else
-    zval retval = zval_used_for_init;
-#endif
 
     *is_temp = 1;
     obj = Z_GEO_BOUNDING_BOX_SEARCH_QUERY_OBJ_P(object);
@@ -250,10 +227,8 @@ PHP_MINIT_FUNCTION(GeoBoundingBoxSearchQuery)
 
     memcpy(&geo_bounding_box_search_query_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     geo_bounding_box_search_query_handlers.get_debug_info = pcbc_geo_bounding_box_search_query_get_debug_info;
-#if PHP_VERSION_ID >= 70000
     geo_bounding_box_search_query_handlers.free_obj = geo_bounding_box_search_query_free_object;
     geo_bounding_box_search_query_handlers.offset = XtOffsetOf(pcbc_geo_bounding_box_search_query_t, std);
-#endif
 
     zend_register_class_alias("\\CouchbaseGeoBoundingBoxSearchQuery", pcbc_geo_bounding_box_search_query_ce);
     return SUCCESS;

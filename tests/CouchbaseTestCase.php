@@ -27,7 +27,7 @@ class CouchbaseTestCase extends \PHPUnit_Framework_TestCase {
         } else {
             $this->testDsn = getenv('CB_DSN');
             if ($this->testDsn === FALSE) {
-                $this->testDsn = 'couchbase://localhost/default';
+                $this->testDsn = 'couchbase://localhost';
             }
 
             $this->testBucket = getenv('CB_BUCKET');

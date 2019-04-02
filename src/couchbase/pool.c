@@ -1,5 +1,5 @@
 /**
- *     Copyright 2017 Couchbase, Inc.
+ *     Copyright 2017-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -264,7 +264,6 @@ void pcbc_connection_delref(pcbc_connection_t *conn TSRMLS_DC)
     }
 }
 
-#if PHP_VERSION_ID >= 70000
 static zend_resource *pcbc_connection_lookup(smart_str *plist_key TSRMLS_DC)
 {
     zend_resource *res;
@@ -296,41 +295,8 @@ static lcb_error_t pcbc_connection_cache(smart_str *plist_key, pcbc_connection_t
              conn->connstr, conn->bucketname, conn->auth_hash, conn->lcb, conn->refs);
     return LCB_SUCCESS;
 }
-#else
-static zend_rsrc_list_entry *pcbc_connection_lookup(smart_str *plist_key TSRMLS_DC)
-{
-    zend_rsrc_list_entry *res = NULL;
-    int rv;
 
-    rv = zend_hash_find(&EG(persistent_list), plist_key->c, plist_key->len, (void *)&res);
-    if (rv == SUCCESS && res->type == pcbc_res_couchbase) {
-        return res;
-    }
-    return NULL;
-}
-static lcb_error_t pcbc_connection_cache(smart_str *plist_key, pcbc_connection_t *conn TSRMLS_DC)
-{
-    zend_rsrc_list_entry res;
-    int rv;
-
-    res.type = pcbc_res_couchbase;
-    res.ptr = conn;
-    rv = zend_hash_update(&EG(persistent_list), plist_key->c, plist_key->len, (void *)&res, sizeof(res), NULL);
-    if (rv == FAILURE) {
-        pcbc_log(LOGARGS(NULL, ERROR), "failed to register persistent connection");
-        return LCB_EINVAL;
-    }
-    return LCB_SUCCESS;
-}
-#endif
-
-static void pcbc_destroy_connection_resource(
-#if PHP_VERSION_ID >= 70000
-    zend_resource *res
-#else
-    zend_rsrc_list_entry *res
-#endif
-    )
+static void pcbc_destroy_connection_resource(zend_resource *res)
 {
     if (res->ptr) {
         pcbc_connection_t *conn = res->ptr;
@@ -362,11 +328,7 @@ lcb_error_t pcbc_connection_get(pcbc_connection_t **result, lcb_type_t type, con
     pcbc_connection_t *conn = NULL;
     smart_str plist_key = {0};
     zend_bool is_persistent = 1; // always persistent connections
-#if PHP_VERSION_ID >= 70000
     zend_resource *res = NULL;
-#else
-    zend_rsrc_list_entry *res = NULL;
-#endif
 
     rv = pcbc_normalize_connstr(type, (char *)connstr, bucketname, &cstr TSRMLS_CC);
     if (rv != LCB_SUCCESS) {
@@ -434,25 +396,13 @@ lcb_error_t pcbc_connection_get(pcbc_connection_t **result, lcb_type_t type, con
     return LCB_SUCCESS;
 }
 
-static int pcbc_destroy_idle_connections(
-#if PHP_VERSION_ID >= 70000
-    zval *el
-#else
-    zend_rsrc_list_entry *res TSRMLS_DC
-#endif
-    )
+static int pcbc_destroy_idle_connections(zval *el)
 {
-#if PHP_VERSION_ID >= 70000
     zend_resource *res = Z_RES_P(el);
 
     if (res->type != pcbc_res_couchbase) {
         return 0;
     }
-#else
-    if (Z_TYPE_P(res) != pcbc_res_couchbase) {
-        return 0;
-    }
-#endif
 
     if (res->ptr) {
         pcbc_connection_t *conn = res->ptr;
@@ -472,25 +422,14 @@ static int pcbc_destroy_idle_connections(
     return 0;
 }
 
-#if PHP_VERSION_ID >= 70000
 void pcbc_connection_cleanup()
 {
     zend_hash_apply(&EG(persistent_list), (apply_func_t)pcbc_destroy_idle_connections);
 }
-#else
-void pcbc_connection_cleanup(TSRMLS_D)
-{
-    zend_hash_apply(&EG(persistent_list), (apply_func_t)pcbc_destroy_idle_connections TSRMLS_CC);
-}
-#endif
 
 ZEND_RSRC_DTOR_FUNC(pcbc_connection_dtor)
 {
-#if PHP_VERSION_ID >= 70000
     pcbc_destroy_connection_resource(res);
-#else
-    pcbc_destroy_connection_resource(rsrc);
-#endif
 }
 
 PHP_MINIT_FUNCTION(CouchbasePool)

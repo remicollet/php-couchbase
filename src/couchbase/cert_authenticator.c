@@ -1,5 +1,5 @@
 /**
- *     Copyright 2018 Couchbase, Inc.
+ *     Copyright 2018-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -17,6 +17,13 @@
 #include "couchbase.h"
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/cert_authenticator", __FILE__, __LINE__
+
+static inline pcbc_cert_authenticator_t *pcbc_cert_authenticator_fetch_object(zend_object *obj)
+{
+    return (pcbc_cert_authenticator_t *)((char *)obj - XtOffsetOf(pcbc_cert_authenticator_t, std));
+}
+#define Z_CERT_AUTHENTICATOR_OBJ(zo) (pcbc_cert_authenticator_fetch_object(zo))
+#define Z_CERT_AUTHENTICATOR_OBJ_P(zv) (pcbc_cert_authenticator_fetch_object(Z_OBJ_P(zv)))
 
 zend_class_entry *pcbc_cert_authenticator_ce;
 extern zend_class_entry *pcbc_authenticator_ce;
@@ -56,17 +63,14 @@ zend_function_entry cert_authenticator_methods[] = {
 
 zend_object_handlers cert_authenticator_handlers;
 
-static void cert_authenticator_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
+static void cert_authenticator_free_object(zend_object *object TSRMLS_DC) /* {{{ */
 {
     pcbc_cert_authenticator_t *obj = Z_CERT_AUTHENTICATOR_OBJ(object);
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    efree(obj);
-#endif
 } /* }}} */
 
-static pcbc_create_object_retval authenticator_create_object(zend_class_entry *class_type TSRMLS_DC)
+static zend_object *authenticator_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
     pcbc_cert_authenticator_t *obj = NULL;
 
@@ -75,18 +79,8 @@ static pcbc_create_object_retval authenticator_create_object(zend_class_entry *c
     zend_object_std_init(&obj->std, class_type TSRMLS_CC);
     object_properties_init(&obj->std, class_type);
 
-#if PHP_VERSION_ID >= 70000
     obj->std.handlers = &cert_authenticator_handlers;
     return &obj->std;
-#else
-    {
-        zend_object_value ret;
-        ret.handle = zend_objects_store_put(obj, (zend_objects_store_dtor_t)zend_objects_destroy_object,
-                                            cert_authenticator_free_object, NULL TSRMLS_CC);
-        ret.handlers = &cert_authenticator_handlers;
-        return ret;
-    }
-#endif
 }
 
 PHP_MINIT_FUNCTION(CertAuthenticator)
@@ -101,9 +95,7 @@ PHP_MINIT_FUNCTION(CertAuthenticator)
     zend_class_implements(pcbc_cert_authenticator_ce TSRMLS_CC, 1, pcbc_authenticator_ce);
 
     memcpy(&cert_authenticator_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-#if PHP_VERSION_ID >= 70000
     cert_authenticator_handlers.free_obj = cert_authenticator_free_object;
     cert_authenticator_handlers.offset = XtOffsetOf(pcbc_cert_authenticator_t, std);
-#endif
     return SUCCESS;
 }

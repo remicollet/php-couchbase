@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -20,26 +20,20 @@
 #include "couchbase.h"
 
 typedef struct {
-    PCBC_ZEND_OBJECT_PRE
+
     double boost;
     char *field;
     int limit;
-    PCBC_ZVAL ranges; /* array or arrays like ["range-name" => ["min" => ..., "max" => ...], ...] */
-    PCBC_ZEND_OBJECT_POST
+    zval ranges; /* array or arrays like ["range-name" => ["min" => ..., "max" => ...], ...] */
+    zend_object std;
 } pcbc_numeric_range_search_facet_t;
 
-#if PHP_VERSION_ID >= 70000
 static inline pcbc_numeric_range_search_facet_t *pcbc_numeric_range_search_facet_fetch_object(zend_object *obj)
 {
     return (pcbc_numeric_range_search_facet_t *)((char *)obj - XtOffsetOf(pcbc_numeric_range_search_facet_t, std));
 }
 #define Z_NUMERIC_RANGE_SEARCH_FACET_OBJ(zo) (pcbc_numeric_range_search_facet_fetch_object(zo))
 #define Z_NUMERIC_RANGE_SEARCH_FACET_OBJ_P(zv) (pcbc_numeric_range_search_facet_fetch_object(Z_OBJ_P(zv)))
-#else
-#define Z_NUMERIC_RANGE_SEARCH_FACET_OBJ(zo) ((pcbc_numeric_range_search_facet_t *)zo)
-#define Z_NUMERIC_RANGE_SEARCH_FACET_OBJ_P(zv)                                                                         \
-    ((pcbc_numeric_range_search_facet_t *)zend_object_store_get_object(zv TSRMLS_CC))
-#endif
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/numeric_search_facet", __FILE__, __LINE__
 
@@ -59,44 +53,29 @@ PHP_METHOD(NumericRangeSearchFacet, addRange)
 {
     pcbc_numeric_range_search_facet_t *obj;
     char *name = NULL;
-    PCBC_ZVAL range;
+    zval range;
     int rv;
-    pcbc_str_arg_size name_len = 0;
+    size_t name_len = 0;
     double min = 0, max = 0;
     zend_bool min_null = 0, max_null = 0;
 
-#if PHP_VERSION_ID >= 50600
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sd!d!", &name, &name_len, &min, &min_null, &max, &max_null);
-#else
-    zval *zmin = NULL, *zmax = NULL;
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "szz", &name, &name_len, &min, &max);
-    if (zmin) {
-        min = Z_DVAL_P(zmin);
-    } else {
-        min_null = 1;
-    }
-    if (zmax) {
-        min = Z_DVAL_P(zmax);
-    } else {
-        min_null = 1;
-    }
-#endif
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
     obj = Z_NUMERIC_RANGE_SEARCH_FACET_OBJ_P(getThis());
 
-    PCBC_ZVAL_ALLOC(range);
-    array_init_size(PCBC_P(range), 3);
-    ADD_ASSOC_STRINGL(PCBC_P(range), "name", name, name_len);
+    ZVAL_UNDEF(&range);
+    array_init_size(&range, 3);
+    ADD_ASSOC_STRINGL(&range, "name", name, name_len);
     if (!min_null) {
-        ADD_ASSOC_DOUBLE_EX(PCBC_P(range), "min", min);
+        ADD_ASSOC_DOUBLE_EX(&range, "min", min);
     }
     if (!max_null) {
-        ADD_ASSOC_DOUBLE_EX(PCBC_P(range), "max", max);
+        ADD_ASSOC_DOUBLE_EX(&range, "max", max);
     }
-    add_next_index_zval(PCBC_P(obj->ranges), PCBC_P(range));
+    add_next_index_zval(&obj->ranges, &range);
 
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
@@ -117,8 +96,8 @@ PHP_METHOD(NumericRangeSearchFacet, jsonSerialize)
     array_init(return_value);
     ADD_ASSOC_STRING(return_value, "field", obj->field);
     ADD_ASSOC_LONG_EX(return_value, "size", obj->limit);
-    ADD_ASSOC_ZVAL_EX(return_value, "numeric_ranges", PCBC_P(obj->ranges));
-    PCBC_ADDREF_P(PCBC_P(obj->ranges));
+    ADD_ASSOC_ZVAL_EX(return_value, "numeric_ranges", &obj->ranges);
+    PCBC_ADDREF_P(&obj->ranges);
 } /* }}} */
 
 ZEND_BEGIN_ARG_INFO_EX(ai_NumericRangeSearchFacet_none, 0, 0, 0)
@@ -148,13 +127,13 @@ void pcbc_numeric_range_search_facet_init(zval *return_value, char *field, int f
     obj->field = estrndup(field, field_len);
     obj->limit = limit;
 
-    PCBC_ZVAL_ALLOC(obj->ranges);
-    array_init(PCBC_P(obj->ranges));
+    ZVAL_UNDEF(&obj->ranges);
+    array_init(&obj->ranges);
 }
 
 zend_object_handlers numeric_search_facet_handlers;
 
-static void numeric_search_facet_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
+static void numeric_search_facet_free_object(zend_object *object TSRMLS_DC) /* {{{ */
 {
     pcbc_numeric_range_search_facet_t *obj = Z_NUMERIC_RANGE_SEARCH_FACET_OBJ(object);
 
@@ -164,12 +143,9 @@ static void numeric_search_facet_free_object(pcbc_free_object_arg *object TSRMLS
     zval_ptr_dtor(&obj->ranges);
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    efree(obj);
-#endif
 } /* }}} */
 
-static pcbc_create_object_retval numeric_search_facet_create_object(zend_class_entry *class_type TSRMLS_DC)
+static zend_object *numeric_search_facet_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
     pcbc_numeric_range_search_facet_t *obj = NULL;
 
@@ -178,28 +154,14 @@ static pcbc_create_object_retval numeric_search_facet_create_object(zend_class_e
     zend_object_std_init(&obj->std, class_type TSRMLS_CC);
     object_properties_init(&obj->std, class_type);
 
-#if PHP_VERSION_ID >= 70000
     obj->std.handlers = &numeric_search_facet_handlers;
     return &obj->std;
-#else
-    {
-        zend_object_value ret;
-        ret.handle = zend_objects_store_put(obj, (zend_objects_store_dtor_t)zend_objects_destroy_object,
-                                            numeric_search_facet_free_object, NULL TSRMLS_CC);
-        ret.handlers = &numeric_search_facet_handlers;
-        return ret;
-    }
-#endif
 }
 
 static HashTable *pcbc_numeric_range_search_facet_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
 {
     pcbc_numeric_range_search_facet_t *obj = NULL;
-#if PHP_VERSION_ID >= 70000
     zval retval;
-#else
-    zval retval = zval_used_for_init;
-#endif
 
     *is_temp = 1;
     obj = Z_NUMERIC_RANGE_SEARCH_FACET_OBJ_P(object);
@@ -207,8 +169,8 @@ static HashTable *pcbc_numeric_range_search_facet_get_debug_info(zval *object, i
     array_init(&retval);
     ADD_ASSOC_STRING(&retval, "field", obj->field);
     ADD_ASSOC_LONG_EX(&retval, "limit", obj->limit);
-    ADD_ASSOC_ZVAL_EX(&retval, "numeric_ranges", PCBC_P(obj->ranges));
-    PCBC_ADDREF_P(PCBC_P(obj->ranges));
+    ADD_ASSOC_ZVAL_EX(&retval, "numeric_ranges", &obj->ranges);
+    PCBC_ADDREF_P(&obj->ranges);
     return Z_ARRVAL(retval);
 } /* }}} */
 
@@ -226,10 +188,8 @@ PHP_MINIT_FUNCTION(NumericRangeSearchFacet)
 
     memcpy(&numeric_search_facet_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     numeric_search_facet_handlers.get_debug_info = pcbc_numeric_range_search_facet_get_debug_info;
-#if PHP_VERSION_ID >= 70000
     numeric_search_facet_handlers.free_obj = numeric_search_facet_free_object;
     numeric_search_facet_handlers.offset = XtOffsetOf(pcbc_numeric_range_search_facet_t, std);
-#endif
 
     zend_register_class_alias("\\CouchbaseNumericRangeSearchFacet", pcbc_numeric_range_search_facet_ce);
     return SUCCESS;

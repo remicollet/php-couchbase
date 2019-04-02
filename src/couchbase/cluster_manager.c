@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -62,12 +62,12 @@ PHP_METHOD(ClusterManager, createBucket)
 {
     pcbc_cluster_manager_t *obj;
     const char *name = NULL;
-    pcbc_str_arg_size name_len = 0;
+    size_t name_len = 0;
     zval *options = NULL;
     int rv;
     lcb_CMDHTTP cmd = {0};
     const char *path = "/pools/default/buckets";
-    PCBC_ZVAL default_options;
+    zval default_options;
     smart_str buf = {0};
 
     obj = Z_CLUSTER_MANAGER_OBJ_P(getThis());
@@ -77,18 +77,18 @@ PHP_METHOD(ClusterManager, createBucket)
         return;
     }
 
-    PCBC_ZVAL_ALLOC(default_options);
-    array_init_size(PCBC_P(default_options), 5);
-    ADD_ASSOC_STRING(PCBC_P(default_options), "name", name);
-    ADD_ASSOC_STRING(PCBC_P(default_options), "authType", "sasl");
-    ADD_ASSOC_STRING(PCBC_P(default_options), "bucketType", "couchbase");
-    ADD_ASSOC_LONG_EX(PCBC_P(default_options), "ramQuotaMB", 100);
-    ADD_ASSOC_LONG_EX(PCBC_P(default_options), "replicaNumber", 1);
+    ZVAL_UNDEF(&default_options);
+    array_init_size(&default_options, 5);
+    ADD_ASSOC_STRING(&default_options, "name", name);
+    ADD_ASSOC_STRING(&default_options, "authType", "sasl");
+    ADD_ASSOC_STRING(&default_options, "bucketType", "couchbase");
+    ADD_ASSOC_LONG_EX(&default_options, "ramQuotaMB", 100);
+    ADD_ASSOC_LONG_EX(&default_options, "replicaNumber", 1);
     if (options && Z_TYPE_P(options) == IS_ARRAY) {
-        PCBC_ARRAY_MERGE(Z_ARRVAL_P(PCBC_P(default_options)), Z_ARRVAL_P(options));
+        PCBC_ARRAY_MERGE(Z_ARRVAL_P(&default_options), Z_ARRVAL_P(options));
     }
 
-    rv = php_url_encode_hash_ex(HASH_OF(PCBC_P(default_options)), &buf, NULL, 0, NULL, 0, NULL, 0, NULL, NULL,
+    rv = php_url_encode_hash_ex(HASH_OF(&default_options), &buf, NULL, 0, NULL, 0, NULL, 0, NULL, NULL,
                                 PHP_QUERY_RFC1738 TSRMLS_CC);
     zval_ptr_dtor(&default_options);
     if (rv == FAILURE) {
@@ -113,7 +113,7 @@ PHP_METHOD(ClusterManager, removeBucket)
 {
     pcbc_cluster_manager_t *obj;
     const char *name = NULL;
-    pcbc_str_arg_size name_len = 0;
+    size_t name_len = 0;
     lcb_CMDHTTP cmd = {0};
     char *path;
     int rv, path_len;
@@ -194,7 +194,7 @@ PHP_METHOD(ClusterManager, getUser)
 {
     pcbc_cluster_manager_t *obj;
     const char *name = NULL;
-    pcbc_str_arg_size name_len = 0;
+    size_t name_len = 0;
     lcb_CMDHTTP cmd = {0};
     char *path;
     int rv, path_len;
@@ -230,7 +230,7 @@ PHP_METHOD(ClusterManager, removeUser)
 {
     pcbc_cluster_manager_t *obj;
     const char *name = NULL;
-    pcbc_str_arg_size name_len = 0;
+    size_t name_len = 0;
     lcb_CMDHTTP cmd = {0};
     char *path;
     int rv, path_len;
@@ -274,13 +274,13 @@ PHP_METHOD(ClusterManager, upsertUser)
 {
     pcbc_cluster_manager_t *obj;
     const char *name = NULL;
-    pcbc_str_arg_size name_len = 0;
+    size_t name_len = 0;
     zval *settings = NULL;
     char *path;
     int rv, path_len;
     lcb_CMDHTTP cmd = {0};
     smart_str buf = {0};
-    PCBC_ZVAL body;
+    zval body;
     pcbc_user_settings_t *user;
     long domain = PCBC_CLUSTER_MANAGER_RBAC_DOMAIN_LOCAL;
 
@@ -310,18 +310,18 @@ PHP_METHOD(ClusterManager, upsertUser)
     LCB_CMD_SET_KEY(&cmd, path, path_len);
     cmd.content_type = PCBC_CONTENT_TYPE_FORM;
 
-    PCBC_ZVAL_ALLOC(body);
-    array_init_size(PCBC_P(body), 3);
+    ZVAL_UNDEF(&body);
+    array_init_size(&body, 3);
     if (user->full_name) {
-        ADD_ASSOC_STRINGL(PCBC_P(body), "name", user->full_name, user->full_name_len);
+        ADD_ASSOC_STRINGL(&body, "name", user->full_name, user->full_name_len);
     }
     if (user->password) {
-        ADD_ASSOC_STRINGL(PCBC_P(body), "password", user->password, user->password_len);
+        ADD_ASSOC_STRINGL(&body, "password", user->password, user->password_len);
     }
     if (PCBC_SMARTSTR_LEN(user->roles)) {
-        ADD_ASSOC_STRINGL(PCBC_P(body), "roles", PCBC_SMARTSTR_VAL(user->roles), PCBC_SMARTSTR_LEN(user->roles));
+        ADD_ASSOC_STRINGL(&body, "roles", PCBC_SMARTSTR_VAL(user->roles), PCBC_SMARTSTR_LEN(user->roles));
     }
-    rv = php_url_encode_hash_ex(HASH_OF(PCBC_P(body)), &buf, NULL, 0, NULL, 0, NULL, 0, NULL, NULL,
+    rv = php_url_encode_hash_ex(HASH_OF(&body), &buf, NULL, 0, NULL, 0, NULL, 0, NULL, NULL,
                                 PHP_QUERY_RFC1738 TSRMLS_CC);
     zval_ptr_dtor(&body);
     if (rv == FAILURE) {
@@ -392,19 +392,16 @@ zend_function_entry cluster_manager_methods[] = {
 
 zend_object_handlers pcbc_cluster_manager_handlers;
 
-static void pcbc_cluster_manager_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
+static void pcbc_cluster_manager_free_object(zend_object *object TSRMLS_DC) /* {{{ */
 {
     pcbc_cluster_manager_t *obj = Z_CLUSTER_MANAGER_OBJ(object);
     pcbc_connection_delref(obj->conn TSRMLS_CC);
     obj->conn = NULL;
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    efree(obj);
-#endif
 } /* }}} */
 
-static pcbc_create_object_retval pcbc_cluster_manager_create_object(zend_class_entry *class_type TSRMLS_DC)
+static zend_object *pcbc_cluster_manager_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
     pcbc_cluster_manager_t *obj = NULL;
 
@@ -413,18 +410,8 @@ static pcbc_create_object_retval pcbc_cluster_manager_create_object(zend_class_e
     zend_object_std_init(&obj->std, class_type TSRMLS_CC);
     object_properties_init(&obj->std, class_type);
 
-#if PHP_VERSION_ID >= 70000
     obj->std.handlers = &pcbc_cluster_manager_handlers;
     return &obj->std;
-#else
-    {
-        zend_object_value ret;
-        ret.handle = zend_objects_store_put(obj, (zend_objects_store_dtor_t)zend_objects_destroy_object,
-                                            pcbc_cluster_manager_free_object, NULL TSRMLS_CC);
-        ret.handlers = &pcbc_cluster_manager_handlers;
-        return ret;
-    }
-#endif
 }
 
 void pcbc_cluster_manager_init(zval *return_value, pcbc_cluster_t *cluster, const char *username,
@@ -439,12 +426,12 @@ void pcbc_cluster_manager_init(zval *return_value, pcbc_cluster_t *cluster, cons
     char *auth_hash = NULL;
 
     if (!Z_ISUNDEF(cluster->auth)) {
-        if (instanceof_function(Z_OBJCE_P(PCBC_P(cluster->auth)), pcbc_classic_authenticator_ce TSRMLS_CC)) {
-            pcbc_generate_classic_lcb_auth(Z_CLASSIC_AUTHENTICATOR_OBJ_P(PCBC_P(cluster->auth)), &auth,
-                                           LCB_TYPE_CLUSTER, username, password, &auth_hash TSRMLS_CC);
-        } else if (instanceof_function(Z_OBJCE_P(PCBC_P(cluster->auth)), pcbc_password_authenticator_ce TSRMLS_CC)) {
-            pcbc_generate_password_lcb_auth(Z_PASSWORD_AUTHENTICATOR_OBJ_P(PCBC_P(cluster->auth)), &auth,
-                                            LCB_TYPE_CLUSTER, username, password, &auth_hash TSRMLS_CC);
+        if (instanceof_function(Z_OBJCE_P(&cluster->auth), pcbc_classic_authenticator_ce TSRMLS_CC)) {
+            pcbc_generate_classic_lcb_auth(Z_CLASSIC_AUTHENTICATOR_OBJ_P(&cluster->auth), &auth, LCB_TYPE_CLUSTER,
+                                           username, password, &auth_hash TSRMLS_CC);
+        } else if (instanceof_function(Z_OBJCE_P(&cluster->auth), pcbc_password_authenticator_ce TSRMLS_CC)) {
+            pcbc_generate_password_lcb_auth(Z_PASSWORD_AUTHENTICATOR_OBJ_P(&cluster->auth), &auth, LCB_TYPE_CLUSTER,
+                                            username, password, &auth_hash TSRMLS_CC);
         }
     }
     if (!auth) {
@@ -464,12 +451,8 @@ void pcbc_cluster_manager_init(zval *return_value, pcbc_cluster_t *cluster, cons
 
 static HashTable *pcbc_cluster_manager_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
 {
-/* pcbc_cluster_manager_t *obj = NULL; */
-#if PHP_VERSION_ID >= 70000
+    /* pcbc_cluster_manager_t *obj = NULL; */
     zval retval;
-#else
-    zval retval = zval_used_for_init;
-#endif
 
     *is_temp = 1;
     /* obj = Z_CLUSTER_MANAGER_OBJ_P(object); */
@@ -490,10 +473,8 @@ PHP_MINIT_FUNCTION(ClusterManager)
 
     memcpy(&pcbc_cluster_manager_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     pcbc_cluster_manager_handlers.get_debug_info = pcbc_cluster_manager_get_debug_info;
-#if PHP_VERSION_ID >= 70000
     pcbc_cluster_manager_handlers.free_obj = pcbc_cluster_manager_free_object;
     pcbc_cluster_manager_handlers.offset = XtOffsetOf(pcbc_cluster_manager_t, std);
-#endif
     zend_declare_class_constant_long(pcbc_cluster_manager_ce, ZEND_STRL("RBAC_DOMAIN_LOCAL"),
                                      PCBC_CLUSTER_MANAGER_RBAC_DOMAIN_LOCAL TSRMLS_CC);
     zend_declare_class_constant_long(pcbc_cluster_manager_ce, ZEND_STRL("RBAC_DOMAIN_EXTERNAL"),

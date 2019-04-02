@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ PHP_METHOD(MutationToken, from)
 {
     long vbid = 0;
     char *bucket = NULL, *vbuuid = NULL, *seqno = NULL;
-    pcbc_str_arg_size bucket_len = 0, vbuuid_len = 0, seqno_len = 0;
+    size_t bucket_len = 0, vbuuid_len = 0, seqno_len = 0;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "slss", &bucket, &bucket_len, &vbid, &vbuuid, &vbuuid_len,
@@ -59,11 +59,7 @@ PHP_METHOD(MutationToken, bucketName)
     }
     obj = Z_MUTATION_TOKEN_OBJ_P(getThis());
 
-#if PHP_VERSION_ID >= 70000
     ZVAL_STRING(return_value, obj->bucket);
-#else
-    ZVAL_STRING(return_value, obj->bucket, 1);
-#endif
 } /* }}} */
 
 /* {{{ proto int MutationToken::vbucketId() */
@@ -95,12 +91,8 @@ PHP_METHOD(MutationToken, vbucketUuid)
     obj = Z_MUTATION_TOKEN_OBJ_P(getThis());
 
     str = pcbc_base36_encode_str(PCBC_MUTATION_TOKEN_ID(obj));
-#if PHP_VERSION_ID >= 70000
     ZVAL_STRING(return_value, str);
     efree(str);
-#else
-    ZVAL_STRING(return_value, str, 0);
-#endif
 } /* }}} */
 
 /* {{{ proto int MutationToken::sequenceNumber() */
@@ -117,12 +109,8 @@ PHP_METHOD(MutationToken, sequenceNumber)
     obj = Z_MUTATION_TOKEN_OBJ_P(getThis());
 
     str = pcbc_base36_encode_str(PCBC_MUTATION_TOKEN_SEQ(obj));
-#if PHP_VERSION_ID >= 70000
     ZVAL_STRING(return_value, str);
     efree(str);
-#else
-    ZVAL_STRING(return_value, str, 0);
-#endif
 } /* }}} */
 
 ZEND_BEGIN_ARG_INFO_EX(ai_MutationToken_none, 0, 0, 0)
@@ -169,19 +157,16 @@ void pcbc_mutation_token_init_php(zval *return_value, char *bucket, int bucket_l
     pcbc_mutation_token_init(return_value, bucket, &mt TSRMLS_CC);
 }
 
-static void mutation_token_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
+static void mutation_token_free_object(zend_object *object TSRMLS_DC) /* {{{ */
 {
     pcbc_mutation_token_t *obj = Z_MUTATION_TOKEN_OBJ(object);
 
     efree(obj->bucket);
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    efree(obj);
-#endif
 } /* }}} */
 
-static pcbc_create_object_retval mutation_token_create_object(zend_class_entry *class_type TSRMLS_DC)
+static zend_object *mutation_token_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
     pcbc_mutation_token_t *obj = NULL;
 
@@ -190,28 +175,14 @@ static pcbc_create_object_retval mutation_token_create_object(zend_class_entry *
     zend_object_std_init(&obj->std, class_type TSRMLS_CC);
     object_properties_init(&obj->std, class_type);
 
-#if PHP_VERSION_ID >= 70000
     obj->std.handlers = &pcbc_mutation_token_handlers;
     return &obj->std;
-#else
-    {
-        zend_object_value ret;
-        ret.handle = zend_objects_store_put(obj, (zend_objects_store_dtor_t)zend_objects_destroy_object,
-                                            mutation_token_free_object, NULL TSRMLS_CC);
-        ret.handlers = &pcbc_mutation_token_handlers;
-        return ret;
-    }
-#endif
 }
 
 static HashTable *mutation_token_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
 {
     pcbc_mutation_token_t *obj = NULL;
-#if PHP_VERSION_ID >= 70000
     zval retval;
-#else
-    zval retval = zval_used_for_init;
-#endif
     char *num36;
 
     *is_temp = 1;
@@ -241,10 +212,8 @@ PHP_MINIT_FUNCTION(MutationToken)
 
     memcpy(&pcbc_mutation_token_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     pcbc_mutation_token_handlers.get_debug_info = mutation_token_get_debug_info;
-#if PHP_VERSION_ID >= 70000
     pcbc_mutation_token_handlers.free_obj = mutation_token_free_object;
     pcbc_mutation_token_handlers.offset = XtOffsetOf(pcbc_mutation_token_t, std);
-#endif
 
     zend_register_class_alias("\\CouchbaseMutationToken", pcbc_mutation_token_ce);
     return SUCCESS;

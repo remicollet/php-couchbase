@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -20,6 +20,13 @@
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/view_query", __FILE__, __LINE__
 
+static inline pcbc_view_query_t *pcbc_view_query_fetch_object(zend_object *obj)
+{
+    return (pcbc_view_query_t *)((char *)obj - XtOffsetOf(pcbc_view_query_t, std));
+}
+#define Z_VIEW_QUERY_OBJ(zo) (pcbc_view_query_fetch_object(zo))
+#define Z_VIEW_QUERY_OBJ_P(zv) (pcbc_view_query_fetch_object(Z_OBJ_P(zv)))
+
 zend_class_entry *pcbc_view_query_ce;
 
 /* {{{ proto ViewQuery::__construct() */
@@ -38,8 +45,8 @@ void pcbc_view_query_init(zval *return_value, char *design_document, int design_
     obj = Z_VIEW_QUERY_OBJ_P(return_value);
     obj->design_document = estrndup(design_document, design_document_len);
     obj->view_name = estrndup(view_name, view_name_len);
-    PCBC_ZVAL_ALLOC(obj->options);
-    array_init(PCBC_P(obj->options));
+    ZVAL_UNDEF(&obj->options);
+    array_init(&obj->options);
     obj->keys = NULL;
 }
 
@@ -57,7 +64,7 @@ PHP_METHOD(ViewQuery, limit)
     }
 
     obj = Z_VIEW_QUERY_OBJ_P(getThis());
-    ADD_ASSOC_LONG_EX(PCBC_P(obj->options), "limit", limit);
+    ADD_ASSOC_LONG_EX(&obj->options, "limit", limit);
 
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
@@ -76,7 +83,7 @@ PHP_METHOD(ViewQuery, skip)
     }
 
     obj = Z_VIEW_QUERY_OBJ_P(getThis());
-    ADD_ASSOC_LONG_EX(PCBC_P(obj->options), "skip", skip);
+    ADD_ASSOC_LONG_EX(&obj->options, "skip", skip);
 
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
@@ -85,7 +92,7 @@ PHP_METHOD(ViewQuery, skip)
 PHP_METHOD(ViewQuery, from)
 {
     char *design_document = NULL, *view_name = NULL;
-    pcbc_str_arg_size design_document_len = 0, view_name_len = 0;
+    size_t design_document_len = 0, view_name_len = 0;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &design_document, &design_document_len, &view_name,
@@ -101,7 +108,7 @@ PHP_METHOD(ViewQuery, from)
 PHP_METHOD(ViewQuery, fromSpatial)
 {
     char *design_document = NULL, *view_name = NULL;
-    pcbc_str_arg_size design_document_len = 0, view_name_len = 0;
+    size_t design_document_len = 0, view_name_len = 0;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &design_document, &design_document_len, &view_name,
@@ -130,13 +137,13 @@ PHP_METHOD(ViewQuery, consistency)
     obj = Z_VIEW_QUERY_OBJ_P(getThis());
     switch (consistency) {
     case UPDATE_NONE:
-        ADD_ASSOC_STRING(PCBC_P(obj->options), "stale", "ok");
+        ADD_ASSOC_STRING(&obj->options, "stale", "ok");
         break;
     case UPDATE_BEFORE:
-        ADD_ASSOC_STRING(PCBC_P(obj->options), "stale", "false");
+        ADD_ASSOC_STRING(&obj->options, "stale", "false");
         break;
     case UPDATE_AFTER:
-        ADD_ASSOC_STRING(PCBC_P(obj->options), "stale", "update_after");
+        ADD_ASSOC_STRING(&obj->options, "stale", "update_after");
         break;
     default:
         throw_pcbc_exception("invalid consistency level", LCB_EINVAL);
@@ -162,10 +169,10 @@ PHP_METHOD(ViewQuery, order)
     obj = Z_VIEW_QUERY_OBJ_P(getThis());
     switch (order) {
     case ORDER_ASCENDING:
-        ADD_ASSOC_STRING(PCBC_P(obj->options), "descending", "false");
+        ADD_ASSOC_STRING(&obj->options, "descending", "false");
         break;
     case ORDER_DESCENDING:
-        ADD_ASSOC_STRING(PCBC_P(obj->options), "descending", "true");
+        ADD_ASSOC_STRING(&obj->options, "descending", "true");
         break;
     default:
         throw_pcbc_exception("invalid order", LCB_EINVAL);
@@ -208,9 +215,9 @@ PHP_METHOD(ViewQuery, reduce)
 
     obj = Z_VIEW_QUERY_OBJ_P(getThis());
     if (reduce) {
-        ADD_ASSOC_STRING(PCBC_P(obj->options), "reduce", "true");
+        ADD_ASSOC_STRING(&obj->options, "reduce", "true");
     } else {
-        ADD_ASSOC_STRING(PCBC_P(obj->options), "reduce", "false");
+        ADD_ASSOC_STRING(&obj->options, "reduce", "false");
     }
 
     RETURN_ZVAL(getThis(), 1, 0);
@@ -231,9 +238,9 @@ PHP_METHOD(ViewQuery, group)
 
     obj = Z_VIEW_QUERY_OBJ_P(getThis());
     if (group) {
-        ADD_ASSOC_STRING(PCBC_P(obj->options), "group", "true");
+        ADD_ASSOC_STRING(&obj->options, "group", "true");
     } else {
-        ADD_ASSOC_STRING(PCBC_P(obj->options), "group", "false");
+        ADD_ASSOC_STRING(&obj->options, "group", "false");
     }
 
     RETURN_ZVAL(getThis(), 1, 0);
@@ -253,7 +260,7 @@ PHP_METHOD(ViewQuery, groupLevel)
     }
 
     obj = Z_VIEW_QUERY_OBJ_P(getThis());
-    ADD_ASSOC_LONG_EX(PCBC_P(obj->options), "group_level", level);
+    ADD_ASSOC_LONG_EX(&obj->options, "group_level", level);
 
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
@@ -280,7 +287,7 @@ PHP_METHOD(ViewQuery, key)
         if (last_error != 0) {
             pcbc_log(LOGARGS(WARN), "Failed to encode key as JSON: json_last_error=%d", last_error);
         } else {
-            ADD_ASSOC_STRINGL(PCBC_P(obj->options), "key", PCBC_SMARTSTR_VAL(buf), PCBC_SMARTSTR_LEN(buf));
+            ADD_ASSOC_STRINGL(&obj->options, "key", PCBC_SMARTSTR_VAL(buf), PCBC_SMARTSTR_LEN(buf));
         }
         smart_str_free(&buf);
     }
@@ -303,15 +310,15 @@ PHP_METHOD(ViewQuery, keys)
 
     obj = Z_VIEW_QUERY_OBJ_P(getThis());
     {
-        PCBC_ZVAL payload;
+        zval payload;
         smart_str buf = {0};
         int last_error;
 
-        PCBC_ZVAL_ALLOC(payload);
-        array_init_size(PCBC_P(payload), 1);
+        ZVAL_UNDEF(&payload);
+        array_init_size(&payload, 1);
         Z_ADDREF_P(keys);
-        ADD_ASSOC_ZVAL_EX(PCBC_P(payload), "keys", keys);
-        PCBC_JSON_ENCODE(&buf, PCBC_P(payload), 0, last_error);
+        ADD_ASSOC_ZVAL_EX(&payload, "keys", keys);
+        PCBC_JSON_ENCODE(&buf, &payload, 0, last_error);
         zval_ptr_dtor(&payload);
         if (last_error != 0) {
             pcbc_log(LOGARGS(WARN), "Failed to encode keys as JSON: json_last_error=%d", last_error);
@@ -340,7 +347,7 @@ PHP_METHOD(ViewQuery, range)
     }
 
     obj = Z_VIEW_QUERY_OBJ_P(getThis());
-    ADD_ASSOC_STRING(PCBC_P(obj->options), "inclusive_end", (inclusive_end) ? "true" : "false");
+    ADD_ASSOC_STRING(&obj->options, "inclusive_end", (inclusive_end) ? "true" : "false");
     {
         smart_str buf = {0};
         int last_error;
@@ -349,7 +356,7 @@ PHP_METHOD(ViewQuery, range)
         if (last_error != 0) {
             pcbc_log(LOGARGS(WARN), "Failed to encode startKey as JSON: json_last_error=%d", last_error);
         } else {
-            ADD_ASSOC_STRINGL(PCBC_P(obj->options), "startkey", PCBC_SMARTSTR_VAL(buf), PCBC_SMARTSTR_LEN(buf));
+            ADD_ASSOC_STRINGL(&obj->options, "startkey", PCBC_SMARTSTR_VAL(buf), PCBC_SMARTSTR_LEN(buf));
         }
         smart_str_free(&buf);
     }
@@ -361,7 +368,7 @@ PHP_METHOD(ViewQuery, range)
         if (last_error != 0) {
             pcbc_log(LOGARGS(WARN), "Failed to encode endKey as JSON: json_last_error=%d", last_error);
         } else {
-            ADD_ASSOC_STRINGL(PCBC_P(obj->options), "endkey", PCBC_SMARTSTR_VAL(buf), PCBC_SMARTSTR_LEN(buf));
+            ADD_ASSOC_STRINGL(&obj->options, "endkey", PCBC_SMARTSTR_VAL(buf), PCBC_SMARTSTR_LEN(buf));
         }
         smart_str_free(&buf);
     }
@@ -375,7 +382,7 @@ PHP_METHOD(ViewQuery, idRange)
 {
     pcbc_view_query_t *obj;
     char *start_id = NULL, *end_id = NULL;
-    pcbc_str_arg_size start_id_len = 0, end_id_len = 0;
+    size_t start_id_len = 0, end_id_len = 0;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &start_id, &start_id_len, &end_id, &end_id_len);
@@ -384,8 +391,8 @@ PHP_METHOD(ViewQuery, idRange)
     }
 
     obj = Z_VIEW_QUERY_OBJ_P(getThis());
-    ADD_ASSOC_STRINGL(PCBC_P(obj->options), "startkey_docid", start_id, start_id_len);
-    ADD_ASSOC_STRINGL(PCBC_P(obj->options), "endkey_docid", end_id, end_id_len);
+    ADD_ASSOC_STRINGL(&obj->options, "startkey_docid", start_id, start_id_len);
+    ADD_ASSOC_STRINGL(&obj->options, "endkey_docid", end_id, end_id_len);
 
     RETURN_ZVAL(getThis(), 1, 0);
 } /* }}} */
@@ -406,7 +413,6 @@ PHP_METHOD(ViewQuery, custom)
     obj = Z_VIEW_QUERY_OBJ_P(getThis());
 
     {
-#if PHP_VERSION_ID >= 70000
         HashTable *ht;
         zend_ulong num_key;
         zend_string *string_key = NULL;
@@ -416,27 +422,11 @@ PHP_METHOD(ViewQuery, custom)
         ZEND_HASH_FOREACH_KEY_VAL(ht, num_key, string_key, entry)
         {
             if (string_key) {
-                add_assoc_zval_ex(PCBC_P(obj->options), ZSTR_VAL(string_key), ZSTR_LEN(string_key), entry);
+                add_assoc_zval_ex(&obj->options, ZSTR_VAL(string_key), ZSTR_LEN(string_key), entry);
                 PCBC_ADDREF_P(entry);
             }
         }
         ZEND_HASH_FOREACH_END();
-#else
-        HashPosition pos;
-        zval **entry;
-
-        zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(custom_options), &pos);
-        while (zend_hash_get_current_data_ex(Z_ARRVAL_P(custom_options), (void **)&entry, &pos) == SUCCESS) {
-            if (zend_hash_get_current_key_type_ex(Z_ARRVAL_P(custom_options), &pos) == HASH_KEY_IS_STRING) {
-                char *key = NULL;
-                uint key_len = 0;
-                zend_hash_get_current_key_ex(Z_ARRVAL_P(custom_options), &key, &key_len, NULL, 0, &pos);
-                add_assoc_zval_ex(obj->options, key, key_len, *entry);
-                PCBC_ADDREF_P(*entry);
-            }
-            zend_hash_move_forward_ex(Z_ARRVAL_P(custom_options), &pos);
-        }
-#endif
     }
 
     RETURN_ZVAL(getThis(), 1, 0);
@@ -463,7 +453,7 @@ PHP_METHOD(ViewQuery, encode)
     /* ADD_ASSOC_BOOL_EX(return_value, "include_docs", obj->include_docs); */
     {
         smart_str buf = {0};
-        rv = php_url_encode_hash_ex(HASH_OF(PCBC_P(obj->options)), &buf, NULL, 0, NULL, 0, NULL, 0, NULL, NULL,
+        rv = php_url_encode_hash_ex(HASH_OF(&obj->options), &buf, NULL, 0, NULL, 0, NULL, 0, NULL, NULL,
                                     PHP_QUERY_RFC1738 TSRMLS_CC);
         if (rv == FAILURE) {
             pcbc_log(LOGARGS(WARN), "Failed to encode options as RFC1738 query");
@@ -573,7 +563,7 @@ zend_function_entry view_query_methods[] = {
 
 zend_object_handlers view_query_handlers;
 
-static void view_query_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
+static void view_query_free_object(zend_object *object TSRMLS_DC) /* {{{ */
 {
     pcbc_view_query_t *obj = Z_VIEW_QUERY_OBJ(object);
 
@@ -588,16 +578,13 @@ static void view_query_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{
     }
     if (!Z_ISUNDEF(obj->options)) {
         zval_ptr_dtor(&obj->options);
-        ZVAL_UNDEF(PCBC_P(obj->options));
+        ZVAL_UNDEF(&obj->options);
     }
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    efree(obj);
-#endif
 } /* }}} */
 
-static pcbc_create_object_retval view_query_create_object(zend_class_entry *class_type TSRMLS_DC)
+static zend_object *view_query_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
     pcbc_view_query_t *obj = NULL;
 
@@ -606,28 +593,14 @@ static pcbc_create_object_retval view_query_create_object(zend_class_entry *clas
     zend_object_std_init(&obj->std, class_type TSRMLS_CC);
     object_properties_init(&obj->std, class_type);
 
-#if PHP_VERSION_ID >= 70000
     obj->std.handlers = &view_query_handlers;
     return &obj->std;
-#else
-    {
-        zend_object_value ret;
-        ret.handle = zend_objects_store_put(obj, (zend_objects_store_dtor_t)zend_objects_destroy_object,
-                                            view_query_free_object, NULL TSRMLS_CC);
-        ret.handlers = &view_query_handlers;
-        return ret;
-    }
-#endif
 }
 
 static HashTable *pcbc_view_query_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
 {
     pcbc_view_query_t *obj = NULL;
-#if PHP_VERSION_ID >= 70000
     zval retval;
-#else
-    zval retval = zval_used_for_init;
-#endif
 
     *is_temp = 1;
     obj = Z_VIEW_QUERY_OBJ_P(object);
@@ -640,8 +613,8 @@ static HashTable *pcbc_view_query_get_debug_info(zval *object, int *is_temp TSRM
         ADD_ASSOC_STRINGL(&retval, "keys", obj->keys, obj->keys_len);
     }
     if (!Z_ISUNDEF(obj->options)) {
-        ADD_ASSOC_ZVAL_EX(&retval, "options", PCBC_P(obj->options));
-        PCBC_ADDREF_P(PCBC_P(obj->options));
+        ADD_ASSOC_ZVAL_EX(&retval, "options", &obj->options);
+        PCBC_ADDREF_P(&obj->options);
     }
 
     return Z_ARRVAL(retval);
@@ -667,10 +640,8 @@ PHP_MINIT_FUNCTION(ViewQuery)
 
     memcpy(&view_query_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     view_query_handlers.get_debug_info = pcbc_view_query_get_debug_info;
-#if PHP_VERSION_ID >= 70000
     view_query_handlers.free_obj = view_query_free_object;
     view_query_handlers.offset = XtOffsetOf(pcbc_view_query_t, std);
-#endif
 
     zend_register_class_alias("\\CouchbaseViewQuery", pcbc_view_query_ce);
     return SUCCESS;

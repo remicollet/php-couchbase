@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@
 
 typedef struct {
     opcookie_res header;
-    PCBC_ZVAL value;
-    PCBC_ZVAL cas;
-    PCBC_ZVAL token;
+    zval value;
+    zval cas;
+    zval token;
 } opcookie_subdoc_res;
 
 void subdoc_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
@@ -36,45 +36,45 @@ void subdoc_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
 
     result->header.err = rb->rc;
     if (rb->rc == LCB_SUCCESS || rb->rc == LCB_SUBDOC_MULTI_FAILURE) {
-        PCBC_ZVAL_ALLOC(result->cas);
-        pcbc_cas_encode(PCBC_P(result->cas), rb->cas TSRMLS_CC);
+        ZVAL_UNDEF(&result->cas);
+        pcbc_cas_encode(&result->cas, rb->cas TSRMLS_CC);
     }
     mutinfo = lcb_resp_get_mutation_token(cbtype, rb);
     if (mutinfo != NULL) {
         char *bucketname;
-        PCBC_ZVAL_ALLOC(result->token);
+        ZVAL_UNDEF(&result->token);
         lcb_cntl(instance, LCB_CNTL_GET, LCB_CNTL_BUCKETNAME, &bucketname);
-        pcbc_mutation_token_init(PCBC_P(result->token), bucketname, mutinfo TSRMLS_CC);
+        pcbc_mutation_token_init(&result->token, bucketname, mutinfo TSRMLS_CC);
     }
-    PCBC_ZVAL_ALLOC(result->value);
-    array_init(PCBC_P(result->value));
+    ZVAL_UNDEF(&result->value);
+    array_init(&result->value);
     while (lcb_sdresult_next(resp, &cur, &vii)) {
-        PCBC_ZVAL value, res, code;
+        zval value, res, code;
         size_t index = oix++;
 
-        PCBC_ZVAL_ALLOC(value);
-        PCBC_ZVAL_ALLOC(res);
-        PCBC_ZVAL_ALLOC(code);
+        ZVAL_UNDEF(&value);
+        ZVAL_UNDEF(&res);
+        ZVAL_UNDEF(&code);
         if (cbtype == LCB_CALLBACK_SDMUTATE) {
             index = cur.index;
         }
         if (cur.nvalue > 0) {
             int last_error;
 
-            PCBC_JSON_COPY_DECODE(PCBC_P(res), cur.value, cur.nvalue, PHP_JSON_OBJECT_AS_ARRAY, last_error);
+            PCBC_JSON_COPY_DECODE(&res, cur.value, cur.nvalue, PHP_JSON_OBJECT_AS_ARRAY, last_error);
             if (last_error != 0) {
                 pcbc_log(LOGARGS(instance, WARN), "Failed to decode subdoc response as JSON: json_last_error=%d",
                          last_error);
             }
         } else {
-            ZVAL_NULL(PCBC_P(res));
+            ZVAL_NULL(&res);
         }
-        array_init(PCBC_P(value));
+        array_init(&value);
 
-        ADD_ASSOC_ZVAL_EX(PCBC_P(value), "value", PCBC_P(res));
-        ZVAL_LONG(PCBC_P(code), cur.status);
-        ADD_ASSOC_ZVAL_EX(PCBC_P(value), "code", PCBC_P(code));
-        add_index_zval(PCBC_P(result->value), index, PCBC_P(value));
+        ADD_ASSOC_ZVAL_EX(&value, "value", &res);
+        ZVAL_LONG(&code, cur.status);
+        ADD_ASSOC_ZVAL_EX(&value, "code", &code);
+        add_index_zval(&result->value, index, &value);
     }
 
     opcookie_push((opcookie *)rb->cookie, &result->header);
@@ -88,12 +88,10 @@ static lcb_error_t proc_subdoc_results(zval *return_value, opcookie *cookie TSRM
     FOREACH_OPCOOKIE_RES(opcookie_subdoc_res, res, cookie)
     {
         if (res->header.err == LCB_SUCCESS) {
-            pcbc_document_fragment_init(return_value, PCBC_P(res->value), PCBC_P(res->cas),
-                                        PCBC_P(res->token) TSRMLS_CC);
+            pcbc_document_fragment_init(return_value, &res->value, &res->cas, &res->token TSRMLS_CC);
         } else {
-            pcbc_document_fragment_init_error(return_value, &res->header,
-                                              res->header.err == LCB_SUBDOC_MULTI_FAILURE ? PCBC_P(res->value)
-                                                                                          : NULL TSRMLS_CC);
+            pcbc_document_fragment_init_error(
+                return_value, &res->header, res->header.err == LCB_SUBDOC_MULTI_FAILURE ? &res->value : NULL TSRMLS_CC);
         }
     }
 
@@ -214,19 +212,10 @@ lcb_U32 pcbc_subdoc_options_to_flags(int is_path, int is_lookup, zval *options T
 
     if (is_path && !is_lookup) {
         switch (Z_TYPE_P(options)) {
-#if PHP_VERSION_ID >= 70000
         case IS_TRUE:
             return LCB_SDSPEC_F_MKINTERMEDIATES;
         case IS_FALSE:
             return 0;
-#else
-        case IS_BOOL:
-            if (Z_BVAL_P(options)) {
-                return LCB_SDSPEC_F_MKINTERMEDIATES;
-            } else {
-                return 0;
-            }
-#endif
         }
     }
     if (Z_TYPE_P(options) == IS_ARRAY) {

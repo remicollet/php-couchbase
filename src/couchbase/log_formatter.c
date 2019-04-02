@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -66,7 +66,8 @@ void pcbc_log_formatter(char *buf, int buf_size, const char *severity, const cha
         }
     }
     if (is_lcb) {
-        snprintf(buf, buf_size, "[cb,%s] (%s L:%d I:%u) %s", severity, subsystem, srcline, (unsigned int)instance_id, msg);
+        snprintf(buf, buf_size, "[cb,%s] (%s L:%d I:%u) %s", severity, subsystem, srcline, (unsigned int)instance_id,
+                 msg);
     } else if (instance_ptr) {
         snprintf(buf, buf_size, "[cb,%s] (%s L:%d) %s. I=%p", severity, subsystem, srcline, msg, instance_ptr);
     } else {

@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ PHP_METHOD(LookupInBuilder, get)
 {
     pcbc_lookup_in_builder_t *obj;
     char *path = NULL;
-    pcbc_str_arg_size path_len = 0;
+    size_t path_len = 0;
     zval *options = NULL;
     int rv;
 
@@ -77,7 +77,7 @@ PHP_METHOD(LookupInBuilder, exists)
 {
     pcbc_lookup_in_builder_t *obj;
     const char *path = NULL;
-    pcbc_str_arg_size path_len = 0;
+    size_t path_len = 0;
     int rv;
     zval *options = NULL;
     pcbc_sd_spec_t *spec;
@@ -111,7 +111,7 @@ PHP_METHOD(LookupInBuilder, getCount)
 {
     pcbc_lookup_in_builder_t *obj;
     const char *path = NULL;
-    pcbc_str_arg_size path_len = 0;
+    size_t path_len = 0;
     int rv;
     zval *options = NULL;
     pcbc_sd_spec_t *spec;
@@ -177,24 +177,14 @@ zend_function_entry lookup_in_builder_methods[] = {
 
 zend_object_handlers pcbc_lookup_in_builder_handlers;
 
-void pcbc_lookup_in_builder_init(zval *return_value, zval *bucket, const char *id, int id_len,
-#if PHP_VERSION_ID >= 70000
-                                 zval *args,
-#else
-                                 zval ***args,
-#endif
+void pcbc_lookup_in_builder_init(zval *return_value, zval *bucket, const char *id, int id_len, zval *args,
                                  int num_args TSRMLS_DC)
 {
     pcbc_lookup_in_builder_t *builder;
 
     object_init_ex(return_value, pcbc_lookup_in_builder_ce);
     builder = Z_LOOKUP_IN_BUILDER_OBJ_P(return_value);
-#if PHP_VERSION_ID >= 70000
     ZVAL_COPY(&builder->bucket_zval, bucket);
-#else
-    Z_ADDREF_P(bucket);
-    builder->bucket_zval = bucket;
-#endif
     builder->bucket = Z_BUCKET_OBJ_P(bucket);
     builder->id_len = id_len;
     builder->id = estrndup(id, id_len);
@@ -204,22 +194,18 @@ void pcbc_lookup_in_builder_init(zval *return_value, zval *bucket, const char *i
     if (num_args && args) {
         int i;
         for (i = 0; i < num_args; ++i) {
-            PCBC_ZVAL *path;
-#if PHP_VERSION_ID >= 70000
+            zval *path;
             path = &args[i];
-#else
-            path = args[i];
-#endif
-            if (PCBC_P(*path) && Z_TYPE_P(PCBC_P(*path)) != IS_STRING) {
+            if (&*path && Z_TYPE_P(&*path) != IS_STRING) {
                 pcbc_log(LOGARGS(builder, WARN), "path has to be a string (skipping argument #%d)", i);
                 continue;
             }
-            pcbc_lookup_in_builder_get(builder, Z_STRVAL_P(PCBC_P(*path)), Z_STRLEN_P(PCBC_P(*path)), NULL TSRMLS_CC);
+            pcbc_lookup_in_builder_get(builder, Z_STRVAL_P(&*path), Z_STRLEN_P(&*path), NULL TSRMLS_CC);
         }
     }
 }
 
-static void lookup_in_builder_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
+static void lookup_in_builder_free_object(zend_object *object TSRMLS_DC) /* {{{ */
 {
     pcbc_lookup_in_builder_t *obj = Z_LOOKUP_IN_BUILDER_OBJ(object);
     pcbc_sd_spec_t *spec;
@@ -235,16 +221,13 @@ static void lookup_in_builder_free_object(pcbc_free_object_arg *object TSRMLS_DC
         efree(tmp);
     }
     obj->head = obj->tail = NULL;
-    Z_DELREF_P(PCBC_P(obj->bucket_zval));
-    ZVAL_UNDEF(PCBC_P(obj->bucket_zval));
+    Z_DELREF_P(&obj->bucket_zval);
+    ZVAL_UNDEF(&obj->bucket_zval);
     obj->bucket = NULL;
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    efree(obj);
-#endif
 } /* }}} */
 
-static pcbc_create_object_retval lookup_in_builder_create_object(zend_class_entry *class_type TSRMLS_DC)
+static zend_object *lookup_in_builder_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
     pcbc_lookup_in_builder_t *obj = NULL;
 
@@ -253,29 +236,15 @@ static pcbc_create_object_retval lookup_in_builder_create_object(zend_class_entr
     zend_object_std_init(&obj->std, class_type TSRMLS_CC);
     object_properties_init(&obj->std, class_type);
 
-#if PHP_VERSION_ID >= 70000
     obj->std.handlers = &pcbc_lookup_in_builder_handlers;
     return &obj->std;
-#else
-    {
-        zend_object_value ret;
-        ret.handle = zend_objects_store_put(obj, (zend_objects_store_dtor_t)zend_objects_destroy_object,
-                                            lookup_in_builder_free_object, NULL TSRMLS_CC);
-        ret.handlers = &pcbc_lookup_in_builder_handlers;
-        return ret;
-    }
-#endif
 }
 
 static HashTable *lookup_in_builder_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
 {
     pcbc_lookup_in_builder_t *obj = NULL;
-#if PHP_VERSION_ID >= 70000
     zval retval;
-#else
-    zval retval = zval_used_for_init;
-#endif
-    PCBC_ZVAL specs;
+    zval specs;
     pcbc_sd_spec_t *spec;
 
     *is_temp = 1;
@@ -284,36 +253,33 @@ static HashTable *lookup_in_builder_get_debug_info(zval *object, int *is_temp TS
     array_init(&retval);
     ADD_ASSOC_STRING(&retval, "id", obj->id);
 
-    PCBC_ZVAL_ALLOC(specs);
-    array_init_size(PCBC_P(specs), obj->nspecs);
+    ZVAL_UNDEF(&specs);
+    array_init_size(&specs, obj->nspecs);
 
     spec = obj->head;
     while (spec) {
-        PCBC_ZVAL s;
+        zval s;
         char *path = NULL;
         int path_len = 0;
-#if PHP_VERSION_ID < 70000
-        MAKE_STD_ZVAL(s);
-#endif
-        array_init(PCBC_P(s));
+        array_init(&s);
         switch (spec->s.sdcmd) {
         case LCB_SDCMD_GET:
-            ADD_ASSOC_STRING(PCBC_P(s), "cmd", "get");
+            ADD_ASSOC_STRING(&s, "cmd", "get");
             PCBC_SDSPEC_GET_PATH(spec, path, path_len);
-            ADD_ASSOC_STRINGL(PCBC_P(s), "path", path, path_len);
-            ADD_ASSOC_LONG_EX(PCBC_P(s), "options", spec->s.options);
+            ADD_ASSOC_STRINGL(&s, "path", path, path_len);
+            ADD_ASSOC_LONG_EX(&s, "options", spec->s.options);
             break;
         case LCB_SDCMD_EXISTS:
-            ADD_ASSOC_STRING(PCBC_P(s), "cmd", "exists");
+            ADD_ASSOC_STRING(&s, "cmd", "exists");
             PCBC_SDSPEC_GET_PATH(spec, path, path_len);
-            ADD_ASSOC_STRINGL(PCBC_P(s), "path", path, path_len);
-            ADD_ASSOC_LONG_EX(PCBC_P(s), "options", spec->s.options);
+            ADD_ASSOC_STRINGL(&s, "path", path, path_len);
+            ADD_ASSOC_LONG_EX(&s, "options", spec->s.options);
             break;
         }
-        add_next_index_zval(PCBC_P(specs), PCBC_P(s));
+        add_next_index_zval(&specs, &s);
         spec = spec->next;
     }
-    add_assoc_zval(&retval, "specs", PCBC_P(specs));
+    add_assoc_zval(&retval, "specs", &specs);
 
     return Z_ARRVAL(retval);
 } /* }}} */
@@ -329,10 +295,8 @@ PHP_MINIT_FUNCTION(LookupInBuilder)
 
     memcpy(&pcbc_lookup_in_builder_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     pcbc_lookup_in_builder_handlers.get_debug_info = lookup_in_builder_get_debug_info;
-#if PHP_VERSION_ID >= 70000
     pcbc_lookup_in_builder_handlers.free_obj = lookup_in_builder_free_object;
     pcbc_lookup_in_builder_handlers.offset = XtOffsetOf(pcbc_lookup_in_builder_t, std);
-#endif
 
     zend_register_class_alias("\\CouchbaseLookupInBuilder", pcbc_lookup_in_builder_ce);
     return SUCCESS;

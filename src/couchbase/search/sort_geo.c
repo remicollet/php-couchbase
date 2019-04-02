@@ -1,5 +1,5 @@
 /**
- *     Copyright 2018 Couchbase, Inc.
+ *     Copyright 2018-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -20,27 +20,21 @@
 #include "couchbase.h"
 
 typedef struct {
-    PCBC_ZEND_OBJECT_PRE
+
     zend_bool descending;
     char *field;
     double lon;
     double lat;
     char *unit;
-    PCBC_ZEND_OBJECT_POST
+    zend_object std;
 } pcbc_search_sort_geo_distance_t;
 
-#if PHP_VERSION_ID >= 70000
 static inline pcbc_search_sort_geo_distance_t *pcbc_search_sort_geo_distance_fetch_object(zend_object *obj)
 {
     return (pcbc_search_sort_geo_distance_t *)((char *)obj - XtOffsetOf(pcbc_search_sort_geo_distance_t, std));
 }
 #define Z_SEARCH_SORT_GEO_DISTANCE_OBJ(zo) (pcbc_search_sort_geo_distance_fetch_object(zo))
 #define Z_SEARCH_SORT_GEO_DISTANCE_OBJ_P(zv) (pcbc_search_sort_geo_distance_fetch_object(Z_OBJ_P(zv)))
-#else
-#define Z_SEARCH_SORT_GEO_DISTANCE_OBJ(zo) ((pcbc_search_sort_geo_distance_t *)zo)
-#define Z_SEARCH_SORT_GEO_DISTANCE_OBJ_P(zv)                                                                           \
-    ((pcbc_search_sort_geo_distance_t *)zend_object_store_get_object(zv TSRMLS_CC))
-#endif
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/search_sort_geo_distance", __FILE__, __LINE__
 
@@ -78,7 +72,7 @@ PHP_METHOD(SearchSortGeoDistance, unit)
 {
     pcbc_search_sort_geo_distance_t *obj;
     char *unit = NULL;
-    pcbc_str_arg_size unit_len;
+    size_t unit_len;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &unit, &unit_len);
@@ -116,13 +110,13 @@ PHP_METHOD(SearchSortGeoDistance, jsonSerialize)
     ADD_ASSOC_BOOL_EX(return_value, "desc", obj->descending);
     ADD_ASSOC_STRING(return_value, "field", obj->field);
     {
-        PCBC_ZVAL location;
+        zval location;
 
-        PCBC_ZVAL_ALLOC(location);
-        array_init_size(PCBC_P(location), 2);
-        ADD_ASSOC_ZVAL_EX(return_value, "location", PCBC_P(location));
-        add_next_index_double(PCBC_P(location), obj->lon);
-        add_next_index_double(PCBC_P(location), obj->lat);
+        ZVAL_UNDEF(&location);
+        array_init_size(&location, 2);
+        ADD_ASSOC_ZVAL_EX(return_value, "location", &location);
+        add_next_index_double(&location, obj->lon);
+        add_next_index_double(&location, obj->lat);
     }
     if (obj->unit != NULL) {
         ADD_ASSOC_STRING(return_value, "unit", obj->unit);
@@ -166,7 +160,7 @@ void pcbc_search_sort_geo_distance_init(zval *return_value, const char *field, i
 
 zend_object_handlers search_sort_geo_distance_handlers;
 
-static void search_sort_geo_distance_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
+static void search_sort_geo_distance_free_object(zend_object *object TSRMLS_DC) /* {{{ */
 {
     pcbc_search_sort_geo_distance_t *obj = Z_SEARCH_SORT_GEO_DISTANCE_OBJ(object);
 
@@ -177,12 +171,9 @@ static void search_sort_geo_distance_free_object(pcbc_free_object_arg *object TS
         efree(obj->unit);
     }
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    efree(obj);
-#endif
 } /* }}} */
 
-static pcbc_create_object_retval search_sort_geo_distance_create_object(zend_class_entry *class_type TSRMLS_DC)
+static zend_object *search_sort_geo_distance_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
     pcbc_search_sort_geo_distance_t *obj = NULL;
 
@@ -191,28 +182,14 @@ static pcbc_create_object_retval search_sort_geo_distance_create_object(zend_cla
     zend_object_std_init(&obj->std, class_type TSRMLS_CC);
     object_properties_init(&obj->std, class_type);
 
-#if PHP_VERSION_ID >= 70000
     obj->std.handlers = &search_sort_geo_distance_handlers;
     return &obj->std;
-#else
-    {
-        zend_object_value ret;
-        ret.handle = zend_objects_store_put(obj, (zend_objects_store_dtor_t)zend_objects_destroy_object,
-                                            search_sort_geo_distance_free_object, NULL TSRMLS_CC);
-        ret.handlers = &search_sort_geo_distance_handlers;
-        return ret;
-    }
-#endif
 }
 
 static HashTable *pcbc_search_sort_geo_distance_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
 {
     pcbc_search_sort_geo_distance_t *obj = NULL;
-#if PHP_VERSION_ID >= 70000
     zval retval;
-#else
-    zval retval = zval_used_for_init;
-#endif
 
     *is_temp = 1;
     obj = Z_SEARCH_SORT_GEO_DISTANCE_OBJ_P(object);
@@ -234,12 +211,7 @@ PHP_MINIT_FUNCTION(SearchSortGeoDistance)
     zend_class_entry ce;
 
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "SearchSortGeoDistance", search_sort_geo_distance_methods);
-    pcbc_search_sort_geo_distance_ce = zend_register_internal_class_ex(&ce, pcbc_search_sort_ce
-#if PHP_VERSION_ID < 70000
-                                                                       ,
-                                                                       NULL
-#endif
-                                                                           TSRMLS_CC);
+    pcbc_search_sort_geo_distance_ce = zend_register_internal_class_ex(&ce, pcbc_search_sort_ce TSRMLS_CC);
     pcbc_search_sort_geo_distance_ce->create_object = search_sort_geo_distance_create_object;
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_search_sort_geo_distance_ce);
 
@@ -247,9 +219,7 @@ PHP_MINIT_FUNCTION(SearchSortGeoDistance)
 
     memcpy(&search_sort_geo_distance_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     search_sort_geo_distance_handlers.get_debug_info = pcbc_search_sort_geo_distance_get_debug_info;
-#if PHP_VERSION_ID >= 70000
     search_sort_geo_distance_handlers.free_obj = search_sort_geo_distance_free_object;
     search_sort_geo_distance_handlers.offset = XtOffsetOf(pcbc_search_sort_geo_distance_t, std);
-#endif
     return SUCCESS;
 }

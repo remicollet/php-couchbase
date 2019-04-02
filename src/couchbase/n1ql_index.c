@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -76,28 +76,28 @@ int pcbc_n1ix_init(zval *return_value, zval *json TSRMLS_DC)
     }
 
     {
-        PCBC_ZVAL type;
+        zval type;
         char *str;
         int str_len = 0;
         zend_bool owned = 0;
 
-        PCBC_ZVAL_ALLOC(type);
+        ZVAL_UNDEF(&type);
         str = php_array_fetch_string(json, "using", &str_len, &owned);
         if (str) {
             if (strcmp(str, "view") == 0) {
-                ZVAL_LONG(PCBC_P(type), LCB_N1XSPEC_T_VIEW);
+                ZVAL_LONG(&type, LCB_N1XSPEC_T_VIEW);
             } else if (strcmp(str, "gsi") == 0) {
-                ZVAL_LONG(PCBC_P(type), LCB_N1XSPEC_T_GSI);
+                ZVAL_LONG(&type, LCB_N1XSPEC_T_GSI);
             } else {
-                ZVAL_LONG(PCBC_P(type), LCB_N1XSPEC_T_DEFAULT);
+                ZVAL_LONG(&type, LCB_N1XSPEC_T_DEFAULT);
             }
             if (owned) {
                 efree(str);
             }
         } else {
-            ZVAL_LONG(PCBC_P(type), LCB_N1XSPEC_T_DEFAULT);
+            ZVAL_LONG(&type, LCB_N1XSPEC_T_DEFAULT);
         }
-        zend_update_property(n1ix_spec_ce, return_value, ZEND_STRL("type"), PCBC_P(type) TSRMLS_CC);
+        zend_update_property(n1ix_spec_ce, return_value, ZEND_STRL("type"), &type TSRMLS_CC);
         zval_ptr_dtor(&type);
     }
 

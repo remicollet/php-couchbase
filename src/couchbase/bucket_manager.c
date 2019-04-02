@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -18,6 +18,12 @@
 
 #define LOGARGS(manager, lvl) LCB_LOG_##lvl, manager->conn->lcb, "pcbc/bucket_manager", __FILE__, __LINE__
 
+static inline pcbc_bucket_manager_t *pcbc_bucket_manager_fetch_object(zend_object *obj)
+{
+    return (pcbc_bucket_manager_t *)((char *)obj - XtOffsetOf(pcbc_bucket_manager_t, std));
+}
+#define Z_BUCKET_MANAGER_OBJ(zo) (pcbc_bucket_manager_fetch_object(zo))
+#define Z_BUCKET_MANAGER_OBJ_P(zv) (pcbc_bucket_manager_fetch_object(Z_OBJ_P(zv)))
 zend_class_entry *pcbc_bucket_manager_ce;
 
 /* {{{ proto void BucketManager::__construct() Should not be called directly */
@@ -105,7 +111,7 @@ PHP_METHOD(BucketManager, insertDesignDocument)
     lcb_CMDHTTP cmd = {0};
     char *path, *name = NULL;
     int rv, path_len;
-    pcbc_str_arg_size name_len = 0;
+    size_t name_len = 0;
     zval *document;
     smart_str buf = {0};
     int last_error;
@@ -173,7 +179,7 @@ PHP_METHOD(BucketManager, upsertDesignDocument)
     lcb_CMDHTTP cmd = {0};
     char *path, *name = NULL;
     int rv, path_len = 0;
-    pcbc_str_arg_size name_len = 0;
+    size_t name_len = 0;
     zval *document;
     smart_str buf = {0};
     int last_error;
@@ -228,7 +234,7 @@ PHP_METHOD(BucketManager, removeDesignDocument)
     lcb_CMDHTTP cmd = {0};
     char *path, *name = NULL;
     int rv, path_len;
-    pcbc_str_arg_size name_len = 0;
+    size_t name_len = 0;
 
     obj = Z_BUCKET_MANAGER_OBJ_P(getThis());
 
@@ -253,7 +259,7 @@ PHP_METHOD(BucketManager, getDesignDocument)
     lcb_CMDHTTP cmd = {0};
     char *path, *name = NULL;
     int rv, path_len;
-    pcbc_str_arg_size name_len = 0;
+    size_t name_len = 0;
 
     obj = Z_BUCKET_MANAGER_OBJ_P(getThis());
 
@@ -298,7 +304,7 @@ PHP_METHOD(BucketManager, createN1qlPrimaryIndex)
     pcbc_bucket_manager_t *obj;
     char *name = NULL;
     int rv;
-    pcbc_str_arg_size name_len = 0;
+    size_t name_len = 0;
     zend_bool ignore_if_exist = 0, defer = 0;
     lcb_CMDN1XMGMT cmd = {0};
 
@@ -332,7 +338,7 @@ PHP_METHOD(BucketManager, createN1qlIndex)
     lcb_CMDN1XMGMT cmd = {0};
     char *name = NULL, *where = NULL;
     int rv, last_error;
-    pcbc_str_arg_size name_len = 0, where_len = 0;
+    size_t name_len = 0, where_len = 0;
     zend_bool ignore_if_exist = 0, defer = 0;
     zval *fields;
     smart_str buf = {0};
@@ -379,7 +385,7 @@ PHP_METHOD(BucketManager, dropN1qlPrimaryIndex)
     lcb_CMDN1XMGMT cmd = {0};
     char *name = NULL;
     int rv;
-    pcbc_str_arg_size name_len = 0;
+    size_t name_len = 0;
     zend_bool ignore_if_not_exist = 0;
 
     obj = Z_BUCKET_MANAGER_OBJ_P(getThis());
@@ -406,7 +412,7 @@ PHP_METHOD(BucketManager, dropN1qlIndex)
     lcb_CMDN1XMGMT cmd = {0};
     char *name = NULL;
     int rv;
-    pcbc_str_arg_size name_len = 0;
+    size_t name_len = 0;
     zend_bool ignore_if_not_exist = 0;
 
     obj = Z_BUCKET_MANAGER_OBJ_P(getThis());
@@ -500,19 +506,16 @@ zend_function_entry bucket_manager_methods[] = {
 
 zend_object_handlers pcbc_bucket_manager_handlers;
 
-static void pcbc_bucket_manager_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
+static void pcbc_bucket_manager_free_object(zend_object *object TSRMLS_DC) /* {{{ */
 {
     pcbc_bucket_manager_t *obj = Z_BUCKET_MANAGER_OBJ(object);
 
     pcbc_connection_delref(obj->conn TSRMLS_CC);
     obj->conn = NULL;
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    efree(obj);
-#endif
 } /* }}} */
 
-static pcbc_create_object_retval pcbc_bucket_manager_create_object(zend_class_entry *class_type TSRMLS_DC)
+static zend_object *pcbc_bucket_manager_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
     pcbc_bucket_manager_t *obj = NULL;
 
@@ -521,18 +524,8 @@ static pcbc_create_object_retval pcbc_bucket_manager_create_object(zend_class_en
     zend_object_std_init(&obj->std, class_type TSRMLS_CC);
     object_properties_init(&obj->std, class_type);
 
-#if PHP_VERSION_ID >= 70000
     obj->std.handlers = &pcbc_bucket_manager_handlers;
     return &obj->std;
-#else
-    {
-        zend_object_value ret;
-        ret.handle = zend_objects_store_put(obj, (zend_objects_store_dtor_t)zend_objects_destroy_object,
-                                            pcbc_bucket_manager_free_object, NULL TSRMLS_CC);
-        ret.handlers = &pcbc_bucket_manager_handlers;
-        return ret;
-    }
-#endif
 }
 
 void pcbc_bucket_manager_init(zval *return_value, zval *bucket TSRMLS_DC)
@@ -548,11 +541,7 @@ void pcbc_bucket_manager_init(zval *return_value, zval *bucket TSRMLS_DC)
 static HashTable *pcbc_bucket_manager_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
 {
     pcbc_bucket_manager_t *obj = NULL;
-#if PHP_VERSION_ID >= 70000
     zval retval;
-#else
-    zval retval = zval_used_for_init;
-#endif
 
     *is_temp = 1;
     obj = Z_BUCKET_MANAGER_OBJ_P(object);
@@ -574,10 +563,8 @@ PHP_MINIT_FUNCTION(BucketManager)
 
     memcpy(&pcbc_bucket_manager_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     pcbc_bucket_manager_handlers.get_debug_info = pcbc_bucket_manager_get_debug_info;
-#if PHP_VERSION_ID >= 70000
     pcbc_bucket_manager_handlers.free_obj = pcbc_bucket_manager_free_object;
     pcbc_bucket_manager_handlers.offset = XtOffsetOf(pcbc_bucket_manager_t, std);
-#endif
 
     zend_register_class_alias("\\CouchbaseBucketManager", pcbc_bucket_manager_ce);
     return SUCCESS;

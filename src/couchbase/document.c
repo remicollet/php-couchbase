@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -26,12 +26,12 @@ zend_function_entry document_methods[] = {
 
 void pcbc_document_init_error(zval *return_value, opcookie_res *header TSRMLS_DC)
 {
-    PCBC_ZVAL exc;
-    PCBC_ZVAL_ALLOC(exc);
+    zval exc;
+    ZVAL_UNDEF(&exc);
 
     object_init_ex(return_value, pcbc_document_ce);
-    pcbc_exception_init_lcb(PCBC_P(exc), header->err, NULL, header->err_ctx, header->err_ref TSRMLS_CC);
-    zend_update_property(pcbc_document_ce, return_value, ZEND_STRL("error"), PCBC_P(exc) TSRMLS_CC);
+    pcbc_exception_init_lcb(&exc, header->err, NULL, header->err_ctx, header->err_ref TSRMLS_CC);
+    zend_update_property(pcbc_document_ce, return_value, ZEND_STRL("error"), &exc TSRMLS_CC);
 
     zval_ptr_dtor(&exc);
 }
@@ -43,26 +43,26 @@ void pcbc_document_init_decode(zval *return_value, pcbc_bucket_t *bucket, const 
     object_init_ex(return_value, pcbc_document_ce);
 
     if (bytes_len) {
-        PCBC_ZVAL val;
-        PCBC_ZVAL_ALLOC(val);
-        pcbc_decode_value(PCBC_P(val), bucket, bytes, bytes_len, flags, datatype TSRMLS_CC);
-        zend_update_property(pcbc_document_ce, return_value, ZEND_STRL("value"), PCBC_P(val) TSRMLS_CC);
+        zval val;
+        ZVAL_UNDEF(&val);
+        pcbc_decode_value(&val, bucket, bytes, bytes_len, flags, datatype TSRMLS_CC);
+        zend_update_property(pcbc_document_ce, return_value, ZEND_STRL("value"), &val TSRMLS_CC);
         zval_ptr_dtor(&val);
     }
     zend_update_property_long(pcbc_document_ce, return_value, ZEND_STRL("flags"), flags TSRMLS_CC);
     {
-        PCBC_ZVAL val;
-        PCBC_ZVAL_ALLOC(val);
-        pcbc_cas_encode(PCBC_P(val), cas TSRMLS_CC);
-        zend_update_property(pcbc_document_ce, return_value, ZEND_STRL("cas"), PCBC_P(val) TSRMLS_CC);
+        zval val;
+        ZVAL_UNDEF(&val);
+        pcbc_cas_encode(&val, cas TSRMLS_CC);
+        zend_update_property(pcbc_document_ce, return_value, ZEND_STRL("cas"), &val TSRMLS_CC);
         zval_ptr_dtor(&val);
     }
 
     if (LCB_MUTATION_TOKEN_ISVALID(token)) {
-        PCBC_ZVAL val;
-        PCBC_ZVAL_ALLOC(val);
-        pcbc_mutation_token_init(PCBC_P(val), bucket->conn->bucketname, token TSRMLS_CC);
-        zend_update_property(pcbc_document_ce, return_value, ZEND_STRL("token"), PCBC_P(val) TSRMLS_CC);
+        zval val;
+        ZVAL_UNDEF(&val);
+        pcbc_mutation_token_init(&val, bucket->conn->bucketname, token TSRMLS_CC);
+        zend_update_property(pcbc_document_ce, return_value, ZEND_STRL("token"), &val TSRMLS_CC);
         zval_ptr_dtor(&val);
     }
 }
@@ -74,17 +74,17 @@ void pcbc_document_init_counter(zval *return_value, pcbc_bucket_t *bucket, lcb_U
 
     zend_update_property_long(pcbc_document_ce, return_value, ZEND_STRL("value"), value TSRMLS_CC);
     {
-        PCBC_ZVAL val;
-        PCBC_ZVAL_ALLOC(val);
-        pcbc_cas_encode(PCBC_P(val), cas TSRMLS_CC);
-        zend_update_property(pcbc_document_ce, return_value, ZEND_STRL("cas"), PCBC_P(val) TSRMLS_CC);
+        zval val;
+        ZVAL_UNDEF(&val);
+        pcbc_cas_encode(&val, cas TSRMLS_CC);
+        zend_update_property(pcbc_document_ce, return_value, ZEND_STRL("cas"), &val TSRMLS_CC);
         zval_ptr_dtor(&val);
     }
     if (LCB_MUTATION_TOKEN_ISVALID(token)) {
-        PCBC_ZVAL val;
-        PCBC_ZVAL_ALLOC(val);
-        pcbc_mutation_token_init(PCBC_P(val), bucket->conn->bucketname, token TSRMLS_CC);
-        zend_update_property(pcbc_document_ce, return_value, ZEND_STRL("token"), PCBC_P(val) TSRMLS_CC);
+        zval val;
+        ZVAL_UNDEF(&val);
+        pcbc_mutation_token_init(&val, bucket->conn->bucketname, token TSRMLS_CC);
+        zend_update_property(pcbc_document_ce, return_value, ZEND_STRL("token"), &val TSRMLS_CC);
         zval_ptr_dtor(&val);
     }
 }
@@ -100,17 +100,17 @@ void pcbc_document_init(zval *return_value, pcbc_bucket_t *bucket, const char *b
     }
     zend_update_property_long(pcbc_document_ce, return_value, ZEND_STRL("flags"), flags TSRMLS_CC);
     {
-        PCBC_ZVAL val;
-        PCBC_ZVAL_ALLOC(val);
-        pcbc_cas_encode(PCBC_P(val), cas TSRMLS_CC);
-        zend_update_property(pcbc_document_ce, return_value, ZEND_STRL("cas"), PCBC_P(val) TSRMLS_CC);
+        zval val;
+        ZVAL_UNDEF(&val);
+        pcbc_cas_encode(&val, cas TSRMLS_CC);
+        zend_update_property(pcbc_document_ce, return_value, ZEND_STRL("cas"), &val TSRMLS_CC);
         zval_ptr_dtor(&val);
     }
     if (LCB_MUTATION_TOKEN_ISVALID(token)) {
-        PCBC_ZVAL val;
-        PCBC_ZVAL_ALLOC(val);
-        pcbc_mutation_token_init(PCBC_P(val), bucket->conn->bucketname, token TSRMLS_CC);
-        zend_update_property(pcbc_document_ce, return_value, ZEND_STRL("token"), PCBC_P(val) TSRMLS_CC);
+        zval val;
+        ZVAL_UNDEF(&val);
+        pcbc_mutation_token_init(&val, bucket->conn->bucketname, token TSRMLS_CC);
+        zend_update_property(pcbc_document_ce, return_value, ZEND_STRL("token"), &val TSRMLS_CC);
         zval_ptr_dtor(&val);
     }
 }

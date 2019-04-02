@@ -1,5 +1,5 @@
 /**
- *     Copyright 2018 Couchbase, Inc.
+ *     Copyright 2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ PHP_METHOD(SearchSort, score)
 PHP_METHOD(SearchSort, field)
 {
     char *field = NULL;
-    pcbc_str_arg_size field_len = 0;
+    size_t field_len = 0;
     long limit;
     int rv;
 
@@ -78,7 +78,7 @@ PHP_METHOD(SearchSort, field)
 PHP_METHOD(SearchSort, geoDistance)
 {
     char *field = NULL;
-    pcbc_str_arg_size field_len = 0;
+    size_t field_len = 0;
     double lon = 0, lat = 0;
     long limit;
     int rv;

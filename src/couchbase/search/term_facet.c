@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -20,24 +20,19 @@
 #include "couchbase.h"
 
 typedef struct {
-    PCBC_ZEND_OBJECT_PRE
+
     double boost;
     char *field;
     int limit;
-    PCBC_ZEND_OBJECT_POST
+    zend_object std;
 } pcbc_term_search_facet_t;
 
-#if PHP_VERSION_ID >= 70000
 static inline pcbc_term_search_facet_t *pcbc_term_search_facet_fetch_object(zend_object *obj)
 {
     return (pcbc_term_search_facet_t *)((char *)obj - XtOffsetOf(pcbc_term_search_facet_t, std));
 }
 #define Z_TERM_SEARCH_FACET_OBJ(zo) (pcbc_term_search_facet_fetch_object(zo))
 #define Z_TERM_SEARCH_FACET_OBJ_P(zv) (pcbc_term_search_facet_fetch_object(Z_OBJ_P(zv)))
-#else
-#define Z_TERM_SEARCH_FACET_OBJ(zo) ((pcbc_term_search_facet_t *)zo)
-#define Z_TERM_SEARCH_FACET_OBJ_P(zv) ((pcbc_term_search_facet_t *)zend_object_store_get_object(zv TSRMLS_CC))
-#endif
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/term_search_facet", __FILE__, __LINE__
 
@@ -91,7 +86,7 @@ void pcbc_term_search_facet_init(zval *return_value, char *field, int field_len,
 
 zend_object_handlers term_search_facet_handlers;
 
-static void term_search_facet_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
+static void term_search_facet_free_object(zend_object *object TSRMLS_DC) /* {{{ */
 {
     pcbc_term_search_facet_t *obj = Z_TERM_SEARCH_FACET_OBJ(object);
 
@@ -100,12 +95,9 @@ static void term_search_facet_free_object(pcbc_free_object_arg *object TSRMLS_DC
     }
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    efree(obj);
-#endif
 } /* }}} */
 
-static pcbc_create_object_retval term_search_facet_create_object(zend_class_entry *class_type TSRMLS_DC)
+static zend_object *term_search_facet_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
     pcbc_term_search_facet_t *obj = NULL;
 
@@ -114,28 +106,14 @@ static pcbc_create_object_retval term_search_facet_create_object(zend_class_entr
     zend_object_std_init(&obj->std, class_type TSRMLS_CC);
     object_properties_init(&obj->std, class_type);
 
-#if PHP_VERSION_ID >= 70000
     obj->std.handlers = &term_search_facet_handlers;
     return &obj->std;
-#else
-    {
-        zend_object_value ret;
-        ret.handle = zend_objects_store_put(obj, (zend_objects_store_dtor_t)zend_objects_destroy_object,
-                                            term_search_facet_free_object, NULL TSRMLS_CC);
-        ret.handlers = &term_search_facet_handlers;
-        return ret;
-    }
-#endif
 }
 
 static HashTable *pcbc_term_search_facet_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
 {
     pcbc_term_search_facet_t *obj = NULL;
-#if PHP_VERSION_ID >= 70000
     zval retval;
-#else
-    zval retval = zval_used_for_init;
-#endif
 
     *is_temp = 1;
     obj = Z_TERM_SEARCH_FACET_OBJ_P(object);
@@ -160,10 +138,8 @@ PHP_MINIT_FUNCTION(TermSearchFacet)
 
     memcpy(&term_search_facet_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     term_search_facet_handlers.get_debug_info = pcbc_term_search_facet_get_debug_info;
-#if PHP_VERSION_ID >= 70000
     term_search_facet_handlers.free_obj = term_search_facet_free_object;
     term_search_facet_handlers.offset = XtOffsetOf(pcbc_term_search_facet_t, std);
-#endif
 
     zend_register_class_alias("\\CouchbaseTermSearchFacet", pcbc_term_search_facet_ce);
     return SUCCESS;

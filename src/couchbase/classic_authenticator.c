@@ -1,5 +1,5 @@
 /**
- *     Copyright 2016-2017 Couchbase, Inc.
+ *     Copyright 2016-2019 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ PHP_METHOD(ClassicAuthenticator, cluster)
 {
     pcbc_classic_authenticator_t *obj;
     char *username = NULL, *password = NULL;
-    pcbc_str_arg_size username_len, password_len;
+    size_t username_len, password_len;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &username, &username_len, &password, &password_len);
@@ -82,7 +82,7 @@ PHP_METHOD(ClassicAuthenticator, bucket)
 {
     pcbc_classic_authenticator_t *obj;
     char *name = NULL, *password = NULL;
-    pcbc_str_arg_size name_len, password_len;
+    size_t name_len, password_len;
     pcbc_credential_t *ptr;
     int rv;
 
@@ -230,7 +230,7 @@ zend_function_entry classic_authenticator_methods[] = {
 
 zend_object_handlers classic_authenticator_handlers;
 
-static void classic_authenticator_free_object(pcbc_free_object_arg *object TSRMLS_DC) /* {{{ */
+static void classic_authenticator_free_object(zend_object *object TSRMLS_DC) /* {{{ */
 {
     pcbc_classic_authenticator_t *obj = Z_CLASSIC_AUTHENTICATOR_OBJ(object);
     pcbc_credential_t *ptr;
@@ -256,12 +256,9 @@ static void classic_authenticator_free_object(pcbc_free_object_arg *object TSRML
     obj->buckets = obj->tail = NULL;
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-#if PHP_VERSION_ID < 70000
-    efree(obj);
-#endif
 } /* }}} */
 
-static pcbc_create_object_retval authenticator_create_object(zend_class_entry *class_type TSRMLS_DC)
+static zend_object *authenticator_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
     pcbc_classic_authenticator_t *obj = NULL;
 
@@ -270,29 +267,15 @@ static pcbc_create_object_retval authenticator_create_object(zend_class_entry *c
     zend_object_std_init(&obj->std, class_type TSRMLS_CC);
     object_properties_init(&obj->std, class_type);
 
-#if PHP_VERSION_ID >= 70000
     obj->std.handlers = &classic_authenticator_handlers;
     return &obj->std;
-#else
-    {
-        zend_object_value ret;
-        ret.handle = zend_objects_store_put(obj, (zend_objects_store_dtor_t)zend_objects_destroy_object,
-                                            classic_authenticator_free_object, NULL TSRMLS_CC);
-        ret.handlers = &classic_authenticator_handlers;
-        return ret;
-    }
-#endif
 }
 
 static HashTable *pcbc_classic_authenticator_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
 {
     pcbc_classic_authenticator_t *obj = NULL;
-#if PHP_VERSION_ID >= 70000
     zval retval;
-#else
-    zval retval = zval_used_for_init;
-#endif
-    PCBC_ZVAL buckets;
+    zval buckets;
     pcbc_credential_t *ptr;
 
     *is_temp = 1;
@@ -302,15 +285,15 @@ static HashTable *pcbc_classic_authenticator_get_debug_info(zval *object, int *i
     if (obj->cluster.username) {
         ADD_ASSOC_STRING(&retval, "cluster", obj->cluster.username);
     }
-    PCBC_ZVAL_ALLOC(buckets);
-    array_init_size(PCBC_P(buckets), obj->nbuckets);
+    ZVAL_UNDEF(&buckets);
+    array_init_size(&buckets, obj->nbuckets);
 
     ptr = obj->buckets;
     while (ptr) {
-        ADD_NEXT_INDEX_STRING(PCBC_P(buckets), ptr->username)
+        ADD_NEXT_INDEX_STRING(&buckets, ptr->username)
         ptr = ptr->next;
     }
-    add_assoc_zval(&retval, "buckets", PCBC_P(buckets));
+    add_assoc_zval(&retval, "buckets", &buckets);
     return Z_ARRVAL(retval);
 } /* }}} */
 
@@ -327,10 +310,8 @@ PHP_MINIT_FUNCTION(ClassicAuthenticator)
 
     memcpy(&classic_authenticator_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     classic_authenticator_handlers.get_debug_info = pcbc_classic_authenticator_get_debug_info;
-#if PHP_VERSION_ID >= 70000
     classic_authenticator_handlers.free_obj = classic_authenticator_free_object;
     classic_authenticator_handlers.offset = XtOffsetOf(pcbc_classic_authenticator_t, std);
-#endif
 
     zend_register_class_alias("\\CouchbaseAuthenticator", pcbc_classic_authenticator_ce);
     return SUCCESS;
