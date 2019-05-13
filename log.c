@@ -60,7 +60,7 @@ struct pcbc_logger_st pcbc_logger = {{0 /* version */, {{log_handler} /* v1 */} 
                                      /** Minimum severity */
                                      LCB_LOG_INFO};
 
-void pcbc_log(int severity, lcb_t instance, const char *subsys, const char *srcfile, int srcline, const char *fmt, ...)
+void pcbc_log(int severity, lcb_INSTANCE *instance, const char *subsys, const char *srcfile, int srcline, const char *fmt, ...)
 {
     va_list ap;
     char buf[PCBC_LOG_MSG_SIZE] = {0};

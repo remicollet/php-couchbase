@@ -23,8 +23,6 @@
 zend_class_entry *pcbc_cluster_ce;
 extern zend_class_entry *pcbc_authenticator_ce;
 
-/* {{{ proto void Cluster::__construct($connstr = 'couchbase://127.0.0.1/')
-   Creates a connection to a cluster */
 PHP_METHOD(Cluster, __construct)
 {
     pcbc_cluster_t *obj;
@@ -46,11 +44,8 @@ PHP_METHOD(Cluster, __construct)
     ZVAL_UNDEF(&obj->auth);
     pcbc_log(LOGARGS(DEBUG), "Initialize Cluster. C=%p connstr=\"%s\"", (void *)obj, obj->connstr);
 }
-/* }}} */
 
-/* {{{ proto \Couchbase\Bucket Cluster::openBucket(string $bucketname = "default", string $password = "")
-   Constructs a connection to a bucket. */
-PHP_METHOD(Cluster, openBucket)
+PHP_METHOD(Cluster, bucket)
 {
     pcbc_cluster_t *obj;
     const char *bucketname = NULL, *password = NULL;
@@ -69,9 +64,8 @@ PHP_METHOD(Cluster, openBucket)
         pcbc_log(LOGARGS(DEBUG), "Fallback to default bucket bucketname. C=%p", (void *)obj);
     }
     pcbc_bucket_init(return_value, obj, bucketname, password TSRMLS_CC);
-} /* }}} */
+}
 
-/* {{{ proto \Couchbase\ClusterManager Cluster::manager(string $username = NULL, string $password = NULL) */
 PHP_METHOD(Cluster, manager)
 {
     pcbc_cluster_t *obj;
@@ -85,9 +79,8 @@ PHP_METHOD(Cluster, manager)
     }
     obj = Z_CLUSTER_OBJ_P(getThis());
     pcbc_cluster_manager_init(return_value, obj, name, password TSRMLS_CC);
-} /* }}} */
+}
 
-/* {{{ proto void Cluster::authenticate(\Couchbase\Authenticator $authenticator) */
 PHP_METHOD(Cluster, authenticate)
 {
     pcbc_cluster_t *obj;
@@ -106,9 +99,8 @@ PHP_METHOD(Cluster, authenticate)
     ZVAL_ZVAL(&obj->auth, authenticator, 1, 0);
 
     RETURN_NULL();
-} /* }}} */
+}
 
-/* {{{ proto void Cluster::authenticateAs(string $username, string $password) */
 PHP_METHOD(Cluster, authenticateAs)
 {
     pcbc_cluster_t *obj;
@@ -131,13 +123,13 @@ PHP_METHOD(Cluster, authenticateAs)
     ZVAL_ZVAL(&obj->auth, &authenticator, 0, 0);
 
     RETURN_NULL();
-} /* }}} */
+}
 
 ZEND_BEGIN_ARG_INFO_EX(ai_Cluster_constructor, 0, 0, 1)
 ZEND_ARG_INFO(0, connstr)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_Cluster_openBucket, 0, 0, 2)
+ZEND_BEGIN_ARG_INFO_EX(ai_Cluster_bucket, 0, 0, 2)
 ZEND_ARG_INFO(0, name)
 ZEND_ARG_INFO(0, password)
 ZEND_END_ARG_INFO()
@@ -159,7 +151,7 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry cluster_methods[] = {
     PHP_ME(Cluster, __construct, ai_Cluster_constructor, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
-    PHP_ME(Cluster, openBucket, ai_Cluster_openBucket, ZEND_ACC_PUBLIC)
+    PHP_ME(Cluster, bucket, ai_Cluster_bucket, ZEND_ACC_PUBLIC)
     PHP_ME(Cluster, manager, ai_Cluster_manager, ZEND_ACC_PUBLIC)
     PHP_ME(Cluster, authenticate, ai_Cluster_authenticate, ZEND_ACC_PUBLIC)
     PHP_ME(Cluster, authenticateAs, ai_Cluster_authenticateAs, ZEND_ACC_PUBLIC)
@@ -182,7 +174,7 @@ static void pcbc_cluster_free_object(zend_object *object TSRMLS_DC) /* {{{ */
     }
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-} /* }}} */
+}
 
 static zend_object *pcbc_cluster_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
@@ -215,7 +207,7 @@ static HashTable *pcbc_cluster_get_debug_info(zval *object, int *is_temp TSRMLS_
     }
 
     return Z_ARRVAL(retval);
-} /* }}} */
+}
 
 PHP_MINIT_FUNCTION(Cluster)
 {
@@ -231,6 +223,10 @@ PHP_MINIT_FUNCTION(Cluster)
     pcbc_cluster_handlers.free_obj = pcbc_cluster_free_object;
     pcbc_cluster_handlers.offset = XtOffsetOf(pcbc_cluster_t, std);
 
-    zend_register_class_alias("\\CouchbaseCluster", pcbc_cluster_ce);
+
     return SUCCESS;
 }
+
+/*
+ * vim: et ts=4 sw=4 sts=4
+ */

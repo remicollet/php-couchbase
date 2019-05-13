@@ -30,24 +30,26 @@ char *pcbc_client_string = "PCBC/" PHP_COUCHBASE_VERSION " (PHP/" PHP_VERSION
 #endif
                            ")";
 
-void get_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
-void store_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
-void unlock_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
-void remove_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
-void touch_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
-void counter_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
-void subdoc_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
-void http_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
-void durability_callback(lcb_t instance, const void *cookie, lcb_error_t error, const lcb_durability_resp_t *resp);
-void ping_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
-void diag_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb);
+void get_callback(lcb_INSTANCE * instance, int cbtype, const lcb_RESPGET *rb);
+void getreplica_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPGETREPLICA *resp);
+void exists_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPEXISTS *resp);
+void store_callback(lcb_INSTANCE * instance, int cbtype, const lcb_RESPSTORE *rb);
+void unlock_callback(lcb_INSTANCE * instance, int cbtype, const lcb_RESPUNLOCK *rb);
+void remove_callback(lcb_INSTANCE * instance, int cbtype, const lcb_RESPREMOVE *rb);
+void touch_callback(lcb_INSTANCE * instance, int cbtype, const lcb_RESPTOUCH *rb);
+void counter_callback(lcb_INSTANCE * instance, int cbtype, const lcb_RESPCOUNTER *rb);
+void subdoc_lookup_callback(lcb_INSTANCE * instance, int cbtype, const lcb_RESPSUBDOC *rb);
+void subdoc_mutate_callback(lcb_INSTANCE * instance, int cbtype, const lcb_RESPSUBDOC *rb);
+void http_callback(lcb_INSTANCE * instance, int cbtype, const lcb_RESPHTTP *rb);
+void ping_callback(lcb_INSTANCE * instance, int cbtype, const lcb_RESPPING *rb);
+void diag_callback(lcb_INSTANCE * instance, int cbtype, const lcb_RESPDIAG *rb);
 
-static lcb_error_t pcbc_establish_connection(lcb_type_t type, lcb_t *result, const char *connstr,
+static lcb_STATUS pcbc_establish_connection(lcb_type_t type, lcb_INSTANCE * *result, const char *connstr,
                                              lcb_AUTHENTICATOR *auth, char *auth_hash TSRMLS_DC)
 {
     struct lcb_create_st create_options;
-    lcb_error_t err;
-    lcb_t conn;
+    lcb_STATUS err;
+    lcb_INSTANCE * conn;
 
     memset(&create_options, 0, sizeof(create_options));
     create_options.version = 4;
@@ -56,16 +58,16 @@ static lcb_error_t pcbc_establish_connection(lcb_type_t type, lcb_t *result, con
     create_options.v.v4.logger = (struct lcb_logprocs_st *)&pcbc_logger;
     err = lcb_create(&conn, &create_options);
     if (err != LCB_SUCCESS) {
-        pcbc_log(LOGARGS(NULL, ERROR), "Failed to initialize LCB connection: %s", pcbc_lcb_strerror(err));
+        pcbc_log(LOGARGS(NULL, ERROR), "Failed to initialize LCB connection: %s", lcb_strerror_short(err));
         return err;
     }
-    pcbc_log(LOGARGS(conn, INFO), "New lcb_t instance has been initialized");
+    pcbc_log(LOGARGS(conn, INFO), "New lcb_INSTANCE * instance has been initialized");
     lcb_set_auth(conn, auth);
     lcbauth_unref(auth);
     pcbc_log(LOGARGS(conn, INFO), "Using authenticator. md5=\"%s\"", auth_hash);
     err = lcb_cntl(conn, LCB_CNTL_SET, LCB_CNTL_CLIENT_STRING, pcbc_client_string);
     if (err != LCB_SUCCESS) {
-        pcbc_log(LOGARGS(conn, ERROR), "Failed to configure LCB client string: %s", pcbc_lcb_strerror(err));
+        pcbc_log(LOGARGS(conn, ERROR), "Failed to configure LCB client string: %s", lcb_strerror_short(err));
         lcb_destroy(conn);
         return err;
     }
@@ -76,30 +78,31 @@ static lcb_error_t pcbc_establish_connection(lcb_type_t type, lcb_t *result, con
         int enabled = 1;
         err = lcb_cntl(conn, LCB_CNTL_SET, LCB_CNTL_ENABLE_ERRMAP, &enabled);
         if (err != LCB_SUCCESS) {
-            pcbc_log(LOGARGS(conn, ERROR), "Failed to enable error maps: %s", pcbc_lcb_strerror(err));
+            pcbc_log(LOGARGS(conn, ERROR), "Failed to enable error maps: %s", lcb_strerror_short(err));
             lcb_destroy(conn);
             return err;
         }
     }
 #endif
 
-    lcb_install_callback3(conn, LCB_CALLBACK_GET, get_callback);
-    lcb_install_callback3(conn, LCB_CALLBACK_GETREPLICA, get_callback);
-    lcb_install_callback3(conn, LCB_CALLBACK_STORE, store_callback);
-    lcb_install_callback3(conn, LCB_CALLBACK_STOREDUR, store_callback);
-    lcb_install_callback3(conn, LCB_CALLBACK_UNLOCK, unlock_callback);
-    lcb_install_callback3(conn, LCB_CALLBACK_REMOVE, remove_callback);
-    lcb_install_callback3(conn, LCB_CALLBACK_TOUCH, touch_callback);
-    lcb_install_callback3(conn, LCB_CALLBACK_COUNTER, counter_callback);
-    lcb_install_callback3(conn, LCB_CALLBACK_SDLOOKUP, subdoc_callback);
-    lcb_install_callback3(conn, LCB_CALLBACK_SDMUTATE, subdoc_callback);
-    lcb_install_callback3(conn, LCB_CALLBACK_HTTP, http_callback);
-    lcb_install_callback3(conn, LCB_CALLBACK_PING, ping_callback);
-    lcb_install_callback3(conn, LCB_CALLBACK_DIAG, diag_callback);
+    lcb_install_callback3(conn, LCB_CALLBACK_GET, (lcb_RESPCALLBACK)get_callback);
+    lcb_install_callback3(conn, LCB_CALLBACK_GETREPLICA, (lcb_RESPCALLBACK)getreplica_callback);
+    lcb_install_callback3(conn, LCB_CALLBACK_EXISTS, (lcb_RESPCALLBACK)exists_callback);
+    lcb_install_callback3(conn, LCB_CALLBACK_STORE, (lcb_RESPCALLBACK)store_callback);
+    lcb_install_callback3(conn, LCB_CALLBACK_STOREDUR, (lcb_RESPCALLBACK)store_callback);
+    lcb_install_callback3(conn, LCB_CALLBACK_UNLOCK, (lcb_RESPCALLBACK)unlock_callback);
+    lcb_install_callback3(conn, LCB_CALLBACK_REMOVE, (lcb_RESPCALLBACK)remove_callback);
+    lcb_install_callback3(conn, LCB_CALLBACK_TOUCH, (lcb_RESPCALLBACK)touch_callback);
+    lcb_install_callback3(conn, LCB_CALLBACK_COUNTER, (lcb_RESPCALLBACK)counter_callback);
+    lcb_install_callback3(conn, LCB_CALLBACK_SDLOOKUP, (lcb_RESPCALLBACK)subdoc_lookup_callback);
+    lcb_install_callback3(conn, LCB_CALLBACK_SDMUTATE, (lcb_RESPCALLBACK)subdoc_mutate_callback);
+    lcb_install_callback3(conn, LCB_CALLBACK_HTTP, (lcb_RESPCALLBACK)http_callback);
+    lcb_install_callback3(conn, LCB_CALLBACK_PING, (lcb_RESPCALLBACK)ping_callback);
+    lcb_install_callback3(conn, LCB_CALLBACK_DIAG, (lcb_RESPCALLBACK)diag_callback);
 
     err = lcb_connect(conn);
     if (err != LCB_SUCCESS) {
-        pcbc_log(LOGARGS(conn, ERROR), "Failed to connect LCB connection: %s", pcbc_lcb_strerror(err));
+        pcbc_log(LOGARGS(conn, ERROR), "Failed to connect LCB connection: %s", lcb_strerror_short(err));
         lcb_destroy(conn);
         return err;
     }
@@ -107,7 +110,7 @@ static lcb_error_t pcbc_establish_connection(lcb_type_t type, lcb_t *result, con
     lcb_wait(conn);
     err = lcb_get_bootstrap_status(conn);
     if (err != LCB_SUCCESS) {
-        pcbc_log(LOGARGS(conn, ERROR), "Failed to bootstrap LCB connection: %s", pcbc_lcb_strerror(err));
+        pcbc_log(LOGARGS(conn, ERROR), "Failed to bootstrap LCB connection: %s", lcb_strerror_short(err));
         lcb_destroy(conn);
         return err;
     }
@@ -116,7 +119,7 @@ static lcb_error_t pcbc_establish_connection(lcb_type_t type, lcb_t *result, con
     return LCB_SUCCESS;
 }
 
-static lcb_error_t pcbc_normalize_connstr(lcb_type_t type, char *connstr, const char *bucketname,
+static lcb_STATUS pcbc_normalize_connstr(lcb_type_t type, char *connstr, const char *bucketname,
                                           char **normalized TSRMLS_DC)
 {
     php_url *url;
@@ -274,7 +277,7 @@ static zend_resource *pcbc_connection_lookup(smart_str *plist_key TSRMLS_DC)
     return NULL;
 }
 
-static lcb_error_t pcbc_connection_cache(smart_str *plist_key, pcbc_connection_t *conn TSRMLS_DC)
+static lcb_STATUS pcbc_connection_cache(smart_str *plist_key, pcbc_connection_t *conn TSRMLS_DC)
 {
     zend_resource res;
     res.type = pcbc_res_couchbase;
@@ -319,12 +322,12 @@ static void pcbc_destroy_connection_resource(zend_resource *res)
     }
 }
 
-lcb_error_t pcbc_connection_get(pcbc_connection_t **result, lcb_type_t type, const char *connstr,
+lcb_STATUS pcbc_connection_get(pcbc_connection_t **result, lcb_type_t type, const char *connstr,
                                 const char *bucketname, lcb_AUTHENTICATOR *auth, char *auth_hash TSRMLS_DC)
 {
     char *cstr = NULL;
-    lcb_error_t rv;
-    lcb_t lcb;
+    lcb_STATUS rv;
+    lcb_INSTANCE * lcb;
     pcbc_connection_t *conn = NULL;
     smart_str plist_key = {0};
     zend_bool is_persistent = 1; // always persistent connections

@@ -207,6 +207,6 @@ PHP_MINIT_FUNCTION(WildcardSearchQuery)
     wildcard_search_query_handlers.free_obj = wildcard_search_query_free_object;
     wildcard_search_query_handlers.offset = XtOffsetOf(pcbc_wildcard_search_query_t, std);
 
-    zend_register_class_alias("\\CouchbaseWildcardSearchQuery", pcbc_wildcard_search_query_ce);
+     
     return SUCCESS;
 }

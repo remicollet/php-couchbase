@@ -18,84 +18,127 @@
 
 #define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/touch", __FILE__, __LINE__
 
-void touch_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
+extern zend_class_entry *pcbc_result_impl_ce;
+
+struct touch_cookie {
+    lcb_STATUS rc;
+    zval *return_value;
+};
+
+void touch_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPTOUCH *resp)
 {
-    opcookie_store_res *result = ecalloc(1, sizeof(opcookie_store_res));
-    const lcb_RESPTOUCH *resp = (const lcb_RESPTOUCH *)rb;
     TSRMLS_FETCH();
 
-    PCBC_RESP_ERR_COPY(result->header, cbtype, rb);
-    if (resp->nkey) {
-        result->key = estrndup(resp->key, resp->nkey);
-    }
-    result->cas = resp->cas;
+    struct touch_cookie *cookie = NULL;
+    lcb_resptouch_cookie(resp, (void **)&cookie);
+    zval *return_value = cookie->return_value;
+    cookie->rc = lcb_resptouch_status(resp);
+    zend_update_property_long(pcbc_result_impl_ce, return_value, ZEND_STRL("status"), cookie->rc TSRMLS_CC);
 
-    opcookie_push((opcookie *)rb->cookie, &result->header);
+    set_property_str(lcb_resptouch_error_context, pcbc_result_impl_ce, "err_ctx");
+    set_property_str(lcb_resptouch_error_ref, pcbc_result_impl_ce, "err_ref");
+    set_property_str(lcb_resptouch_key, pcbc_result_impl_ce, "key");
+
+    if (cookie->rc == LCB_SUCCESS) {
+        zend_string *b64;
+        {
+            uint64_t data;
+            lcb_resptouch_cas(resp, &data);
+            b64 = php_base64_encode((unsigned char *)&data, sizeof(data));
+            zend_update_property_str(pcbc_result_impl_ce, return_value, ZEND_STRL("cas"), b64 TSRMLS_CC);
+        }
+    }
 }
 
-// touch($id {, $lock, $groupid}) : MetaDoc
-PHP_METHOD(Bucket, touch)
-{
-    pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
-    int ii, ncmds, nscheduled;
-    pcbc_pp_state pp_state;
-    pcbc_pp_id id;
-    zval *zexpiry, *zgroupid;
-    opcookie *cookie;
-    lcb_error_t err;
-    lcbtrace_TRACER *tracer = NULL;
+zend_class_entry *pcbc_touch_options_ce;
 
-    // Note that groupid is experimental here and should not be used.
-    if (pcbc_pp_begin(ZEND_NUM_ARGS() TSRMLS_CC, &pp_state, "id|expiry|groupid", &id, &zexpiry, &zgroupid) != SUCCESS) {
-        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+PHP_METHOD(TouchOptions, timeout)
+{
+    zend_long *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
         RETURN_NULL();
     }
+    zend_update_property_long(pcbc_touch_options_ce, getThis(), ZEND_STRL("timeout"), *arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
 
-    ncmds = pcbc_pp_keycount(&pp_state);
-    cookie = opcookie_init();
-    tracer = lcb_get_tracer(obj->conn->lcb);
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_TouchOptions_timeout, 0, 1, \\Couchbase\\TouchOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry pcbc_touch_options_methods[] = {
+    PHP_ME(TouchOptions, timeout, ai_TouchOptions_timeout, ZEND_ACC_PUBLIC)
+    PHP_FE_END
+};
+
+PHP_METHOD(Collection, touch)
+{
+    lcb_STATUS err;
+
+    zend_string *id;
+    zend_long expiration;
+    zval *options;
+
+    int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "Sl|O", &id, &expiration, &options, pcbc_touch_options_ce);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    PCBC_RESOLVE_COLLECTION;
+
+    lcb_CMDTOUCH *cmd;
+    lcb_cmdtouch_create(&cmd);
+    lcb_cmdtouch_collection(cmd, scope_str, scope_len, collection_str, collection_len);
+    lcb_cmdtouch_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
+    lcb_cmdtouch_expiration(cmd, expiration);
+    if (options) {
+        zval *prop, ret;
+        prop = zend_read_property(pcbc_touch_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdtouch_timeout(cmd, Z_LVAL_P(prop));
+        }
+    }
+
+    lcbtrace_SPAN *span = NULL;
+    lcbtrace_TRACER *tracer = lcb_get_tracer(bucket->conn->lcb);
     if (tracer) {
-        cookie->span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_TOUCH, 0, NULL);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
+        span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_TOUCH, 0, NULL);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
+        lcb_cmdtouch_parent_span(cmd, span);
     }
 
-    nscheduled = 0;
-    for (ii = 0; pcbc_pp_next(&pp_state); ++ii) {
-        lcb_CMDTOUCH cmd = {0};
-
-        PCBC_CHECK_ZVAL_LONG(zexpiry, "expiry must be an integer");
-        PCBC_CHECK_ZVAL_STRING(zgroupid, "groupid must be a string");
-
-        LCB_CMD_SET_KEY(&cmd, id.str, id.len);
-        cmd.exptime = Z_LVAL_P(zexpiry);
-        if (zgroupid) {
-            LCB_KREQ_SIMPLE(&cmd._hashkey, Z_STRVAL_P(zgroupid), Z_STRLEN_P(zgroupid));
-        }
-        if (cookie->span) {
-            LCB_CMD_SET_TRACESPAN(&cmd, cookie->span);
-        }
-
-        err = lcb_touch3(obj->conn->lcb, cookie, &cmd);
-        if (err != LCB_SUCCESS) {
-            break;
-        }
-        nscheduled++;
-    }
-    pcbc_assert_number_of_commands(obj->conn->lcb, "touch", nscheduled, ncmds, err);
-
-    if (nscheduled) {
-        lcb_wait(obj->conn->lcb);
-
-        err = proc_touch_results(obj, return_value, cookie, pcbc_pp_ismapped(&pp_state) TSRMLS_CC);
+    object_init_ex(return_value, pcbc_result_impl_ce);
+    struct touch_cookie cookie = {
+        LCB_SUCCESS,
+        return_value
+    };
+    err = lcb_touch(bucket->conn->lcb, &cookie, cmd);
+    if (err == LCB_SUCCESS) {
+        lcb_wait(bucket->conn->lcb);
+        err = cookie.rc;
     }
 
-    if (cookie->span) {
-        lcbtrace_span_finish(cookie->span, LCBTRACE_NOW);
+    if (span) {
+        lcbtrace_span_finish(span, LCBTRACE_NOW);
     }
-    opcookie_destroy(cookie);
 
     if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err);
+        throw_lcb_exception(err, pcbc_result_impl_ce);
     }
 }
+
+PHP_MINIT_FUNCTION(CollectionTouch)
+{
+    zend_class_entry ce;
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "TouchOptions", pcbc_touch_options_methods);
+    pcbc_touch_options_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    zend_declare_property_null(pcbc_touch_options_ce, ZEND_STRL("timeout"), ZEND_ACC_PRIVATE TSRMLS_CC);
+
+    return SUCCESS;
+}
+
+/*
+ * vim: et ts=4 sw=4 sts=4
+ */

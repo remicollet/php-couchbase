@@ -221,6 +221,6 @@ PHP_MINIT_FUNCTION(DateRangeSearchFacet)
     date_search_facet_handlers.free_obj = date_search_facet_free_object;
     date_search_facet_handlers.offset = XtOffsetOf(date_range_search_facet_t, std);
 
-    zend_register_class_alias("\\CouchbaseDateRangeSearchFacet", date_range_search_facet_ce);
+     
     return SUCCESS;
 }

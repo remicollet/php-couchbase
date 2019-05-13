@@ -295,6 +295,6 @@ PHP_MINIT_FUNCTION(TermRangeSearchQuery)
     term_range_search_query_handlers.free_obj = term_range_search_query_free_object;
     term_range_search_query_handlers.offset = XtOffsetOf(pcbc_term_range_search_query_t, std);
 
-    zend_register_class_alias("\\CouchbaseTermRangeSearchQuery", pcbc_term_range_search_query_ce);
+     
     return SUCCESS;
 }

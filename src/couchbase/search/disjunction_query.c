@@ -257,6 +257,6 @@ PHP_MINIT_FUNCTION(DisjunctionSearchQuery)
     disjunction_search_query_handlers.free_obj = disjunction_search_query_free_object;
     disjunction_search_query_handlers.offset = XtOffsetOf(pcbc_disjunction_search_query_t, std);
 
-    zend_register_class_alias("\\CouchbaseDisjunctionSearchQuery", pcbc_disjunction_search_query_ce);
+     
     return SUCCESS;
 }

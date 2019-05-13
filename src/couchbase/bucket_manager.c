@@ -26,66 +26,57 @@ static inline pcbc_bucket_manager_t *pcbc_bucket_manager_fetch_object(zend_objec
 #define Z_BUCKET_MANAGER_OBJ_P(zv) (pcbc_bucket_manager_fetch_object(Z_OBJ_P(zv)))
 zend_class_entry *pcbc_bucket_manager_ce;
 
-/* {{{ proto void BucketManager::__construct() Should not be called directly */
 PHP_METHOD(BucketManager, __construct)
 {
     throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
 }
-/* }}} */
 
-/* {{{ proto array BucketManager::info() */
 PHP_METHOD(BucketManager, info)
 {
-    pcbc_bucket_manager_t *obj;
-    lcb_CMDHTTP cmd = {0};
     char *path;
     int rv, path_len;
 
-    obj = Z_BUCKET_MANAGER_OBJ_P(getThis());
 
     rv = zend_parse_parameters_none();
     if (rv == FAILURE) {
         RETURN_NULL();
     }
+    pcbc_bucket_manager_t *obj = Z_BUCKET_MANAGER_OBJ_P(getThis());
 
-    cmd.type = LCB_HTTP_TYPE_MANAGEMENT;
-    cmd.method = LCB_HTTP_METHOD_GET;
+    lcb_CMDHTTP *cmd;
+    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_MANAGEMENT);
+    lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     path_len = spprintf(&path, 0, "/pools/default/buckets/%s", obj->conn->bucketname);
-    LCB_CMD_SET_KEY(&cmd, path, path_len);
-    cmd.content_type = PCBC_CONTENT_TYPE_FORM;
-    pcbc_http_request(return_value, obj->conn->lcb, &cmd, 1 TSRMLS_CC);
+    lcb_cmdhttp_path(cmd, path, path_len);
+    lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
     efree(path);
-} /* }}} */
+}
 
-/* {{{ proto array BucketManager::flush() */
 PHP_METHOD(BucketManager, flush)
 {
-    pcbc_bucket_manager_t *obj;
-    lcb_CMDHTTP cmd = {0};
     char *path;
     int rv, path_len;
 
-    obj = Z_BUCKET_MANAGER_OBJ_P(getThis());
 
     rv = zend_parse_parameters_none();
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-
-    cmd.type = LCB_HTTP_TYPE_MANAGEMENT;
-    cmd.method = LCB_HTTP_METHOD_POST;
+    pcbc_bucket_manager_t *obj = Z_BUCKET_MANAGER_OBJ_P(getThis());
+    lcb_CMDHTTP *cmd;
+    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_MANAGEMENT);
+    lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_POST);
     path_len = spprintf(&path, 0, "/pools/default/buckets/%s/controller/doFlush", obj->conn->bucketname);
-    LCB_CMD_SET_KEY(&cmd, path, path_len);
-    cmd.content_type = PCBC_CONTENT_TYPE_FORM;
-    pcbc_http_request(return_value, obj->conn->lcb, &cmd, 1 TSRMLS_CC);
+    lcb_cmdhttp_path(cmd, path, path_len);
+    lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
     efree(path);
-} /* }}} */
+}
 
-/* {{{ proto array BucketManager::listDesignDocuments() */
 PHP_METHOD(BucketManager, listDesignDocuments)
 {
     pcbc_bucket_manager_t *obj;
-    lcb_CMDHTTP cmd = {0};
     char *path;
     int rv, path_len;
 
@@ -95,20 +86,19 @@ PHP_METHOD(BucketManager, listDesignDocuments)
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    cmd.type = LCB_HTTP_TYPE_MANAGEMENT;
-    cmd.method = LCB_HTTP_METHOD_GET;
+    lcb_CMDHTTP *cmd;
+    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_MANAGEMENT);
+    lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     path_len = spprintf(&path, 0, "/pools/default/buckets/%s/ddocs", obj->conn->bucketname);
-    LCB_CMD_SET_KEY(&cmd, path, path_len);
-    cmd.content_type = PCBC_CONTENT_TYPE_FORM;
-    pcbc_http_request(return_value, obj->conn->lcb, &cmd, 1 TSRMLS_CC);
+    lcb_cmdhttp_path(cmd, path, path_len);
+    lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
     efree(path);
-} /* }}} */
+}
 
-/* {{{ proto array BucketManager::insertDesignDocument(string $name, array $document) */
 PHP_METHOD(BucketManager, insertDesignDocument)
 {
     pcbc_bucket_manager_t *obj;
-    lcb_CMDHTTP cmd = {0};
     char *path, *name = NULL;
     int rv, path_len;
     size_t name_len = 0;
@@ -125,22 +115,24 @@ PHP_METHOD(BucketManager, insertDesignDocument)
 
     path_len = spprintf(&path, 0, "/_design/%*s", (int)name_len, name);
 
-    cmd.type = LCB_HTTP_TYPE_VIEW;
-    cmd.method = LCB_HTTP_METHOD_GET;
-    LCB_CMD_SET_KEY(&cmd, path, path_len);
-    cmd.content_type = PCBC_CONTENT_TYPE_FORM;
-    pcbc_http_request(return_value, obj->conn->lcb, &cmd, 1 TSRMLS_CC);
+    lcb_CMDHTTP *cmd;
+
+    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_VIEW);
+    lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
+    lcb_cmdhttp_path(cmd, path, path_len);
+    lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
+    zval_dtor(return_value);
     if (!php_array_exists(return_value, "error")) {
         efree(path);
-        zval_dtor(return_value);
         throw_pcbc_exception("Design document already exists", LCB_KEY_EEXISTS);
         RETURN_NULL();
     }
 
-    zval_dtor(return_value);
-    cmd.method = LCB_HTTP_METHOD_PUT;
-    cmd.content_type = PCBC_CONTENT_TYPE_JSON;
-
+    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_VIEW);
+    lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_PUT);
+    lcb_cmdhttp_path(cmd, path, path_len);
+    lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_JSON, strlen(PCBC_CONTENT_TYPE_JSON));
     PCBC_JSON_ENCODE(&buf, document, 0, last_error);
     if (last_error != 0) {
         pcbc_log(LOGARGS(obj, WARN), "Failed to encode design document as JSON: json_last_error=%d", last_error);
@@ -149,9 +141,9 @@ PHP_METHOD(BucketManager, insertDesignDocument)
         RETURN_NULL();
     } else {
         smart_str_0(&buf);
-        PCBC_SMARTSTR_SET(buf, cmd.body, cmd.nbody);
+        lcb_cmdhttp_body(cmd, ZSTR_VAL(buf.s), ZSTR_LEN(buf.s));
     }
-    pcbc_http_request(return_value, obj->conn->lcb, &cmd, 1 TSRMLS_CC);
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
     efree(path);
     smart_str_free(&buf);
 
@@ -170,13 +162,11 @@ PHP_METHOD(BucketManager, insertDesignDocument)
             RETURN_NULL();
         }
     }
-} /* }}} */
+}
 
-/* {{{ proto array BucketManager::upsertDesignDocument(string $name, array $document) */
 PHP_METHOD(BucketManager, upsertDesignDocument)
 {
     pcbc_bucket_manager_t *obj;
-    lcb_CMDHTTP cmd = {0};
     char *path, *name = NULL;
     int rv, path_len = 0;
     size_t name_len = 0;
@@ -191,23 +181,24 @@ PHP_METHOD(BucketManager, upsertDesignDocument)
         return;
     }
 
-    cmd.type = LCB_HTTP_TYPE_VIEW;
-    cmd.method = LCB_HTTP_METHOD_PUT;
+    lcb_CMDHTTP *cmd;
+    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_VIEW);
+    lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_PUT);
     path_len = spprintf(&path, 0, "/_design/%*s", (int)name_len, name);
-    LCB_CMD_SET_KEY(&cmd, path, path_len);
-    cmd.content_type = PCBC_CONTENT_TYPE_JSON;
-
+    lcb_cmdhttp_path(cmd, path, path_len);
+    lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_JSON, strlen(PCBC_CONTENT_TYPE_JSON));
     PCBC_JSON_ENCODE(&buf, document, 0, last_error);
     if (last_error != 0) {
         pcbc_log(LOGARGS(obj, WARN), "Failed to encode design document as JSON: json_last_error=%d", last_error);
+        lcb_cmdhttp_destroy(cmd);
         smart_str_free(&buf);
         efree(path);
         RETURN_NULL();
     } else {
         smart_str_0(&buf);
-        PCBC_SMARTSTR_SET(buf, cmd.body, cmd.nbody);
+        lcb_cmdhttp_body(cmd, ZSTR_VAL(buf.s), ZSTR_LEN(buf.s));
     }
-    pcbc_http_request(return_value, obj->conn->lcb, &cmd, 1 TSRMLS_CC);
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
     efree(path);
     smart_str_free(&buf);
 
@@ -225,13 +216,11 @@ PHP_METHOD(BucketManager, upsertDesignDocument)
             zval_dtor(return_value);
         }
     }
-} /* }}} */
+}
 
-/* {{{ proto array BucketManager::removeDesignDocument(string $name) */
 PHP_METHOD(BucketManager, removeDesignDocument)
 {
     pcbc_bucket_manager_t *obj;
-    lcb_CMDHTTP cmd = {0};
     char *path, *name = NULL;
     int rv, path_len;
     size_t name_len = 0;
@@ -243,20 +232,19 @@ PHP_METHOD(BucketManager, removeDesignDocument)
         return;
     }
 
-    cmd.type = LCB_HTTP_TYPE_VIEW;
-    cmd.method = LCB_HTTP_METHOD_DELETE;
+    lcb_CMDHTTP *cmd;
+    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_VIEW);
+    lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_DELETE);
     path_len = spprintf(&path, 0, "/_design/%*s", (int)name_len, name);
-    LCB_CMD_SET_KEY(&cmd, path, path_len);
-    cmd.content_type = PCBC_CONTENT_TYPE_FORM;
-    pcbc_http_request(return_value, obj->conn->lcb, &cmd, 1 TSRMLS_CC);
+    lcb_cmdhttp_path(cmd, path, path_len);
+    lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
     efree(path);
-} /* }}} */
+}
 
-/* {{{ proto array BucketManager::getDesignDocument(string $name) */
 PHP_METHOD(BucketManager, getDesignDocument)
 {
     pcbc_bucket_manager_t *obj;
-    lcb_CMDHTTP cmd = {0};
     char *path, *name = NULL;
     int rv, path_len;
     size_t name_len = 0;
@@ -268,20 +256,20 @@ PHP_METHOD(BucketManager, getDesignDocument)
         return;
     }
 
-    cmd.type = LCB_HTTP_TYPE_VIEW;
-    cmd.method = LCB_HTTP_METHOD_GET;
+    lcb_CMDHTTP *cmd;
+    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_VIEW);
+    lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     path_len = spprintf(&path, 0, "/_design/%*s", (int)name_len, name);
-    LCB_CMD_SET_KEY(&cmd, path, path_len);
-    cmd.content_type = PCBC_CONTENT_TYPE_FORM;
-    pcbc_http_request(return_value, obj->conn->lcb, &cmd, 1 TSRMLS_CC);
+    lcb_cmdhttp_path(cmd, path, path_len);
+    lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
     efree(path);
     if (php_array_exists(return_value, "error")) {
         zval_dtor(return_value);
         RETURN_BOOL(0);
     }
-} /* }}} */
+}
 
-/* {{{ proto array BucketManager::listN1qlIndexes() */
 PHP_METHOD(BucketManager, listN1qlIndexes)
 {
     pcbc_bucket_manager_t *obj;
@@ -295,10 +283,8 @@ PHP_METHOD(BucketManager, listN1qlIndexes)
     obj = Z_BUCKET_MANAGER_OBJ_P(getThis());
 
     pcbc_n1ix_list(obj, return_value TSRMLS_CC);
-} /* }}} */
+}
 
-/* {{{ proto array BucketManager::createN1qlPrimaryIndex(string $customName = '', boolean $ignoreIfExist = false,
-                                                         boolean $defer = false) */
 PHP_METHOD(BucketManager, createN1qlPrimaryIndex)
 {
     pcbc_bucket_manager_t *obj;
@@ -328,10 +314,8 @@ PHP_METHOD(BucketManager, createN1qlPrimaryIndex)
     cmd.spec.nkeyspace = strlen(obj->conn->bucketname);
 
     pcbc_n1ix_create(obj, &cmd, ignore_if_exist, return_value TSRMLS_CC);
-} /* }}} */
+}
 
-/* {{{ proto array BucketManager::createN1qlIndex(string $indexName, array $fields, string $whereClause = '',
-                                                  boolean $ignoreIfExist = false, boolean $defer = false) */
 PHP_METHOD(BucketManager, createN1qlIndex)
 {
     pcbc_bucket_manager_t *obj;
@@ -376,9 +360,8 @@ PHP_METHOD(BucketManager, createN1qlIndex)
     pcbc_n1ix_create(obj, &cmd, ignore_if_exist, return_value TSRMLS_CC);
     smart_str_free(&buf);
 
-} /* }}} */
+}
 
-/* {{{ proto array BucketManager::dropN1qlPrimaryIndex(string $customName = '', boolean $ignoreIfNotExist = false) */
 PHP_METHOD(BucketManager, dropN1qlPrimaryIndex)
 {
     pcbc_bucket_manager_t *obj;
@@ -403,9 +386,8 @@ PHP_METHOD(BucketManager, dropN1qlPrimaryIndex)
     cmd.spec.ixtype = LCB_N1XSPEC_T_GSI;
     cmd.spec.flags = LCB_N1XSPEC_F_PRIMARY;
     pcbc_n1ix_drop(obj, &cmd, ignore_if_not_exist, return_value TSRMLS_CC);
-} /* }}} */
+}
 
-/* {{{ proto array BucketManager::dropN1qlIndex(string $indexName, $boolean $ignoreIfNotExist = false) */
 PHP_METHOD(BucketManager, dropN1qlIndex)
 {
     pcbc_bucket_manager_t *obj;
@@ -429,9 +411,8 @@ PHP_METHOD(BucketManager, dropN1qlIndex)
 
     cmd.spec.ixtype = LCB_N1XSPEC_T_GSI;
     pcbc_n1ix_drop(obj, &cmd, ignore_if_not_exist, return_value TSRMLS_CC);
-} /* }}} */
+}
 
-/* {{{ proto \Couchbase\SearchIndexManager Cluster::searchIndexManager() */
 PHP_METHOD(BucketManager, searchIndexManager)
 {
     pcbc_bucket_manager_t *obj;
@@ -443,7 +424,7 @@ PHP_METHOD(BucketManager, searchIndexManager)
     }
     obj = Z_BUCKET_MANAGER_OBJ_P(getThis());
     pcbc_search_index_manager_init(return_value, obj TSRMLS_CC);
-} /* }}} */
+}
 
 ZEND_BEGIN_ARG_INFO_EX(ai_BucketManager_none, 0, 0, 0)
 ZEND_END_ARG_INFO()
@@ -506,14 +487,14 @@ zend_function_entry bucket_manager_methods[] = {
 
 zend_object_handlers pcbc_bucket_manager_handlers;
 
-static void pcbc_bucket_manager_free_object(zend_object *object TSRMLS_DC) /* {{{ */
+static void pcbc_bucket_manager_free_object(zend_object *object TSRMLS_DC)
 {
     pcbc_bucket_manager_t *obj = Z_BUCKET_MANAGER_OBJ(object);
 
     pcbc_connection_delref(obj->conn TSRMLS_CC);
     obj->conn = NULL;
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-} /* }}} */
+}
 
 static zend_object *pcbc_bucket_manager_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
@@ -538,7 +519,7 @@ void pcbc_bucket_manager_init(zval *return_value, zval *bucket TSRMLS_DC)
     pcbc_connection_addref(manager->conn TSRMLS_CC);
 }
 
-static HashTable *pcbc_bucket_manager_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
+static HashTable *pcbc_bucket_manager_get_debug_info(zval *object, int *is_temp TSRMLS_DC)
 {
     pcbc_bucket_manager_t *obj = NULL;
     zval retval;
@@ -550,7 +531,7 @@ static HashTable *pcbc_bucket_manager_get_debug_info(zval *object, int *is_temp 
     ADD_ASSOC_STRING(&retval, "bucket", obj->conn->bucketname);
 
     return Z_ARRVAL(retval);
-} /* }}} */
+}
 
 PHP_MINIT_FUNCTION(BucketManager)
 {
@@ -566,6 +547,9 @@ PHP_MINIT_FUNCTION(BucketManager)
     pcbc_bucket_manager_handlers.free_obj = pcbc_bucket_manager_free_object;
     pcbc_bucket_manager_handlers.offset = XtOffsetOf(pcbc_bucket_manager_t, std);
 
-    zend_register_class_alias("\\CouchbaseBucketManager", pcbc_bucket_manager_ce);
     return SUCCESS;
 }
+
+/*
+ * vim: et ts=4 sw=4 sts=4
+ */

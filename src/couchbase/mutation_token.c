@@ -21,15 +21,11 @@
 
 zend_class_entry *pcbc_mutation_token_ce;
 
-/* {{{ proto void MutationToken::__construct() Should not be called directly */
 PHP_METHOD(MutationToken, __construct)
 {
     throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
 }
-/* }}} */
 
-/* {{{ proto \Couchbase\MutationToken MutationToken::from(string $bucketName, int $vbucketID, string $vbucketUUID,
-                                                          string $sequeceNumber) */
 PHP_METHOD(MutationToken, from)
 {
     long vbid = 0;
@@ -45,9 +41,8 @@ PHP_METHOD(MutationToken, from)
 
     pcbc_mutation_token_init_php(return_value, bucket, bucket_len, vbid, vbuuid, vbuuid_len, seqno,
                                  seqno_len TSRMLS_CC);
-} /* }}} */
+}
 
-/* {{{ proto string MutationToken::bucketName() */
 PHP_METHOD(MutationToken, bucketName)
 {
     pcbc_mutation_token_t *obj;
@@ -60,9 +55,8 @@ PHP_METHOD(MutationToken, bucketName)
     obj = Z_MUTATION_TOKEN_OBJ_P(getThis());
 
     ZVAL_STRING(return_value, obj->bucket);
-} /* }}} */
+}
 
-/* {{{ proto int MutationToken::vbucketId() */
 PHP_METHOD(MutationToken, vbucketId)
 {
     pcbc_mutation_token_t *obj;
@@ -75,9 +69,8 @@ PHP_METHOD(MutationToken, vbucketId)
     obj = Z_MUTATION_TOKEN_OBJ_P(getThis());
 
     RETURN_LONG(PCBC_MUTATION_TOKEN_VB(obj));
-} /* }}} */
+}
 
-/* {{{ proto int MutationToken::vbucketUuid() */
 PHP_METHOD(MutationToken, vbucketUuid)
 {
     pcbc_mutation_token_t *obj;
@@ -93,9 +86,8 @@ PHP_METHOD(MutationToken, vbucketUuid)
     str = pcbc_base36_encode_str(PCBC_MUTATION_TOKEN_ID(obj));
     ZVAL_STRING(return_value, str);
     efree(str);
-} /* }}} */
+}
 
-/* {{{ proto int MutationToken::sequenceNumber() */
 PHP_METHOD(MutationToken, sequenceNumber)
 {
     pcbc_mutation_token_t *obj;
@@ -111,7 +103,7 @@ PHP_METHOD(MutationToken, sequenceNumber)
     str = pcbc_base36_encode_str(PCBC_MUTATION_TOKEN_SEQ(obj));
     ZVAL_STRING(return_value, str);
     efree(str);
-} /* }}} */
+}
 
 ZEND_BEGIN_ARG_INFO_EX(ai_MutationToken_none, 0, 0, 0)
 ZEND_END_ARG_INFO()
@@ -151,20 +143,20 @@ void pcbc_mutation_token_init_php(zval *return_value, char *bucket, int bucket_l
                                   int vbuuid_len, char *seqno, int seqno_len TSRMLS_DC)
 {
     lcb_MUTATION_TOKEN mt;
-    LCB_MUTATION_TOKEN_VB(&mt) = (lcb_U16)vbid;
-    LCB_MUTATION_TOKEN_ID(&mt) = pcbc_base36_decode_str(vbuuid, vbuuid_len);
-    LCB_MUTATION_TOKEN_SEQ(&mt) = pcbc_base36_decode_str(seqno, seqno_len);
+    mt.vbid_ = (lcb_U16)vbid;
+    mt.uuid_ = pcbc_base36_decode_str(vbuuid, vbuuid_len);
+    mt.seqno_ = pcbc_base36_decode_str(seqno, seqno_len);
     pcbc_mutation_token_init(return_value, bucket, &mt TSRMLS_CC);
 }
 
-static void mutation_token_free_object(zend_object *object TSRMLS_DC) /* {{{ */
+static void mutation_token_free_object(zend_object *object TSRMLS_DC)
 {
     pcbc_mutation_token_t *obj = Z_MUTATION_TOKEN_OBJ(object);
 
     efree(obj->bucket);
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-} /* }}} */
+}
 
 static zend_object *mutation_token_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
@@ -179,7 +171,7 @@ static zend_object *mutation_token_create_object(zend_class_entry *class_type TS
     return &obj->std;
 }
 
-static HashTable *mutation_token_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
+static HashTable *mutation_token_get_debug_info(zval *object, int *is_temp TSRMLS_DC)
 {
     pcbc_mutation_token_t *obj = NULL;
     zval retval;
@@ -199,13 +191,13 @@ static HashTable *mutation_token_get_debug_info(zval *object, int *is_temp TSRML
     efree(num36);
 
     return Z_ARRVAL(retval);
-} /* }}} */
+}
 
 PHP_MINIT_FUNCTION(MutationToken)
 {
     zend_class_entry ce;
 
-    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "MutationToken", mutation_token_methods);
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "MutationTokenLegacy", mutation_token_methods);
     pcbc_mutation_token_ce = zend_register_internal_class(&ce TSRMLS_CC);
     pcbc_mutation_token_ce->create_object = mutation_token_create_object;
     PCBC_CE_DISABLE_SERIALIZATION(pcbc_mutation_token_ce);
@@ -215,6 +207,10 @@ PHP_MINIT_FUNCTION(MutationToken)
     pcbc_mutation_token_handlers.free_obj = mutation_token_free_object;
     pcbc_mutation_token_handlers.offset = XtOffsetOf(pcbc_mutation_token_t, std);
 
-    zend_register_class_alias("\\CouchbaseMutationToken", pcbc_mutation_token_ce);
+
     return SUCCESS;
 }
+
+/*
+ * vim: et ts=4 sw=4 sts=4
+ */

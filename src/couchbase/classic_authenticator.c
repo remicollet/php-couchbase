@@ -313,6 +313,6 @@ PHP_MINIT_FUNCTION(ClassicAuthenticator)
     classic_authenticator_handlers.free_obj = classic_authenticator_free_object;
     classic_authenticator_handlers.offset = XtOffsetOf(pcbc_classic_authenticator_t, std);
 
-    zend_register_class_alias("\\CouchbaseAuthenticator", pcbc_classic_authenticator_ce);
+     
     return SUCCESS;
 }

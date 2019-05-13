@@ -18,196 +18,203 @@
 
 #define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/view", __FILE__, __LINE__
 
-typedef struct {
-    opcookie_res header;
-    lcb_U16 rflags;
-    zval id;
-    zval key;
-    zval value;
-} opcookie_viewrow_res;
+extern zend_class_entry *pcbc_view_result_impl_ce;
+extern zend_class_entry *pcbc_view_result_entry_ce;
+extern zend_class_entry *pcbc_view_meta_data_impl_ce;
 
-static void viewrow_callback(lcb_t instance, int ignoreme, const lcb_RESPVIEWQUERY *resp)
+struct view_cookie {
+    lcb_STATUS rc;
+    zval *return_value;
+};
+
+static void viewrow_callback(lcb_INSTANCE *  instance, int ignoreme, const lcb_RESPVIEW *resp)
 {
-    opcookie_viewrow_res *result = ecalloc(1, sizeof(opcookie_viewrow_res));
-    opcookie *cookie = (opcookie *)resp->cookie;
-    int last_error;
     TSRMLS_FETCH();
 
-    ZVAL_UNDEF(&result->id);
-    ZVAL_UNDEF(&result->key);
-    ZVAL_UNDEF(&result->value);
+    struct view_cookie *cookie;
+    lcb_respview_cookie(resp, (void **)&cookie);
+    cookie->rc = lcb_respview_status(resp);
 
-    ZVAL_NULL(&result->id);
-    ZVAL_NULL(&result->key);
-    ZVAL_NULL(&result->value);
+    const lcb_RESPHTTP *http;
+    lcb_respview_http_response(resp, &http);
+    uint16_t htstatus;
+    lcb_resphttp_http_status(http, &htstatus);
 
-    result->header.err = resp->rc;
-    result->rflags = resp->rflags;
-    if (result->header.err == LCB_SUCCESS) {
-        PCBC_STRINGL(result->id, resp->docid, resp->ndocid);
-        if (cookie->json_response) {
-            int json_options = cookie->json_options;
+    zval *return_value = cookie->return_value;
 
-            if (resp->rflags & LCB_RESP_F_FINAL) {
-                // parse meta into arrays
-                json_options |= PHP_JSON_OBJECT_AS_ARRAY;
-            }
+    zend_update_property_long(pcbc_view_result_impl_ce, return_value, ZEND_STRL("status"), cookie->rc TSRMLS_CC);
+    zend_update_property_long(pcbc_view_result_impl_ce, return_value, ZEND_STRL("http_status"), htstatus TSRMLS_CC);
 
-            if (resp->nvalue) {
-                PCBC_JSON_COPY_DECODE(&result->value, resp->value, resp->nvalue, json_options, last_error);
-                if (last_error != 0) {
-                    pcbc_log(LOGARGS(instance, WARN), "Failed to decode VIEW value as JSON: json_last_error=%d",
-                             last_error);
-                    PCBC_STRINGL(result->value, resp->value, resp->nvalue);
-                }
-            }
+    int last_error;
+    if (cookie->rc == LCB_SUCCESS) {
+        if (lcb_respview_is_final(resp)) {
+            zval meta, *mval, value;
+            object_init_ex(&meta, pcbc_view_meta_data_impl_ce);
 
-            if (resp->nkey) {
-                if ((resp->rflags & LCB_RESP_F_FINAL) == 0) {
-                    PCBC_JSON_COPY_DECODE(&result->key, resp->key, resp->nkey, json_options, last_error);
-                    if (last_error != 0) {
-                        pcbc_log(LOGARGS(instance, WARN), "Failed to decode VIEW key as JSON: json_last_error=%d",
-                                 last_error);
-                        PCBC_STRINGL(result->key, resp->key, resp->nkey);
-                    }
+            const char *value_str;
+            size_t value_len;
+            lcb_respview_row(resp, &value_str, &value_len);
+            if (value_len) {
+                PCBC_JSON_COPY_DECODE(&value, value_str, value_len, PHP_JSON_OBJECT_AS_ARRAY, last_error);
+                if (last_error) {
+                    pcbc_log(LOGARGS(instance, WARN), "Failed to decode VIEW meta as JSON: json_last_error=%d", last_error);
+                } else {
+                    HashTable *marr = Z_ARRVAL(value);
+
+                    mval = zend_symtable_str_find(marr, ZEND_STRL("total_rows"));
+                    if (mval) zend_update_property(pcbc_view_meta_data_impl_ce, &meta, ZEND_STRL("total_rows"), mval TSRMLS_CC);
+
+                    zend_update_property(pcbc_view_result_impl_ce, return_value, ZEND_STRL("meta"), &meta TSRMLS_CC);
                 }
             }
         } else {
-            PCBC_STRINGL(result->key, resp->key, resp->nkey);
-            PCBC_STRINGL(result->value, resp->value, resp->nvalue);
+            zval entry;
+            object_init_ex(&entry, pcbc_view_result_entry_ce);
+
+            const char *id_str;
+            size_t id_len;
+            lcb_respview_doc_id(resp, &id_str, &id_len);
+            if (id_len) {
+                zend_update_property_stringl(pcbc_view_result_entry_ce, &entry, ZEND_STRL("id"), id_str, id_len TSRMLS_CC);
+            }
+
+            const char *key_str;
+            size_t key_len;
+            lcb_respview_key(resp, &key_str, &key_len);
+            zval key;
+            if (key_len) {
+                PCBC_JSON_COPY_DECODE(&key, key_str, key_len, PHP_JSON_OBJECT_AS_ARRAY, last_error);
+                if (last_error) {
+                    pcbc_log(LOGARGS(instance, WARN), "Failed to decode VIEW key as JSON: json_last_error=%d", last_error);
+                } else {
+                    zend_update_property(pcbc_view_result_entry_ce, &entry, ZEND_STRL("key"), &key TSRMLS_CC);
+                }
+            }
+
+            const char *value_str;
+            size_t value_len;
+            lcb_respview_row(resp, &value_str, &value_len);
+            zval value;
+            if (value_len) {
+                PCBC_JSON_COPY_DECODE(&value, value_str, value_len, PHP_JSON_OBJECT_AS_ARRAY, last_error);
+                if (last_error) {
+                    pcbc_log(LOGARGS(instance, WARN), "Failed to decode VIEW value as JSON: json_last_error=%d", last_error);
+                } else {
+                    zend_update_property(pcbc_view_result_entry_ce, &entry, ZEND_STRL("value"), &value TSRMLS_CC);
+                }
+            }
+
+            const char *geometry_str;
+            size_t geometry_len;
+            lcb_respview_geometry(resp, &geometry_str, &geometry_len);
+            zval geometry;
+            if (geometry_len) {
+                PCBC_JSON_COPY_DECODE(&geometry, geometry_str, geometry_len, PHP_JSON_OBJECT_AS_ARRAY, last_error);
+                if (last_error) {
+                    pcbc_log(LOGARGS(instance, WARN), "Failed to decode VIEW geometry as JSON: json_last_error=%d", last_error);
+                } else {
+                    zend_update_property(pcbc_view_result_entry_ce, &entry, ZEND_STRL("geometry"), &geometry TSRMLS_CC);
+                }
+            }
+
+            const lcb_RESPGET *get;
+            lcb_respview_document(resp, &get);
+            zval document;
+            if (get) {
+                const char *doc_str;
+                size_t doc_len;
+                lcb_respget_value(get, &doc_str, &doc_len);
+                if (doc_len) {
+                    PCBC_JSON_COPY_DECODE(&document, doc_str, doc_len, PHP_JSON_OBJECT_AS_ARRAY, last_error);
+                    if (last_error) {
+                        pcbc_log(LOGARGS(instance, WARN), "Failed to decode VIEW document as JSON: json_last_error=%d", last_error);
+                    } else {
+                        zend_update_property(pcbc_view_result_entry_ce, &entry, ZEND_STRL("document"), &document TSRMLS_CC);
+                    }
+                }
+            }
+
+            zval *rows, rv;
+            rows = zend_read_property(pcbc_view_result_impl_ce, return_value, ZEND_STRL("rows"), 0, &rv);
+            add_next_index_zval(rows, &entry);
         }
     } else {
-        if (resp->htresp->nbody) {
-            zval errval;
-            char *errbody = (char *)resp->htresp->body;
-            int errbody_len = resp->htresp->nbody;
-
-            ZVAL_UNDEF(&errval);
-            PCBC_JSON_COPY_DECODE(&errval, errbody, errbody_len, PHP_JSON_OBJECT_AS_ARRAY, last_error);
-            if (last_error != 0) {
-                pcbc_log(LOGARGS(instance, ERROR), "Failed to perform VIEW query. %d: %.*s",
-                         (int)resp->htresp->htstatus, errbody_len, errbody);
+        const char *body_str;
+        size_t body_len;
+        lcb_resphttp_body(http, &body_str, &body_len);
+        zval body;
+        if (body_len) {
+            PCBC_JSON_COPY_DECODE(&body, body_str, body_len, PHP_JSON_OBJECT_AS_ARRAY, last_error);
+            if (last_error) {
+                pcbc_log(LOGARGS(instance, WARN), "Failed to decode VIEW body as JSON: json_last_error=%d", last_error);
+                zend_update_property_stringl(pcbc_view_result_impl_ce, return_value, ZEND_STRL("body_str"), body_str, body_len TSRMLS_CC);
             } else {
-                char *error = NULL, *reason = NULL;
-                int error_len = 0, reason_len = 0;
-                zend_bool error_free = 0, reason_free = 0;
-
-                error = php_array_fetch_string(&errval, "error", &error_len, &error_free);
-                reason = php_array_fetch_string(&errval, "reason", &reason_len, &reason_free);
-                if (error && reason) {
-                    char *m = NULL;
-                    spprintf(&m, 0, "Failed to perform VIEW query. error: %*s: reason: \"%*s\"", error_len, error,
-                             reason_len, reason);
-                    ZVAL_UNDEF(&cookie->exc);
-                    pcbc_exception_init(&cookie->exc, resp->rc, m TSRMLS_CC);
-                    if (m) {
-                        efree(m);
-                    }
-                } else {
-                    pcbc_log(LOGARGS(instance, ERROR), "Failed to perform VIEW query. %d: %.*s",
-                             (int)resp->htresp->htstatus, errbody_len, errbody);
-                }
-                if (error && error_free) {
-                    efree(error);
-                }
-                if (reason && reason_free) {
-                    efree(reason);
-                }
-            }
-            zval_ptr_dtor(&errval);
-        }
-    }
-
-    opcookie_push((opcookie *)resp->cookie, &result->header);
-}
-
-static lcb_error_t proc_viewrow_results(zval *return_value, opcookie *cookie TSRMLS_DC)
-{
-    opcookie_viewrow_res *res;
-    lcb_error_t err = LCB_SUCCESS;
-
-    // Any error should cause everything to fail... for now?
-    err = opcookie_get_first_error(cookie);
-
-    if (err == LCB_SUCCESS) {
-        zval rows;
-
-        ZVAL_UNDEF(&rows);
-        array_init(&rows);
-
-        object_init(return_value);
-        add_property_zval(return_value, "rows", &rows);
-        Z_DELREF_P(&rows);
-
-        FOREACH_OPCOOKIE_RES(opcookie_viewrow_res, res, cookie)
-        {
-            if (res->rflags & LCB_RESP_F_FINAL) {
-                if (Z_TYPE_P(&res->value) == IS_ARRAY) {
-                    zval *val;
-                    val = php_array_fetch(&res->value, "total_rows");
-                    if (val) {
-                        add_property_zval(return_value, "total_rows", val);
-                    }
-                }
-            } else {
-                zval row;
-
-                ZVAL_UNDEF(&row);
-                object_init(&row);
-                add_property_zval(&row, "id", &res->id);
-                add_property_zval(&row, "key", &res->key);
-                add_property_zval(&row, "value", &res->value);
-                add_next_index_zval(&rows, &row);
+                zend_update_property(pcbc_view_result_impl_ce, return_value, ZEND_STRL("body"), &body TSRMLS_CC);
             }
         }
     }
-
-    FOREACH_OPCOOKIE_RES(opcookie_viewrow_res, res, cookie)
-    {
-        zval_ptr_dtor(&res->id);
-        zval_ptr_dtor(&res->key);
-        zval_ptr_dtor(&res->value);
-    }
-
-    return err;
 }
 
-void pcbc_bucket_view_request(pcbc_bucket_t *bucket, lcb_CMDVIEWQUERY *cmd, int json_response, int json_options,
-                              zval *return_value TSRMLS_DC)
+PHP_METHOD(Bucket, viewQuery)
 {
-    opcookie *cookie;
-    lcb_error_t err;
-    lcbtrace_TRACER *tracer = NULL;
-    lcb_VIEWHANDLE handle = NULL;
+    int rv;
+    zend_string *design_doc;
+    zend_string *view_name;
+    zval options;
 
-    cmd->callback = viewrow_callback;
-    cookie = opcookie_init();
-    cookie->json_response = json_response;
-    cookie->json_options = json_options;
-    tracer = lcb_get_tracer(bucket->conn->lcb);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "SS|z", &design_doc, &view_name, &options);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
+    if (obj->type == LCB_BTYPE_EPHEMERAL) {
+        throw_pcbc_exception("Ephemeral bucket do not support Couchbase Views", LCB_EINVAL);
+        RETURN_NULL();
+    }
+
+    lcb_CMDVIEW *cmd;
+    lcb_cmdview_create(&cmd);
+    lcb_cmdview_design_document(cmd, ZSTR_VAL(design_doc), ZSTR_LEN(design_doc));
+    lcb_cmdview_view_name(cmd, ZSTR_VAL(view_name), ZSTR_LEN(view_name));
+    lcb_cmdview_callback(cmd, viewrow_callback);
+
+    lcb_VIEW_HANDLE *handle = NULL;
+    lcb_cmdview_handle(cmd, &handle);
+
+    lcbtrace_SPAN *span = NULL;
+    lcbtrace_TRACER *tracer = lcb_get_tracer(obj->conn->lcb);
     if (tracer) {
-        cookie->span = lcbtrace_span_start(tracer, "php/view", 0, NULL);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_VIEW);
-        cmd->handle = &handle;
+        span = lcbtrace_span_start(tracer, "php/view", 0, NULL);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_VIEW);
+        lcb_cmdview_parent_span(cmd, span);
     }
-    err = lcb_view_query(bucket->conn->lcb, cookie, cmd);
+
+    rv = object_init_ex(return_value, pcbc_view_result_impl_ce);
+    if (rv != SUCCESS) {
+        return;
+    }
+    zval rows;
+    array_init(&rows);
+    zend_update_property(pcbc_view_result_impl_ce, return_value, ZEND_STRL("rows"), &rows TSRMLS_CC);
+    struct view_cookie cookie = {
+        LCB_SUCCESS,
+        return_value
+    };
+    lcb_STATUS err = lcb_view(obj->conn->lcb, &cookie, cmd);
+    lcb_cmdview_destroy(cmd);
     if (err == LCB_SUCCESS) {
-        if (cookie->span) {
-            lcb_view_set_parent_span(bucket->conn->lcb, handle, cookie->span);
-        }
-        lcb_wait(bucket->conn->lcb);
-        err = proc_viewrow_results(return_value, cookie TSRMLS_CC);
+        lcb_wait(obj->conn->lcb);
+        err = cookie.rc;
+    }
+    if (span) {
+        lcbtrace_span_finish(span, LCBTRACE_NOW);
     }
     if (err != LCB_SUCCESS) {
-        if (Z_ISUNDEF(cookie->exc)) {
-            throw_lcb_exception(err);
-        } else {
-            zend_throw_exception_object(&cookie->exc TSRMLS_CC);
-        }
+        throw_lcb_exception(err, NULL);
     }
-    if (cookie->span) {
-        lcbtrace_span_finish(cookie->span, LCBTRACE_NOW);
-    }
-    opcookie_destroy(cookie);
 }
+
+/*
+ * vim: et ts=4 sw=4 sts=4
+ */

@@ -162,6 +162,6 @@ PHP_MINIT_FUNCTION(MatchAllSearchQuery)
     match_all_search_query_handlers.free_obj = match_all_search_query_free_object;
     match_all_search_query_handlers.offset = XtOffsetOf(pcbc_match_all_search_query_t, std);
 
-    zend_register_class_alias("\\CouchbaseMatchAllSearchQuery", pcbc_match_all_search_query_ce);
+     
     return SUCCESS;
 }

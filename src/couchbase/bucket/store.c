@@ -18,624 +18,867 @@
 
 #define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/store", __FILE__, __LINE__
 
-void store_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
+zend_class_entry *pcbc_durability_level_ce;
+static const zend_function_entry pcbc_durability_level_methods[] = {
+    PHP_FE_END
+};
+
+
+extern zend_class_entry *pcbc_store_result_impl_ce;
+extern zend_class_entry *pcbc_mutation_token_impl_ce;
+
+struct store_cookie {
+    lcb_STATUS rc;
+    zval *return_value;
+};
+
+void store_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPSTORE *resp)
 {
-    opcookie_store_res *result = ecalloc(1, sizeof(opcookie_store_res));
-    const lcb_MUTATION_TOKEN *mutinfo;
     TSRMLS_FETCH();
 
-    PCBC_RESP_ERR_COPY(result->header, cbtype, rb);
-    result->key_len = rb->nkey;
-    if (rb->nkey) {
-        result->key = estrndup(rb->key, rb->nkey);
-    }
-    result->cas = rb->cas;
-    mutinfo = lcb_resp_get_mutation_token(cbtype, rb);
-    if (mutinfo) {
-        memcpy(&result->token, mutinfo, sizeof(result->token));
-    }
+    struct store_cookie *cookie = NULL;
+    lcb_respstore_cookie(resp, (void **)&cookie);
+    zval *return_value = cookie->return_value;
+    cookie->rc = lcb_respstore_status(resp);
+    zend_update_property_long(pcbc_store_result_impl_ce, return_value, ZEND_STRL("status"), cookie->rc TSRMLS_CC);
 
-    if (cbtype == LCB_CALLBACK_STOREDUR) {
-        const lcb_RESPSTOREDUR *resp = (lcb_RESPSTOREDUR *)rb;
-        if (resp->rc != LCB_SUCCESS && resp->store_ok) {
-            pcbc_log(LOGARGS(instance, WARN), "Stored, but durability failed. Persisted(%u). Replicated(%u)",
-                     resp->dur_resp->npersisted, resp->dur_resp->nreplicated);
+    set_property_str(lcb_respstore_error_context, pcbc_store_result_impl_ce, "err_ctx");
+    set_property_str(lcb_respstore_error_ref, pcbc_store_result_impl_ce, "err_ref");
+    set_property_str(lcb_respstore_key, pcbc_store_result_impl_ce, "key");
+
+    if (cookie->rc == LCB_SUCCESS) {
+        zend_string *b64;
+        {
+            uint64_t data;
+            lcb_respstore_cas(resp, &data);
+            b64 = php_base64_encode((unsigned char *)&data, sizeof(data));
+            zend_update_property_str(pcbc_store_result_impl_ce, return_value, ZEND_STRL("cas"), b64 TSRMLS_CC);
+        }
+        {
+            lcb_MUTATION_TOKEN token = {0};
+            lcb_respstore_mutation_token(resp, &token);
+            if (lcb_mutation_token_is_valid(&token)) {
+                zval val;
+                object_init_ex(&val, pcbc_mutation_token_impl_ce);
+
+                zend_update_property_long(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("partition_id"), token.vbid_ TSRMLS_CC);
+                b64 = php_base64_encode((unsigned char *)&token.uuid_, sizeof(token.uuid_));
+                zend_update_property_str(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("partition_uuid"), b64 TSRMLS_CC);
+                b64 = php_base64_encode((unsigned char *)&token.seqno_, sizeof(token.seqno_));
+                zend_update_property_str(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("sequence_number"), b64 TSRMLS_CC);
+
+                const char *bucket;
+                lcb_cntl(instance, LCB_CNTL_GET, LCB_CNTL_BUCKETNAME, &bucket);
+                zend_update_property_string(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("bucket_name"), bucket TSRMLS_CC);
+
+                zend_update_property(pcbc_store_result_impl_ce, return_value, ZEND_STRL("mutation_token"), &val TSRMLS_CC);
+            }
+        }
+    }
+    if (lcb_respstore_observe_attached(resp)) {
+        int store_ok;
+        lcb_respstore_observe_stored(resp, &store_ok);
+        zend_update_property_bool(pcbc_store_result_impl_ce, return_value, ZEND_STRL("is_stored"), store_ok TSRMLS_CC);
+        if (store_ok) {
+            set_property_num(uint16_t, lcb_respstore_observe_num_persisted, pcbc_store_result_impl_ce, "num_persisted");
+            set_property_num(uint16_t, lcb_respstore_observe_num_replicated, pcbc_store_result_impl_ce, "num_replicated");
+        }
+    }
+}
+
+zend_class_entry *pcbc_insert_options_ce;
+
+PHP_METHOD(InsertOptions, timeout)
+{
+    zend_long *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_insert_options_ce, getThis(), ZEND_STRL("timeout"), *arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(InsertOptions, expiration)
+{
+    zend_long *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_insert_options_ce, getThis(), ZEND_STRL("expiration"), *arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(InsertOptions, durabilityLevel)
+{
+    zend_long *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_insert_options_ce, getThis(), ZEND_STRL("durability_level"), *arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_InsertOptions_timeout, 0, 1, \\Couchbase\\InsertOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_InsertOptions_expiration, 0, 1, \\Couchbase\\InsertOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_InsertOptions_durabilityLevel, 0, 1, \\Couchbase\\InsertOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry pcbc_insert_options_methods[] = {
+    PHP_ME(InsertOptions, timeout, ai_InsertOptions_timeout, ZEND_ACC_PUBLIC)
+    PHP_ME(InsertOptions, expiration, ai_InsertOptions_expiration, ZEND_ACC_PUBLIC)
+    PHP_ME(InsertOptions, durabilityLevel, ai_InsertOptions_durabilityLevel, ZEND_ACC_PUBLIC)
+    PHP_FE_END
+};
+
+PHP_METHOD(Collection, insert)
+{
+    zend_string *id;
+    zval *value, *options;
+    lcb_STATUS err;
+
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Sz|O", &id, &value, &options, pcbc_insert_options_ce);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    PCBC_RESOLVE_COLLECTION;
+
+    lcb_CMDSTORE *cmd;
+    lcb_cmdstore_create(&cmd, LCB_STORE_ADD);
+    lcb_cmdstore_collection(cmd, scope_str, scope_len, collection_str, collection_len);
+    if (options) {
+        zval *prop, ret;
+        prop = zend_read_property(pcbc_insert_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdstore_timeout(cmd, Z_LVAL_P(prop));
+        }
+        prop = zend_read_property(pcbc_insert_options_ce, getThis(), ZEND_STRL("expiration"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdstore_expiration(cmd, Z_LVAL_P(prop));
+        }
+        prop = zend_read_property(pcbc_insert_options_ce, getThis(), ZEND_STRL("durability_level"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdstore_durability(cmd, Z_LVAL_P(prop));
         }
     }
 
-    opcookie_push((opcookie *)rb->cookie, &result->header);
-}
-
-lcb_error_t proc_store_results(pcbc_bucket_t *bucket, zval *return_value, opcookie *cookie, int is_mapped TSRMLS_DC)
-{
-    opcookie_store_res *res;
-    lcb_error_t err = LCB_SUCCESS;
-
-    // If we are not mapped, we need to throw any op errors
-    if (is_mapped == 0) {
-        err = opcookie_get_first_error(cookie);
+    lcbtrace_SPAN *parent_span = NULL;
+    lcbtrace_TRACER *tracer = lcb_get_tracer(bucket->conn->lcb);
+    if (tracer) {
+        parent_span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_INSERT, 0, NULL);
+        lcbtrace_span_add_tag_str(parent_span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(parent_span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
+        lcb_cmdstore_parent_span(cmd, parent_span);
+    }
+    lcbtrace_SPAN *span = NULL;
+    if (parent_span) {
+        lcbtrace_REF ref;
+        ref.type = LCBTRACE_REF_CHILD_OF;
+        ref.span = parent_span;
+        span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_REQUEST_ENCODING, LCBTRACE_NOW, &ref);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
+    }
+    void *bytes = NULL;
+    size_t nbytes;
+    uint32_t flags;
+    uint8_t datatype;
+    rv = pcbc_encode_value(bucket, value, &bytes, &nbytes, &flags, &datatype TSRMLS_CC);
+    if (span) {
+        lcbtrace_span_finish(span, LCBTRACE_NOW);
+    }
+    if (rv != SUCCESS) {
+        pcbc_log(LOGARGS(bucket->conn->lcb, ERROR), "Failed to encode value for before storing");
+        lcb_cmdstore_destroy(cmd);
+        throw_lcb_exception(err, NULL);
+        RETURN_NULL();
     }
 
-    if (err == LCB_SUCCESS) {
-        FOREACH_OPCOOKIE_RES(opcookie_store_res, res, cookie)
-        {
-            zval *doc = bop_get_return_doc(return_value, res->key, res->key_len, is_mapped TSRMLS_CC);
+    lcb_cmdstore_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
+    lcb_cmdstore_value(cmd, bytes, nbytes);
+    lcb_cmdstore_flags(cmd, flags);
+    lcb_cmdstore_datatype(cmd, datatype);
 
-            if (res->header.err == LCB_SUCCESS) {
-                pcbc_document_init(doc, bucket, NULL, 0, 0, res->cas, &res->token TSRMLS_CC);
-            } else {
-                pcbc_document_init_error(doc, &res->header TSRMLS_CC);
+    object_init_ex(return_value, pcbc_store_result_impl_ce);
+    struct store_cookie cookie = {
+        LCB_SUCCESS,
+        return_value
+    };
+    err = lcb_store(bucket->conn->lcb, &cookie, cmd);
+    efree(bytes);
+    lcb_cmdstore_destroy(cmd);
+    if (err == LCB_SUCCESS) {
+        lcb_wait(bucket->conn->lcb);
+        err = cookie.rc;
+    }
+    if (parent_span) {
+        lcbtrace_span_finish(parent_span, LCBTRACE_NOW);
+    }
+    if (err != LCB_SUCCESS) {
+        throw_lcb_exception(err, pcbc_store_result_impl_ce);
+    }
+}
+
+zend_class_entry *pcbc_upsert_options_ce;
+
+PHP_METHOD(UpsertOptions, cas)
+{
+    zend_string *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "S", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_string *decoded = php_base64_decode(ZSTR_VAL(arg), ZSTR_LEN(arg));
+    if (decoded) {
+        if (ZSTR_LEN(decoded) == sizeof(uint64_t)) {
+            zend_update_property_str(pcbc_upsert_options_ce, getThis(), ZEND_STRL("cas"), arg TSRMLS_CC);
+        }
+        zend_string_free(decoded);
+    }
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(UpsertOptions, timeout)
+{
+    zend_long *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_upsert_options_ce, getThis(), ZEND_STRL("timeout"), *arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(UpsertOptions, expiration)
+{
+    zend_long *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_upsert_options_ce, getThis(), ZEND_STRL("expiration"), *arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(UpsertOptions, durabilityLevel)
+{
+    zend_long *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_upsert_options_ce, getThis(), ZEND_STRL("durability_level"), *arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_UpsertOptions_cas, 0, 1, \\Couchbase\\UpsertOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_UpsertOptions_timeout, 0, 1, \\Couchbase\\UpsertOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_UpsertOptions_expiration, 0, 1, \\Couchbase\\UpsertOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_UpsertOptions_durabilityLevel, 0, 1, \\Couchbase\\UpsertOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry pcbc_upsert_options_methods[] = {
+    PHP_ME(UpsertOptions, cas, ai_UpsertOptions_cas, ZEND_ACC_PUBLIC)
+    PHP_ME(UpsertOptions, timeout, ai_UpsertOptions_timeout, ZEND_ACC_PUBLIC)
+    PHP_ME(UpsertOptions, expiration, ai_UpsertOptions_expiration, ZEND_ACC_PUBLIC)
+    PHP_ME(UpsertOptions, durabilityLevel, ai_UpsertOptions_durabilityLevel, ZEND_ACC_PUBLIC)
+    PHP_FE_END
+};
+
+PHP_METHOD(Collection, upsert)
+{
+    zend_string *id;
+    zval *value, *options;
+    lcb_STATUS err;
+
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Sz|O", &id, &value, &options, pcbc_upsert_options_ce);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    PCBC_RESOLVE_COLLECTION;
+
+    lcb_CMDSTORE *cmd;
+    lcb_cmdstore_create(&cmd, LCB_STORE_UPSERT);
+    lcb_cmdstore_collection(cmd, scope_str, scope_len, collection_str, collection_len);
+    if (options) {
+        zval *prop, ret;
+        prop = zend_read_property(pcbc_upsert_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdstore_timeout(cmd, Z_LVAL_P(prop));
+        }
+        prop = zend_read_property(pcbc_upsert_options_ce, getThis(), ZEND_STRL("expiration"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdstore_expiration(cmd, Z_LVAL_P(prop));
+        }
+        prop = zend_read_property(pcbc_upsert_options_ce, getThis(), ZEND_STRL("durability_level"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdstore_durability(cmd, Z_LVAL_P(prop));
+        }
+        prop = zend_read_property(pcbc_upsert_options_ce, getThis(), ZEND_STRL("cas"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_STRING) {
+            zend_string *decoded = php_base64_decode(Z_STRVAL_P(prop), Z_STRLEN_P(prop));
+            if (decoded) {
+                uint64_t cas = 0;
+                memcpy(&cas, ZSTR_VAL(decoded), ZSTR_LEN(decoded));
+                lcb_cmdstore_cas(cmd, cas);
+                zend_string_free(decoded);
             }
         }
     }
 
-    FOREACH_OPCOOKIE_RES(opcookie_store_res, res, cookie)
-    {
-        if (res->key) {
-            efree(res->key);
-        }
-        PCBC_RESP_ERR_FREE(res->header);
+    lcbtrace_SPAN *parent_span = NULL;
+    lcbtrace_TRACER *tracer = lcb_get_tracer(bucket->conn->lcb);
+    if (tracer) {
+        parent_span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_UPSERT, 0, NULL);
+        lcbtrace_span_add_tag_str(parent_span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(parent_span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
+        lcb_cmdstore_parent_span(cmd, parent_span);
     }
-
-    return err;
-}
-
-// insert($id, $doc {, $expiry, $groupid}) : MetaDoc
-PHP_METHOD(Bucket, insert)
-{
-    pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
-    int ii, ncmds, nscheduled;
-    pcbc_pp_state pp_state;
-    pcbc_pp_id id;
-    zval *zvalue, *zexpiry, *zflags, *zgroupid, *zpersist, *zreplica;
-    opcookie *cookie;
-    lcb_error_t err;
-    lcbtrace_TRACER *tracer = NULL;
-
-    // Note that groupid is experimental here and should not be used.
-    if (pcbc_pp_begin(ZEND_NUM_ARGS() TSRMLS_CC, &pp_state, "id|value|expiry,flags,groupid,persist_to,replicate_to",
-                      &id, &zvalue, &zexpiry, &zflags, &zgroupid, &zpersist, &zreplica) != SUCCESS) {
-        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+    lcbtrace_SPAN *span = NULL;
+    if (parent_span) {
+        lcbtrace_REF ref;
+        ref.type = LCBTRACE_REF_CHILD_OF;
+        ref.span = parent_span;
+        span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_REQUEST_ENCODING, LCBTRACE_NOW, &ref);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
+    }
+    void *bytes = NULL;
+    size_t nbytes;
+    uint32_t flags;
+    uint8_t datatype;
+    rv = pcbc_encode_value(bucket, value, &bytes, &nbytes, &flags, &datatype TSRMLS_CC);
+    if (span) {
+        lcbtrace_span_finish(span, LCBTRACE_NOW);
+    }
+    if (rv != SUCCESS) {
+        pcbc_log(LOGARGS(bucket->conn->lcb, ERROR), "Failed to encode value for before storing");
+        lcb_cmdstore_destroy(cmd);
+        throw_lcb_exception(err, NULL);
         RETURN_NULL();
     }
 
-    ncmds = pcbc_pp_keycount(&pp_state);
-    cookie = opcookie_init();
-    tracer = lcb_get_tracer(obj->conn->lcb);
-    if (tracer) {
-        cookie->span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_INSERT, 0, NULL);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
+    lcb_cmdstore_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
+    lcb_cmdstore_value(cmd, bytes, nbytes);
+    lcb_cmdstore_flags(cmd, flags);
+    lcb_cmdstore_datatype(cmd, datatype);
+
+    object_init_ex(return_value, pcbc_store_result_impl_ce);
+    struct store_cookie cookie = {
+        LCB_SUCCESS,
+        return_value
+    };
+    err = lcb_store(bucket->conn->lcb, &cookie, cmd);
+    efree(bytes);
+    lcb_cmdstore_destroy(cmd);
+    if (err == LCB_SUCCESS) {
+        lcb_wait(bucket->conn->lcb);
+        err = cookie.rc;
     }
-
-    nscheduled = 0;
-    for (ii = 0; pcbc_pp_next(&pp_state); ++ii) {
-        lcb_CMDSTOREDUR cmd = {0};
-        void *bytes;
-        lcb_size_t nbytes;
-        int rc;
-        lcbtrace_SPAN *span = NULL;
-
-        PCBC_CHECK_ZVAL_LONG(zexpiry, "expiry must be an integer");
-        PCBC_CHECK_ZVAL_LONG(zflags, "flags must be an integer");
-        PCBC_CHECK_ZVAL_STRING(zgroupid, "groupid must be a string");
-
-        cmd.operation = LCB_ADD;
-        LCB_CMD_SET_KEY(&cmd, id.str, id.len);
-
-        if (cookie->span) {
-            lcbtrace_REF ref;
-            ref.type = LCBTRACE_REF_CHILD_OF;
-            ref.span = cookie->span;
-            span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_REQUEST_ENCODING, LCBTRACE_NOW, &ref);
-            lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
-            lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
-        }
-        rc = pcbc_encode_value(obj, zvalue, &bytes, &nbytes, &cmd.flags, &cmd.datatype TSRMLS_CC);
-        if (span) {
-            lcbtrace_span_finish(span, LCBTRACE_NOW);
-        }
-        if (rc != SUCCESS) {
-            pcbc_log(LOGARGS(obj->conn->lcb, ERROR), "Failed to encode value for before storing");
-            err = LCB_ERROR;
-            break;
-        }
-        LCB_CMD_SET_VALUE(&cmd, bytes, nbytes);
-
-        if (zexpiry) {
-            cmd.exptime = Z_LVAL_P(zexpiry);
-        }
-        if (zflags) {
-            cmd.flags = Z_LVAL_P(zflags);
-        }
-        if (zgroupid) {
-            LCB_KREQ_SIMPLE(&cmd._hashkey, Z_STRVAL_P(zgroupid), Z_STRLEN_P(zgroupid));
-        }
-        if (zpersist) {
-            cmd.persist_to = (char)Z_LVAL_P(zpersist);
-        }
-        if (zreplica) {
-            cmd.replicate_to = (char)Z_LVAL_P(zreplica);
-        }
-
-        if (cookie->span) {
-            LCB_CMD_SET_TRACESPAN(&cmd, cookie->span);
-        }
-        if (cmd.persist_to || cmd.replicate_to) {
-            err = lcb_storedur3(obj->conn->lcb, cookie, &cmd);
-        } else {
-            err = lcb_store3(obj->conn->lcb, cookie, (lcb_CMDSTORE *)&cmd);
-        }
-        efree(bytes);
-        if (err != LCB_SUCCESS) {
-            break;
-        }
-        nscheduled++;
+    if (parent_span) {
+        lcbtrace_span_finish(parent_span, LCBTRACE_NOW);
     }
-    pcbc_assert_number_of_commands(obj->conn->lcb, "insert", nscheduled, ncmds, err);
-
-    if (nscheduled) {
-        lcb_wait(obj->conn->lcb);
-
-        err = proc_store_results(obj, return_value, cookie, pcbc_pp_ismapped(&pp_state) TSRMLS_CC);
-    }
-
-    if (cookie->span) {
-        lcbtrace_span_finish(cookie->span, LCBTRACE_NOW);
-    }
-    opcookie_destroy(cookie);
-
     if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err);
+        throw_lcb_exception(err, pcbc_store_result_impl_ce);
     }
 }
 
-// upsert($id, $doc {, $expiry, $groupid}) : MetaDoc
-PHP_METHOD(Bucket, upsert)
-{
-    pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
-    int ii, ncmds, nscheduled;
-    pcbc_pp_state pp_state;
-    zval *zvalue, *zexpiry, *zflags, *zgroupid, *zpersist, *zreplica;
-    pcbc_pp_id id;
-    opcookie *cookie;
-    lcb_error_t err;
-    lcbtrace_TRACER *tracer = NULL;
+zend_class_entry *pcbc_replace_options_ce;
 
-    // Note that groupid is experimental here and should not be used.
-    if (pcbc_pp_begin(ZEND_NUM_ARGS() TSRMLS_CC, &pp_state, "id|value|expiry,flags,groupid,persist_to,replicate_to",
-                      &id, &zvalue, &zexpiry, &zflags, &zgroupid, &zpersist, &zreplica) != SUCCESS) {
-        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+PHP_METHOD(ReplaceOptions, cas)
+{
+    zend_string *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "S", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_string *decoded = php_base64_decode(ZSTR_VAL(arg), ZSTR_LEN(arg));
+    if (decoded) {
+        if (ZSTR_LEN(decoded) == sizeof(uint64_t)) {
+            zend_update_property_str(pcbc_replace_options_ce, getThis(), ZEND_STRL("cas"), arg TSRMLS_CC);
+        }
+        zend_string_free(decoded);
+    }
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(ReplaceOptions, timeout)
+{
+    zend_long *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_replace_options_ce, getThis(), ZEND_STRL("timeout"), *arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(ReplaceOptions, expiration)
+{
+    zend_long *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_replace_options_ce, getThis(), ZEND_STRL("expiration"), *arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(ReplaceOptions, durabilityLevel)
+{
+    zend_long *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_replace_options_ce, getThis(), ZEND_STRL("durability_level"), *arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ReplaceOptions_cas, 0, 1, \\Couchbase\\ReplaceOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ReplaceOptions_timeout, 0, 1, \\Couchbase\\ReplaceOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ReplaceOptions_expiration, 0, 1, \\Couchbase\\ReplaceOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ReplaceOptions_durabilityLevel, 0, 1, \\Couchbase\\ReplaceOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry pcbc_replace_options_methods[] = {
+    PHP_ME(ReplaceOptions, cas, ai_ReplaceOptions_cas, ZEND_ACC_PUBLIC)
+    PHP_ME(ReplaceOptions, timeout, ai_ReplaceOptions_timeout, ZEND_ACC_PUBLIC)
+    PHP_ME(ReplaceOptions, expiration, ai_ReplaceOptions_expiration, ZEND_ACC_PUBLIC)
+    PHP_ME(ReplaceOptions, durabilityLevel, ai_ReplaceOptions_durabilityLevel, ZEND_ACC_PUBLIC)
+    PHP_FE_END
+};
+
+PHP_METHOD(Collection, replace)
+{
+    zend_string *id;
+    zval *value, *options;
+    lcb_STATUS err;
+
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Sz|O", &id, &value, &options, pcbc_replace_options_ce);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    PCBC_RESOLVE_COLLECTION;
+
+    lcb_CMDSTORE *cmd;
+    lcb_cmdstore_create(&cmd, LCB_STORE_REPLACE);
+    lcb_cmdstore_collection(cmd, scope_str, scope_len, collection_str, collection_len);
+    if (options) {
+        zval *prop, ret;
+        prop = zend_read_property(pcbc_replace_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdstore_timeout(cmd, Z_LVAL_P(prop));
+        }
+        prop = zend_read_property(pcbc_replace_options_ce, getThis(), ZEND_STRL("expiration"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdstore_expiration(cmd, Z_LVAL_P(prop));
+        }
+        prop = zend_read_property(pcbc_replace_options_ce, getThis(), ZEND_STRL("durability_level"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdstore_durability(cmd, Z_LVAL_P(prop));
+        }
+        prop = zend_read_property(pcbc_replace_options_ce, getThis(), ZEND_STRL("cas"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_STRING) {
+            zend_string *decoded = php_base64_decode(Z_STRVAL_P(prop), Z_STRLEN_P(prop));
+            if (decoded) {
+                uint64_t cas = 0;
+                memcpy(&cas, ZSTR_VAL(decoded), ZSTR_LEN(decoded));
+                lcb_cmdstore_cas(cmd, cas);
+                zend_string_free(decoded);
+            }
+        }
+    }
+
+    lcbtrace_SPAN *parent_span = NULL;
+    lcbtrace_TRACER *tracer = lcb_get_tracer(bucket->conn->lcb);
+    if (tracer) {
+        parent_span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_REPLACE, 0, NULL);
+        lcbtrace_span_add_tag_str(parent_span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(parent_span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
+        lcb_cmdstore_parent_span(cmd, parent_span);
+    }
+    lcbtrace_SPAN *span = NULL;
+    if (parent_span) {
+        lcbtrace_REF ref;
+        ref.type = LCBTRACE_REF_CHILD_OF;
+        ref.span = parent_span;
+        span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_REQUEST_ENCODING, LCBTRACE_NOW, &ref);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
+    }
+    void *bytes = NULL;
+    size_t nbytes;
+    uint32_t flags;
+    uint8_t datatype;
+    rv = pcbc_encode_value(bucket, value, &bytes, &nbytes, &flags, &datatype TSRMLS_CC);
+    if (span) {
+        lcbtrace_span_finish(span, LCBTRACE_NOW);
+    }
+    if (rv != SUCCESS) {
+        pcbc_log(LOGARGS(bucket->conn->lcb, ERROR), "Failed to encode value for before storing");
+        lcb_cmdstore_destroy(cmd);
+        throw_lcb_exception(err, NULL);
         RETURN_NULL();
     }
 
-    ncmds = pcbc_pp_keycount(&pp_state);
-    cookie = opcookie_init();
-    tracer = lcb_get_tracer(obj->conn->lcb);
-    if (tracer) {
-        cookie->span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_UPSERT, 0, NULL);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
+    lcb_cmdstore_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
+    lcb_cmdstore_value(cmd, bytes, nbytes);
+    lcb_cmdstore_flags(cmd, flags);
+    lcb_cmdstore_datatype(cmd, datatype);
+
+    object_init_ex(return_value, pcbc_store_result_impl_ce);
+    struct store_cookie cookie = {
+        LCB_SUCCESS,
+        return_value
+    };
+    err = lcb_store(bucket->conn->lcb, &cookie, cmd);
+    efree(bytes);
+    lcb_cmdstore_destroy(cmd);
+    if (err == LCB_SUCCESS) {
+        lcb_wait(bucket->conn->lcb);
+        err = cookie.rc;
     }
-
-    nscheduled = 0;
-    for (ii = 0; pcbc_pp_next(&pp_state); ++ii) {
-        lcb_CMDSTOREDUR cmd = {0};
-        void *bytes;
-        lcb_size_t nbytes;
-        int rc;
-        lcbtrace_SPAN *span = NULL;
-
-        PCBC_CHECK_ZVAL_LONG(zexpiry, "expiry must be an integer");
-        PCBC_CHECK_ZVAL_LONG(zflags, "flags must be an integer");
-        PCBC_CHECK_ZVAL_STRING(zgroupid, "groupid must be a string");
-        PCBC_CHECK_ZVAL_LONG(zpersist, "persist_to must be an integer");
-        PCBC_CHECK_ZVAL_LONG(zreplica, "replicate_to must be an integer");
-
-        cmd.operation = LCB_SET;
-        LCB_CMD_SET_KEY(&cmd, id.str, id.len);
-
-        if (cookie->span) {
-            lcbtrace_REF ref;
-            ref.type = LCBTRACE_REF_CHILD_OF;
-            ref.span = cookie->span;
-            span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_REQUEST_ENCODING, LCBTRACE_NOW, &ref);
-            lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
-            lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
-        }
-        rc = pcbc_encode_value(obj, zvalue, &bytes, &nbytes, &cmd.flags, &cmd.datatype TSRMLS_CC);
-        if (span) {
-            lcbtrace_span_finish(span, LCBTRACE_NOW);
-        }
-        if (rc != SUCCESS) {
-            pcbc_log(LOGARGS(obj->conn->lcb, ERROR), "Failed to encode value for before storing");
-            err = LCB_ERROR;
-            break;
-        }
-        LCB_CMD_SET_VALUE(&cmd, bytes, nbytes);
-
-        if (zexpiry) {
-            cmd.exptime = Z_LVAL_P(zexpiry);
-        }
-        if (zflags) {
-            cmd.flags = Z_LVAL_P(zflags);
-        }
-        if (zgroupid) {
-            LCB_KREQ_SIMPLE(&cmd._hashkey, Z_STRVAL_P(zgroupid), Z_STRLEN_P(zgroupid));
-        }
-        if (zpersist) {
-            cmd.persist_to = (char)Z_LVAL_P(zpersist);
-        }
-        if (zreplica) {
-            cmd.replicate_to = (char)Z_LVAL_P(zreplica);
-        }
-
-        if (cookie->span) {
-            LCB_CMD_SET_TRACESPAN(&cmd, cookie->span);
-        }
-        if (cmd.persist_to || cmd.replicate_to) {
-            err = lcb_storedur3(obj->conn->lcb, cookie, &cmd);
-        } else {
-            err = lcb_store3(obj->conn->lcb, cookie, (lcb_CMDSTORE *)&cmd);
-        }
-        efree(bytes);
-        if (err != LCB_SUCCESS) {
-            break;
-        }
-        nscheduled++;
+    if (parent_span) {
+        lcbtrace_span_finish(parent_span, LCBTRACE_NOW);
     }
-    pcbc_assert_number_of_commands(obj->conn->lcb, "upsert", nscheduled, ncmds, err);
-
-    if (nscheduled) {
-        lcb_wait(obj->conn->lcb);
-
-        err = proc_store_results(obj, return_value, cookie, pcbc_pp_ismapped(&pp_state) TSRMLS_CC);
-    }
-
-    if (cookie->span) {
-        lcbtrace_span_finish(cookie->span, LCBTRACE_NOW);
-    }
-    opcookie_destroy(cookie);
-
     if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err);
+        throw_lcb_exception(err, pcbc_store_result_impl_ce);
     }
 }
 
-// replace($id, $doc {, $cas, $expiry, $groupid}) : MetaDoc
-PHP_METHOD(Bucket, replace)
-{
-    pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
-    int ii, ncmds, nscheduled;
-    pcbc_pp_state pp_state;
-    pcbc_pp_id id;
-    zval *zvalue, *zcas, *zexpiry, *zflags, *zgroupid, *zpersist, *zreplica;
-    opcookie *cookie;
-    lcb_error_t err;
-    lcbtrace_TRACER *tracer = NULL;
+zend_class_entry *pcbc_append_options_ce;
 
-    // Note that groupid is experimental here and should not be used.
-    if (pcbc_pp_begin(ZEND_NUM_ARGS() TSRMLS_CC, &pp_state, "id|value|cas,expiry,flags,groupid,persist_to,replicate_to",
-                      &id, &zvalue, &zcas, &zexpiry, &zflags, &zgroupid, &zpersist, &zreplica) != SUCCESS) {
-        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+PHP_METHOD(AppendOptions, cas)
+{
+    zend_string *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "S", &arg);
+    if (rv == FAILURE) {
         RETURN_NULL();
     }
-
-    ncmds = pcbc_pp_keycount(&pp_state);
-    cookie = opcookie_init();
-    tracer = lcb_get_tracer(obj->conn->lcb);
-    if (tracer) {
-        cookie->span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_REPLACE, 0, NULL);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
+    zend_string *decoded = php_base64_decode(ZSTR_VAL(arg), ZSTR_LEN(arg));
+    if (decoded) {
+        if (ZSTR_LEN(decoded) == sizeof(uint64_t)) {
+            zend_update_property_str(pcbc_append_options_ce, getThis(), ZEND_STRL("cas"), arg TSRMLS_CC);
+        }
+        zend_string_free(decoded);
     }
-
-    nscheduled = 0;
-    for (ii = 0; pcbc_pp_next(&pp_state); ++ii) {
-        lcb_CMDSTOREDUR cmd = {0};
-        void *bytes;
-        lcb_size_t nbytes;
-        int rc;
-        lcbtrace_SPAN *span = NULL;
-
-        PCBC_CHECK_ZVAL_STRING(zcas, "cas must be a string");
-        PCBC_CHECK_ZVAL_LONG(zexpiry, "expiry must be an integer");
-        PCBC_CHECK_ZVAL_LONG(zflags, "flags must be an integer");
-        PCBC_CHECK_ZVAL_STRING(zgroupid, "groupid must be a string");
-        PCBC_CHECK_ZVAL_LONG(zpersist, "persist_to must be an integer");
-        PCBC_CHECK_ZVAL_LONG(zreplica, "replicate_to must be an integer");
-
-        cmd.operation = LCB_REPLACE;
-        LCB_CMD_SET_KEY(&cmd, id.str, id.len);
-
-        if (cookie->span) {
-            lcbtrace_REF ref;
-            ref.type = LCBTRACE_REF_CHILD_OF;
-            ref.span = cookie->span;
-            span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_REQUEST_ENCODING, LCBTRACE_NOW, &ref);
-            lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
-            lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
-        }
-        rc = pcbc_encode_value(obj, zvalue, &bytes, &nbytes, &cmd.flags, &cmd.datatype TSRMLS_CC);
-        if (span) {
-            lcbtrace_span_finish(span, LCBTRACE_NOW);
-        }
-        if (rc != SUCCESS) {
-            pcbc_log(LOGARGS(obj->conn->lcb, ERROR), "Failed to encode value for before storing");
-            err = LCB_ERROR;
-            break;
-        }
-        LCB_CMD_SET_VALUE(&cmd, bytes, nbytes);
-
-        if (zcas) {
-            cmd.cas = pcbc_cas_decode(zcas TSRMLS_CC);
-        }
-        if (zexpiry) {
-            cmd.exptime = Z_LVAL_P(zexpiry);
-        }
-        if (zflags) {
-            cmd.flags = Z_LVAL_P(zflags);
-        }
-        if (zgroupid) {
-            LCB_KREQ_SIMPLE(&cmd._hashkey, Z_STRVAL_P(zgroupid), Z_STRLEN_P(zgroupid));
-        }
-        if (zpersist) {
-            cmd.persist_to = (char)Z_LVAL_P(zpersist);
-        }
-        if (zreplica) {
-            cmd.replicate_to = (char)Z_LVAL_P(zreplica);
-        }
-
-        if (cookie->span) {
-            LCB_CMD_SET_TRACESPAN(&cmd, cookie->span);
-        }
-        if (cmd.persist_to || cmd.replicate_to) {
-            err = lcb_storedur3(obj->conn->lcb, cookie, &cmd);
-        } else {
-            err = lcb_store3(obj->conn->lcb, cookie, (lcb_CMDSTORE *)&cmd);
-        }
-        efree(bytes);
-        if (err != LCB_SUCCESS) {
-            break;
-        }
-        nscheduled++;
-    }
-    pcbc_assert_number_of_commands(obj->conn->lcb, "replace", nscheduled, ncmds, err);
-
-    if (nscheduled) {
-        lcb_wait(obj->conn->lcb);
-
-        err = proc_store_results(obj, return_value, cookie, pcbc_pp_ismapped(&pp_state) TSRMLS_CC);
-    }
-
-    if (cookie->span) {
-        lcbtrace_span_finish(cookie->span, LCBTRACE_NOW);
-    }
-    opcookie_destroy(cookie);
-
-    if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err);
-    }
+    RETURN_ZVAL(getThis(), 1, 0);
 }
 
-// append($id, $doc {, $cas, $groupid}) : MetaDoc
-PHP_METHOD(Bucket, append)
+PHP_METHOD(AppendOptions, timeout)
 {
-    pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
-    int ii, ncmds, nscheduled;
-    pcbc_pp_state pp_state;
-    pcbc_pp_id id;
-    zval *zvalue, *zcas, *zgroupid, *zpersist, *zreplica;
-    opcookie *cookie;
-    lcb_error_t err;
-    lcbtrace_TRACER *tracer = NULL;
-
-    // Note that groupid is experimental here and should not be used.
-    if (pcbc_pp_begin(ZEND_NUM_ARGS() TSRMLS_CC, &pp_state, "id|value|cas,groupid,persist_to,replicate_to", &id,
-                      &zvalue, &zcas, &zgroupid, &zpersist, &zreplica) != SUCCESS) {
-        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+    zend_long *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
         RETURN_NULL();
     }
-
-    ncmds = pcbc_pp_keycount(&pp_state);
-    cookie = opcookie_init();
-    tracer = lcb_get_tracer(obj->conn->lcb);
-    if (tracer) {
-        cookie->span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_APPEND, 0, NULL);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
-    }
-
-    nscheduled = 0;
-    for (ii = 0; pcbc_pp_next(&pp_state); ++ii) {
-        lcb_CMDSTOREDUR cmd = {0};
-        void *bytes;
-        lcb_size_t nbytes;
-        int rc;
-        lcbtrace_SPAN *span = NULL;
-
-        PCBC_CHECK_ZVAL_STRING(zcas, "cas must be a string");
-        PCBC_CHECK_ZVAL_STRING(zgroupid, "groupid must be a string");
-        PCBC_CHECK_ZVAL_LONG(zpersist, "persist_to must be an integer");
-        PCBC_CHECK_ZVAL_LONG(zreplica, "replicate_to must be an integer");
-
-        cmd.operation = LCB_APPEND;
-        LCB_CMD_SET_KEY(&cmd, id.str, id.len);
-
-        if (cookie->span) {
-            lcbtrace_REF ref;
-            ref.type = LCBTRACE_REF_CHILD_OF;
-            ref.span = cookie->span;
-            span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_REQUEST_ENCODING, LCBTRACE_NOW, &ref);
-            lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
-            lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
-        }
-        rc = pcbc_encode_value(obj, zvalue, &bytes, &nbytes, &cmd.flags, &cmd.datatype TSRMLS_CC);
-        if (span) {
-            lcbtrace_span_finish(span, LCBTRACE_NOW);
-        }
-        if (rc != SUCCESS) {
-            pcbc_log(LOGARGS(obj->conn->lcb, ERROR), "Failed to encode value for before storing");
-            err = LCB_ERROR;
-            break;
-        }
-        LCB_CMD_SET_VALUE(&cmd, bytes, nbytes);
-
-        if (zcas) {
-            cmd.cas = pcbc_cas_decode(zcas TSRMLS_CC);
-        }
-        if (zgroupid) {
-            LCB_KREQ_SIMPLE(&cmd._hashkey, Z_STRVAL_P(zgroupid), Z_STRLEN_P(zgroupid));
-        }
-        if (zpersist) {
-            cmd.persist_to = (char)Z_LVAL_P(zpersist);
-        }
-        if (zreplica) {
-            cmd.replicate_to = (char)Z_LVAL_P(zreplica);
-        }
-
-        // Flags ignored for this op, enforced by libcouchbase
-        cmd.flags = 0;
-
-        if (cookie->span) {
-            LCB_CMD_SET_TRACESPAN(&cmd, cookie->span);
-        }
-        if (cmd.persist_to || cmd.replicate_to) {
-            err = lcb_storedur3(obj->conn->lcb, cookie, &cmd);
-        } else {
-            err = lcb_store3(obj->conn->lcb, cookie, (lcb_CMDSTORE *)&cmd);
-        }
-        efree(bytes);
-        if (err != LCB_SUCCESS) {
-            break;
-        }
-        nscheduled++;
-    }
-    pcbc_assert_number_of_commands(obj->conn->lcb, "append", nscheduled, ncmds, err);
-
-    if (nscheduled) {
-        lcb_wait(obj->conn->lcb);
-
-        err = proc_store_results(obj, return_value, cookie, pcbc_pp_ismapped(&pp_state) TSRMLS_CC);
-    }
-
-    if (cookie->span) {
-        lcbtrace_span_finish(cookie->span, LCBTRACE_NOW);
-    }
-    opcookie_destroy(cookie);
-
-    if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err);
-    }
+    zend_update_property_long(pcbc_append_options_ce, getThis(), ZEND_STRL("timeout"), *arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
 }
 
-// prepend($id, $doc {, $cas, $groupid}) : MetaDoc
-PHP_METHOD(Bucket, prepend)
+PHP_METHOD(AppendOptions, durabilityLevel)
 {
-    pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
-    int ii, ncmds, nscheduled;
-    pcbc_pp_state pp_state;
-    pcbc_pp_id id;
-    zval *zvalue, *zcas, *zgroupid, *zpersist, *zreplica;
-    opcookie *cookie;
-    lcb_error_t err = LCB_SUCCESS;
-    lcbtrace_TRACER *tracer = NULL;
-
-    // Note that groupid is experimental here and should not be used.
-    if (pcbc_pp_begin(ZEND_NUM_ARGS() TSRMLS_CC, &pp_state, "id|value|cas,groupid,persist_to,replicate_to", &id,
-                      &zvalue, &zcas, &zgroupid, &zpersist, &zreplica) != SUCCESS) {
-        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+    zend_long *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
         RETURN_NULL();
     }
+    zend_update_property_long(pcbc_append_options_ce, getThis(), ZEND_STRL("durability_level"), *arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
 
-    ncmds = pcbc_pp_keycount(&pp_state);
-    cookie = opcookie_init();
-    tracer = lcb_get_tracer(obj->conn->lcb);
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_AppendOptions_cas, 0, 1, \\Couchbase\\AppendOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_AppendOptions_timeout, 0, 1, \\Couchbase\\AppendOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_AppendOptions_durabilityLevel, 0, 1, \\Couchbase\\AppendOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry pcbc_append_options_methods[] = {
+    PHP_ME(AppendOptions, cas, ai_AppendOptions_cas, ZEND_ACC_PUBLIC)
+    PHP_ME(AppendOptions, timeout, ai_AppendOptions_timeout, ZEND_ACC_PUBLIC)
+    PHP_ME(AppendOptions, durabilityLevel, ai_AppendOptions_durabilityLevel, ZEND_ACC_PUBLIC)
+    PHP_FE_END
+};
+
+PHP_METHOD(Collection, append)
+{
+    zend_string *id, *value;
+    zval *options;
+    lcb_STATUS err;
+
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "SS|O", &id, &value, &options, pcbc_append_options_ce);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    PCBC_RESOLVE_COLLECTION;
+
+    lcb_CMDSTORE *cmd;
+    lcb_cmdstore_create(&cmd, LCB_STORE_APPEND);
+    lcb_cmdstore_collection(cmd, scope_str, scope_len, collection_str, collection_len);
+    if (options) {
+        zval *prop, ret;
+        prop = zend_read_property(pcbc_append_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdstore_timeout(cmd, Z_LVAL_P(prop));
+        }
+        prop = zend_read_property(pcbc_append_options_ce, getThis(), ZEND_STRL("durability_level"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdstore_durability(cmd, Z_LVAL_P(prop));
+        }
+        prop = zend_read_property(pcbc_append_options_ce, getThis(), ZEND_STRL("cas"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_STRING) {
+            zend_string *decoded = php_base64_decode(Z_STRVAL_P(prop), Z_STRLEN_P(prop));
+            if (decoded) {
+                uint64_t cas = 0;
+                memcpy(&cas, ZSTR_VAL(decoded), ZSTR_LEN(decoded));
+                lcb_cmdstore_cas(cmd, cas);
+                zend_string_free(decoded);
+            }
+        }
+    }
+
+    lcbtrace_SPAN *span = NULL;
+    lcbtrace_TRACER *tracer = lcb_get_tracer(bucket->conn->lcb);
     if (tracer) {
-        cookie->span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_PREPEND, 0, NULL);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
+        span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_APPEND, 0, NULL);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
+        lcb_cmdstore_parent_span(cmd, span);
     }
 
-    nscheduled = 0;
-    for (ii = 0; pcbc_pp_next(&pp_state); ++ii) {
-        lcb_CMDSTOREDUR cmd = {0};
-        void *bytes;
-        lcb_size_t nbytes;
-        int rc;
-        lcbtrace_SPAN *span = NULL;
+    lcb_cmdstore_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
+    lcb_cmdstore_value(cmd, ZSTR_VAL(value), ZSTR_LEN(value));
 
-        PCBC_CHECK_ZVAL_STRING(zcas, "cas must be a string");
-        PCBC_CHECK_ZVAL_STRING(zgroupid, "groupid must be a string");
-        PCBC_CHECK_ZVAL_LONG(zpersist, "persist_to must be an integer");
-        PCBC_CHECK_ZVAL_LONG(zreplica, "replicate_to must be an integer");
-
-        cmd.operation = LCB_PREPEND;
-        LCB_CMD_SET_KEY(&cmd, id.str, id.len);
-
-        if (cookie->span) {
-            lcbtrace_REF ref;
-            ref.type = LCBTRACE_REF_CHILD_OF;
-            ref.span = cookie->span;
-            span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_REQUEST_ENCODING, LCBTRACE_NOW, &ref);
-            lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
-            lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
-        }
-        rc = pcbc_encode_value(obj, zvalue, &bytes, &nbytes, &cmd.flags, &cmd.datatype TSRMLS_CC);
-        if (span) {
-            lcbtrace_span_finish(span, LCBTRACE_NOW);
-        }
-        if (rc != SUCCESS) {
-            pcbc_log(LOGARGS(obj->conn->lcb, ERROR), "Failed to encode value for before storing");
-            err = LCB_ERROR;
-            break;
-        }
-        LCB_CMD_SET_VALUE(&cmd, bytes, nbytes);
-
-        if (zcas) {
-            cmd.cas = pcbc_cas_decode(zcas TSRMLS_CC);
-        }
-        if (zgroupid) {
-            LCB_KREQ_SIMPLE(&cmd._hashkey, Z_STRVAL_P(zgroupid), Z_STRLEN_P(zgroupid));
-        }
-        if (zpersist) {
-            cmd.persist_to = (char)Z_LVAL_P(zpersist);
-        }
-        if (zreplica) {
-            cmd.replicate_to = (char)Z_LVAL_P(zreplica);
-        }
-
-        // Flags ignored for this op, enforced by libcouchbase
-        cmd.flags = 0;
-
-        if (cookie->span) {
-            LCB_CMD_SET_TRACESPAN(&cmd, cookie->span);
-        }
-        if (cmd.persist_to || cmd.replicate_to) {
-            err = lcb_storedur3(obj->conn->lcb, cookie, &cmd);
-        } else {
-            err = lcb_store3(obj->conn->lcb, cookie, (lcb_CMDSTORE *)&cmd);
-        }
-        efree(bytes);
-        if (err != LCB_SUCCESS) {
-            break;
-        }
-        nscheduled++;
+    object_init_ex(return_value, pcbc_store_result_impl_ce);
+    struct store_cookie cookie = {
+        LCB_SUCCESS,
+        return_value
+    };
+    err = lcb_store(bucket->conn->lcb, &cookie, cmd);
+    lcb_cmdstore_destroy(cmd);
+    if (err == LCB_SUCCESS) {
+        lcb_wait(bucket->conn->lcb);
+        err = cookie.rc;
     }
-    pcbc_assert_number_of_commands(obj->conn->lcb, "prepend", nscheduled, ncmds, err);
-
-    if (nscheduled) {
-        lcb_wait(obj->conn->lcb);
-
-        err = proc_store_results(obj, return_value, cookie, pcbc_pp_ismapped(&pp_state) TSRMLS_CC);
+    if (span) {
+        lcbtrace_span_finish(span, LCBTRACE_NOW);
     }
-
-    if (cookie->span) {
-        lcbtrace_span_finish(cookie->span, LCBTRACE_NOW);
-    }
-    opcookie_destroy(cookie);
-
     if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err);
+        throw_lcb_exception(err, pcbc_store_result_impl_ce);
     }
 }
+
+zend_class_entry *pcbc_prepend_options_ce;
+
+PHP_METHOD(PrependOptions, cas)
+{
+    zend_string *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "S", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_string *decoded = php_base64_decode(ZSTR_VAL(arg), ZSTR_LEN(arg));
+    if (decoded) {
+        if (ZSTR_LEN(decoded) == sizeof(uint64_t)) {
+            zend_update_property_str(pcbc_prepend_options_ce, getThis(), ZEND_STRL("cas"), arg TSRMLS_CC);
+        }
+        zend_string_free(decoded);
+    }
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(PrependOptions, timeout)
+{
+    zend_long *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_prepend_options_ce, getThis(), ZEND_STRL("timeout"), *arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(PrependOptions, durabilityLevel)
+{
+    zend_long *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_prepend_options_ce, getThis(), ZEND_STRL("durability_level"), *arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_PrependOptions_cas, 0, 1, \\Couchbase\\PrependOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_PrependOptions_timeout, 0, 1, \\Couchbase\\PrependOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_PrependOptions_durabilityLevel, 0, 1, \\Couchbase\\PrependOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry pcbc_prepend_options_methods[] = {
+    PHP_ME(PrependOptions, cas, ai_PrependOptions_cas, ZEND_ACC_PUBLIC)
+    PHP_ME(PrependOptions, timeout, ai_PrependOptions_timeout, ZEND_ACC_PUBLIC)
+    PHP_ME(PrependOptions, durabilityLevel, ai_PrependOptions_durabilityLevel, ZEND_ACC_PUBLIC)
+    PHP_FE_END
+};
+
+PHP_METHOD(Collection, prepend)
+{
+    zend_string *id, *value;
+    zval *options;
+    lcb_STATUS err;
+
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "SS|O", &id, &value, &options, pcbc_prepend_options_ce);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    PCBC_RESOLVE_COLLECTION;
+
+    lcb_CMDSTORE *cmd;
+    lcb_cmdstore_create(&cmd, LCB_STORE_PREPEND);
+    lcb_cmdstore_collection(cmd, scope_str, scope_len, collection_str, collection_len);
+    if (options) {
+        zval *prop, ret;
+        prop = zend_read_property(pcbc_append_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdstore_timeout(cmd, Z_LVAL_P(prop));
+        }
+        prop = zend_read_property(pcbc_append_options_ce, getThis(), ZEND_STRL("durability_level"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdstore_durability(cmd, Z_LVAL_P(prop));
+        }
+        prop = zend_read_property(pcbc_append_options_ce, getThis(), ZEND_STRL("cas"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_STRING) {
+            zend_string *decoded = php_base64_decode(Z_STRVAL_P(prop), Z_STRLEN_P(prop));
+            if (decoded) {
+                uint64_t cas = 0;
+                memcpy(&cas, ZSTR_VAL(decoded), ZSTR_LEN(decoded));
+                lcb_cmdstore_cas(cmd, cas);
+                zend_string_free(decoded);
+            }
+        }
+    }
+
+    lcbtrace_SPAN *span = NULL;
+    lcbtrace_TRACER *tracer = lcb_get_tracer(bucket->conn->lcb);
+    if (tracer) {
+        span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_PREPEND, 0, NULL);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
+        lcb_cmdstore_parent_span(cmd, span);
+    }
+
+    lcb_cmdstore_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
+    lcb_cmdstore_value(cmd, ZSTR_VAL(value), ZSTR_LEN(value));
+
+    object_init_ex(return_value, pcbc_store_result_impl_ce);
+    struct store_cookie cookie = {
+        LCB_SUCCESS,
+        return_value
+    };
+    err = lcb_store(bucket->conn->lcb, &cookie, cmd);
+    lcb_cmdstore_destroy(cmd);
+    if (err == LCB_SUCCESS) {
+        lcb_wait(bucket->conn->lcb);
+        err = cookie.rc;
+    }
+    if (span) {
+        lcbtrace_span_finish(span, LCBTRACE_NOW);
+    }
+    if (err != LCB_SUCCESS) {
+        throw_lcb_exception(err, pcbc_store_result_impl_ce);
+    }
+}
+
+PHP_MINIT_FUNCTION(CollectionStore)
+{
+    zend_class_entry ce;
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "InsertOptions", pcbc_insert_options_methods);
+    pcbc_insert_options_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    zend_declare_property_null(pcbc_insert_options_ce, ZEND_STRL("timeout"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_insert_options_ce, ZEND_STRL("expiration"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_insert_options_ce, ZEND_STRL("durability_level"), ZEND_ACC_PRIVATE TSRMLS_CC);
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "UpsertOptions", pcbc_upsert_options_methods);
+    pcbc_upsert_options_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    zend_declare_property_null(pcbc_upsert_options_ce, ZEND_STRL("cas"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_upsert_options_ce, ZEND_STRL("timeout"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_upsert_options_ce, ZEND_STRL("expiration"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_upsert_options_ce, ZEND_STRL("durability_level"), ZEND_ACC_PRIVATE TSRMLS_CC);
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "ReplaceOptions", pcbc_replace_options_methods);
+    pcbc_replace_options_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    zend_declare_property_null(pcbc_replace_options_ce, ZEND_STRL("cas"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_replace_options_ce, ZEND_STRL("timeout"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_replace_options_ce, ZEND_STRL("expiration"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_replace_options_ce, ZEND_STRL("durability_level"), ZEND_ACC_PRIVATE TSRMLS_CC);
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "AppendOptions", pcbc_append_options_methods);
+    pcbc_append_options_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    zend_declare_property_null(pcbc_append_options_ce, ZEND_STRL("cas"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_append_options_ce, ZEND_STRL("timeout"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_append_options_ce, ZEND_STRL("durability_level"), ZEND_ACC_PRIVATE TSRMLS_CC);
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "PrependOptions", pcbc_prepend_options_methods);
+    pcbc_prepend_options_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    zend_declare_property_null(pcbc_prepend_options_ce, ZEND_STRL("cas"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_prepend_options_ce, ZEND_STRL("timeout"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_prepend_options_ce, ZEND_STRL("durability_level"), ZEND_ACC_PRIVATE TSRMLS_CC);
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "DurabilityLevel", pcbc_durability_level_methods);
+    pcbc_durability_level_ce = zend_register_internal_interface(&ce TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_durability_level_ce, ZEND_STRL("NONE"), LCB_DURABILITYLEVEL_NONE TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_durability_level_ce, ZEND_STRL("MAJORITY"), LCB_DURABILITYLEVEL_MAJORITY TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_durability_level_ce, ZEND_STRL("MAJORITY_AND_PERSIST_ON_MASTER"), LCB_DURABILITYLEVEL_MAJORITY_AND_PERSIST_ON_MASTER TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_durability_level_ce, ZEND_STRL("PERSIST_TO_MAJORITY"), LCB_DURABILITYLEVEL_PERSIST_TO_MAJORITY TSRMLS_CC);
+
+    return SUCCESS;
+}
+
+
+/*
+ * vim: et ts=4 sw=4 sts=4
+ */

@@ -31,8 +31,7 @@ void opcookie_destroy(opcookie *cookie)
     }
     efree(cookie);
 }
-
-lcb_error_t opcookie_get_first_error(opcookie *cookie)
+ lcb_STATUS opcookie_get_first_error(opcookie *cookie)
 {
     return cookie->first_error;
 }

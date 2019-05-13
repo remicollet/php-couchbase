@@ -211,6 +211,6 @@ PHP_MINIT_FUNCTION(PasswordAuthenticator)
     password_authenticator_handlers.free_obj = password_authenticator_free_object;
     password_authenticator_handlers.offset = XtOffsetOf(pcbc_password_authenticator_t, std);
 
-    zend_register_class_alias("\\CouchbaseAuthenticator", pcbc_password_authenticator_ce);
+     
     return SUCCESS;
 }

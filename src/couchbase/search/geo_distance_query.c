@@ -223,6 +223,6 @@ PHP_MINIT_FUNCTION(GeoDistanceSearchQuery)
     geo_distance_search_query_handlers.free_obj = geo_distance_search_query_free_object;
     geo_distance_search_query_handlers.offset = XtOffsetOf(pcbc_geo_distance_search_query_t, std);
 
-    zend_register_class_alias("\\CouchbaseGeoDistanceSearchQuery", pcbc_geo_distance_search_query_ce);
+     
     return SUCCESS;
 }

@@ -279,6 +279,6 @@ PHP_MINIT_FUNCTION(NumericRangeSearchQuery)
     numeric_range_search_query_handlers.free_obj = numeric_range_search_query_free_object;
     numeric_range_search_query_handlers.offset = XtOffsetOf(pcbc_numeric_range_search_query_t, std);
 
-    zend_register_class_alias("\\CouchbaseNumericRangeSearchQuery", pcbc_numeric_range_search_query_ce);
+     
     return SUCCESS;
 }

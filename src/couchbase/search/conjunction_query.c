@@ -223,6 +223,6 @@ PHP_MINIT_FUNCTION(ConjunctionSearchQuery)
     conjunction_search_query_handlers.free_obj = conjunction_search_query_free_object;
     conjunction_search_query_handlers.offset = XtOffsetOf(pcbc_conjunction_search_query_t, std);
 
-    zend_register_class_alias("\\CouchbaseConjunctionSearchQuery", pcbc_conjunction_search_query_ce);
+     
     return SUCCESS;
 }

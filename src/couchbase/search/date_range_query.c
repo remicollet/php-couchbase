@@ -352,6 +352,6 @@ PHP_MINIT_FUNCTION(DateRangeSearchQuery)
     date_range_search_query_handlers.free_obj = date_range_search_query_free_object;
     date_range_search_query_handlers.offset = XtOffsetOf(pcbc_date_range_search_query_t, std);
 
-    zend_register_class_alias("\\CouchbaseDateRangeSearchQuery", pcbc_date_range_search_query_ce);
+     
     return SUCCESS;
 }

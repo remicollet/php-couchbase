@@ -230,6 +230,6 @@ PHP_MINIT_FUNCTION(GeoBoundingBoxSearchQuery)
     geo_bounding_box_search_query_handlers.free_obj = geo_bounding_box_search_query_free_object;
     geo_bounding_box_search_query_handlers.offset = XtOffsetOf(pcbc_geo_bounding_box_search_query_t, std);
 
-    zend_register_class_alias("\\CouchbaseGeoBoundingBoxSearchQuery", pcbc_geo_bounding_box_search_query_ce);
+     
     return SUCCESS;
 }

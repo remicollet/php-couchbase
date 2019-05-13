@@ -79,7 +79,7 @@ int pcbc_encode_value(pcbc_bucket_t *bucket, zval *value, void **bytes, lcb_size
 
         *nbytes = Z_STRLEN_P(zbytes);
         *bytes = estrndup(Z_STRVAL_P(zbytes), *nbytes);
-        *flags = Z_LVAL_P(zflags);
+        *flags = (uint32_t)Z_LVAL_P(zflags);
         *datatype = (lcb_uint8_t)Z_LVAL_P(zdatatype);
     }
 

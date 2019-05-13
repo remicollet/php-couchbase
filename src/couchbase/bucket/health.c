@@ -23,10 +23,10 @@ typedef struct {
     zval val;
 } opcookie_health_res;
 
-static lcb_error_t proc_health_results(zval *return_value, opcookie *cookie TSRMLS_DC)
+static lcb_STATUS proc_health_results(zval *return_value, opcookie *cookie TSRMLS_DC)
 {
     opcookie_health_res *res;
-    lcb_error_t err = LCB_SUCCESS;
+    lcb_STATUS err = LCB_SUCCESS;
 
     err = opcookie_get_first_error(cookie);
 
@@ -44,23 +44,26 @@ static lcb_error_t proc_health_results(zval *return_value, opcookie *cookie TSRM
     return err;
 }
 
-void ping_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
+void ping_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPPING *resp)
 {
     opcookie_health_res *result = ecalloc(1, sizeof(opcookie_health_res));
-    const lcb_RESPPING *resp = (const lcb_RESPPING *)rb;
-
     TSRMLS_FETCH();
 
-    result->header.err = resp->rc;
-    if (resp->rc == LCB_SUCCESS) {
+    result->header.err = lcb_respping_status(resp);
+    if (result->header.err == LCB_SUCCESS) {
         int last_error = 0;
         ZVAL_UNDEF(&result->val);
-        PCBC_JSON_COPY_DECODE(&result->val, resp->json, resp->njson, PHP_JSON_OBJECT_AS_ARRAY, last_error);
+	const char *json = NULL;
+	size_t njson = 0;
+	lcb_respping_value(resp, &json, &njson);
+        PCBC_JSON_COPY_DECODE(&result->val, json, njson, PHP_JSON_OBJECT_AS_ARRAY, last_error);
         if (last_error != 0) {
             pcbc_log(LOGARGS(instance, WARN), "Failed to decode PING response as JSON: json_last_error=%d", last_error);
         }
     }
-    opcookie_push((opcookie *)resp->cookie, &result->header);
+    opcookie *cookie;
+    lcb_respping_cookie(resp, (void **)&cookie);
+    opcookie_push(cookie, &result->header);
     (void)instance;
     (void)cbtype;
 }
@@ -68,81 +71,84 @@ void ping_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
 PHP_METHOD(Bucket, ping)
 {
     pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
-    char *report_id = NULL;
-    size_t report_id_len = 0;
-    opcookie *cookie;
-    lcb_CMDPING cmd = {0};
-    long services = LCB_PINGSVC_F_KV | LCB_PINGSVC_F_N1QL | LCB_PINGSVC_F_VIEWS | LCB_PINGSVC_F_FTS;
+    zval *options;
     int rv;
-    lcb_error_t err;
+    lcb_STATUS err;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|ls", &services, &report_id, &report_id_len);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z", &options);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
-    cookie = opcookie_init();
-    cmd.id = report_id;
-    cmd.services = services;
-    cmd.options = LCB_PINGOPT_F_JSON;
-    err = lcb_ping3(obj->conn->lcb, cookie, &cmd);
+    lcb_CMDPING *cmd;
+
+    lcb_cmdping_create(&cmd);
+    lcb_cmdping_all(cmd);
+    lcb_cmdping_encode_json(cmd, 1, 0, 1);
+    opcookie *cookie = opcookie_init();
+    err = lcb_ping(obj->conn->lcb, cookie, cmd);
+    lcb_cmdping_destroy(cmd);
     if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err);
+        throw_lcb_exception(err, NULL);
     }
     lcb_wait(obj->conn->lcb);
     err = proc_health_results(return_value, cookie TSRMLS_CC);
     opcookie_destroy(cookie);
     if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err);
+        throw_lcb_exception(err, NULL);
     }
 }
 
-void diag_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
+void diag_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPDIAG *resp)
 {
     opcookie_health_res *result = ecalloc(1, sizeof(opcookie_health_res));
-    const lcb_RESPDIAG *resp = (const lcb_RESPDIAG *)rb;
 
     TSRMLS_FETCH();
 
-    result->header.err = resp->rc;
-    if (resp->rc == LCB_SUCCESS) {
+    result->header.err = lcb_respdiag_status(resp);
+    if (result->header.err == LCB_SUCCESS) {
         int last_error = 0;
         ZVAL_UNDEF(&result->val);
-        PCBC_JSON_COPY_DECODE(&result->val, resp->json, resp->njson, PHP_JSON_OBJECT_AS_ARRAY, last_error);
+	const char *json = NULL;
+	size_t njson = 0;
+	lcb_respdiag_value(resp, &json, &njson);
+        PCBC_JSON_COPY_DECODE(&result->val, json, njson, PHP_JSON_OBJECT_AS_ARRAY, last_error);
         if (last_error != 0) {
             pcbc_log(LOGARGS(instance, WARN), "Failed to decode PING response as JSON: json_last_error=%d", last_error);
         }
     }
-    opcookie_push((opcookie *)resp->cookie, &result->header);
+    opcookie *cookie;
+    lcb_respdiag_cookie(resp, (void **)&cookie);
+    opcookie_push(cookie, &result->header);
     (void)instance;
     (void)cbtype;
 }
 
-PHP_METHOD(Bucket, diag)
+PHP_METHOD(Bucket, diagnostics)
 {
     pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
-    char *report_id = NULL;
-    size_t report_id_len = 0;
-    opcookie *cookie;
-    lcb_CMDDIAG cmd = {0};
+    zend_string *report_id;
     int rv;
-    lcb_error_t err;
+    lcb_STATUS err;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|s", &report_id, &report_id_len);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|S", &report_id);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
-    cookie = opcookie_init();
-    cmd.id = report_id;
-    err = lcb_diag(obj->conn->lcb, cookie, &cmd);
+    lcb_CMDDIAG *cmd;
+    lcb_cmddiag_create(&cmd);
+    lcb_cmddiag_report_id(cmd, ZSTR_VAL(report_id), ZSTR_LEN(report_id));
+    opcookie *cookie = opcookie_init();
+    err = lcb_diag(obj->conn->lcb, cookie, cmd);
+    lcb_cmddiag_destroy(cmd);
     if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err);
+        throw_lcb_exception(err, NULL);
     }
     lcb_wait(obj->conn->lcb);
     err = proc_health_results(return_value, cookie TSRMLS_CC);
     opcookie_destroy(cookie);
     if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err);
+        throw_lcb_exception(err, NULL);
     }
 }

@@ -25,14 +25,10 @@
 #include <php.h>
 
 #include <libcouchbase/couchbase.h>
-#include <libcouchbase/auth.h>
-#include <libcouchbase/api3.h>
-#include <libcouchbase/views.h>
-#include <libcouchbase/n1ql.h>
-#include <libcouchbase/cbft.h>
 #include <libcouchbase/ixmgmt.h>
 #include <libcouchbase/crypto.h>
 
+#include <ext/standard/base64.h>
 #include <ext/standard/php_var.h>
 #include <zend_smart_str.h>
 #include <zend_interfaces.h>
@@ -64,13 +60,12 @@ struct pcbc_connection {
     char *connstr;
     char *bucketname;
     char *auth_hash;
-    lcb_t lcb;
+    lcb_INSTANCE *lcb;
     int refs;
     time_t idle_at;
 };
 typedef struct pcbc_connection pcbc_connection_t;
-
-lcb_error_t pcbc_connection_get(pcbc_connection_t **result, lcb_type_t type, const char *connstr,
+ lcb_STATUS pcbc_connection_get(pcbc_connection_t **result, lcb_type_t type, const char *connstr,
                                 const char *bucketname, lcb_AUTHENTICATOR *auth, char *auth_hash TSRMLS_DC);
 void pcbc_connection_addref(pcbc_connection_t *conn TSRMLS_DC);
 void pcbc_connection_delref(pcbc_connection_t *conn TSRMLS_DC);
@@ -96,64 +91,20 @@ ZEND_EXTERN_MODULE_GLOBALS(couchbase)
 #define PCBCG(v) (couchbase_globals.v)
 #endif
 
-PHP_MINIT_FUNCTION(CouchbasePool);
-PHP_MINIT_FUNCTION(CouchbaseException);
-PHP_MINIT_FUNCTION(Document);
-PHP_MINIT_FUNCTION(DocumentFragment);
-PHP_MINIT_FUNCTION(Cluster);
-PHP_MINIT_FUNCTION(ClusterManager);
-PHP_MINIT_FUNCTION(UserSettings);
-PHP_MINIT_FUNCTION(Bucket);
-PHP_MINIT_FUNCTION(BucketManager);
-PHP_MINIT_FUNCTION(Authenticator);
-PHP_MINIT_FUNCTION(CertAuthenticator);
-PHP_MINIT_FUNCTION(ClassicAuthenticator);
-PHP_MINIT_FUNCTION(PasswordAuthenticator);
-PHP_MINIT_FUNCTION(MutationToken);
-PHP_MINIT_FUNCTION(MutationState);
-PHP_MINIT_FUNCTION(ViewQueryEncodable);
-PHP_MINIT_FUNCTION(ViewQuery);
-PHP_MINIT_FUNCTION(SpatialViewQuery);
-PHP_MINIT_FUNCTION(AnalyticsQuery);
-PHP_MINIT_FUNCTION(N1qlQuery);
-PHP_MINIT_FUNCTION(N1qlIndex);
-PHP_MINIT_FUNCTION(MutateInBuilder);
-PHP_MINIT_FUNCTION(LookupInBuilder);
-PHP_MINIT_FUNCTION(SearchQuery);
-PHP_MINIT_FUNCTION(SearchQueryPart);
-PHP_MINIT_FUNCTION(BooleanFieldSearchQuery);
-PHP_MINIT_FUNCTION(BooleanSearchQuery);
-PHP_MINIT_FUNCTION(ConjunctionSearchQuery);
-PHP_MINIT_FUNCTION(DateRangeSearchQuery);
-PHP_MINIT_FUNCTION(DisjunctionSearchQuery);
-PHP_MINIT_FUNCTION(DocIdSearchQuery);
-PHP_MINIT_FUNCTION(GeoBoundingBoxSearchQuery);
-PHP_MINIT_FUNCTION(GeoDistanceSearchQuery);
-PHP_MINIT_FUNCTION(MatchAllSearchQuery);
-PHP_MINIT_FUNCTION(MatchNoneSearchQuery);
-PHP_MINIT_FUNCTION(MatchPhraseSearchQuery);
-PHP_MINIT_FUNCTION(MatchSearchQuery);
-PHP_MINIT_FUNCTION(NumericRangeSearchQuery);
-PHP_MINIT_FUNCTION(PhraseSearchQuery);
-PHP_MINIT_FUNCTION(PrefixSearchQuery);
-PHP_MINIT_FUNCTION(QueryStringSearchQuery);
-PHP_MINIT_FUNCTION(RegexpSearchQuery);
-PHP_MINIT_FUNCTION(TermSearchQuery);
-PHP_MINIT_FUNCTION(TermRangeSearchQuery);
-PHP_MINIT_FUNCTION(WildcardSearchQuery);
-PHP_MINIT_FUNCTION(SearchFacet);
-PHP_MINIT_FUNCTION(TermSearchFacet);
-PHP_MINIT_FUNCTION(DateRangeSearchFacet);
-PHP_MINIT_FUNCTION(NumericRangeSearchFacet);
-PHP_MINIT_FUNCTION(SearchSort);
-PHP_MINIT_FUNCTION(SearchSortField);
-PHP_MINIT_FUNCTION(SearchSortGeoDistance);
-PHP_MINIT_FUNCTION(SearchSortId);
-PHP_MINIT_FUNCTION(SearchSortScore);
-PHP_MINIT_FUNCTION(CryptoProvider);
-PHP_MINIT_FUNCTION(SearchIndexManager);
+#if PHP_VERSION_ID < 70200
 
-zval *bop_get_return_doc(zval *return_value, const char *key, int key_len, int is_mapped TSRMLS_DC);
+#undef ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO
+#define ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(name, type, allow_null) \
+	ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(name, 0, -1, type, NULL, allow_null)
+
+#define zend_parse_parameters_none_throw zend_parse_parameters_none
+
+#define ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO(name, class_name, allow_null) \
+	ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(name, 0, -1, IS_OBJECT, NULL, allow_null)
+
+#define ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(name, return_reference, required_num_args, class_name, allow_null) \
+	ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(name, return_reference, required_num_args, IS_OBJECT, NULL, allow_null)
+#endif
 
 #define PCBC_DATE_FORMAT_RFC3339 "Y-m-d\\TH:i:sP"
 
@@ -163,7 +114,6 @@ extern zend_class_entry *pcbc_n1ql_query_ce;
 extern zend_class_entry *pcbc_cluster_ce;
 extern zend_class_entry *pcbc_bucket_ce;
 extern zend_class_entry *pcbc_document_fragment_ce;
-extern zend_class_entry *pcbc_document_ce;
 extern zend_class_entry *pcbc_mutation_token_ce;
 extern zend_class_entry *pcbc_mutation_state_ce;
 extern zend_class_entry *pcbc_exception_ce;
@@ -176,10 +126,32 @@ extern zend_class_entry *pcbc_json_serializable_ce;
 extern zend_class_entry *pcbc_user_settings_ce;
 extern zend_class_entry *pcbc_crypto_provider_ce;
 
+extern zend_class_entry *pcbc_collection_ce;
+
+#define PCBC_RESOLVE_COLLECTION \
+    const char *collection_str = NULL, *scope_str = NULL; \
+    size_t collection_len = 0, scope_len = 0; \
+    pcbc_bucket_t *bucket = NULL; \
+    { \
+        zval *prop, rv; \
+        zval *self = getThis(); \
+        prop = zend_read_property(pcbc_collection_ce, self, ZEND_STRL("bucket"), 0, &rv); \
+        bucket = Z_BUCKET_OBJ_P(prop); \
+        prop = zend_read_property(pcbc_collection_ce, self, ZEND_STRL("scope"), 0, &rv); \
+        if (Z_TYPE_P(prop) == IS_STRING) { \
+            scope_str = Z_STRVAL_P(prop); \
+            scope_len = Z_STRLEN_P(prop); \
+        } \
+        prop = zend_read_property(pcbc_collection_ce, self, ZEND_STRL("name"), 0, &rv); \
+        if (Z_TYPE_P(prop) == IS_STRING) { \
+            collection_str = Z_STRVAL_P(prop); \
+            collection_len = Z_STRLEN_P(prop); \
+        } \
+    }
+
+void pcbc_create_lcb_exception(zval *return_value, long code, zend_string *context, zend_string *ref TSRMLS_DC);
+
 void pcbc_exception_init(zval *return_value, long code, const char *message TSRMLS_DC);
-void pcbc_exception_init_lcb(zval *return_value, long code, const char *message, const char *ctx,
-                             const char *ref TSRMLS_DC);
-const char *pcbc_lcb_strerror(lcb_error_t error);
 #define throw_pcbc_exception(__pcbc_message, __pcbc_code)                                                              \
     do {                                                                                                               \
         zval __pcbc_error;                                                                                             \
@@ -187,11 +159,24 @@ const char *pcbc_lcb_strerror(lcb_error_t error);
         pcbc_exception_init(&__pcbc_error, __pcbc_code, __pcbc_message TSRMLS_CC);                                     \
         zend_throw_exception_object(&__pcbc_error TSRMLS_CC);                                                          \
     } while (0)
-#define throw_lcb_exception(__pcbc_code)                                                                               \
+
+#define throw_lcb_exception(code, result_ce)                                                                           \
     do {                                                                                                               \
+        zend_string *ctx = NULL, *ref = NULL;                                                                          \
+        zval *zref, __rv1, *zctx, __rv2;                                                                               \
+        if (result_ce) {                                                                                               \
+            zref = zend_read_property(result_ce, return_value, ZEND_STRL("err_ref"), 0, &__rv1);                       \
+            if (Z_TYPE_P(zref) == IS_STRING) {                                                                         \
+                ref = Z_STR_P(zref);                                                                                   \
+            }                                                                                                          \
+            zctx = zend_read_property(result_ce, return_value, ZEND_STRL("err_ctx"), 0, &__rv2);                       \
+            if (Z_TYPE_P(zctx) == IS_STRING) {                                                                         \
+                ctx = Z_STR_P(zctx);                                                                                   \
+            }                                                                                                          \
+        }                                                                                                              \
         zval __pcbc_error;                                                                                             \
         ZVAL_UNDEF(&__pcbc_error);                                                                                     \
-        pcbc_exception_init_lcb(&__pcbc_error, __pcbc_code, NULL, NULL, NULL TSRMLS_CC);                               \
+        pcbc_create_lcb_exception(&__pcbc_error, code, ctx, ref TSRMLS_CC);                                            \
         zend_throw_exception_object(&__pcbc_error TSRMLS_CC);                                                          \
     } while (0)
 
@@ -365,57 +350,6 @@ typedef struct {
     zend_object std;
 } pcbc_bucket_manager_t;
 
-#define PCBC_SDSPEC_GET_PATH(_s, _p, _np)                                                                              \
-    do {                                                                                                               \
-        _p = (char *)(_s)->s.path.contig.bytes;                                                                        \
-        _np = (_s)->s.path.contig.nbytes;                                                                              \
-    } while (0);
-
-#define PCBC_SDSPEC_COPY_PATH(_s, _p, _np)                                                                             \
-    do {                                                                                                               \
-        (_s)->s.path.type = LCB_KV_COPY;                                                                               \
-        (_s)->s.path.contig.bytes = estrndup(_p, _np);                                                                 \
-        (_s)->s.path.contig.nbytes = _np;                                                                              \
-    } while (0);
-
-#define PCBC_SDSPEC_FREE_PATH(_s)                                                                                      \
-    do {                                                                                                               \
-        if ((_s)->s.path.contig.bytes) {                                                                               \
-            efree((void *)(_s)->s.path.contig.bytes);                                                                  \
-            (_s)->s.path.contig.bytes = NULL;                                                                          \
-            (_s)->s.path.contig.nbytes = 0;                                                                            \
-        }                                                                                                              \
-    } while (0);
-
-#define PCBC_SDSPEC_GET_VALUE(_s, v, nv)                                                                               \
-    do {                                                                                                               \
-        v = (char *)(_s)->s.value.u_buf.contig.bytes;                                                                  \
-        nv = (_s)->s.value.u_buf.contig.nbytes;                                                                        \
-    } while (0);
-
-#define PCBC_SDSPEC_SET_VALUE(_s, v, nv)                                                                               \
-    do {                                                                                                               \
-        (_s)->s.value.vtype = LCB_KV_COPY;                                                                             \
-        (_s)->s.value.u_buf.contig.bytes = v;                                                                          \
-        (_s)->s.value.u_buf.contig.nbytes = nv;                                                                        \
-    } while (0);
-
-#define PCBC_SDSPEC_SET_VALUE_SMARTSTR(__pcbc_sdspec, __pcbc_smart_str)                                                \
-    do {                                                                                                               \
-        (__pcbc_sdspec)->s.value.vtype = LCB_KV_COPY;                                                                  \
-        (__pcbc_sdspec)->s.value.u_buf.contig.nbytes = PCBC_SMARTSTR_LEN(__pcbc_smart_str);                            \
-        (__pcbc_sdspec)->s.value.u_buf.contig.bytes =                                                                  \
-            estrndup(PCBC_SMARTSTR_VAL(__pcbc_smart_str), PCBC_SMARTSTR_LEN(__pcbc_smart_str));                        \
-    } while (0);
-
-#define PCBC_SDSPEC_FREE_VALUE(_s)                                                                                     \
-    do {                                                                                                               \
-        if ((_s)->s.value.u_buf.contig.bytes) {                                                                        \
-            efree((void *)(_s)->s.value.u_buf.contig.bytes);                                                           \
-            (_s)->s.value.u_buf.contig.bytes = NULL;                                                                   \
-        }                                                                                                              \
-    } while (0);
-
 struct pcbc_mutation_token {
     char *bucket;
     lcb_MUTATION_TOKEN mt;
@@ -423,9 +357,9 @@ struct pcbc_mutation_token {
     zend_object std;
 };
 typedef struct pcbc_mutation_token pcbc_mutation_token_t;
-#define PCBC_MUTATION_TOKEN_ID(p) (LCB_MUTATION_TOKEN_ID(&p->mt))
-#define PCBC_MUTATION_TOKEN_SEQ(p) (LCB_MUTATION_TOKEN_SEQ(&p->mt))
-#define PCBC_MUTATION_TOKEN_VB(p) (LCB_MUTATION_TOKEN_VB(&p->mt))
+#define PCBC_MUTATION_TOKEN_ID(p) ((p)->mt.uuid_)
+#define PCBC_MUTATION_TOKEN_SEQ(p) ((p)->mt.seqno_)
+#define PCBC_MUTATION_TOKEN_VB(p) ((p)->mt.vbid_)
 
 typedef struct {
     int ntokens;
@@ -434,20 +368,12 @@ typedef struct {
     zend_object std;
 } pcbc_mutation_state_t;
 
-struct pcbc_sd_spec {
-    lcb_SDSPEC s;
-    struct pcbc_sd_spec *next;
-};
-typedef struct pcbc_sd_spec pcbc_sd_spec_t;
-
 typedef struct {
     pcbc_bucket_t *bucket;
     zval bucket_zval;
     char *id;
     int id_len;
-    int nspecs;
-    pcbc_sd_spec_t *head;
-    pcbc_sd_spec_t *tail;
+    lcb_SUBDOCOPS *operations;
     zend_object std;
 } pcbc_lookup_in_builder_t;
 
@@ -456,18 +382,8 @@ typedef struct {
 #define PCBC_SUBDOC_FULLDOC_UPSERT 3
 
 typedef struct {
-    pcbc_bucket_t *bucket;
-    zval bucket_zval;
-    char *id;
-    int id_len;
-    lcb_cas_t cas;
-    long expiry;
-    int nspecs;
-    int fulldoc;
-    pcbc_sd_spec_t *head;
-    pcbc_sd_spec_t *tail;
     zend_object std;
-} pcbc_mutate_in_builder_t;
+} pcbc_MUTATE_IN_SPEC;
 
 typedef struct {
     zend_object std;
@@ -557,9 +473,11 @@ typedef struct {
 
 typedef struct {
     void *next;
-    lcb_error_t err;
+    lcb_STATUS err;
     char *err_ctx;
+    size_t err_ctx_len;
     char *err_ref;
+    size_t err_reflen;
 } opcookie_res;
 
 #define PCBC_RESP_ERR_COPY(opcookie, cbtype, respbase)                                                                 \
@@ -582,12 +500,6 @@ typedef struct {
         free(opcookie.err_ref);                                                                                        \
     } while (0);
 
-// assumes first parameter in the spec is the ids (`id|`).
-int pcbc_pp_begin(int param_count TSRMLS_DC, pcbc_pp_state *state, const char *spec, ...);
-int pcbc_pp_ismapped(pcbc_pp_state *state);
-int pcbc_pp_keycount(pcbc_pp_state *state);
-int pcbc_pp_next(pcbc_pp_state *state);
-
 int pcbc_decode_value(zval *return_value, pcbc_bucket_t *bucket, const char *bytes, int bytes_len, lcb_U32 flags,
                       lcb_datatype_t datatype TSRMLS_DC);
 int pcbc_encode_value(pcbc_bucket_t *bucket, zval *value, void **bytes, lcb_size_t *nbytes, lcb_uint32_t *flags,
@@ -599,7 +511,7 @@ lcb_cas_t pcbc_cas_decode(zval *cas TSRMLS_DC);
 void pcbc_cas_encode(zval *return_value, lcb_cas_t cas TSRMLS_DC);
 
 void pcbc_bucket_subdoc_request(pcbc_bucket_t *data, void *builder, int is_lookup, zval *return_value TSRMLS_DC);
-void pcbc_http_request(zval *return_value, lcb_t conn, lcb_CMDHTTP *cmd, int json_response TSRMLS_DC);
+void pcbc_http_request(zval *return_value, lcb_INSTANCE *conn, lcb_CMDHTTP *cmd, int json_response TSRMLS_DC);
 
 void pcbc_bucket_init(zval *return_value, pcbc_cluster_t *cluster, const char *bucketname,
                       const char *password TSRMLS_DC);
@@ -610,16 +522,16 @@ void pcbc_bucket_get(pcbc_bucket_t *obj, pcbc_pp_state *pp_state, pcbc_pp_id *id
 lcb_U32 pcbc_subdoc_options_to_flags(int is_path, int is_lookup, zval *options TSRMLS_DC);
 int pcbc_lookup_in_builder_get(pcbc_lookup_in_builder_t *builder, char *path, int path_len, zval *options TSRMLS_DC);
 void pcbc_mutate_in_builder_init(zval *return_value, zval *bucket, const char *id, int id_len, lcb_cas_t cas TSRMLS_DC);
-int pcbc_mutate_in_builder_upsert(pcbc_mutate_in_builder_t *builder, char *path, int path_len, zval *value,
+int pcbc_mutate_in_builder_upsert(pcbc_MUTATE_IN_SPEC *builder, char *path, int path_len, zval *value,
                                   lcb_U32 flags TSRMLS_DC);
-int pcbc_mutate_in_builder_remove(pcbc_mutate_in_builder_t *builder, char *path, int path_len, lcb_U32 flags TSRMLS_DC);
-int pcbc_mutate_in_builder_array_append(pcbc_mutate_in_builder_t *builder, char *path, int path_len, zval *value,
+int pcbc_mutate_in_builder_remove(pcbc_MUTATE_IN_SPEC *builder, char *path, int path_len, lcb_U32 flags TSRMLS_DC);
+int pcbc_mutate_in_builder_array_append(pcbc_MUTATE_IN_SPEC *builder, char *path, int path_len, zval *value,
                                         lcb_U32 flags TSRMLS_DC);
-int pcbc_mutate_in_builder_array_prepend(pcbc_mutate_in_builder_t *builder, char *path, int path_len, zval *value,
+int pcbc_mutate_in_builder_array_prepend(pcbc_MUTATE_IN_SPEC *builder, char *path, int path_len, zval *value,
                                          lcb_U32 flags TSRMLS_DC);
-int pcbc_mutate_in_builder_array_add_unique(pcbc_mutate_in_builder_t *builder, char *path, int path_len, zval *value,
+int pcbc_mutate_in_builder_array_add_unique(pcbc_MUTATE_IN_SPEC *builder, char *path, int path_len, zval *value,
                                             lcb_U32 flags TSRMLS_DC);
-int pcbc_mutate_in_builder_replace(pcbc_mutate_in_builder_t *builder, char *path, int path_len, zval *value,
+int pcbc_mutate_in_builder_replace(pcbc_MUTATE_IN_SPEC *builder, char *path, int path_len, zval *value,
                                    lcb_U32 flags TSRMLS_DC);
 
 void pcbc_cluster_manager_init(zval *return_value, pcbc_cluster_t *cluster, const char *name,
@@ -655,8 +567,6 @@ int pcbc_document_fragment_init_error(zval *return_value, opcookie_res *header, 
 void pcbc_bucket_n1ql_request(pcbc_bucket_t *bucket, lcb_CMDN1QL *cmd, int json_response, int json_options, int is_cbas,
                               zval *return_value TSRMLS_DC);
 void pcbc_bucket_cbft_request(pcbc_bucket_t *bucket, lcb_CMDFTS *cmd, int json_response, int json_options,
-                              zval *return_value TSRMLS_DC);
-void pcbc_bucket_view_request(pcbc_bucket_t *bucket, lcb_CMDVIEWQUERY *cmd, int json_response, int json_options,
                               zval *return_value TSRMLS_DC);
 void pcbc_spatial_view_query_init(zval *return_value, char *design_document, int design_document_len, char *view_name,
                                   int view_name_len TSRMLS_DC);
@@ -734,9 +644,9 @@ static inline pcbc_lookup_in_builder_t *pcbc_lookup_in_builder_fetch_object(zend
 {
     return (pcbc_lookup_in_builder_t *)((char *)obj - XtOffsetOf(pcbc_lookup_in_builder_t, std));
 }
-static inline pcbc_mutate_in_builder_t *pcbc_mutate_in_builder_fetch_object(zend_object *obj)
+static inline pcbc_MUTATE_IN_SPEC *pcbc_mutate_in_builder_fetch_object(zend_object *obj)
 {
-    return (pcbc_mutate_in_builder_t *)((char *)obj - XtOffsetOf(pcbc_mutate_in_builder_t, std));
+    return (pcbc_MUTATE_IN_SPEC *)((char *)obj - XtOffsetOf(pcbc_MUTATE_IN_SPEC, std));
 }
 static inline pcbc_mutation_state_t *pcbc_mutation_state_fetch_object(zend_object *obj)
 {
@@ -786,7 +696,7 @@ static inline pcbc_user_settings_t *pcbc_user_settings_fetch_object(zend_object 
 typedef struct {
     opcookie_res *res_head;
     opcookie_res *res_tail;
-    lcb_error_t first_error;
+    lcb_STATUS first_error;
     int json_response;
     int json_options;
     int is_cbas; // FIXME: convert to bit-flags
@@ -796,8 +706,7 @@ typedef struct {
 
 opcookie *opcookie_init();
 void opcookie_destroy(opcookie *cookie);
-void opcookie_push(opcookie *cookie, opcookie_res *res);
-lcb_error_t opcookie_get_first_error(opcookie *cookie);
+void opcookie_push(opcookie *cookie, opcookie_res *res); lcb_STATUS opcookie_get_first_error(opcookie *cookie);
 opcookie_res *opcookie_next_res(opcookie *cookie, opcookie_res *cur);
 
 #define FOREACH_OPCOOKIE_RES(Type, Res, cookie)                                                                        \
@@ -811,8 +720,7 @@ typedef struct {
     lcb_cas_t cas;
     lcb_MUTATION_TOKEN token;
 } opcookie_store_res;
-
-lcb_error_t proc_store_results(pcbc_bucket_t *bucket, zval *return_value, opcookie *cookie, int is_mapped TSRMLS_DC);
+ lcb_STATUS proc_store_results(pcbc_bucket_t *bucket, zval *return_value, opcookie *cookie TSRMLS_DC);
 
 #define proc_remove_results proc_store_results
 #define proc_touch_results proc_store_results
@@ -826,5 +734,25 @@ lcb_error_t proc_store_results(pcbc_bucket_t *bucket, zval *return_value, opcook
 #define PCBC_ADDREF_P(__pcbc_zval) Z_TRY_ADDREF_P((__pcbc_zval))
 
 #define PCBC_DELREF_P(__pcbc_zval) Z_TRY_DELREF_P((__pcbc_zval))
+
+
+
+#define set_property_str(getter, class_entry, prop) \
+    do { \
+        const char *data = NULL; \
+        size_t ndata = 0; \
+        getter(resp, &data, &ndata); \
+        if (ndata && data) { \
+            zend_update_property_stringl(class_entry, return_value, ZEND_STRL(prop), data, ndata TSRMLS_CC); \
+        } \
+    } while (0);
+
+#define set_property_num(type, getter, class_entry, prop) \
+    do { \
+        type data = 0; \
+        getter(resp, &data); \
+        zend_update_property_long(class_entry, return_value, ZEND_STRL(prop), data TSRMLS_CC); \
+    } while (0);
+
 
 #endif /* COUCHBASE_H_ */

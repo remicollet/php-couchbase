@@ -191,6 +191,6 @@ PHP_MINIT_FUNCTION(NumericRangeSearchFacet)
     numeric_search_facet_handlers.free_obj = numeric_search_facet_free_object;
     numeric_search_facet_handlers.offset = XtOffsetOf(pcbc_numeric_range_search_facet_t, std);
 
-    zend_register_class_alias("\\CouchbaseNumericRangeSearchFacet", pcbc_numeric_range_search_facet_ce);
+     
     return SUCCESS;
 }

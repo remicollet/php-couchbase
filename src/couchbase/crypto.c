@@ -65,7 +65,7 @@ static const char *pcbc_crypto_get_key_id(struct lcbcrypto_PROVIDER *provider)
     return NULL;
 }
 
-static lcb_error_t pcbc_crypto_generate_iv(struct lcbcrypto_PROVIDER *provider, uint8_t **iv, size_t *iv_len)
+static lcb_STATUS pcbc_crypto_generate_iv(struct lcbcrypto_PROVIDER *provider, uint8_t **iv, size_t *iv_len)
 {
     zval *zprovider = (zval *)provider->cookie;
     int rv;
@@ -89,7 +89,7 @@ static lcb_error_t pcbc_crypto_generate_iv(struct lcbcrypto_PROVIDER *provider, 
     return LCB_EINVAL;
 }
 
-static lcb_error_t pcbc_crypto_sign(struct lcbcrypto_PROVIDER *provider, const lcbcrypto_SIGV *inputs,
+static lcb_STATUS pcbc_crypto_sign(struct lcbcrypto_PROVIDER *provider, const lcbcrypto_SIGV *inputs,
                                     size_t inputs_num, uint8_t **sig, size_t *sig_len)
 {
     zval *zprovider = (zval *)provider->cookie;
@@ -125,7 +125,7 @@ static lcb_error_t pcbc_crypto_sign(struct lcbcrypto_PROVIDER *provider, const l
     return LCB_EINVAL;
 }
 
-static lcb_error_t pcbc_crypto_verify_signature(struct lcbcrypto_PROVIDER *provider, const lcbcrypto_SIGV *inputs,
+static lcb_STATUS pcbc_crypto_verify_signature(struct lcbcrypto_PROVIDER *provider, const lcbcrypto_SIGV *inputs,
                                                 size_t inputs_num, uint8_t *sig, size_t sig_len)
 {
     zval *zprovider = (zval *)provider->cookie;
@@ -164,7 +164,7 @@ static lcb_error_t pcbc_crypto_verify_signature(struct lcbcrypto_PROVIDER *provi
     return LCB_EINVAL;
 }
 
-static lcb_error_t pcbc_crypto_encrypt(struct lcbcrypto_PROVIDER *provider, const uint8_t *input, size_t input_len,
+static lcb_STATUS pcbc_crypto_encrypt(struct lcbcrypto_PROVIDER *provider, const uint8_t *input, size_t input_len,
                                        const uint8_t *iv, size_t iv_len, uint8_t **output, size_t *output_len)
 {
     zval *zprovider = (zval *)provider->cookie;
@@ -203,7 +203,7 @@ static lcb_error_t pcbc_crypto_encrypt(struct lcbcrypto_PROVIDER *provider, cons
     return LCB_EINVAL;
 }
 
-static lcb_error_t pcbc_crypto_decrypt(struct lcbcrypto_PROVIDER *provider, const uint8_t *input, size_t input_len,
+static lcb_STATUS pcbc_crypto_decrypt(struct lcbcrypto_PROVIDER *provider, const uint8_t *input, size_t input_len,
                                        const uint8_t *iv, size_t iv_len, uint8_t **output, size_t *output_len)
 {
     zval *zprovider = (zval *)provider->cookie;
@@ -299,7 +299,7 @@ void pcbc_crypto_encrypt_fields(pcbc_bucket_t *obj, zval *document, zval *option
     long ii;
     size_t nfields;
     lcbcrypto_CMDENCRYPT ecmd = {0};
-    lcb_error_t err;
+    lcb_STATUS err;
 
     PCBC_JSON_ENCODE(&buf, document, 0, last_error);
     if (last_error != 0) {
@@ -369,7 +369,7 @@ void pcbc_crypto_decrypt_fields(pcbc_bucket_t *obj, zval *document, zval *option
     long ii;
     size_t nfields;
     lcbcrypto_CMDDECRYPT dcmd = {0};
-    lcb_error_t err;
+    lcb_STATUS err;
 
     PCBC_JSON_ENCODE(&buf, document, 0, last_error);
     if (last_error != 0) {

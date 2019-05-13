@@ -18,163 +18,139 @@
 
 #define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/cbft", __FILE__, __LINE__
 
-typedef struct {
-    opcookie_res header;
-    lcb_U16 rflags;
-    zval row;
-} opcookie_ftsrow_res;
+extern zend_class_entry *pcbc_search_result_impl_ce;
+extern zend_class_entry *pcbc_search_meta_data_impl_ce;
+extern zend_class_entry *pcbc_search_query_ce;
 
-static void ftsrow_callback(lcb_t instance, int ignoreme, const lcb_RESPFTS *resp)
+struct search_cookie {
+    lcb_STATUS rc;
+    zval *return_value;
+};
+
+static void ftsrow_callback(lcb_INSTANCE *  instance, int ignoreme, const lcb_RESPFTS *resp)
 {
-    opcookie_ftsrow_res *result = ecalloc(1, sizeof(opcookie_ftsrow_res));
-    opcookie *cookie = (opcookie *)resp->cookie;
     TSRMLS_FETCH();
 
-    result->header.err = resp->rc;
-    if (result->header.err == LCB_HTTP_ERROR) {
-        pcbc_log(LOGARGS(instance, ERROR), "Failed to search in index. %d: %.*s", (int)resp->htresp->htstatus,
-                 (int)resp->nrow, (char *)resp->row);
-    }
-    result->rflags = resp->rflags;
-    ZVAL_UNDEF(&result->row);
-    if (cookie->json_response) {
+    struct search_cookie *cookie;
+    lcb_respfts_cookie(resp, (void **)&cookie);
+    cookie->rc = lcb_respfts_status(resp);
+    zval *return_value = cookie->return_value;
+
+    zend_update_property_long(pcbc_search_result_impl_ce, return_value, ZEND_STRL("status"), cookie->rc TSRMLS_CC);
+
+    const char *row = NULL;
+    size_t nrow = 0;
+    lcb_respfts_row(resp, &row, &nrow);
+
+    if (nrow > 0) {
+        zval value;
+        ZVAL_NULL(&value);
+
         int last_error;
-        int json_options = cookie->json_options;
+        PCBC_JSON_COPY_DECODE(&value, row, nrow, PHP_JSON_OBJECT_AS_ARRAY, last_error);
+        if(last_error != 0) {
+            pcbc_log(LOGARGS(instance, WARN), "Failed to decode FTS response as JSON: json_last_error=%d", last_error);
+        }
+        if (lcb_respfts_is_final(resp)) {
+            zval meta, *mval, *mstatus;
+            object_init_ex(&meta, pcbc_search_meta_data_impl_ce);
+            HashTable *marr = Z_ARRVAL(value);
 
-        if (resp->rflags & LCB_RESP_F_FINAL) {
-            // parse meta into arrays
-            json_options |= PHP_JSON_OBJECT_AS_ARRAY;
-        }
-        PCBC_JSON_COPY_DECODE(&result->row, resp->row, resp->nrow, json_options, last_error);
-        if (last_error != 0) {
-            pcbc_log(LOGARGS(instance, WARN), "Failed to decode FTS row as JSON: json_last_error=%d", last_error);
-            PCBC_STRINGL(result->row, resp->row, resp->nrow);
-        }
-    } else {
-        PCBC_STRINGL(result->row, resp->row, resp->nrow);
-    }
-    if (result->header.err != LCB_SUCCESS) {
-        zval *val;
-        if (Z_TYPE_P(&result->row) == IS_ARRAY && (val = php_array_fetch(&result->row, "errors"))) {
-            zval *err = php_array_fetch(val, "0");
-            if (err) {
-                char *msg = NULL;
-                int msg_len;
-                zend_bool need_free = 0;
-                long code = php_array_fetch_long(err, "code");
-                msg = php_array_fetch_string(err, "msg", &msg_len, &need_free);
-                if (code && msg) {
-                    char *m = NULL;
-                    spprintf(&m, 0, "Failed to perform FTS query. HTTP %d: code: %d, message: \"%*s\"",
-                             (int)resp->htresp->htstatus, (int)code, msg_len, msg);
-                    ZVAL_UNDEF(&cookie->exc);
-                    pcbc_exception_init(&cookie->exc, code, m TSRMLS_CC);
-                    if (m) {
-                        efree(m);
-                    }
-                }
-                if (msg && need_free) {
-                    efree(msg);
-                }
+            mval = zend_symtable_str_find(marr, ZEND_STRL("took"));
+            if (mval) zend_update_property(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("took"), mval TSRMLS_CC);
+            mval = zend_symtable_str_find(marr, ZEND_STRL("total_hits"));
+            if (mval) zend_update_property(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("total_hits"), mval TSRMLS_CC);
+            mval = zend_symtable_str_find(marr, ZEND_STRL("max_score"));
+            if (mval) zend_update_property(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("max_score"), mval TSRMLS_CC);
+            mval = zend_symtable_str_find(marr, ZEND_STRL("metrics"));
+            if (mval) zend_update_property(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("metrics"), mval TSRMLS_CC);
+            zend_update_property(pcbc_search_result_impl_ce, return_value, ZEND_STRL("meta"), &meta TSRMLS_CC);
+
+            mstatus = zend_symtable_str_find(marr, ZEND_STRL("status"));
+            if (mstatus) {
+                mval = zend_symtable_str_find(Z_ARRVAL_P(mstatus), ZEND_STRL("successful"));
+                if (mval) zend_update_property(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("success_count"), mval TSRMLS_CC);
+                mval = zend_symtable_str_find(Z_ARRVAL_P(mstatus), ZEND_STRL("failed"));
+                if (mval) zend_update_property(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("error_count"), mval TSRMLS_CC);
             }
+
+            mval = zend_symtable_str_find(marr, ZEND_STRL("facets"));
+            if (mval) zend_update_property(pcbc_search_result_impl_ce, return_value, ZEND_STRL("facets"), mval TSRMLS_CC);
         } else {
-            pcbc_log(LOGARGS(instance, ERROR), "Failed to perform FTS query. %d: %.*s", (int)resp->htresp->htstatus,
-                     (int)resp->nrow, (char *)resp->row);
+            zval *hits, rv;
+            hits = zend_read_property(pcbc_search_result_impl_ce, return_value, ZEND_STRL("hits"), 0, &rv);
+            add_next_index_zval(hits, &value);
         }
     }
-
-    opcookie_push((opcookie *)resp->cookie, &result->header);
 }
 
-static lcb_error_t proc_ftsrow_results(pcbc_bucket_t *bucket, zval *return_value, opcookie *cookie TSRMLS_DC)
+PHP_METHOD(Bucket, searchQuery)
 {
-    opcookie_ftsrow_res *res;
-    lcb_error_t err = LCB_SUCCESS;
+    lcb_STATUS err;
+    zend_string *index;
+    zval *query;
+    zval *options;
+    int rv;
 
-    err = opcookie_get_first_error(cookie);
-
-    if (err == LCB_SUCCESS) {
-        zval hits;
-
-        ZVAL_UNDEF(&hits);
-        array_init(&hits);
-
-        object_init(return_value);
-        add_property_zval(return_value, "hits", &hits);
-        Z_DELREF_P(&hits);
-
-        FOREACH_OPCOOKIE_RES(opcookie_ftsrow_res, res, cookie)
-        {
-            if (res->rflags & LCB_RESP_F_FINAL) {
-                zval metrics;
-                zval *val;
-
-                val = php_array_fetch(&res->row, "status");
-                if (val) {
-                    add_property_zval(return_value, "status", val);
-                }
-                val = php_array_fetch(&res->row, "facets");
-                if (val) {
-                    add_property_zval(return_value, "facets", val);
-                }
-                ZVAL_UNDEF(&metrics);
-                array_init_size(&metrics, 3);
-                ADD_ASSOC_LONG_EX(&metrics, "total_hits", php_array_fetch_long(&res->row, "total_hits"));
-                ADD_ASSOC_DOUBLE_EX(&metrics, "max_score", php_array_fetch_double(&res->row, "max_score"));
-                ADD_ASSOC_LONG_EX(&metrics, "took", php_array_fetch_long((&res->row), "took"));
-                add_property_zval(return_value, "metrics", &metrics);
-                Z_DELREF_P(&metrics);
-            } else {
-                add_next_index_zval(&hits, &res->row);
-                PCBC_ADDREF_P(&res->row);
-            }
-        }
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "SO|z", &index, &query, pcbc_search_query_ce, &options);
+    if (rv == FAILURE) {
+        RETURN_NULL();
     }
 
-    FOREACH_OPCOOKIE_RES(opcookie_ftsrow_res, res, cookie)
+    pcbc_bucket_t *bucket = Z_BUCKET_OBJ_P(getThis());
+
+    lcb_CMDFTS *cmd;
+    lcb_cmdfts_create(&cmd);
+    lcb_cmdfts_callback(cmd, ftsrow_callback);
+
     {
-        zval_ptr_dtor(&res->row);
-    }
+        smart_str buf = {0};
+        int last_error;
 
-    return err;
-}
-
-void pcbc_bucket_cbft_request(pcbc_bucket_t *bucket, lcb_CMDFTS *cmd, int json_response, int json_options,
-                              zval *return_value TSRMLS_DC)
-{
-    opcookie *cookie;
-    lcb_error_t err;
-    lcbtrace_TRACER *tracer = NULL;
-    lcb_FTSHANDLE handle = NULL;
-
-    cmd->callback = ftsrow_callback;
-    cookie = opcookie_init();
-    cookie->json_response = json_response;
-    cookie->json_options = json_options;
-    tracer = lcb_get_tracer(bucket->conn->lcb);
-    if (tracer) {
-        cookie->span = lcbtrace_span_start(tracer, "php/search", 0, NULL);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_SEARCH);
-        cmd->handle = &handle;
-    }
-    err = lcb_fts_query(bucket->conn->lcb, cookie, cmd);
-    if (err == LCB_SUCCESS) {
-        if (cookie->span) {
-            lcb_fts_set_parent_span(bucket->conn->lcb, handle, cookie->span);
+        PCBC_JSON_ENCODE(&buf, query, 0, last_error);
+        if (last_error != 0) {
+            pcbc_log(LOGARGS(bucket->conn->lcb, WARN), "Failed to encode FTS query as JSON: json_last_error=%d", last_error);
+            smart_str_free(&buf);
+            RETURN_NULL();
         }
+        smart_str_0(&buf);
+        lcb_cmdfts_query(cmd, ZSTR_VAL(buf.s), ZSTR_LEN(buf.s));
+        smart_str_free(&buf);
+    }
+
+    object_init_ex(return_value, pcbc_search_result_impl_ce);
+    zval hits;
+    array_init(&hits);
+    zend_update_property(pcbc_search_result_impl_ce, return_value, ZEND_STRL("hits"), &hits TSRMLS_CC);
+    struct search_cookie cookie = {
+        LCB_SUCCESS,
+        return_value
+    };
+
+    lcb_FTS_HANDLE *handle = NULL;
+    lcb_cmdfts_handle(cmd, &handle);
+    lcbtrace_SPAN *span = NULL;
+    lcbtrace_TRACER *tracer = lcb_get_tracer(bucket->conn->lcb);
+    if (tracer) {
+        span = lcbtrace_span_start(tracer, "php/search", 0, NULL);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_SEARCH);
+        lcb_cmdfts_parent_span(cmd, span);
+    }
+    err = lcb_fts(bucket->conn->lcb, &cookie, cmd);
+    lcb_cmdfts_destroy(cmd);
+    if (err == LCB_SUCCESS) {
         lcb_wait(bucket->conn->lcb);
-        err = proc_ftsrow_results(bucket, return_value, cookie TSRMLS_CC);
+        err = cookie.rc;
+    }
+    if (span) {
+        lcbtrace_span_finish(span, LCBTRACE_NOW);
     }
     if (err != LCB_SUCCESS) {
-        if (Z_ISUNDEF(cookie->exc)) {
-            throw_lcb_exception(err);
-        } else {
-            zend_throw_exception_object(&cookie->exc TSRMLS_CC);
-        }
+        throw_lcb_exception(err, NULL);
     }
-    if (cookie->span) {
-        lcbtrace_span_finish(cookie->span, LCBTRACE_NOW);
-    }
-    opcookie_destroy(cookie);
 }
+
+/*
+ * vim: et ts=4 sw=4 sts=4
+ */

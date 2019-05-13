@@ -207,6 +207,6 @@ PHP_MINIT_FUNCTION(RegexpSearchQuery)
     regexp_search_query_handlers.free_obj = regexp_search_query_free_object;
     regexp_search_query_handlers.offset = XtOffsetOf(pcbc_regexp_search_query_t, std);
 
-    zend_register_class_alias("\\CouchbaseRegexpSearchQuery", pcbc_regexp_search_query_ce);
+     
     return SUCCESS;
 }

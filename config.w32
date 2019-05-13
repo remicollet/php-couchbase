@@ -19,14 +19,12 @@ if (PHP_COUCHBASE != "no") {
             "exception.c " +
             "log.c " +
             "opcookie.c " +
-            "paramparser.c " +
             "transcoding.c ";
         fastlz_sources =
             "fastlz.c";
         src_couchbase_sources  =
             "analytics_query.c " +
             "authenticator.c " +
-            "crypto.c " +
             "cert_authenticator.c " +
             "classic_authenticator.c " +
             "password_authenticator.c " +
@@ -35,26 +33,25 @@ if (PHP_COUCHBASE != "no") {
             "bucket_manager.c " +
             "cluster.c " +
             "cluster_manager.c " +
-            "document.c " +
-            "document_fragment.c " +
+            "collection.c " +
+            "result.c " +
             "log_formatter.c " +
-            "lookup_in_builder.c " +
-            "mutate_in_builder.c " +
+            "lookup_spec.c " +
+            "mutate_spec.c " +
             "mutation_state.c " +
             "mutation_token.c " +
             "n1ql_index.c " +
             "n1ql_query.c " +
             "pool.c " +
             "search_index_manager.c " +
-            "search_query.c " +
-            "spatial_view_query.c " +
-            "view_query.c " +
-            "view_query_encodable.c ";
+            "search_query.c ";
         src_couchbase_bucket_sources =
+            "cbas.c " +
             "cbft.c " +
             "counter.c " +
-            "durability.c " +
+            "exists.c " +
             "get.c " +
+            "get_replica.c " +
             "health.c " +
             "http.c " +
             "n1ql.c " +

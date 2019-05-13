@@ -189,6 +189,70 @@ static void php_extname_init_globals(zend_couchbase_globals *couchbase_globals)
     couchbase_globals->pool_max_idle_time = 60;
 }
 
+PHP_MINIT_FUNCTION(Result);
+PHP_MINIT_FUNCTION(CouchbasePool);
+PHP_MINIT_FUNCTION(CouchbaseException);
+PHP_MINIT_FUNCTION(Collection);
+PHP_MINIT_FUNCTION(Cluster);
+PHP_MINIT_FUNCTION(ClusterManager);
+PHP_MINIT_FUNCTION(UserSettings);
+PHP_MINIT_FUNCTION(Bucket);
+PHP_MINIT_FUNCTION(BucketManager);
+PHP_MINIT_FUNCTION(Authenticator);
+PHP_MINIT_FUNCTION(CertAuthenticator);
+PHP_MINIT_FUNCTION(ClassicAuthenticator);
+PHP_MINIT_FUNCTION(PasswordAuthenticator);
+PHP_MINIT_FUNCTION(MutationToken);
+PHP_MINIT_FUNCTION(MutationState);
+PHP_MINIT_FUNCTION(AnalyticsQuery);
+PHP_MINIT_FUNCTION(N1qlQuery);
+PHP_MINIT_FUNCTION(N1qlIndex);
+PHP_MINIT_FUNCTION(LookupInSpec);
+PHP_MINIT_FUNCTION(MutateInSpec);
+PHP_MINIT_FUNCTION(SearchQuery);
+PHP_MINIT_FUNCTION(SearchQueryPart);
+PHP_MINIT_FUNCTION(BooleanFieldSearchQuery);
+PHP_MINIT_FUNCTION(BooleanSearchQuery);
+PHP_MINIT_FUNCTION(ConjunctionSearchQuery);
+PHP_MINIT_FUNCTION(DateRangeSearchQuery);
+PHP_MINIT_FUNCTION(DisjunctionSearchQuery);
+PHP_MINIT_FUNCTION(DocIdSearchQuery);
+PHP_MINIT_FUNCTION(GeoBoundingBoxSearchQuery);
+PHP_MINIT_FUNCTION(GeoDistanceSearchQuery);
+PHP_MINIT_FUNCTION(MatchAllSearchQuery);
+PHP_MINIT_FUNCTION(MatchNoneSearchQuery);
+PHP_MINIT_FUNCTION(MatchPhraseSearchQuery);
+PHP_MINIT_FUNCTION(MatchSearchQuery);
+PHP_MINIT_FUNCTION(NumericRangeSearchQuery);
+PHP_MINIT_FUNCTION(PhraseSearchQuery);
+PHP_MINIT_FUNCTION(PrefixSearchQuery);
+PHP_MINIT_FUNCTION(QueryStringSearchQuery);
+PHP_MINIT_FUNCTION(RegexpSearchQuery);
+PHP_MINIT_FUNCTION(TermSearchQuery);
+PHP_MINIT_FUNCTION(TermRangeSearchQuery);
+PHP_MINIT_FUNCTION(WildcardSearchQuery);
+PHP_MINIT_FUNCTION(SearchFacet);
+PHP_MINIT_FUNCTION(TermSearchFacet);
+PHP_MINIT_FUNCTION(DateRangeSearchFacet);
+PHP_MINIT_FUNCTION(NumericRangeSearchFacet);
+PHP_MINIT_FUNCTION(SearchSort);
+PHP_MINIT_FUNCTION(SearchSortField);
+PHP_MINIT_FUNCTION(SearchSortGeoDistance);
+PHP_MINIT_FUNCTION(SearchSortId);
+PHP_MINIT_FUNCTION(SearchSortScore);
+PHP_MINIT_FUNCTION(CryptoProvider);
+PHP_MINIT_FUNCTION(SearchIndexManager);
+PHP_MINIT_FUNCTION(CollectionGet);
+PHP_MINIT_FUNCTION(CollectionGetReplica);
+PHP_MINIT_FUNCTION(CollectionExists);
+PHP_MINIT_FUNCTION(CollectionUnlock);
+PHP_MINIT_FUNCTION(CollectionStore);
+PHP_MINIT_FUNCTION(CollectionTouch);
+PHP_MINIT_FUNCTION(CollectionCounter);
+PHP_MINIT_FUNCTION(CollectionRemove);
+PHP_MINIT_FUNCTION(CollectionSubdoc);
+
+
 PHP_MINIT_FUNCTION(couchbase)
 {
     ZEND_INIT_MODULE_GLOBALS(couchbase, php_extname_init_globals, NULL);
@@ -203,12 +267,12 @@ PHP_MINIT_FUNCTION(couchbase)
             return FAILURE;
         }
     }
+    PHP_MINIT(Result)(INIT_FUNC_ARGS_PASSTHRU);
 
     PHP_MINIT(CouchbasePool)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(CouchbaseException)(INIT_FUNC_ARGS_PASSTHRU);
-    PHP_MINIT(Document)(INIT_FUNC_ARGS_PASSTHRU);
-    PHP_MINIT(DocumentFragment)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(Cluster)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(Collection)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(ClusterManager)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(UserSettings)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(Bucket)(INIT_FUNC_ARGS_PASSTHRU);
@@ -219,14 +283,11 @@ PHP_MINIT_FUNCTION(couchbase)
     PHP_MINIT(PasswordAuthenticator)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(MutationToken)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(MutationState)(INIT_FUNC_ARGS_PASSTHRU);
-    PHP_MINIT(ViewQueryEncodable)(INIT_FUNC_ARGS_PASSTHRU);
-    PHP_MINIT(ViewQuery)(INIT_FUNC_ARGS_PASSTHRU);
-    PHP_MINIT(SpatialViewQuery)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(AnalyticsQuery)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(N1qlQuery)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(N1qlIndex)(INIT_FUNC_ARGS_PASSTHRU);
-    PHP_MINIT(LookupInBuilder)(INIT_FUNC_ARGS_PASSTHRU);
-    PHP_MINIT(MutateInBuilder)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(LookupInSpec)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(MutateInSpec)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(SearchQuery)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(SearchQueryPart)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(BooleanFieldSearchQuery)(INIT_FUNC_ARGS_PASSTHRU);
@@ -258,8 +319,17 @@ PHP_MINIT_FUNCTION(couchbase)
     PHP_MINIT(SearchSortGeoDistance)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(SearchSortId)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(SearchSortScore)(INIT_FUNC_ARGS_PASSTHRU);
-    PHP_MINIT(CryptoProvider)(INIT_FUNC_ARGS_PASSTHRU);
+//  PHP_MINIT(CryptoProvider)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(SearchIndexManager)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(CollectionGet)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(CollectionGetReplica)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(CollectionExists)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(CollectionUnlock)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(CollectionStore)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(CollectionTouch)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(CollectionCounter)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(CollectionRemove)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(CollectionSubdoc)(INIT_FUNC_ARGS_PASSTHRU);
 
     PCBC_REGISTER_CONST(PERSISTTO_MASTER);
     PCBC_REGISTER_CONST(PERSISTTO_ONE);
@@ -268,18 +338,6 @@ PHP_MINIT_FUNCTION(couchbase)
     PCBC_REGISTER_CONST(REPLICATETO_ONE);
     PCBC_REGISTER_CONST(REPLICATETO_TWO);
     PCBC_REGISTER_CONST(REPLICATETO_THREE);
-
-    PCBC_REGISTER_LCBCONST(SDCMD_GET);
-    PCBC_REGISTER_LCBCONST(SDCMD_REPLACE);
-    PCBC_REGISTER_LCBCONST(SDCMD_EXISTS);
-    PCBC_REGISTER_LCBCONST(SDCMD_DICT_ADD);
-    PCBC_REGISTER_LCBCONST(SDCMD_DICT_UPSERT);
-    PCBC_REGISTER_LCBCONST(SDCMD_ARRAY_ADD_FIRST);
-    PCBC_REGISTER_LCBCONST(SDCMD_ARRAY_ADD_LAST);
-    PCBC_REGISTER_LCBCONST(SDCMD_ARRAY_INSERT);
-    PCBC_REGISTER_LCBCONST(SDCMD_ARRAY_ADD_UNIQUE);
-    PCBC_REGISTER_LCBCONST(SDCMD_COUNTER);
-    PCBC_REGISTER_LCBCONST(SDCMD_REMOVE);
 
     PCBC_REGISTER_LCBCONST(CNTL_OP_TIMEOUT);
     PCBC_REGISTER_LCBCONST(CNTL_VIEW_TIMEOUT);
@@ -598,7 +656,7 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
     add_index_zval(return_value, 2, &dtype);
 }
 
-static void basic_decoder_v1(char *bytes, int bytes_len, unsigned long flags, unsigned long datatype,
+static void basic_decoder_v1(char *bytes, size_t bytes_len, unsigned long flags, unsigned long datatype,
                              zend_bool jsonassoc, zval *return_value TSRMLS_DC)
 {
     zval res;
@@ -654,7 +712,7 @@ static void basic_decoder_v1(char *bytes, int bytes_len, unsigned long flags, un
             } else if (cmprtype == COUCHBASE_COMPRESSION_FASTLZ) {
                 unsigned long output_size = *(uint32_t *)bytes;
                 char *output = emalloc(output_size);
-                output_size = fastlz_decompress((uint8_t *)bytes + 4, bytes_len - 4, output, output_size);
+                output_size = fastlz_decompress((uint8_t *)bytes + 4, (int)bytes_len - 4, output, (int)output_size);
                 if (output_size == 0) {
                     efree(output);
                     pcbc_log(LOGARGS(WARN), "Failed to uncompress data with fastlz");
@@ -822,7 +880,7 @@ PHP_FUNCTION(basicDecoderV1)
         json_array = php_array_fetchc_bool(options, "jsonassoc");
     }
 
-    basic_decoder_v1(bytes, bytes_len, flags, datatype, json_array, return_value TSRMLS_CC);
+    basic_decoder_v1(bytes, (int)bytes_len, flags, datatype, json_array, return_value TSRMLS_CC);
 }
 
 /* {{{ proto \Couchbase\couchbase_passthru_encoder(string $value)
@@ -893,7 +951,7 @@ PHP_FUNCTION(defaultDecoder)
         RETURN_NULL();
     }
 
-    basic_decoder_v1(bytes, bytes_len, flags, datatype, PCBCG(dec_json_array), return_value TSRMLS_CC);
+    basic_decoder_v1(bytes, (int)bytes_len, flags, datatype, PCBCG(dec_json_array), return_value TSRMLS_CC);
 }
 
 PHP_FUNCTION(zlibCompress)
@@ -958,7 +1016,7 @@ PHP_FUNCTION(fastlzCompress)
     }
 
     dataIn = PCBC_STRVAL_ZP(zdata);
-    dataSize = PCBC_STRLEN_ZP(zdata);
+    dataSize = (unsigned long)PCBC_STRLEN_ZP(zdata);
     dataOutSize = 4 + (dataSize + dataSize / 20);
     dataOut = emalloc(dataOutSize);
     dataOutSize = fastlz_compress(dataIn, dataSize, (uint8_t *)dataOut + 4);
@@ -980,7 +1038,7 @@ PHP_FUNCTION(fastlzDecompress)
     }
 
     dataIn = PCBC_STRVAL_ZP(zdata);
-    dataSize = PCBC_STRLEN_ZP(zdata);
+    dataSize = (unsigned long)PCBC_STRLEN_ZP(zdata);
     dataOutSize = *(uint32_t *)dataIn;
     dataOut = emalloc(dataOutSize);
     dataOutSize = fastlz_decompress((uint8_t *)dataIn + 4, dataSize - 4, dataOut, dataOutSize);
@@ -994,7 +1052,7 @@ static PHP_MINFO_FUNCTION(couchbase)
 {
     char buf[128];
     const char *changeset;
-    lcb_error_t err;
+    lcb_STATUS err;
 
     err = lcb_cntl(NULL, LCB_CNTL_GET, LCB_CNTL_CHANGESET, (void *)&changeset);
     if (err != LCB_SUCCESS) {

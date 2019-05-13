@@ -204,6 +204,5 @@ PHP_MINIT_FUNCTION(BooleanFieldSearchQuery)
     boolean_field_search_query_handlers.free_obj = boolean_field_search_query_free_object;
     boolean_field_search_query_handlers.offset = XtOffsetOf(pcbc_boolean_field_search_query_t, std);
 
-    zend_register_class_alias("\\CouchbaseBooleanFieldSearchQuery", pcbc_boolean_field_search_query_ce);
     return SUCCESS;
 }

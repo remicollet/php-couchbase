@@ -502,6 +502,6 @@ PHP_MINIT_FUNCTION(N1qlQuery)
     zend_declare_class_constant_string(pcbc_n1ql_query_ce, ZEND_STRL("PROFILE_TIMINGS"),
                                        PCBC_N1QL_PROFILE_TIMINGS TSRMLS_CC);
 
-    zend_register_class_alias("\\CouchbaseN1qlQuery", pcbc_n1ql_query_ce);
+     
     return SUCCESS;
 }

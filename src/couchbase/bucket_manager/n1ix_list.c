@@ -24,7 +24,7 @@ typedef struct {
     int nspecs;
 } opcookie_n1ix_list_res;
 
-static void n1ix_list_callback(lcb_t instance, int cbtype, const lcb_RESPN1XMGMT *resp)
+static void n1ix_list_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPN1XMGMT *resp)
 {
     opcookie_n1ix_list_res *result = ecalloc(1, sizeof(opcookie_n1ix_list_res));
     int i;
@@ -32,37 +32,45 @@ static void n1ix_list_callback(lcb_t instance, int cbtype, const lcb_RESPN1XMGMT
 
     result->header.err = resp->rc;
     if (result->header.err != LCB_SUCCESS) {
-        pcbc_log(LOGARGS(instance, ERROR), "Failed to list indexes. %d: %.*s", (int)resp->inner->htresp->htstatus,
-                 (int)resp->inner->nrow, (char *)resp->inner->row);
-    }
-    result->nspecs = resp->nspecs;
-    result->specs = ecalloc(result->nspecs, sizeof(zval));
-    for (i = 0; i < result->nspecs; ++i) {
-        const lcb_N1XSPEC *spec = resp->specs[i];
-        int last_error;
-        zval value, json;
+        const lcb_RESPN1QL *n1ql = resp->inner;
+        const lcb_RESPHTTP *http;
+        lcb_respn1ql_http_response(n1ql, &http);
+        const char *body;
+        size_t nbody;
+        lcb_resphttp_body(http, &body, &nbody);
+        uint16_t htstatus;
+        lcb_resphttp_http_status(http, &htstatus);
+        pcbc_log(LOGARGS(instance, ERROR), "Failed to list indexes. %d: %.*s", (int)htstatus, (int)nbody, body);
+    } else {
+        result->nspecs = resp->nspecs;
+        result->specs = ecalloc(result->nspecs, sizeof(zval));
+        for (i = 0; i < result->nspecs; ++i) {
+            const lcb_N1XSPEC *spec = resp->specs[i];
+            int last_error;
+            zval value, json;
 
-        ZVAL_UNDEF(&value);
-        ZVAL_UNDEF(&json);
-        PCBC_JSON_COPY_DECODE(&json, spec->rawjson, spec->nrawjson, PHP_JSON_OBJECT_AS_ARRAY, last_error);
-        if (last_error != 0) {
-            pcbc_log(LOGARGS(instance, WARN), "Failed to decode value as JSON: json_last_error=%d", last_error);
-            ZVAL_NULL(&value);
-        } else {
-            pcbc_n1ix_init(&value, &json TSRMLS_CC);
+            ZVAL_UNDEF(&value);
+            ZVAL_UNDEF(&json);
+            PCBC_JSON_COPY_DECODE(&json, spec->rawjson, spec->nrawjson, PHP_JSON_OBJECT_AS_ARRAY, last_error);
+            if (last_error != 0) {
+                pcbc_log(LOGARGS(instance, WARN), "Failed to decode value as JSON: json_last_error=%d", last_error);
+                ZVAL_NULL(&value);
+            } else {
+                pcbc_n1ix_init(&value, &json TSRMLS_CC);
+            }
+
+            zval_ptr_dtor(&json);
+            result->specs[i] = value;
         }
-
-        zval_ptr_dtor(&json);
-        result->specs[i] = value;
     }
 
     opcookie_push((opcookie *)resp->cookie, &result->header);
 }
 
-static lcb_error_t proc_n1ix_list_results(zval *return_value, opcookie *cookie TSRMLS_DC)
+static lcb_STATUS proc_n1ix_list_results(zval *return_value, opcookie *cookie TSRMLS_DC)
 {
     opcookie_n1ix_list_res *result = (opcookie_n1ix_list_res *)opcookie_next_res(cookie, NULL);
-    lcb_error_t err = opcookie_get_first_error(cookie);
+    lcb_STATUS err = opcookie_get_first_error(cookie);
     int i;
 
     if (result) {
@@ -82,7 +90,7 @@ int pcbc_n1ix_list(pcbc_bucket_manager_t *manager, zval *return_value TSRMLS_DC)
 {
     lcb_CMDN1XMGMT cmd = {0};
     opcookie *cookie;
-    lcb_error_t err;
+    lcb_STATUS err;
 
     cmd.callback = n1ix_list_callback;
     cookie = opcookie_init();
@@ -99,8 +107,12 @@ int pcbc_n1ix_list(pcbc_bucket_manager_t *manager, zval *return_value TSRMLS_DC)
     opcookie_destroy(cookie);
 
     if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err);
+        throw_lcb_exception(err, NULL);
         return FAILURE;
     }
     return SUCCESS;
 }
+
+/*
+ * vim: et ts=4 sw=4 sts=4
+ */

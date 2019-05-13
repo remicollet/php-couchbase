@@ -22,15 +22,22 @@ typedef struct {
     opcookie_res header;
 } opcookie_n1ix_drop_res;
 
-static void n1ix_drop_callback(lcb_t instance, int cbtype, const lcb_RESPN1XMGMT *resp)
+static void n1ix_drop_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPN1XMGMT *resp)
 {
     opcookie_n1ix_drop_res *result = ecalloc(1, sizeof(opcookie_n1ix_drop_res));
     TSRMLS_FETCH();
 
     result->header.err = resp->rc;
     if (result->header.err != LCB_SUCCESS) {
-        pcbc_log(LOGARGS(instance, ERROR), "Failed to drop index. %d: %.*s", (int)resp->inner->htresp->htstatus,
-                 (int)resp->inner->nrow, (char *)resp->inner->row);
+        const lcb_RESPN1QL *n1ql = resp->inner;
+        const lcb_RESPHTTP *http;
+        lcb_respn1ql_http_response(n1ql, &http);
+        const char *body;
+        size_t nbody;
+        lcb_resphttp_body(http, &body, &nbody);
+        uint16_t htstatus;
+        lcb_resphttp_http_status(http, &htstatus);
+        pcbc_log(LOGARGS(instance, ERROR), "Failed to drop index. %d: %.*s", (int)htstatus, (int)nbody, body);
     }
 
     opcookie_push((opcookie *)resp->cookie, &result->header);
@@ -40,7 +47,7 @@ void pcbc_n1ix_drop(pcbc_bucket_manager_t *manager, lcb_CMDN1XMGMT *cmd, zend_bo
                     zval *return_value TSRMLS_DC)
 {
     opcookie *cookie;
-    lcb_error_t err;
+    lcb_STATUS err;
 
     cmd->callback = n1ix_drop_callback;
     cookie = opcookie_init();
@@ -54,6 +61,10 @@ void pcbc_n1ix_drop(pcbc_bucket_manager_t *manager, lcb_CMDN1XMGMT *cmd, zend_bo
     }
     opcookie_destroy(cookie);
     if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err);
+        throw_lcb_exception(err, NULL);
     }
 }
+
+/*
+ * vim: et ts=4 sw=4 sts=4
+ */

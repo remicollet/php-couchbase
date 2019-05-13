@@ -262,6 +262,6 @@ PHP_MINIT_FUNCTION(DocIdSearchQuery)
     doc_id_search_query_handlers.free_obj = doc_id_search_query_free_object;
     doc_id_search_query_handlers.offset = XtOffsetOf(pcbc_doc_id_search_query_t, std);
 
-    zend_register_class_alias("\\CouchbaseDocIdSearchQuery", pcbc_doc_id_search_query_ce);
+     
     return SUCCESS;
 }

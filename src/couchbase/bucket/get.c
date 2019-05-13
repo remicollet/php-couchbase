@@ -18,284 +18,324 @@
 
 #define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/get", __FILE__, __LINE__
 
-typedef struct {
-    opcookie_res header;
-    char *key;
-    int key_len;
-    char *bytes;
-    int bytes_len;
-    lcb_U32 flags;
-    lcb_datatype_t datatype;
-    lcb_cas_t cas;
-} opcookie_get_res;
+extern zend_class_entry *pcbc_get_result_impl_ce;
 
-void get_callback(lcb_t instance, int cbtype, const lcb_RESPBASE *rb)
+
+struct get_cookie {
+    lcb_STATUS rc;
+    zval *return_value;
+};
+
+void get_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPGET *resp)
 {
-    opcookie_get_res *result = ecalloc(1, sizeof(opcookie_get_res));
-    const lcb_RESPGET *resp = (const lcb_RESPGET *)rb;
     TSRMLS_FETCH();
 
-    PCBC_RESP_ERR_COPY(result->header, cbtype, rb);
-    result->key_len = resp->nkey;
-    if (resp->nkey) {
-        result->key = estrndup(resp->key, resp->nkey);
-    }
-    result->bytes_len = resp->nvalue;
-    if (resp->nvalue) {
-        result->bytes = estrndup(resp->value, resp->nvalue);
-    }
-    result->flags = resp->itmflags;
-    result->datatype = resp->datatype;
-    result->cas = resp->cas;
+    struct get_cookie *cookie = NULL;
+    lcb_respget_cookie(resp, (void **)&cookie);
+    zval *return_value = cookie->return_value;
+    cookie->rc = lcb_respget_status(resp);
+    zend_update_property_long(pcbc_get_result_impl_ce, return_value, ZEND_STRL("status"), cookie->rc TSRMLS_CC);
 
-    opcookie_push((opcookie *)rb->cookie, &result->header);
+    set_property_str(lcb_respget_error_context, pcbc_get_result_impl_ce, "err_ctx");
+    set_property_str(lcb_respget_error_ref, pcbc_get_result_impl_ce, "err_ref");
+    set_property_str(lcb_respget_key, pcbc_get_result_impl_ce, "key");
+    if (cookie->rc == LCB_SUCCESS) {
+        set_property_num(uint32_t, lcb_respget_flags, pcbc_get_result_impl_ce, "flags");
+        set_property_num(uint8_t, lcb_respget_datatype, pcbc_get_result_impl_ce, "datatype");
+        set_property_str(lcb_respget_value, pcbc_get_result_impl_ce, "data");
+        {
+            uint64_t data;
+            lcb_respget_cas(resp, &data);
+            zend_string *b64;
+            b64 = php_base64_encode((unsigned char *)&data, sizeof(data));
+            zend_update_property_str(pcbc_get_result_impl_ce, return_value, ZEND_STRL("cas"), b64 TSRMLS_CC);
+        }
+    }
 }
 
-static lcb_error_t proc_get_results(pcbc_bucket_t *bucket, zval *return_value, opcookie *cookie,
-                                    int is_mapped TSRMLS_DC)
-{
-    opcookie_get_res *res;
-    lcb_error_t err = LCB_SUCCESS;
-    lcbtrace_SPAN *parent = cookie->span;
-    lcbtrace_TRACER *tracer = lcb_get_tracer(bucket->conn->lcb);
 
-    // If we are not mapped, we need to throw any op errors
-    if (is_mapped == 0) {
-        err = opcookie_get_first_error(cookie);
+zend_class_entry *pcbc_get_options_ce;
+
+PHP_METHOD(GetOptions, timeout)
+{
+    zend_long *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
     }
+    zend_update_property_long(pcbc_get_options_ce, getThis(), ZEND_STRL("timeout"), *arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(GetOptions, withExpiration)
+{
+    zend_bool *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "b", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_bool(pcbc_get_options_ce, getThis(), ZEND_STRL("with_expiration"), *arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(GetOptions, project)
+{
+    zval *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "a", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property(pcbc_get_options_ce, getThis(), ZEND_STRL("project"), arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_GetOptions_timeout, 0, 1, \\Couchbase\\GetOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_GetOptions_withExpiration, 0, 1, \\Couchbase\\GetOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_TRUE|IS_FALSE, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_GetOptions_project, 0, 1, \\Couchbase\\GetOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_ARRAY, 0)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry pcbc_get_options_methods[] = {
+    PHP_ME(GetOptions, timeout, ai_GetOptions_timeout, ZEND_ACC_PUBLIC)
+    PHP_ME(GetOptions, withExpiration, ai_GetOptions_withExpiration, ZEND_ACC_PUBLIC)
+    PHP_ME(GetOptions, project, ai_GetOptions_project, ZEND_ACC_PUBLIC)
+    PHP_FE_END
+};
+
+
+PHP_METHOD(Collection, get)
+{
+    zend_string *id;
+    zval *options;
+    lcb_STATUS err;
+
+    int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|O", &id, &options, pcbc_get_options_ce);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    PCBC_RESOLVE_COLLECTION;
+
+    lcb_CMDGET *cmd;
+    lcb_cmdget_create(&cmd);
+    lcb_cmdget_collection(cmd, scope_str, scope_len, collection_str, collection_len);
+    lcb_cmdget_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
+    if (options) {
+        zval *prop, ret;
+        prop = zend_read_property(pcbc_get_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdget_timeout(cmd, Z_LVAL_P(prop));
+        }
+    }
+
+    lcbtrace_SPAN *span = NULL;
+    lcbtrace_TRACER *tracer = lcb_get_tracer(bucket->conn->lcb);
+    if (tracer) {
+        span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_GET, 0, NULL);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
+        lcb_cmdget_parent_span(cmd, span);
+    }
+
+    object_init_ex(return_value, pcbc_get_result_impl_ce);
+    struct get_cookie cookie = {
+        LCB_SUCCESS,
+        return_value
+    };
+    err = lcb_get(bucket->conn->lcb, &cookie, cmd);
+    lcb_cmdget_destroy(cmd);
 
     if (err == LCB_SUCCESS) {
-        FOREACH_OPCOOKIE_RES(opcookie_get_res, res, cookie)
-        {
-            zval *doc = bop_get_return_doc(return_value, res->key, res->key_len, is_mapped TSRMLS_CC);
-
-            if (res->header.err == LCB_SUCCESS) {
-                lcbtrace_SPAN *span = NULL;
-                if (parent) {
-                    lcbtrace_REF ref;
-                    ref.type = LCBTRACE_REF_CHILD_OF;
-                    ref.span = parent;
-                    span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_RESPONSE_DECODING, LCBTRACE_NOW, &ref);
-                    lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
-                    lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
-                }
-                pcbc_document_init_decode(doc, bucket, res->bytes, res->bytes_len, res->flags, res->datatype, res->cas,
-                                          NULL TSRMLS_CC);
-                if (span) {
-                    lcbtrace_span_finish(span, LCBTRACE_NOW);
-                }
-            } else {
-                pcbc_document_init_error(doc, &res->header TSRMLS_CC);
-            }
-        }
+        lcb_wait(bucket->conn->lcb);
+        err = cookie.rc;
     }
-
-    FOREACH_OPCOOKIE_RES(opcookie_get_res, res, cookie)
-    {
-        if (res->key) {
-            efree(res->key);
-        }
-        if (res->bytes) {
-            efree(res->bytes);
-        }
-        PCBC_RESP_ERR_FREE(res->header);
+    if (span) {
+        lcbtrace_span_finish(span, LCBTRACE_NOW);
     }
-
-    return err;
-}
-
-void pcbc_bucket_get(pcbc_bucket_t *obj, pcbc_pp_state *pp_state, pcbc_pp_id *id, zval **lock, zval **expiry,
-                     zval **groupid, zval *return_value TSRMLS_DC)
-{
-    int ii, ncmds, nscheduled;
-    opcookie *cookie;
-    lcb_error_t err = LCB_SUCCESS;
-    lcbtrace_TRACER *tracer = NULL;
-
-    ncmds = pcbc_pp_keycount(pp_state);
-    cookie = opcookie_init();
-
-    tracer = lcb_get_tracer(obj->conn->lcb);
-    if (tracer) {
-        cookie->span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_GET, 0, NULL);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
-    }
-
-    nscheduled = 0;
-    for (ii = 0; pcbc_pp_next(pp_state); ++ii) {
-        lcb_CMDGET cmd = {0};
-
-        if (lock) {
-            PCBC_CHECK_ZVAL_LONG(*lock, "lockTime must be an integer");
-        }
-        if (expiry) {
-            PCBC_CHECK_ZVAL_LONG(*expiry, "expiry must be an integer");
-        }
-        if (groupid) {
-            PCBC_CHECK_ZVAL_STRING(*groupid, "groupid must be a string");
-        }
-
-        LCB_CMD_SET_KEY(&cmd, id->str, id->len);
-        if (cookie->span) {
-            LCB_CMD_SET_TRACESPAN(&cmd, cookie->span);
-        }
-        if (expiry && *expiry) {
-            cmd.lock = 0;
-            cmd.exptime = Z_LVAL_P(*expiry);
-        } else if (lock && *lock) {
-            cmd.lock = 1;
-            cmd.exptime = Z_LVAL_P(*lock);
-        }
-        if (groupid && *groupid) {
-            LCB_KREQ_SIMPLE(&cmd._hashkey, Z_STRVAL_P(*groupid), Z_STRLEN_P(*groupid));
-        }
-        err = lcb_get3(obj->conn->lcb, cookie, &cmd);
-        if (err != LCB_SUCCESS) {
-            break;
-        }
-
-        nscheduled++;
-    }
-    pcbc_assert_number_of_commands(obj->conn->lcb, "get", nscheduled, ncmds, err);
-
-    if (nscheduled) {
-        lcb_wait(obj->conn->lcb);
-        err = proc_get_results(obj, return_value, cookie, pcbc_pp_ismapped(pp_state) TSRMLS_CC);
-    }
-
-    if (cookie->span) {
-        lcbtrace_span_finish(cookie->span, LCBTRACE_NOW);
-    }
-    opcookie_destroy(cookie);
-
     if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err);
+        throw_lcb_exception(err, pcbc_get_result_impl_ce);
     }
 }
 
-/* {{{ proto mixed Bucket::get(string $id, array $options) */
-PHP_METHOD(Bucket, get)
-{
-    pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
-    pcbc_pp_state pp_state;
-    pcbc_pp_id id;
-    zval *lock = NULL, *expiry = NULL, *groupid = NULL;
+zend_class_entry *pcbc_get_and_lock_options_ce;
 
-    // Note that groupid is experimental here and should not be used.
-    if (pcbc_pp_begin(ZEND_NUM_ARGS() TSRMLS_CC, &pp_state, "id||lockTime,expiry,groupid", &id, &lock, &expiry,
-                      &groupid) != SUCCESS) {
-        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+PHP_METHOD(GetAndLockOptions, timeout)
+{
+    zend_long *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
         RETURN_NULL();
     }
-
-    pcbc_bucket_get(obj, &pp_state, &id, &lock, &expiry, &groupid, return_value TSRMLS_CC);
+    zend_update_property_long(pcbc_get_and_lock_options_ce, getThis(), ZEND_STRL("timeout"), *arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
 }
 
-/* {{{ proto mixed Bucket::getAndLock(string $id, int $lockTime, array $options) */
-PHP_METHOD(Bucket, getAndLock)
-{
-    pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
-    pcbc_pp_state pp_state;
-    pcbc_pp_id id;
-    zval *lock = NULL, *groupid = NULL;
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_GetAndLockOptions_timeout, 0, 1, \\Couchbase\\GetAndLockOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
 
-    // Note that groupid is experimental here and should not be used.
-    if (pcbc_pp_begin(ZEND_NUM_ARGS() TSRMLS_CC, &pp_state, "id,lockTime||groupid", &id, &lock, &groupid) != SUCCESS) {
-        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+static const zend_function_entry pcbc_get_and_lock_options_methods[] = {
+    PHP_ME(GetAndLockOptions, timeout, ai_GetAndLockOptions_timeout, ZEND_ACC_PUBLIC)
+    PHP_FE_END
+};
+
+PHP_METHOD(Collection, getAndLock)
+{
+    zend_string *id;
+    zval *options;
+    zend_long expiry;
+    lcb_STATUS err;
+
+    int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "Sl|O", &id, &expiry, &options, pcbc_get_and_lock_options_ce);
+    if (rv == FAILURE) {
         RETURN_NULL();
     }
+    PCBC_RESOLVE_COLLECTION;
 
-    pcbc_bucket_get(obj, &pp_state, &id, &lock, NULL, &groupid, return_value TSRMLS_CC);
-}
+    lcb_CMDGET *cmd;
+    lcb_cmdget_create(&cmd);
+    lcb_cmdget_collection(cmd, scope_str, scope_len, collection_str, collection_len);
+    lcb_cmdget_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
+    lcb_cmdget_locktime(cmd, expiry);
 
-/* {{{ proto mixed Bucket::getAndTouch(string $id, int $expiry, array $options) */
-PHP_METHOD(Bucket, getAndTouch)
-{
-    pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
-    pcbc_pp_state pp_state;
-    pcbc_pp_id id;
-    zval *expiry = NULL, *groupid = NULL;
-
-    // Note that groupid is experimental here and should not be used.
-    if (pcbc_pp_begin(ZEND_NUM_ARGS() TSRMLS_CC, &pp_state, "id,expiry||groupid", &id, &expiry, &groupid) != SUCCESS) {
-        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
-        RETURN_NULL();
+    if (options) {
+        zval *prop, ret;
+        prop = zend_read_property(pcbc_get_and_lock_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdget_timeout(cmd, Z_LVAL_P(prop));
+        }
     }
 
-    pcbc_bucket_get(obj, &pp_state, &id, NULL, &expiry, &groupid, return_value TSRMLS_CC);
-}
-
-// get($id {, $lock, $groupid}) : MetaDoc
-PHP_METHOD(Bucket, getFromReplica)
-{
-    pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
-    int ii, ncmds, nscheduled;
-    pcbc_pp_state pp_state;
-    pcbc_pp_id id;
-    zval *zindex, *zgroupid;
-    opcookie *cookie;
-    lcb_error_t err = LCB_SUCCESS;
-    lcbtrace_TRACER *tracer = NULL;
-
-    // Note that groupid is experimental here and should not be used.
-    if (pcbc_pp_begin(ZEND_NUM_ARGS() TSRMLS_CC, &pp_state, "id||index,groupid", &id, &zindex, &zgroupid) != SUCCESS) {
-        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
-        RETURN_NULL();
-    }
-
-    ncmds = pcbc_pp_keycount(&pp_state);
-    cookie = opcookie_init();
-    tracer = lcb_get_tracer(obj->conn->lcb);
+    lcbtrace_SPAN *span = NULL;
+    lcbtrace_TRACER *tracer = lcb_get_tracer(bucket->conn->lcb);
     if (tracer) {
-        cookie->span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_GET_FROM_REPLICA, 0, NULL);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
-        lcbtrace_span_add_tag_str(cookie->span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
+        span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_GET, 0, NULL);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
+        lcb_cmdget_parent_span(cmd, span);
     }
-
-    nscheduled = 0;
-    for (ii = 0; pcbc_pp_next(&pp_state); ++ii) {
-        lcb_CMDGETREPLICA cmd = {0};
-
-        PCBC_CHECK_ZVAL_LONG(zindex, "index must be an integer");
-        PCBC_CHECK_ZVAL_STRING(zgroupid, "groupid must be a string");
-
-        LCB_CMD_SET_KEY(&cmd, id.str, id.len);
-        if (cookie->span) {
-            LCB_CMD_SET_TRACESPAN(&cmd, cookie->span);
-        }
-        if (zindex) {
-            cmd.index = Z_LVAL_P(zindex);
-            if (cmd.index >= 0) {
-                cmd.strategy = LCB_REPLICA_SELECT;
-            } else {
-                cmd.strategy = LCB_REPLICA_FIRST;
-            }
-        }
-        if (zgroupid) {
-            LCB_KREQ_SIMPLE(&cmd._hashkey, Z_STRVAL_P(zgroupid), Z_STRLEN_P(zgroupid));
-        }
-
-        err = lcb_rget3(obj->conn->lcb, cookie, &cmd);
-        if (err != LCB_SUCCESS) {
-            break;
-        }
-        nscheduled++;
+    object_init_ex(return_value, pcbc_get_result_impl_ce);
+    struct get_cookie cookie = {
+        LCB_SUCCESS,
+        return_value
+    };
+    err = lcb_get(bucket->conn->lcb, &cookie, cmd);
+    lcb_cmdget_destroy(cmd);
+    if (err == LCB_SUCCESS) {
+        lcb_wait(bucket->conn->lcb);
+        err = cookie.rc;
     }
-    pcbc_assert_number_of_commands(obj->conn->lcb, "get_from_replica", nscheduled, ncmds, err);
-
-    if (nscheduled) {
-        lcb_wait(obj->conn->lcb);
-
-        err = proc_get_results(obj, return_value, cookie, pcbc_pp_ismapped(&pp_state) TSRMLS_CC);
+    if (span) {
+        lcbtrace_span_finish(span, LCBTRACE_NOW);
     }
-
-    if (cookie->span) {
-        lcbtrace_span_finish(cookie->span, LCBTRACE_NOW);
-    }
-    opcookie_destroy(cookie);
-
     if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err);
+        throw_lcb_exception(err, pcbc_get_result_impl_ce);
     }
 }
+
+zend_class_entry *pcbc_get_and_touch_options_ce;
+
+PHP_METHOD(GetAndTouchOptions, timeout)
+{
+    zend_long *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_get_and_touch_options_ce, getThis(), ZEND_STRL("timeout"), *arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_GetAndTouchOptions_timeout, 0, 1, \\Couchbase\\GetAndTouchOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry pcbc_get_and_touch_options_methods[] = {
+    PHP_ME(GetAndTouchOptions, timeout, ai_GetAndTouchOptions_timeout, ZEND_ACC_PUBLIC)
+    PHP_FE_END
+};
+
+PHP_METHOD(Collection, getAndTouch)
+{
+    zend_string *id;
+    zval *options;
+    zend_long expiry;
+    lcb_STATUS err;
+
+    int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "Sl|O", &id, &expiry, &options, pcbc_get_and_touch_options_ce);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    PCBC_RESOLVE_COLLECTION;
+
+    lcb_CMDGET *cmd;
+    lcb_cmdget_create(&cmd);
+    lcb_cmdget_collection(cmd, scope_str, scope_len, collection_str, collection_len);
+    lcb_cmdget_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
+    lcb_cmdget_expiration(cmd, expiry);
+
+    if (options) {
+        zval *prop, ret;
+        prop = zend_read_property(pcbc_get_and_touch_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdget_timeout(cmd, Z_LVAL_P(prop));
+        }
+    }
+
+    lcbtrace_SPAN *span = NULL;
+    lcbtrace_TRACER *tracer = lcb_get_tracer(bucket->conn->lcb);
+    if (tracer) {
+        span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_GET, 0, NULL);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
+        lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
+        lcb_cmdget_parent_span(cmd, span);
+    }
+    object_init_ex(return_value, pcbc_get_result_impl_ce);
+    struct get_cookie cookie = {
+        LCB_SUCCESS,
+        return_value
+    };
+    err = lcb_get(bucket->conn->lcb, &cookie, cmd);
+    lcb_cmdget_destroy(cmd);
+    if (err == LCB_SUCCESS) {
+        lcb_wait(bucket->conn->lcb);
+        err = cookie.rc;
+    }
+    if (span) {
+        lcbtrace_span_finish(span, LCBTRACE_NOW);
+    }
+    if (err != LCB_SUCCESS) {
+        throw_lcb_exception(err, pcbc_get_result_impl_ce);
+    }
+}
+
+PHP_MINIT_FUNCTION(CollectionGet)
+{
+    zend_class_entry ce;
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "GetOptions", pcbc_get_options_methods);
+    pcbc_get_options_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    zend_declare_property_null(pcbc_get_options_ce, ZEND_STRL("timeout"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_get_options_ce, ZEND_STRL("with_expiration"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_get_options_ce, ZEND_STRL("project"), ZEND_ACC_PRIVATE TSRMLS_CC);
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "GetAndTouchOptions", pcbc_get_and_touch_options_methods);
+    pcbc_get_and_touch_options_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    zend_declare_property_null(pcbc_get_and_touch_options_ce, ZEND_STRL("timeout"), ZEND_ACC_PRIVATE TSRMLS_CC);
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "GetAndLockOptions", pcbc_get_and_lock_options_methods);
+    pcbc_get_and_lock_options_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    zend_declare_property_null(pcbc_get_and_lock_options_ce, ZEND_STRL("timeout"), ZEND_ACC_PRIVATE TSRMLS_CC);
+
+    return SUCCESS;
+}
+
+
+/*
+ * vim: et ts=4 sw=4 sts=4
+ */

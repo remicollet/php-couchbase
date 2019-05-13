@@ -5,10 +5,11 @@ PHP_ARG_WITH(system-fastlz, wheter to use system FastLZ library,
     [  --with-system-fastlz   Use system FastLZ library], no, no)
 
 if test "$PHP_COUCHBASE" != "no"; then
+  AC_MSG_CHECKING(for libcouchbase in default path and $PHP_COUCHBASE)
   if test -r $PHP_COUCHBASE/include/libcouchbase/couchbase.h; then
     LIBCOUCHBASE_DIR=$PHP_COUCHBASE
+    AC_MSG_RESULT(found in $PHP_COUCHBASE)
   else
-    AC_MSG_CHECKING(for libcouchbase in default path)
     for i in /usr/local /usr; do
       if test -r $i/include/libcouchbase/couchbase.h; then
         LIBCOUCHBASE_DIR=$i
@@ -52,21 +53,16 @@ COUCHBASE_FILES=" \
     exception.c \
     log.c \
     opcookie.c \
-    paramparser.c \
     src/couchbase/analytics_query.c \
     src/couchbase/authenticator.c \
-    src/couchbase/crypto.c \
-    src/couchbase/cert_authenticator.c \
-    src/couchbase/classic_authenticator.c \
-    src/couchbase/password_authenticator.c \
     src/couchbase/base36.c \
-    src/couchbase/pool.c \
-    src/couchbase/log_formatter.c \
     src/couchbase/bucket.c \
+    src/couchbase/bucket/cbas.c \
     src/couchbase/bucket/cbft.c \
     src/couchbase/bucket/counter.c \
-    src/couchbase/bucket/durability.c \
+    src/couchbase/bucket/exists.c \
     src/couchbase/bucket/get.c \
+    src/couchbase/bucket/get_replica.c \
     src/couchbase/bucket/health.c \
     src/couchbase/bucket/http.c \
     src/couchbase/bucket/n1ql.c \
@@ -80,53 +76,55 @@ COUCHBASE_FILES=" \
     src/couchbase/bucket_manager/n1ix_create.c \
     src/couchbase/bucket_manager/n1ix_drop.c \
     src/couchbase/bucket_manager/n1ix_list.c \
+    src/couchbase/cert_authenticator.c \
+    src/couchbase/classic_authenticator.c \
     src/couchbase/cluster.c \
     src/couchbase/cluster_manager.c \
     src/couchbase/cluster_manager/user_settings.c \
-    src/couchbase/document.c \
-    src/couchbase/document_fragment.c \
-    src/couchbase/lookup_in_builder.c \
-    src/couchbase/mutate_in_builder.c \
+    src/couchbase/collection.c \
+    src/couchbase/log_formatter.c \
+    src/couchbase/lookup_spec.c \
+    src/couchbase/mutate_spec.c \
     src/couchbase/mutation_state.c \
     src/couchbase/mutation_token.c \
     src/couchbase/n1ql_index.c \
     src/couchbase/n1ql_query.c \
-    src/couchbase/search_query.c \
-    src/couchbase/search/query_part.c \
-    src/couchbase/search/sort.c \
-    src/couchbase/search/sort_field.c \
-    src/couchbase/search/sort_geo.c \
-    src/couchbase/search/sort_id.c \
-    src/couchbase/search/sort_score.c \
+    src/couchbase/password_authenticator.c \
+    src/couchbase/pool.c \
+    src/couchbase/result.c \
     src/couchbase/search/boolean_field_query.c \
     src/couchbase/search/boolean_query.c \
     src/couchbase/search/conjunction_query.c \
+    src/couchbase/search/date_range_facet.c \
     src/couchbase/search/date_range_query.c \
     src/couchbase/search/disjunction_query.c \
     src/couchbase/search/doc_id_query.c \
+    src/couchbase/search/facet.c \
     src/couchbase/search/geo_bounding_box_query.c \
     src/couchbase/search/geo_distance_query.c \
     src/couchbase/search/match_all_query.c \
     src/couchbase/search/match_none_query.c \
     src/couchbase/search/match_phrase_query.c \
     src/couchbase/search/match_query.c \
+    src/couchbase/search/numeric_range_facet.c \
     src/couchbase/search/numeric_range_query.c \
     src/couchbase/search/phrase_query.c \
     src/couchbase/search/prefix_query.c \
+    src/couchbase/search/query_part.c \
     src/couchbase/search/query_string_query.c \
     src/couchbase/search/regexp_query.c \
+    src/couchbase/search/sort.c \
+    src/couchbase/search/sort_field.c \
+    src/couchbase/search/sort_geo.c \
+    src/couchbase/search/sort_id.c \
+    src/couchbase/search/sort_score.c \
+    src/couchbase/search/term_facet.c \
     src/couchbase/search/term_query.c \
     src/couchbase/search/term_range_query.c \
     src/couchbase/search/wildcard_query.c \
-    src/couchbase/search/facet.c \
-    src/couchbase/search/term_facet.c \
-    src/couchbase/search/date_range_facet.c \
-    src/couchbase/search/numeric_range_facet.c \
-    src/couchbase/view_query.c \
-    src/couchbase/view_query_encodable.c \
-    src/couchbase/spatial_view_query.c \
-    transcoding.c \
     src/couchbase/search_index_manager.c \
+    src/couchbase/search_query.c \
+    transcoding.c \
 "
 
   AC_CHECK_HEADERS([zlib.h])

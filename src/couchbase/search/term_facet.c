@@ -141,6 +141,6 @@ PHP_MINIT_FUNCTION(TermSearchFacet)
     term_search_facet_handlers.free_obj = term_search_facet_free_object;
     term_search_facet_handlers.offset = XtOffsetOf(pcbc_term_search_facet_t, std);
 
-    zend_register_class_alias("\\CouchbaseTermSearchFacet", pcbc_term_search_facet_ce);
+     
     return SUCCESS;
 }

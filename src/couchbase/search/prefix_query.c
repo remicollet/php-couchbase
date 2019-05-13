@@ -207,6 +207,6 @@ PHP_MINIT_FUNCTION(PrefixSearchQuery)
     prefix_search_query_handlers.free_obj = prefix_search_query_free_object;
     prefix_search_query_handlers.offset = XtOffsetOf(pcbc_prefix_search_query_t, std);
 
-    zend_register_class_alias("\\CouchbasePrefixSearchQuery", pcbc_prefix_search_query_ce);
+     
     return SUCCESS;
 }

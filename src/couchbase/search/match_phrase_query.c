@@ -247,6 +247,6 @@ PHP_MINIT_FUNCTION(MatchPhraseSearchQuery)
     match_phrase_search_query_handlers.free_obj = match_phrase_search_query_free_object;
     match_phrase_search_query_handlers.offset = XtOffsetOf(pcbc_match_phrase_search_query_t, std);
 
-    zend_register_class_alias("\\CouchbaseMatchPhraseSearchQuery", pcbc_match_phrase_search_query_ce);
+     
     return SUCCESS;
 }

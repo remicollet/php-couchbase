@@ -39,7 +39,6 @@ PHP_METHOD(SearchIndexManager, __construct)
 PHP_METHOD(SearchIndexManager, listIndexes)
 {
     pcbc_search_index_manager_t *obj;
-    lcb_CMDHTTP cmd = {0};
     const char *path = "/api/index";
     int rv;
 
@@ -50,17 +49,17 @@ PHP_METHOD(SearchIndexManager, listIndexes)
         RETURN_NULL();
     }
 
-    cmd.type = LCB_HTTP_TYPE_FTS;
-    cmd.method = LCB_HTTP_METHOD_GET;
-    LCB_CMD_SET_KEY(&cmd, path, strlen(path));
-    cmd.content_type = PCBC_CONTENT_TYPE_FORM;
-    pcbc_http_request(return_value, obj->conn->lcb, &cmd, 1 TSRMLS_CC);
+    lcb_CMDHTTP *cmd;
+    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_FTS);
+    lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
+    lcb_cmdhttp_path(cmd, path, strlen(path));
+    lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
 }
 
 PHP_METHOD(SearchIndexManager, getIndex)
 {
     pcbc_search_index_manager_t *obj;
-    lcb_CMDHTTP cmd = {0};
     int rv, path_len;
     char *path, *name = NULL;
     size_t name_len = 0;
@@ -73,18 +72,18 @@ PHP_METHOD(SearchIndexManager, getIndex)
     path_len = spprintf(&path, 0, "/api/index/%.*s", (int)name_len, name);
     obj = Z_SEARCH_INDEX_MANAGER_OBJ_P(getThis());
 
-    cmd.type = LCB_HTTP_TYPE_FTS;
-    cmd.method = LCB_HTTP_METHOD_GET;
-    LCB_CMD_SET_KEY(&cmd, path, path_len);
-    cmd.content_type = PCBC_CONTENT_TYPE_FORM;
-    pcbc_http_request(return_value, obj->conn->lcb, &cmd, 1 TSRMLS_CC);
+    lcb_CMDHTTP *cmd;
+    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_FTS);
+    lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
+    lcb_cmdhttp_path(cmd, path, strlen(path));
+    lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
     efree(path);
 }
 
 PHP_METHOD(SearchIndexManager, deleteIndex)
 {
     pcbc_search_index_manager_t *obj;
-    lcb_CMDHTTP cmd = {0};
     int rv, path_len;
     char *path, *name = NULL;
     size_t name_len = 0;
@@ -97,18 +96,18 @@ PHP_METHOD(SearchIndexManager, deleteIndex)
     path_len = spprintf(&path, 0, "/api/index/%.*s", (int)name_len, name);
     obj = Z_SEARCH_INDEX_MANAGER_OBJ_P(getThis());
 
-    cmd.type = LCB_HTTP_TYPE_FTS;
-    cmd.method = LCB_HTTP_METHOD_DELETE;
-    LCB_CMD_SET_KEY(&cmd, path, path_len);
-    cmd.content_type = PCBC_CONTENT_TYPE_FORM;
-    pcbc_http_request(return_value, obj->conn->lcb, &cmd, 1 TSRMLS_CC);
+    lcb_CMDHTTP *cmd;
+    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_FTS);
+    lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_DELETE);
+    lcb_cmdhttp_path(cmd, path, strlen(path));
+    lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
     efree(path);
 }
 
 PHP_METHOD(SearchIndexManager, createIndex)
 {
     pcbc_search_index_manager_t *obj;
-    lcb_CMDHTTP cmd = {0};
     int rv, path_len;
     char *def = NULL, *name = NULL;
     size_t def_len = 0, name_len = 0;
@@ -122,20 +121,19 @@ PHP_METHOD(SearchIndexManager, createIndex)
     obj = Z_SEARCH_INDEX_MANAGER_OBJ_P(getThis());
     path_len = spprintf(&path, 0, "/api/index/%.*s", (int)name_len, name);
 
-    cmd.type = LCB_HTTP_TYPE_FTS;
-    cmd.method = LCB_HTTP_METHOD_PUT;
-    LCB_CMD_SET_KEY(&cmd, path, path_len);
-    cmd.body = def;
-    cmd.nbody = def_len;
-    cmd.content_type = PCBC_CONTENT_TYPE_JSON;
-    pcbc_http_request(return_value, obj->conn->lcb, &cmd, 1 TSRMLS_CC);
+    lcb_CMDHTTP *cmd;
+    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_FTS);
+    lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_PUT);
+    lcb_cmdhttp_path(cmd, path, strlen(path));
+    lcb_cmdhttp_body(cmd, def, def_len);
+    lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_JSON, strlen(PCBC_CONTENT_TYPE_JSON));
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
     efree(path);
 }
 
 PHP_METHOD(SearchIndexManager, getIndexedDocumentsCount)
 {
     pcbc_search_index_manager_t *obj;
-    lcb_CMDHTTP cmd = {0};
     int rv, path_len;
     char *path, *name = NULL;
     size_t name_len = 0;
@@ -148,11 +146,12 @@ PHP_METHOD(SearchIndexManager, getIndexedDocumentsCount)
     path_len = spprintf(&path, 0, "/api/index/%.*s/count", (int)name_len, name);
     obj = Z_SEARCH_INDEX_MANAGER_OBJ_P(getThis());
 
-    cmd.type = LCB_HTTP_TYPE_FTS;
-    cmd.method = LCB_HTTP_METHOD_GET;
-    LCB_CMD_SET_KEY(&cmd, path, path_len);
-    cmd.content_type = PCBC_CONTENT_TYPE_FORM;
-    pcbc_http_request(return_value, obj->conn->lcb, &cmd, 1 TSRMLS_CC);
+    lcb_CMDHTTP *cmd;
+    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_FTS);
+    lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
+    lcb_cmdhttp_path(cmd, path, strlen(path));
+    lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
     efree(path);
 }
 

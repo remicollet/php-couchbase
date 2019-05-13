@@ -21,12 +21,10 @@
 
 zend_class_entry *pcbc_mutation_state_ce;
 
-/* {{{ proto void MutationState::__construct() Should not be called directly */
 PHP_METHOD(MutationState, __construct)
 {
     throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
 }
-/* }}} */
 
 static void pcbc_add_token(pcbc_mutation_state_t *state, pcbc_mutation_token_t *token TSRMLS_DC)
 {
@@ -34,7 +32,7 @@ static void pcbc_add_token(pcbc_mutation_state_t *state, pcbc_mutation_token_t *
 
     t = state->head;
     while (t) {
-        if (PCBC_MUTATION_TOKEN_VB(t) == PCBC_MUTATION_TOKEN_VB(t) && strcmp(t->bucket, token->bucket) == 0) {
+        if (PCBC_MUTATION_TOKEN_VB(t) == PCBC_MUTATION_TOKEN_VB(token) && strcmp(t->bucket, token->bucket) == 0) {
             if (PCBC_MUTATION_TOKEN_SEQ(t) < PCBC_MUTATION_TOKEN_SEQ(token)) {
                 new_token = t;
             }
@@ -85,7 +83,6 @@ static void pcbc_add_token(pcbc_mutation_state_t *state, pcbc_mutation_token_t *
                              LCB_EINVAL);                                                                              \
     }
 
-/* {{{ proto \Couchbase\MutationState MutationState::from(array $source = []) */
 PHP_METHOD(MutationState, from)
 {
     zval *source = NULL;
@@ -102,14 +99,14 @@ PHP_METHOD(MutationState, from)
 
     switch (Z_TYPE_P(source)) {
     case IS_OBJECT:
-        ADD_TOKEN_FROM_ZVAL(source);
+        // ADD_TOKEN_FROM_ZVAL(source);
         break;
     case IS_ARRAY: {
         zval *entry;
 
         ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(source), entry)
         {
-            ADD_TOKEN_FROM_ZVAL(entry);
+            // ADD_TOKEN_FROM_ZVAL(entry);
         }
         ZEND_HASH_FOREACH_END();
     } break;
@@ -117,9 +114,8 @@ PHP_METHOD(MutationState, from)
         throw_pcbc_exception(
             "Array or object with mutation state expected (Document, DocumentFragment or MutationToken)", LCB_EINVAL);
     }
-} /* }}} */
+}
 
-/* {{{ proto \Couchbase\MutationState MutationState::add(array $source) */
 PHP_METHOD(MutationState, add)
 {
     pcbc_mutation_state_t *state;
@@ -134,14 +130,14 @@ PHP_METHOD(MutationState, add)
 
     switch (Z_TYPE_P(source)) {
     case IS_OBJECT:
-        ADD_TOKEN_FROM_ZVAL(source);
+        // ADD_TOKEN_FROM_ZVAL(source);
         break;
     case IS_ARRAY: {
         zval *entry;
 
         ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(source), entry)
         {
-            ADD_TOKEN_FROM_ZVAL(entry);
+            // ADD_TOKEN_FROM_ZVAL(entry);
         }
         ZEND_HASH_FOREACH_END();
     } break;
@@ -151,7 +147,7 @@ PHP_METHOD(MutationState, add)
     }
 
     RETURN_ZVAL(getThis(), 1, 0);
-} /* }}} */
+}
 
 #undef ADD_TOKEN_FROM_ZVAL
 
@@ -236,7 +232,7 @@ void pcbc_mutation_state_init(zval *return_value, zval *source TSRMLS_DC)
     state->ntokens = 0;
 }
 
-static void mutation_state_free_object(zend_object *object TSRMLS_DC) /* {{{ */
+static void mutation_state_free_object(zend_object *object TSRMLS_DC)
 {
     pcbc_mutation_state_t *obj = Z_MUTATION_STATE_OBJ(object);
     pcbc_mutation_token_t *token;
@@ -251,7 +247,7 @@ static void mutation_state_free_object(zend_object *object TSRMLS_DC) /* {{{ */
     obj->head = obj->tail = NULL;
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-} /* }}} */
+}
 
 static zend_object *mutation_state_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
@@ -266,7 +262,7 @@ static zend_object *mutation_state_create_object(zend_class_entry *class_type TS
     return &obj->std;
 }
 
-static HashTable *mutation_state_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
+static HashTable *mutation_state_get_debug_info(zval *object, int *is_temp TSRMLS_DC)
 {
     pcbc_mutation_state_t *obj = NULL;
     zval retval;
@@ -296,7 +292,7 @@ static HashTable *mutation_state_get_debug_info(zval *object, int *is_temp TSRML
         token = token->next;
     }
     return Z_ARRVAL(retval);
-} /* }}} */
+}
 
 PHP_MINIT_FUNCTION(MutationState)
 {
@@ -312,6 +308,10 @@ PHP_MINIT_FUNCTION(MutationState)
     pcbc_mutation_state_handlers.free_obj = mutation_state_free_object;
     pcbc_mutation_state_handlers.offset = XtOffsetOf(pcbc_mutation_state_t, std);
 
-    zend_register_class_alias("\\CouchbaseMutationState", pcbc_mutation_state_ce);
+
     return SUCCESS;
 }
+
+/*
+ * vim: et ts=4 sw=4 sts=4
+ */

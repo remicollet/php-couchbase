@@ -26,6 +26,6 @@ struct pcbc_logger_st {
 
 void pcbc_log_formatter(char *buf, int buf_size, const char *severity, const char *subsystem, int srcline,
                         int instance_id, void *instance_ptr, int is_lcb, const char *fmt, va_list ap);
-void pcbc_log(int severity, lcb_t instance, const char *subsys, const char *srcfile, int srcline, const char *fmt, ...);
+void pcbc_log(int severity, lcb_INSTANCE *instance, const char *subsys, const char *srcfile, int srcline, const char *fmt, ...);
 
 #endif // LOG_H_

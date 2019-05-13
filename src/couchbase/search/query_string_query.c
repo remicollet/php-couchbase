@@ -167,6 +167,6 @@ PHP_MINIT_FUNCTION(QueryStringSearchQuery)
     query_string_search_query_handlers.free_obj = query_string_search_query_free_object;
     query_string_search_query_handlers.offset = XtOffsetOf(pcbc_query_string_search_query_t, std);
 
-    zend_register_class_alias("\\CouchbaseStringSearchQuery", pcbc_query_string_search_query_ce);
+     
     return SUCCESS;
 }

@@ -271,6 +271,6 @@ PHP_MINIT_FUNCTION(TermSearchQuery)
     term_search_query_handlers.free_obj = term_search_query_free_object;
     term_search_query_handlers.offset = XtOffsetOf(pcbc_term_search_query_t, std);
 
-    zend_register_class_alias("\\CouchbaseTermSearchQuery", pcbc_term_search_query_ce);
+     
     return SUCCESS;
 }
