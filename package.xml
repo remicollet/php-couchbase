@@ -18,9 +18,9 @@
         <active>yes</active>
     </lead>
 
-    <date>2019-05-01</date>
+    <date>2019-05-22</date>
     <version>
-        <release>3.0.0.alpha.1</release>
+        <release>3.0.0alpha1</release>
         <api>3.0.0</api>
     </version>
     <stability>
@@ -30,7 +30,7 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        * alpha release
+        * first alpha release
     </notes>
     <contents>
         <dir name="/">
@@ -70,20 +70,18 @@
             <file role="src" name="log.c" />
             <file role="src" name="log.h" />
             <file role="src" name="opcookie.c" />
-            <file role="src" name="paramparser.c" />
             <file role="src" name="php_couchbase.h" />
             <file role="src" name="src/couchbase/analytics_query.c" />
             <file role="src" name="src/couchbase/authenticator.c" />
-            <file role="src" name="src/couchbase/crypto.c" />
-            <file role="src" name="src/couchbase/cert_authenticator.c" />
-            <file role="src" name="src/couchbase/classic_authenticator.c" />
-            <file role="src" name="src/couchbase/password_authenticator.c" />
             <file role="src" name="src/couchbase/base36.c" />
             <file role="src" name="src/couchbase/bucket.c" />
             <file role="src" name="src/couchbase/bucket/cbft.c" />
+            <file role="src" name="src/couchbase/bucket/exists.c" />
+            <file role="src" name="src/couchbase/collection.c" />
+            <file role="src" name="src/couchbase/bucket/cbas.c" />
             <file role="src" name="src/couchbase/bucket/counter.c" />
-            <file role="src" name="src/couchbase/bucket/durability.c" />
             <file role="src" name="src/couchbase/bucket/get.c" />
+            <file role="src" name="src/couchbase/bucket/get_replica.c" />
             <file role="src" name="src/couchbase/bucket/health.c" />
             <file role="src" name="src/couchbase/bucket/http.c" />
             <file role="src" name="src/couchbase/bucket/n1ql.c" />
@@ -97,20 +95,22 @@
             <file role="src" name="src/couchbase/bucket_manager/n1ix_create.c" />
             <file role="src" name="src/couchbase/bucket_manager/n1ix_drop.c" />
             <file role="src" name="src/couchbase/bucket_manager/n1ix_list.c" />
+            <file role="src" name="src/couchbase/cert_authenticator.c" />
+            <file role="src" name="src/couchbase/classic_authenticator.c" />
             <file role="src" name="src/couchbase/cluster.c" />
             <file role="src" name="src/couchbase/cluster_manager.c" />
             <file role="src" name="src/couchbase/cluster_manager/user_settings.c" />
-            <file role="src" name="src/couchbase/search_index_manager.c" />
-            <file role="src" name="src/couchbase/document.c" />
-            <file role="src" name="src/couchbase/document_fragment.c" />
+            <file role="src" name="src/couchbase/crypto.c" />
             <file role="src" name="src/couchbase/log_formatter.c" />
-            <file role="src" name="src/couchbase/lookup_in_builder.c" />
-            <file role="src" name="src/couchbase/mutate_in_builder.c" />
+            <file role="src" name="src/couchbase/lookup_spec.c" />
+            <file role="src" name="src/couchbase/mutate_spec.c" />
             <file role="src" name="src/couchbase/mutation_state.c" />
             <file role="src" name="src/couchbase/mutation_token.c" />
             <file role="src" name="src/couchbase/n1ql_index.c" />
             <file role="src" name="src/couchbase/n1ql_query.c" />
+            <file role="src" name="src/couchbase/password_authenticator.c" />
             <file role="src" name="src/couchbase/pool.c" />
+            <file role="src" name="src/couchbase/result.c" />
             <file role="src" name="src/couchbase/search/boolean_field_query.c" />
             <file role="src" name="src/couchbase/search/boolean_query.c" />
             <file role="src" name="src/couchbase/search/conjunction_query.c" />
@@ -141,27 +141,9 @@
             <file role="src" name="src/couchbase/search/term_query.c" />
             <file role="src" name="src/couchbase/search/term_range_query.c" />
             <file role="src" name="src/couchbase/search/wildcard_query.c" />
+            <file role="src" name="src/couchbase/search_index_manager.c" />
             <file role="src" name="src/couchbase/search_query.c" />
-            <file role="src" name="src/couchbase/spatial_view_query.c" />
-            <file role="src" name="src/couchbase/view_query.c" />
-            <file role="src" name="src/couchbase/view_query_encodable.c" />
             <file role="src" name="transcoding.c" />
-            <file role="test" name="integration/CrossBucketN1qlQueryTest.php" />
-            <file role="test" name="integration/DnsSrvTest.php" />
-            <file role="test" name="integration/MockTest.php" />
-            <file role="test" name="integration/SearchTest.php" />
-            <file role="test" name="tests/AliasesTest.php" />
-            <file role="test" name="tests/BucketManagerTest.php" />
-            <file role="test" name="tests/BucketTest.php" />
-            <file role="test" name="tests/ClusterManagerTest.php" />
-            <file role="test" name="tests/ClusterTest.php" />
-            <file role="test" name="tests/CouchbaseMock.php" />
-            <file role="test" name="tests/CouchbaseTestCase.php" />
-            <file role="test" name="tests/DatastructuresTest.php" />
-            <file role="test" name="tests/N1qlQueryTest.php" />
-            <file role="test" name="tests/SearchQueryTest.php" />
-            <file role="test" name="tests/TranscoderTest.php" />
-            <file role="test" name="tests/ViewQueryTest.php" />
         </dir>
     </contents>
     <dependencies>
