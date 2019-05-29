@@ -160,7 +160,7 @@ PHP_METHOD(Bucket, viewQuery)
     int rv;
     zend_string *design_doc;
     zend_string *view_name;
-    zval options;
+    zval *options = NULL;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "SS|z", &design_doc, &view_name, &options);
     if (rv == FAILURE) {

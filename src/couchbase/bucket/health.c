@@ -71,7 +71,7 @@ void ping_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPPING *res
 PHP_METHOD(Bucket, ping)
 {
     pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
-    zval *options;
+    zval *options = NULL;
     int rv;
     lcb_STATUS err;
 

@@ -78,7 +78,7 @@ PHP_METHOD(Collection, touch)
 
     zend_string *id;
     zend_long expiration;
-    zval *options;
+    zval *options = NULL;
 
     int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "Sl|O", &id, &expiration, &options, pcbc_touch_options_ce);
     if (rv == FAILURE) {
@@ -93,7 +93,7 @@ PHP_METHOD(Collection, touch)
     lcb_cmdtouch_expiration(cmd, expiration);
     if (options) {
         zval *prop, ret;
-        prop = zend_read_property(pcbc_touch_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        prop = zend_read_property(pcbc_touch_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdtouch_timeout(cmd, Z_LVAL_P(prop));
         }

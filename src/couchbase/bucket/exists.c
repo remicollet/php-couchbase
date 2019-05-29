@@ -74,7 +74,7 @@ static const zend_function_entry pcbc_exists_options_methods[] = {
 PHP_METHOD(Collection, exists)
 {
     zend_string *id;
-    zval *options;
+    zval *options = NULL;
     lcb_STATUS err;
 
     int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|O", &id, &options, pcbc_exists_options_ce);
@@ -89,7 +89,7 @@ PHP_METHOD(Collection, exists)
     lcb_cmdexists_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
     if (options) {
         zval *prop, ret;
-        prop = zend_read_property(pcbc_exists_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        prop = zend_read_property(pcbc_exists_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdexists_timeout(cmd, Z_LVAL_P(prop));
         }

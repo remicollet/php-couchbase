@@ -78,7 +78,7 @@ PHP_METHOD(Collection, unlock)
     lcb_STATUS err;
 
     zend_string *id, *cas;
-    zval *options;
+    zval *options = NULL;
 
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "SS|O", &id, &cas, &options, pcbc_unlock_options_ce);
     if (rv == FAILURE) {
@@ -99,7 +99,7 @@ PHP_METHOD(Collection, unlock)
     }
     if (options) {
         zval *prop, ret;
-        prop = zend_read_property(pcbc_unlock_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        prop = zend_read_property(pcbc_unlock_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdunlock_timeout(cmd, Z_LVAL_P(prop));
         }

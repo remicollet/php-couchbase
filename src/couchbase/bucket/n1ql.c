@@ -83,7 +83,7 @@ PHP_METHOD(Bucket, query)
 {
     lcb_STATUS err;
     zend_string *statement;
-    zval *options;
+    zval *options = NULL;
 
     int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "S|z", &statement, &options);
     if (rv == FAILURE) {

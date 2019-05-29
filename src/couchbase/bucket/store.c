@@ -157,15 +157,15 @@ PHP_METHOD(Collection, insert)
     lcb_cmdstore_collection(cmd, scope_str, scope_len, collection_str, collection_len);
     if (options) {
         zval *prop, ret;
-        prop = zend_read_property(pcbc_insert_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        prop = zend_read_property(pcbc_insert_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdstore_timeout(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_insert_options_ce, getThis(), ZEND_STRL("expiration"), 0, &ret);
+        prop = zend_read_property(pcbc_insert_options_ce, options, ZEND_STRL("expiration"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdstore_expiration(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_insert_options_ce, getThis(), ZEND_STRL("durability_level"), 0, &ret);
+        prop = zend_read_property(pcbc_insert_options_ce, options, ZEND_STRL("durability_level"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdstore_durability(cmd, Z_LVAL_P(prop));
         }
@@ -321,19 +321,19 @@ PHP_METHOD(Collection, upsert)
     lcb_cmdstore_collection(cmd, scope_str, scope_len, collection_str, collection_len);
     if (options) {
         zval *prop, ret;
-        prop = zend_read_property(pcbc_upsert_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        prop = zend_read_property(pcbc_upsert_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdstore_timeout(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_upsert_options_ce, getThis(), ZEND_STRL("expiration"), 0, &ret);
+        prop = zend_read_property(pcbc_upsert_options_ce, options, ZEND_STRL("expiration"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdstore_expiration(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_upsert_options_ce, getThis(), ZEND_STRL("durability_level"), 0, &ret);
+        prop = zend_read_property(pcbc_upsert_options_ce, options, ZEND_STRL("durability_level"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdstore_durability(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_upsert_options_ce, getThis(), ZEND_STRL("cas"), 0, &ret);
+        prop = zend_read_property(pcbc_upsert_options_ce, options, ZEND_STRL("cas"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_STRING) {
             zend_string *decoded = php_base64_decode(Z_STRVAL_P(prop), Z_STRLEN_P(prop));
             if (decoded) {
@@ -495,19 +495,19 @@ PHP_METHOD(Collection, replace)
     lcb_cmdstore_collection(cmd, scope_str, scope_len, collection_str, collection_len);
     if (options) {
         zval *prop, ret;
-        prop = zend_read_property(pcbc_replace_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        prop = zend_read_property(pcbc_replace_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdstore_timeout(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_replace_options_ce, getThis(), ZEND_STRL("expiration"), 0, &ret);
+        prop = zend_read_property(pcbc_replace_options_ce, options, ZEND_STRL("expiration"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdstore_expiration(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_replace_options_ce, getThis(), ZEND_STRL("durability_level"), 0, &ret);
+        prop = zend_read_property(pcbc_replace_options_ce, options, ZEND_STRL("durability_level"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdstore_durability(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_replace_options_ce, getThis(), ZEND_STRL("cas"), 0, &ret);
+        prop = zend_read_property(pcbc_replace_options_ce, options, ZEND_STRL("cas"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_STRING) {
             zend_string *decoded = php_base64_decode(Z_STRVAL_P(prop), Z_STRLEN_P(prop));
             if (decoded) {
@@ -639,7 +639,7 @@ static const zend_function_entry pcbc_append_options_methods[] = {
 PHP_METHOD(Collection, append)
 {
     zend_string *id, *value;
-    zval *options;
+    zval *options = NULL;
     lcb_STATUS err;
 
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "SS|O", &id, &value, &options, pcbc_append_options_ce);
@@ -653,15 +653,15 @@ PHP_METHOD(Collection, append)
     lcb_cmdstore_collection(cmd, scope_str, scope_len, collection_str, collection_len);
     if (options) {
         zval *prop, ret;
-        prop = zend_read_property(pcbc_append_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        prop = zend_read_property(pcbc_append_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdstore_timeout(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_append_options_ce, getThis(), ZEND_STRL("durability_level"), 0, &ret);
+        prop = zend_read_property(pcbc_append_options_ce, options, ZEND_STRL("durability_level"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdstore_durability(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_append_options_ce, getThis(), ZEND_STRL("cas"), 0, &ret);
+        prop = zend_read_property(pcbc_append_options_ce, options, ZEND_STRL("cas"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_STRING) {
             zend_string *decoded = php_base64_decode(Z_STRVAL_P(prop), Z_STRLEN_P(prop));
             if (decoded) {
@@ -767,7 +767,7 @@ static const zend_function_entry pcbc_prepend_options_methods[] = {
 PHP_METHOD(Collection, prepend)
 {
     zend_string *id, *value;
-    zval *options;
+    zval *options = NULL;
     lcb_STATUS err;
 
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "SS|O", &id, &value, &options, pcbc_prepend_options_ce);
@@ -781,15 +781,15 @@ PHP_METHOD(Collection, prepend)
     lcb_cmdstore_collection(cmd, scope_str, scope_len, collection_str, collection_len);
     if (options) {
         zval *prop, ret;
-        prop = zend_read_property(pcbc_append_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        prop = zend_read_property(pcbc_append_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdstore_timeout(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_append_options_ce, getThis(), ZEND_STRL("durability_level"), 0, &ret);
+        prop = zend_read_property(pcbc_append_options_ce, options, ZEND_STRL("durability_level"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdstore_durability(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_append_options_ce, getThis(), ZEND_STRL("cas"), 0, &ret);
+        prop = zend_read_property(pcbc_append_options_ce, options, ZEND_STRL("cas"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_STRING) {
             zend_string *decoded = php_base64_decode(Z_STRVAL_P(prop), Z_STRLEN_P(prop));
             if (decoded) {

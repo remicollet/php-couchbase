@@ -135,7 +135,7 @@ static const zend_function_entry pcbc_remove_options_methods[] = {
 PHP_METHOD(Collection, remove)
 {
     zend_string *id;
-    zval *options;
+    zval *options = NULL;
     lcb_STATUS err;
 
     int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "S|O", &id, &options, pcbc_remove_options_ce);
@@ -150,15 +150,15 @@ PHP_METHOD(Collection, remove)
     lcb_cmdremove_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
     if (options) {
         zval *prop, ret;
-        prop = zend_read_property(pcbc_remove_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        prop = zend_read_property(pcbc_remove_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdremove_timeout(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_remove_options_ce, getThis(), ZEND_STRL("durability_level"), 0, &ret);
+        prop = zend_read_property(pcbc_remove_options_ce, options, ZEND_STRL("durability_level"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdremove_durability(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_remove_options_ce, getThis(), ZEND_STRL("cas"), 0, &ret);
+        prop = zend_read_property(pcbc_remove_options_ce, options, ZEND_STRL("cas"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_STRING) {
             zend_string *decoded = php_base64_decode(Z_STRVAL_P(prop), Z_STRLEN_P(prop));
             if (decoded) {

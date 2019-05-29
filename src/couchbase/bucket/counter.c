@@ -134,7 +134,7 @@ PHP_METHOD(Collection, increment)
 {
     lcb_STATUS err = LCB_SUCCESS;
     zend_string *id;
-    zval *options;
+    zval *options = NULL;
 
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "S|O", &id, &options, pcbc_counter_options_ce);
     if (rv == FAILURE) {
@@ -149,15 +149,15 @@ PHP_METHOD(Collection, increment)
     lcb_cmdcounter_delta(cmd, +1);
     if (options) {
         zval *prop, ret;
-        prop = zend_read_property(pcbc_counter_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        prop = zend_read_property(pcbc_counter_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdcounter_timeout(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_counter_options_ce, getThis(), ZEND_STRL("durability_level"), 0, &ret);
+        prop = zend_read_property(pcbc_counter_options_ce, options, ZEND_STRL("durability_level"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdcounter_durability(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_counter_options_ce, getThis(), ZEND_STRL("expiration"), 0, &ret);
+        prop = zend_read_property(pcbc_counter_options_ce, options, ZEND_STRL("expiration"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdcounter_expiration(cmd, 0);
         }
@@ -197,7 +197,7 @@ PHP_METHOD(Collection, decrement)
 {
     lcb_STATUS err = LCB_SUCCESS;
     zend_string *id;
-    zval *options;
+    zval *options = NULL;
 
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "S|O", &id, &options, pcbc_counter_options_ce);
     if (rv == FAILURE) {
@@ -212,7 +212,7 @@ PHP_METHOD(Collection, decrement)
     lcb_cmdcounter_delta(cmd, -1);
     if (options) {
         zval *prop, ret;
-        prop = zend_read_property(pcbc_counter_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        prop = zend_read_property(pcbc_counter_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdcounter_timeout(cmd, Z_LVAL_P(prop));
         }

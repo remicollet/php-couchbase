@@ -112,7 +112,7 @@ static const zend_function_entry pcbc_get_options_methods[] = {
 PHP_METHOD(Collection, get)
 {
     zend_string *id;
-    zval *options;
+    zval *options = NULL;
     lcb_STATUS err;
 
     int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|O", &id, &options, pcbc_get_options_ce);
@@ -127,7 +127,7 @@ PHP_METHOD(Collection, get)
     lcb_cmdget_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
     if (options) {
         zval *prop, ret;
-        prop = zend_read_property(pcbc_get_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        prop = zend_read_property(pcbc_get_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdget_timeout(cmd, Z_LVAL_P(prop));
         }
@@ -187,7 +187,7 @@ static const zend_function_entry pcbc_get_and_lock_options_methods[] = {
 PHP_METHOD(Collection, getAndLock)
 {
     zend_string *id;
-    zval *options;
+    zval *options = NULL;
     zend_long expiry;
     lcb_STATUS err;
 
@@ -205,7 +205,7 @@ PHP_METHOD(Collection, getAndLock)
 
     if (options) {
         zval *prop, ret;
-        prop = zend_read_property(pcbc_get_and_lock_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        prop = zend_read_property(pcbc_get_and_lock_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdget_timeout(cmd, Z_LVAL_P(prop));
         }
@@ -263,7 +263,7 @@ static const zend_function_entry pcbc_get_and_touch_options_methods[] = {
 PHP_METHOD(Collection, getAndTouch)
 {
     zend_string *id;
-    zval *options;
+    zval *options = NULL;
     zend_long expiry;
     lcb_STATUS err;
 
@@ -281,7 +281,7 @@ PHP_METHOD(Collection, getAndTouch)
 
     if (options) {
         zval *prop, ret;
-        prop = zend_read_property(pcbc_get_and_touch_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        prop = zend_read_property(pcbc_get_and_touch_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdget_timeout(cmd, Z_LVAL_P(prop));
         }

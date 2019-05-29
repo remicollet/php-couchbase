@@ -89,7 +89,7 @@ PHP_METHOD(Bucket, searchQuery)
     lcb_STATUS err;
     zend_string *index;
     zval *query;
-    zval *options;
+    zval *options = NULL;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "SO|z", &index, &query, pcbc_search_query_ce, &options);

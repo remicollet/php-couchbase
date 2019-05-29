@@ -208,7 +208,7 @@ static const zend_function_entry pcbc_lookup_in_options_methods[] = {
 PHP_METHOD(Collection, lookupIn)
 {
     zend_string *id;
-    zval *options;
+    zval *options = NULL;
     HashTable *spec = NULL;
     int rv;
 
@@ -259,7 +259,7 @@ PHP_METHOD(Collection, lookupIn)
     lcb_cmdsubdoc_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
     if (options) {
         zval *prop, ret;
-        prop = zend_read_property(pcbc_lookup_in_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        prop = zend_read_property(pcbc_lookup_in_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdsubdoc_timeout(cmd, Z_LVAL_P(prop));
         }
@@ -376,7 +376,7 @@ static const zend_function_entry pcbc_mutate_in_options_methods[] = {
 PHP_METHOD(Collection, mutateIn)
 {
     zend_string *id;
-    zval *options;
+    zval *options = NULL;
     HashTable *spec = NULL;
     int rv;
 
@@ -510,19 +510,19 @@ PHP_METHOD(Collection, mutateIn)
     lcb_cmdsubdoc_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
     if (options) {
         zval *prop, ret;
-        prop = zend_read_property(pcbc_mutate_in_options_ce, getThis(), ZEND_STRL("timeout"), 0, &ret);
+        prop = zend_read_property(pcbc_mutate_in_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdsubdoc_timeout(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_mutate_in_options_ce, getThis(), ZEND_STRL("expiration"), 0, &ret);
+        prop = zend_read_property(pcbc_mutate_in_options_ce, options, ZEND_STRL("expiration"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdsubdoc_expiration(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_mutate_in_options_ce, getThis(), ZEND_STRL("durability_level"), 0, &ret);
+        prop = zend_read_property(pcbc_mutate_in_options_ce, options, ZEND_STRL("durability_level"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdsubdoc_durability(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_mutate_in_options_ce, getThis(), ZEND_STRL("cas"), 0, &ret);
+        prop = zend_read_property(pcbc_mutate_in_options_ce, options, ZEND_STRL("cas"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_STRING) {
             zend_string *decoded = php_base64_decode(Z_STRVAL_P(prop), Z_STRLEN_P(prop));
             if (decoded) {
