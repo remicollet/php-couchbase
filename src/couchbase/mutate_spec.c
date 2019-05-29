@@ -43,16 +43,11 @@ static const zend_function_entry pcbc_mutate_insert_spec_methods[] = {
 PHP_METHOD(MutateUpsertSpec, __construct);
 
 ZEND_BEGIN_ARG_INFO_EX(ai_MutateUpsertSpec_constructor, 0, 0, 2)
-ZEND_ARG_INFO(0, path)
+ZEND_ARG_TYPE_INFO(0, path, IS_STRING, 0)
 ZEND_ARG_INFO(0, value)
-ZEND_ARG_INFO(0, isXattr)
-ZEND_ARG_INFO(0, createPath)
-ZEND_ARG_INFO(0, expandMacros)
-// ZEND_ARG_TYPE_INFO(0, path, IS_STRING, 0)
-// ZEND_ARG_INFO(0, value)
-// ZEND_ARG_TYPE_INFO(0, isXattr, IS_TRUE|IS_FALSE, 0)
-// ZEND_ARG_TYPE_INFO(0, createPath, IS_TRUE|IS_FALSE, 0)
-// ZEND_ARG_TYPE_INFO(0, expandMacros, IS_TRUE|IS_FALSE, 0)
+ZEND_ARG_TYPE_INFO(0, isXattr, IS_TRUE|IS_FALSE, 0)
+ZEND_ARG_TYPE_INFO(0, createPath, IS_TRUE|IS_FALSE, 0)
+ZEND_ARG_TYPE_INFO(0, expandMacros, IS_TRUE|IS_FALSE, 0)
 ZEND_END_ARG_INFO()
 
 zend_class_entry *pcbc_mutate_upsert_spec_ce;
@@ -190,6 +185,22 @@ static const zend_function_entry pcbc_mutate_replace_full_spec_methods[] = {
     PHP_FE_END
 };
 
+PHP_METHOD(MutateCounterSpec, __construct);
+
+ZEND_BEGIN_ARG_INFO_EX(ai_MutateCounterSpec_constructor, 0, 0, 2)
+ZEND_ARG_TYPE_INFO(0, path, IS_STRING, 0)
+ZEND_ARG_TYPE_INFO(0, delta, IS_LONG, 0)
+ZEND_ARG_TYPE_INFO(0, isXattr, IS_TRUE|IS_FALSE, 0)
+ZEND_ARG_TYPE_INFO(0, createPath, IS_TRUE|IS_FALSE, 0)
+ZEND_END_ARG_INFO()
+
+zend_class_entry *pcbc_mutate_counter_spec_ce;
+static const zend_function_entry pcbc_mutate_counter_spec_methods[] = {
+    PHP_ME(MutateCounterSpec, __construct, ai_MutateCounterSpec_constructor, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    PHP_FE_END
+};
+
+
 // clang-format on
 
 PHP_MINIT_FUNCTION(MutateInSpec)
@@ -280,6 +291,14 @@ PHP_MINIT_FUNCTION(MutateInSpec)
     pcbc_mutate_replace_full_spec_ce = zend_register_internal_class(&ce TSRMLS_CC);
     zend_class_implements(pcbc_mutate_replace_full_spec_ce TSRMLS_CC, 1, pcbc_mutate_in_spec_ce);
     zend_declare_property_null(pcbc_mutate_replace_full_spec_ce, ZEND_STRL("value"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "MutateCounterSpec", pcbc_mutate_counter_spec_methods);
+
+    pcbc_mutate_counter_spec_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    zend_class_implements(pcbc_mutate_counter_spec_ce TSRMLS_CC, 1, pcbc_mutate_in_spec_ce);
+    zend_declare_property_null(pcbc_mutate_counter_spec_ce, ZEND_STRL("path"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_mutate_counter_spec_ce, ZEND_STRL("delta"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_mutate_counter_spec_ce, ZEND_STRL("is_xattr"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_mutate_counter_spec_ce, ZEND_STRL("create_path"), ZEND_ACC_PRIVATE TSRMLS_CC);
 }
 
 
@@ -565,6 +584,23 @@ PHP_METHOD(MutateReplaceFullSpec, __construct)
         smart_str_free(&buf);
     }
 }
+
+PHP_METHOD(MutateCounterSpec, __construct)
+{
+    zend_string *path;
+    zend_long delta;
+    zend_bool is_xattr = 0, create_path = 0;
+
+    int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "Sl|bb", &path, &delta, &is_xattr, &create_path);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_str(pcbc_mutate_counter_spec_ce, getThis(), ZEND_STRL("path"), path TSRMLS_CC);
+    zend_update_property_long(pcbc_mutate_counter_spec_ce, getThis(), ZEND_STRL("delta"), delta TSRMLS_CC);
+    zend_update_property_bool(pcbc_mutate_counter_spec_ce, getThis(), ZEND_STRL("is_xattr"), is_xattr TSRMLS_CC);
+    zend_update_property_bool(pcbc_mutate_counter_spec_ce, getThis(), ZEND_STRL("create_path"), create_path TSRMLS_CC);
+}
+
 
 /*
  * vim: et ts=4 sw=4 sts=4

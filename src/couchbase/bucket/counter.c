@@ -262,7 +262,7 @@ PHP_METHOD(Collection, decrement)
         }
         prop = zend_read_property(pcbc_counter_options_ce, getThis(), ZEND_STRL("expiration"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
-            lcb_cmdcounter_expiration(cmd, 0);
+            lcb_cmdcounter_expiration(cmd, Z_LVAL_P(prop));
         }
         prop = zend_read_property(pcbc_counter_options_ce, options, ZEND_STRL("delta"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG && Z_LVAL_P(prop) > 0) {

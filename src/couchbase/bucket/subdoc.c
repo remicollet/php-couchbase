@@ -38,6 +38,7 @@ extern zend_class_entry *pcbc_mutate_array_add_unique_spec_ce;
 extern zend_class_entry *pcbc_mutate_insert_full_spec_ce;
 extern zend_class_entry *pcbc_mutate_upsert_full_spec_ce;
 extern zend_class_entry *pcbc_mutate_replace_full_spec_ce;
+extern zend_class_entry *pcbc_mutate_counter_spec_ce;
 
 extern zend_class_entry *pcbc_mutate_in_result_impl_ce;
 extern zend_class_entry *pcbc_mutate_in_result_entry_ce;
@@ -496,6 +497,16 @@ PHP_METHOD(Collection, mutateIn)
         } else if (Z_OBJCE_P(entry) == pcbc_mutate_replace_full_spec_ce) {
             value = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("value"), 0, &rv2);
             lcb_subdocops_fulldoc_replace(operations, idx, flags, Z_STRVAL_P(value), Z_STRLEN_P(value));
+        } else if (Z_OBJCE_P(entry) == pcbc_mutate_counter_spec_ce) {
+            if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("is_xattr"), 0, &rv1)) == IS_TRUE) {
+                flags |= LCB_SUBDOCOPS_F_XATTRPATH;
+            }
+            if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("create_path"), 0, &rv1)) == IS_TRUE) {
+                flags |= LCB_SUBDOCOPS_F_MKINTERMEDIATES;
+            }
+            path = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("path"), 0, &rv1);
+            value = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("delta"), 0, &rv2);
+            lcb_subdocops_counter(operations, idx, flags, Z_STRVAL_P(path), Z_STRLEN_P(path), Z_LVAL_P(value));
         } else {
             /* TODO: raise argument exception */
             lcb_subdocops_destroy(operations);
