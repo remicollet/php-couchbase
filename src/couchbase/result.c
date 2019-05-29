@@ -867,7 +867,7 @@ PHP_METHOD(GetResultImpl, content)
     }
 
     zval *prop, rv;
-    prop = zend_read_property(pcbc_get_result_impl_ce, getThis(), ZEND_STRL("content"), 0, &rv);
+    prop = zend_read_property(pcbc_get_result_impl_ce, getThis(), ZEND_STRL("data"), 0, &rv);
     ZVAL_DEREF(prop);
     ZVAL_COPY(return_value, prop);
 }
@@ -903,7 +903,7 @@ PHP_METHOD(GetReplicaResultImpl, content)
     }
 
     zval *prop, rv;
-    prop = zend_read_property(pcbc_get_replica_result_impl_ce, getThis(), ZEND_STRL("content"), 0, &rv);
+    prop = zend_read_property(pcbc_get_replica_result_impl_ce, getThis(), ZEND_STRL("data"), 0, &rv);
     ZVAL_DEREF(prop);
     ZVAL_COPY(return_value, prop);
 }
