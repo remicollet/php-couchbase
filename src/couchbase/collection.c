@@ -137,7 +137,7 @@ PHP_METHOD(Collection, upsert);
 PHP_METHOD(Collection, replace);
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_upsert, 0, 2, \\Couchbase\\StoreResult, 0)
 ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
-ZEND_ARG_TYPE_INFO(0, value, IS_OBJECT, 0)
+ZEND_ARG_INFO(0, value)
 ZEND_ARG_TYPE_INFO(0, options, IS_OBJECT, 0)
 ZEND_END_ARG_INFO()
 

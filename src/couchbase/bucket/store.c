@@ -143,7 +143,7 @@ static const zend_function_entry pcbc_insert_options_methods[] = {
 PHP_METHOD(Collection, insert)
 {
     zend_string *id;
-    zval *value, *options;
+    zval *value, *options = NULL;
     lcb_STATUS err;
 
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Sz|O", &id, &value, &options, pcbc_insert_options_ce);
@@ -307,7 +307,7 @@ static const zend_function_entry pcbc_upsert_options_methods[] = {
 PHP_METHOD(Collection, upsert)
 {
     zend_string *id;
-    zval *value, *options;
+    zval *value, *options = NULL;
     lcb_STATUS err;
 
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Sz|O", &id, &value, &options, pcbc_upsert_options_ce);
@@ -481,7 +481,7 @@ static const zend_function_entry pcbc_replace_options_methods[] = {
 PHP_METHOD(Collection, replace)
 {
     zend_string *id;
-    zval *value, *options;
+    zval *value, *options = NULL;
     lcb_STATUS err;
 
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Sz|O", &id, &value, &options, pcbc_replace_options_ce);
