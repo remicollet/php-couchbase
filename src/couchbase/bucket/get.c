@@ -94,7 +94,7 @@ ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_GetOptions_withExpiration, 0, 1, \\Couchbase\\GetOptions, 0)
-ZEND_ARG_TYPE_INFO(0, arg, IS_TRUE|IS_FALSE, 0)
+ZEND_ARG_TYPE_INFO(0, arg, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_GetOptions_project, 0, 1, \\Couchbase\\GetOptions, 0)

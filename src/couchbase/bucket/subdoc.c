@@ -196,7 +196,7 @@ ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_LookupInOptions_withExpiration, 0, 1, \\Couchbase\\LookupInOptions, 0)
-ZEND_ARG_TYPE_INFO(0, arg, IS_TRUE|IS_FALSE, 0)
+ZEND_ARG_TYPE_INFO(0, arg, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 static const zend_function_entry pcbc_lookup_in_options_methods[] = {

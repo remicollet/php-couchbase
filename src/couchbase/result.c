@@ -217,7 +217,7 @@ static const zend_function_entry pcbc_get_result_impl_methods[] = {
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_GetReplicaResult_content, IS_OBJECT, 1)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_GetReplicaResult_isMaster, IS_TRUE|IS_FALSE, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_GetReplicaResult_isMaster, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 zend_class_entry *pcbc_get_replica_result_ce;
@@ -241,7 +241,7 @@ static const zend_function_entry pcbc_get_replica_result_impl_methods[] = {
     PHP_FE_END
 };
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_ExistsResult_exists, IS_TRUE|IS_FALSE, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_ExistsResult_exists, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 zend_class_entry *pcbc_exists_result_ce;

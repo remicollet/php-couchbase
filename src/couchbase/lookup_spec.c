@@ -28,7 +28,7 @@ PHP_METHOD(LookupGetSpec, __construct);
 
 ZEND_BEGIN_ARG_INFO_EX(ai_LookupGetSpec_constructor, 0, 0, 1)
 ZEND_ARG_TYPE_INFO(0, path, IS_STRING, 0)
-ZEND_ARG_TYPE_INFO(0, isXattr, IS_TRUE|IS_FALSE, 0)
+ZEND_ARG_TYPE_INFO(0, isXattr, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 zend_class_entry *pcbc_lookup_get_spec_ce;
@@ -41,7 +41,7 @@ PHP_METHOD(LookupCountSpec, __construct);
 
 ZEND_BEGIN_ARG_INFO_EX(ai_LookupCountSpec_constructor, 0, 0, 1)
 ZEND_ARG_TYPE_INFO(0, path, IS_STRING, 0)
-ZEND_ARG_TYPE_INFO(0, isXattr, IS_TRUE|IS_FALSE, 0)
+ZEND_ARG_TYPE_INFO(0, isXattr, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 zend_class_entry *pcbc_lookup_count_spec_ce;
@@ -54,7 +54,7 @@ PHP_METHOD(LookupExistsSpec, __construct);
 
 ZEND_BEGIN_ARG_INFO_EX(ai_LookupExistsSpec_constructor, 0, 0, 1)
 ZEND_ARG_TYPE_INFO(0, path, IS_STRING, 0)
-ZEND_ARG_TYPE_INFO(0, isXattr, IS_TRUE|IS_FALSE, 0)
+ZEND_ARG_TYPE_INFO(0, isXattr, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 zend_class_entry *pcbc_lookup_exists_spec_ce;

@@ -29,9 +29,9 @@ PHP_METHOD(MutateInsertSpec, __construct);
 ZEND_BEGIN_ARG_INFO_EX(ai_MutateInsertSpec_constructor, 0, 0, 2)
 ZEND_ARG_TYPE_INFO(0, path, IS_STRING, 0)
 ZEND_ARG_INFO(0, value)
-ZEND_ARG_TYPE_INFO(0, isXattr, IS_TRUE|IS_FALSE, 0)
-ZEND_ARG_TYPE_INFO(0, createPath, IS_TRUE|IS_FALSE, 0)
-ZEND_ARG_TYPE_INFO(0, expandMacros, IS_TRUE|IS_FALSE, 0)
+ZEND_ARG_TYPE_INFO(0, isXattr, _IS_BOOL, 0)
+ZEND_ARG_TYPE_INFO(0, createPath, _IS_BOOL, 0)
+ZEND_ARG_TYPE_INFO(0, expandMacros, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 zend_class_entry *pcbc_mutate_insert_spec_ce;
@@ -45,9 +45,9 @@ PHP_METHOD(MutateUpsertSpec, __construct);
 ZEND_BEGIN_ARG_INFO_EX(ai_MutateUpsertSpec_constructor, 0, 0, 2)
 ZEND_ARG_TYPE_INFO(0, path, IS_STRING, 0)
 ZEND_ARG_INFO(0, value)
-ZEND_ARG_TYPE_INFO(0, isXattr, IS_TRUE|IS_FALSE, 0)
-ZEND_ARG_TYPE_INFO(0, createPath, IS_TRUE|IS_FALSE, 0)
-ZEND_ARG_TYPE_INFO(0, expandMacros, IS_TRUE|IS_FALSE, 0)
+ZEND_ARG_TYPE_INFO(0, isXattr, _IS_BOOL, 0)
+ZEND_ARG_TYPE_INFO(0, createPath, _IS_BOOL, 0)
+ZEND_ARG_TYPE_INFO(0, expandMacros, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 zend_class_entry *pcbc_mutate_upsert_spec_ce;
@@ -61,7 +61,7 @@ PHP_METHOD(MutateReplaceSpec, __construct);
 ZEND_BEGIN_ARG_INFO_EX(ai_MutateReplaceSpec_constructor, 0, 0, 2)
 ZEND_ARG_TYPE_INFO(0, path, IS_STRING, 0)
 ZEND_ARG_INFO(0, value)
-ZEND_ARG_TYPE_INFO(0, isXattr, IS_TRUE|IS_FALSE, 0)
+ZEND_ARG_TYPE_INFO(0, isXattr, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 zend_class_entry *pcbc_mutate_replace_spec_ce;
@@ -74,7 +74,7 @@ PHP_METHOD(MutateRemoveSpec, __construct);
 
 ZEND_BEGIN_ARG_INFO_EX(ai_MutateRemoveSpec_constructor, 0, 0, 1)
 ZEND_ARG_TYPE_INFO(0, path, IS_STRING, 0)
-ZEND_ARG_TYPE_INFO(0, isXattr, IS_TRUE|IS_FALSE, 0)
+ZEND_ARG_TYPE_INFO(0, isXattr, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 zend_class_entry *pcbc_mutate_remove_spec_ce;
@@ -88,9 +88,9 @@ PHP_METHOD(MutateArrayAppendSpec, __construct);
 ZEND_BEGIN_ARG_INFO_EX(ai_MutateArrayAppendSpec_constructor, 0, 0, 2)
 ZEND_ARG_TYPE_INFO(0, path, IS_STRING, 0)
 ZEND_ARG_TYPE_INFO(0, values, IS_ARRAY, 0)
-ZEND_ARG_TYPE_INFO(0, isXattr, IS_TRUE|IS_FALSE, 0)
-ZEND_ARG_TYPE_INFO(0, createPath, IS_TRUE|IS_FALSE, 0)
-ZEND_ARG_TYPE_INFO(0, expandMacros, IS_TRUE|IS_FALSE, 0)
+ZEND_ARG_TYPE_INFO(0, isXattr, _IS_BOOL, 0)
+ZEND_ARG_TYPE_INFO(0, createPath, _IS_BOOL, 0)
+ZEND_ARG_TYPE_INFO(0, expandMacros, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 zend_class_entry *pcbc_mutate_array_append_spec_ce;
@@ -105,9 +105,9 @@ PHP_METHOD(MutateArrayPrependSpec, __construct);
 ZEND_BEGIN_ARG_INFO_EX(ai_MutateArrayPrependSpec_constructor, 0, 0, 2)
 ZEND_ARG_TYPE_INFO(0, path, IS_STRING, 0)
 ZEND_ARG_TYPE_INFO(0, values, IS_ARRAY, 0)
-ZEND_ARG_TYPE_INFO(0, isXattr, IS_TRUE|IS_FALSE, 0)
-ZEND_ARG_TYPE_INFO(0, createPath, IS_TRUE|IS_FALSE, 0)
-ZEND_ARG_TYPE_INFO(0, expandMacros, IS_TRUE|IS_FALSE, 0)
+ZEND_ARG_TYPE_INFO(0, isXattr, _IS_BOOL, 0)
+ZEND_ARG_TYPE_INFO(0, createPath, _IS_BOOL, 0)
+ZEND_ARG_TYPE_INFO(0, expandMacros, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 zend_class_entry *pcbc_mutate_array_prepend_spec_ce;
@@ -121,9 +121,9 @@ PHP_METHOD(MutateArrayInsertSpec, __construct);
 ZEND_BEGIN_ARG_INFO_EX(ai_MutateArrayInsertSpec_constructor, 0, 0, 2)
 ZEND_ARG_TYPE_INFO(0, path, IS_STRING, 0)
 ZEND_ARG_TYPE_INFO(0, values, IS_ARRAY, 0)
-ZEND_ARG_TYPE_INFO(0, isXattr, IS_TRUE|IS_FALSE, 0)
-ZEND_ARG_TYPE_INFO(0, createPath, IS_TRUE|IS_FALSE, 0)
-ZEND_ARG_TYPE_INFO(0, expandMacros, IS_TRUE|IS_FALSE, 0)
+ZEND_ARG_TYPE_INFO(0, isXattr, _IS_BOOL, 0)
+ZEND_ARG_TYPE_INFO(0, createPath, _IS_BOOL, 0)
+ZEND_ARG_TYPE_INFO(0, expandMacros, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 zend_class_entry *pcbc_mutate_array_insert_spec_ce;
@@ -137,9 +137,9 @@ PHP_METHOD(MutateArrayAddUniqueSpec, __construct);
 ZEND_BEGIN_ARG_INFO_EX(ai_MutateArrayAddUniqueSpec_constructor, 0, 0, 2)
 ZEND_ARG_TYPE_INFO(0, path, IS_STRING, 0)
 ZEND_ARG_INFO(0, value)
-ZEND_ARG_TYPE_INFO(0, isXattr, IS_TRUE|IS_FALSE, 0)
-ZEND_ARG_TYPE_INFO(0, createPath, IS_TRUE|IS_FALSE, 0)
-ZEND_ARG_TYPE_INFO(0, expandMacros, IS_TRUE|IS_FALSE, 0)
+ZEND_ARG_TYPE_INFO(0, isXattr, _IS_BOOL, 0)
+ZEND_ARG_TYPE_INFO(0, createPath, _IS_BOOL, 0)
+ZEND_ARG_TYPE_INFO(0, expandMacros, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 zend_class_entry *pcbc_mutate_array_add_unique_spec_ce;
@@ -190,8 +190,8 @@ PHP_METHOD(MutateCounterSpec, __construct);
 ZEND_BEGIN_ARG_INFO_EX(ai_MutateCounterSpec_constructor, 0, 0, 2)
 ZEND_ARG_TYPE_INFO(0, path, IS_STRING, 0)
 ZEND_ARG_TYPE_INFO(0, delta, IS_LONG, 0)
-ZEND_ARG_TYPE_INFO(0, isXattr, IS_TRUE|IS_FALSE, 0)
-ZEND_ARG_TYPE_INFO(0, createPath, IS_TRUE|IS_FALSE, 0)
+ZEND_ARG_TYPE_INFO(0, isXattr, _IS_BOOL, 0)
+ZEND_ARG_TYPE_INFO(0, createPath, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 zend_class_entry *pcbc_mutate_counter_spec_ce;
