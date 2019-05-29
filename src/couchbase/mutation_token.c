@@ -19,7 +19,7 @@
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/mutation_token", __FILE__, __LINE__
 
-zend_class_entry *pcbc_mutation_token_ce;
+zend_class_entry *pcbc_mutation_token_legacy_ce;
 
 PHP_METHOD(MutationToken, __construct)
 {
@@ -133,7 +133,7 @@ void pcbc_mutation_token_init(zval *return_value, const char *bucket, const lcb_
 {
     pcbc_mutation_token_t *token;
 
-    object_init_ex(return_value, pcbc_mutation_token_ce);
+    object_init_ex(return_value, pcbc_mutation_token_legacy_ce);
     token = Z_MUTATION_TOKEN_OBJ_P(return_value);
     token->bucket = estrdup(bucket);
     token->mt = *mt;
@@ -198,9 +198,9 @@ PHP_MINIT_FUNCTION(MutationToken)
     zend_class_entry ce;
 
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "MutationTokenLegacy", mutation_token_methods);
-    pcbc_mutation_token_ce = zend_register_internal_class(&ce TSRMLS_CC);
-    pcbc_mutation_token_ce->create_object = mutation_token_create_object;
-    PCBC_CE_DISABLE_SERIALIZATION(pcbc_mutation_token_ce);
+    pcbc_mutation_token_legacy_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    pcbc_mutation_token_legacy_ce->create_object = mutation_token_create_object;
+    PCBC_CE_DISABLE_SERIALIZATION(pcbc_mutation_token_legacy_ce);
 
     memcpy(&pcbc_mutation_token_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     pcbc_mutation_token_handlers.get_debug_info = mutation_token_get_debug_info;

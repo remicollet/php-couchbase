@@ -19,6 +19,7 @@
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/mutation_state", __FILE__, __LINE__
 
+extern zend_class_entry *pcbc_mutation_token_legacy_ce;
 zend_class_entry *pcbc_mutation_state_ce;
 
 PHP_METHOD(MutationState, __construct)
@@ -62,20 +63,20 @@ static void pcbc_add_token(pcbc_mutation_state_t *state, pcbc_mutation_token_t *
 }
 
 #define ADD_TOKEN_FROM_ZVAL(source)                                                                                    \
-    if (instanceof_function(Z_OBJCE_P(source), pcbc_mutation_token_ce TSRMLS_CC)) {                                    \
+    if (instanceof_function(Z_OBJCE_P(source), pcbc_mutation_token_legacy_ce TSRMLS_CC)) {                                    \
         pcbc_add_token(state, Z_MUTATION_TOKEN_OBJ_P(source) TSRMLS_CC);                                               \
     } else if (instanceof_function(Z_OBJCE_P(source), pcbc_document_ce TSRMLS_CC)) {                                   \
         zval *val;                                                                                                     \
         PCBC_READ_PROPERTY(val, pcbc_document_ce, source, "token", 0);                                                 \
         if (val && Z_TYPE_P(val) == IS_OBJECT &&                                                                       \
-            instanceof_function(Z_OBJCE_P(val), pcbc_mutation_token_ce TSRMLS_CC)) {                                   \
+            instanceof_function(Z_OBJCE_P(val), pcbc_mutation_token_legacy_ce TSRMLS_CC)) {                                   \
             pcbc_add_token(state, Z_MUTATION_TOKEN_OBJ_P(val) TSRMLS_CC);                                              \
         }                                                                                                              \
     } else if (instanceof_function(Z_OBJCE_P(source), pcbc_document_fragment_ce TSRMLS_CC)) {                          \
         zval *val;                                                                                                     \
         PCBC_READ_PROPERTY(val, pcbc_document_fragment_ce, source, "token", 0);                                        \
         if (val && Z_TYPE_P(val) == IS_OBJECT &&                                                                       \
-            instanceof_function(Z_OBJCE_P(val), pcbc_mutation_token_ce TSRMLS_CC)) {                                   \
+            instanceof_function(Z_OBJCE_P(val), pcbc_mutation_token_legacy_ce TSRMLS_CC)) {                                   \
             pcbc_add_token(state, Z_MUTATION_TOKEN_OBJ_P(val) TSRMLS_CC);                                              \
         }                                                                                                              \
     } else {                                                                                                           \
