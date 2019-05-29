@@ -90,34 +90,34 @@ zend_class_entry *pcbc_insert_options_ce;
 
 PHP_METHOD(InsertOptions, timeout)
 {
-    zend_long *arg;
+    zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_insert_options_ce, getThis(), ZEND_STRL("timeout"), *arg TSRMLS_CC);
+    zend_update_property_long(pcbc_insert_options_ce, getThis(), ZEND_STRL("timeout"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
 PHP_METHOD(InsertOptions, expiration)
 {
-    zend_long *arg;
+    zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_insert_options_ce, getThis(), ZEND_STRL("expiration"), *arg TSRMLS_CC);
+    zend_update_property_long(pcbc_insert_options_ce, getThis(), ZEND_STRL("expiration"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
 PHP_METHOD(InsertOptions, durabilityLevel)
 {
-    zend_long *arg;
+    zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_insert_options_ce, getThis(), ZEND_STRL("durability_level"), *arg TSRMLS_CC);
+    zend_update_property_long(pcbc_insert_options_ce, getThis(), ZEND_STRL("durability_level"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
@@ -249,34 +249,34 @@ PHP_METHOD(UpsertOptions, cas)
 
 PHP_METHOD(UpsertOptions, timeout)
 {
-    zend_long *arg;
+    zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_upsert_options_ce, getThis(), ZEND_STRL("timeout"), *arg TSRMLS_CC);
+    zend_update_property_long(pcbc_upsert_options_ce, getThis(), ZEND_STRL("timeout"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
 PHP_METHOD(UpsertOptions, expiration)
 {
-    zend_long *arg;
+    zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_upsert_options_ce, getThis(), ZEND_STRL("expiration"), *arg TSRMLS_CC);
+    zend_update_property_long(pcbc_upsert_options_ce, getThis(), ZEND_STRL("expiration"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
 PHP_METHOD(UpsertOptions, durabilityLevel)
 {
-    zend_long *arg;
+    zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_upsert_options_ce, getThis(), ZEND_STRL("durability_level"), *arg TSRMLS_CC);
+    zend_update_property_long(pcbc_upsert_options_ce, getThis(), ZEND_STRL("durability_level"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
@@ -423,34 +423,34 @@ PHP_METHOD(ReplaceOptions, cas)
 
 PHP_METHOD(ReplaceOptions, timeout)
 {
-    zend_long *arg;
+    zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_replace_options_ce, getThis(), ZEND_STRL("timeout"), *arg TSRMLS_CC);
+    zend_update_property_long(pcbc_replace_options_ce, getThis(), ZEND_STRL("timeout"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
 PHP_METHOD(ReplaceOptions, expiration)
 {
-    zend_long *arg;
+    zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_replace_options_ce, getThis(), ZEND_STRL("expiration"), *arg TSRMLS_CC);
+    zend_update_property_long(pcbc_replace_options_ce, getThis(), ZEND_STRL("expiration"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
 PHP_METHOD(ReplaceOptions, durabilityLevel)
 {
-    zend_long *arg;
+    zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_replace_options_ce, getThis(), ZEND_STRL("durability_level"), *arg TSRMLS_CC);
+    zend_update_property_long(pcbc_replace_options_ce, getThis(), ZEND_STRL("durability_level"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
@@ -597,23 +597,23 @@ PHP_METHOD(AppendOptions, cas)
 
 PHP_METHOD(AppendOptions, timeout)
 {
-    zend_long *arg;
+    zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_append_options_ce, getThis(), ZEND_STRL("timeout"), *arg TSRMLS_CC);
+    zend_update_property_long(pcbc_append_options_ce, getThis(), ZEND_STRL("timeout"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
 PHP_METHOD(AppendOptions, durabilityLevel)
 {
-    zend_long *arg;
+    zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_append_options_ce, getThis(), ZEND_STRL("durability_level"), *arg TSRMLS_CC);
+    zend_update_property_long(pcbc_append_options_ce, getThis(), ZEND_STRL("durability_level"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
@@ -725,23 +725,23 @@ PHP_METHOD(PrependOptions, cas)
 
 PHP_METHOD(PrependOptions, timeout)
 {
-    zend_long *arg;
+    zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_prepend_options_ce, getThis(), ZEND_STRL("timeout"), *arg TSRMLS_CC);
+    zend_update_property_long(pcbc_prepend_options_ce, getThis(), ZEND_STRL("timeout"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
 PHP_METHOD(PrependOptions, durabilityLevel)
 {
-    zend_long *arg;
+    zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_prepend_options_ce, getThis(), ZEND_STRL("durability_level"), *arg TSRMLS_CC);
+    zend_update_property_long(pcbc_prepend_options_ce, getThis(), ZEND_STRL("durability_level"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 

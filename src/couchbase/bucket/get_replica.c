@@ -67,12 +67,12 @@ zend_class_entry *pcbc_get_any_replica_options_ce;
 
 PHP_METHOD(GetAnyReplicaOptions, timeout)
 {
-    zend_long *arg;
+    zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_get_any_replica_options_ce, getThis(), ZEND_STRL("timeout"), *arg TSRMLS_CC);
+    zend_update_property_long(pcbc_get_any_replica_options_ce, getThis(), ZEND_STRL("timeout"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
@@ -141,12 +141,12 @@ zend_class_entry *pcbc_get_all_replicas_options_ce;
 
 PHP_METHOD(GetAllReplicasOptions, timeout)
 {
-    zend_long *arg;
+    zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_get_all_replicas_options_ce, getThis(), ZEND_STRL("timeout"), *arg TSRMLS_CC);
+    zend_update_property_long(pcbc_get_all_replicas_options_ce, getThis(), ZEND_STRL("timeout"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
