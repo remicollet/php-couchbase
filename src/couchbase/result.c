@@ -1461,7 +1461,7 @@ PHP_METHOD(ViewResultImpl, rows)
     }
 
     zval *prop, rv;
-    prop = zend_read_property(pcbc_search_result_impl_ce, getThis(), ZEND_STRL("rows"), 0, &rv);
+    prop = zend_read_property(pcbc_view_result_impl_ce, getThis(), ZEND_STRL("rows"), 0, &rv);
     ZVAL_DEREF(prop);
     ZVAL_COPY(return_value, prop);
 }
@@ -1473,7 +1473,7 @@ PHP_METHOD(ViewResultImpl, metadata)
     }
 
     zval *prop, rv;
-    prop = zend_read_property(pcbc_view_meta_data_impl_ce, getThis(), ZEND_STRL("meta"), 0, &rv);
+    prop = zend_read_property(pcbc_view_result_impl_ce, getThis(), ZEND_STRL("meta"), 0, &rv);
     ZVAL_DEREF(prop);
     ZVAL_COPY(return_value, prop);
 }
@@ -1485,7 +1485,7 @@ PHP_METHOD(ViewResultEntry, id)
     }
 
     zval *prop, rv;
-    prop = zend_read_property(pcbc_view_meta_data_impl_ce, getThis(), ZEND_STRL("id"), 0, &rv);
+    prop = zend_read_property(pcbc_view_result_entry_ce, getThis(), ZEND_STRL("id"), 0, &rv);
     ZVAL_DEREF(prop);
     ZVAL_COPY(return_value, prop);
 }
@@ -1497,7 +1497,7 @@ PHP_METHOD(ViewResultEntry, key)
     }
 
     zval *prop, rv;
-    prop = zend_read_property(pcbc_view_meta_data_impl_ce, getThis(), ZEND_STRL("key"), 0, &rv);
+    prop = zend_read_property(pcbc_view_result_entry_ce, getThis(), ZEND_STRL("key"), 0, &rv);
     ZVAL_DEREF(prop);
     ZVAL_COPY(return_value, prop);
 }
@@ -1509,7 +1509,7 @@ PHP_METHOD(ViewResultEntry, value)
     }
 
     zval *prop, rv;
-    prop = zend_read_property(pcbc_view_meta_data_impl_ce, getThis(), ZEND_STRL("value"), 0, &rv);
+    prop = zend_read_property(pcbc_view_result_entry_ce, getThis(), ZEND_STRL("value"), 0, &rv);
     ZVAL_DEREF(prop);
     ZVAL_COPY(return_value, prop);
 }
@@ -1521,7 +1521,7 @@ PHP_METHOD(ViewResultEntry, geometry)
     }
 
     zval *prop, rv;
-    prop = zend_read_property(pcbc_view_meta_data_impl_ce, getThis(), ZEND_STRL("geometry"), 0, &rv);
+    prop = zend_read_property(pcbc_view_result_entry_ce, getThis(), ZEND_STRL("geometry"), 0, &rv);
     ZVAL_DEREF(prop);
     ZVAL_COPY(return_value, prop);
 }
@@ -1533,7 +1533,7 @@ PHP_METHOD(ViewResultEntry, document)
     }
 
     zval *prop, rv;
-    prop = zend_read_property(pcbc_view_meta_data_impl_ce, getThis(), ZEND_STRL("document"), 0, &rv);
+    prop = zend_read_property(pcbc_view_result_entry_ce, getThis(), ZEND_STRL("document"), 0, &rv);
     ZVAL_DEREF(prop);
     ZVAL_COPY(return_value, prop);
 }

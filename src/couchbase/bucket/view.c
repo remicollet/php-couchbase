@@ -15,6 +15,8 @@
  */
 
 #include "couchbase.h"
+#include <ext/standard/php_http.h>
+#include <ext/standard/url.h>
 
 #define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/view", __FILE__, __LINE__
 
@@ -155,6 +157,415 @@ static void viewrow_callback(lcb_INSTANCE *  instance, int ignoreme, const lcb_R
     }
 }
 
+zend_class_entry *pcbc_view_order_ce;
+static const zend_function_entry pcbc_view_order_methods[] = {
+    PHP_FE_END
+};
+
+zend_class_entry *pcbc_view_consistency_ce;
+static const zend_function_entry pcbc_view_consistency_methods[] = {
+    PHP_FE_END
+};
+
+zend_class_entry *pcbc_view_options_ce;
+
+PHP_METHOD(ViewOptions, timeout)
+{
+    zend_long arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_view_options_ce, getThis(), ZEND_STRL("timeout"), arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(ViewOptions, includeDocs)
+{
+    zend_bool arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "b", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_bool(pcbc_view_options_ce, getThis(), ZEND_STRL("include_docs"), arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(ViewOptions, maxConcurrentDocs)
+{
+    zend_long arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_view_options_ce, getThis(), ZEND_STRL("max_concurrent_docs"), arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(ViewOptions, key)
+{
+    zval *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zval *data, rv1;
+    data = zend_read_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), 0, &rv1);
+    if (Z_TYPE_P(data) == IS_NULL) {
+        array_init(&rv1);
+        data = &rv1;
+        zend_update_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), data TSRMLS_CC);
+    }
+    {
+        smart_str buf = {0};
+        int last_error;
+        PCBC_JSON_ENCODE(&buf, arg, 0, last_error);
+        if (last_error != 0) {
+            pcbc_log(LOGARGS(NULL, WARN), "Failed to encode key as JSON: json_last_error=%d", last_error);
+            smart_str_free(&buf);
+            RETURN_NULL();
+        }
+        smart_str_0(&buf);
+        add_assoc_str_ex(data, ZEND_STRL("key"), buf.s TSRMLS_CC);
+    }
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(ViewOptions, limit)
+{
+    zend_long arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zval *data, rv1;
+    data = zend_read_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), 0, &rv1);
+    if (Z_TYPE_P(data) == IS_NULL) {
+        array_init(&rv1);
+        data = &rv1;
+        zend_update_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), data TSRMLS_CC);
+    }
+    add_assoc_long_ex(data, ZEND_STRL("limit"), arg);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(ViewOptions, skip)
+{
+    zend_long arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zval *data, rv1;
+    data = zend_read_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), 0, &rv1);
+    if (Z_TYPE_P(data) == IS_NULL) {
+        array_init(&rv1);
+        data = &rv1;
+        zend_update_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), data TSRMLS_CC);
+    }
+    add_assoc_long_ex(data, ZEND_STRL("skip"), arg);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(ViewOptions, consistency)
+{
+    zend_long arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zval *data, rv1;
+    data = zend_read_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), 0, &rv1);
+    if (Z_TYPE_P(data) == IS_NULL) {
+        array_init(&rv1);
+        data = &rv1;
+        zend_update_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), data TSRMLS_CC);
+    }
+    switch (arg) {
+        case 0:
+            add_assoc_string_ex(data, ZEND_STRL("stale"), "ok");
+            break;
+        case 1:
+            add_assoc_string_ex(data, ZEND_STRL("stale"), "false");
+            break;
+        case 2:
+            add_assoc_string_ex(data, ZEND_STRL("stale"), "update_after");
+            break;
+    }
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(ViewOptions, order)
+{
+    zend_long arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zval *data, rv1;
+    data = zend_read_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), 0, &rv1);
+    if (Z_TYPE_P(data) == IS_NULL) {
+        array_init(&rv1);
+        data = &rv1;
+        zend_update_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), data TSRMLS_CC);
+    }
+    switch (arg) {
+        case 0:
+            add_assoc_string_ex(data, ZEND_STRL("descending"), "false");
+            break;
+        case 1:
+            add_assoc_string_ex(data, ZEND_STRL("descending"), "true");
+            break;
+    }
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(ViewOptions, reduce)
+{
+    zend_bool arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "b", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zval *data, rv1;
+    data = zend_read_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), 0, &rv1);
+    if (Z_TYPE_P(data) == IS_NULL) {
+        array_init(&rv1);
+        data = &rv1;
+        zend_update_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), data TSRMLS_CC);
+    }
+    add_assoc_string_ex(data, ZEND_STRL("reduce"), arg ? "true" : "false");
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(ViewOptions, group)
+{
+    zend_bool arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "b", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zval *data, rv1;
+    data = zend_read_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), 0, &rv1);
+    if (Z_TYPE_P(data) == IS_NULL) {
+        array_init(&rv1);
+        data = &rv1;
+        zend_update_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), data TSRMLS_CC);
+    }
+    add_assoc_string_ex(data, ZEND_STRL("group"), arg ? "true" : "false");
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(ViewOptions, groupLevel)
+{
+    zend_long arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zval *data, rv1;
+    data = zend_read_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), 0, &rv1);
+    if (Z_TYPE_P(data) == IS_NULL) {
+        array_init(&rv1);
+        data = &rv1;
+        zend_update_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), data TSRMLS_CC);
+    }
+    add_assoc_long_ex(data, ZEND_STRL("group_level"), arg);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+
+PHP_METHOD(ViewOptions, range)
+{
+    zval *start, *end = NULL;
+    zend_bool inclusive_end = 0;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz!|b", &start, &end, &inclusive_end);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zval *data, rv1;
+    data = zend_read_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), 0, &rv1);
+    if (Z_TYPE_P(data) == IS_NULL) {
+        array_init(&rv1);
+        data = &rv1;
+        zend_update_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), data TSRMLS_CC);
+    }
+    add_assoc_string_ex(data, ZEND_STRL("inclusive_end"), inclusive_end ? "true" : "false");
+    {
+        smart_str buf = {0};
+        int last_error;
+        PCBC_JSON_ENCODE(&buf, start, 0, last_error);
+        if (last_error != 0) {
+            pcbc_log(LOGARGS(NULL, WARN), "Failed to encode startkey as JSON: json_last_error=%d", last_error);
+            smart_str_free(&buf);
+            RETURN_NULL();
+        }
+        smart_str_0(&buf);
+        add_assoc_str_ex(data, ZEND_STRL("starkey"), buf.s TSRMLS_CC);
+    }
+    if (end != NULL) {
+        smart_str buf = {0};
+        int last_error;
+        PCBC_JSON_ENCODE(&buf, end, 0, last_error);
+        if (last_error != 0) {
+            pcbc_log(LOGARGS(NULL, WARN), "Failed to encode endkey as JSON: json_last_error=%d", last_error);
+            smart_str_free(&buf);
+            RETURN_NULL();
+        }
+        smart_str_0(&buf);
+        add_assoc_str_ex(data, ZEND_STRL("endkey"), buf.s TSRMLS_CC);
+    }
+
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(ViewOptions, idRange)
+{
+    zend_string *start, *end = NULL;
+    zend_bool inclusive_end = 0;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "SS!|b", &start, &end, &inclusive_end);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zval *data, rv1;
+    data = zend_read_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), 0, &rv1);
+    if (Z_TYPE_P(data) == IS_NULL) {
+        array_init(&rv1);
+        data = &rv1;
+        zend_update_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), data TSRMLS_CC);
+    }
+    add_assoc_string_ex(data, ZEND_STRL("inclusive_end"), inclusive_end ? "true" : "false");
+    add_assoc_str_ex(data, ZEND_STRL("starkey_docid"), start TSRMLS_CC);
+    if (end != NULL) {
+        add_assoc_str_ex(data, ZEND_STRL("endkey_docid"), end TSRMLS_CC);
+    }
+
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(ViewOptions, custom)
+{
+    zend_string *key, *value;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "SS", &key, &value);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zval *data, rv1;
+    data = zend_read_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), 0, &rv1);
+    if (Z_TYPE_P(data) == IS_NULL) {
+        array_init(&rv1);
+        data = &rv1;
+        zend_update_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), data TSRMLS_CC);
+    }
+    add_assoc_str_ex(data, ZSTR_VAL(key), ZSTR_LEN(key), value TSRMLS_CC);
+
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(ViewOptions, keys)
+{
+    zval *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "a", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zval *data, rv1;
+    data = zend_read_property(pcbc_view_options_ce, getThis(), ZEND_STRL("body"), 0, &rv1);
+    if (Z_TYPE_P(data) == IS_NULL) {
+        array_init(&rv1);
+        data = &rv1;
+        zend_update_property(pcbc_view_options_ce, getThis(), ZEND_STRL("body"), data TSRMLS_CC);
+    }
+    add_assoc_zval_ex(data, ZEND_STRL("keys"), arg);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_timeout, 0, 1, \\Couchbase\\ViewOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_includeDocs, 0, 1, \\Couchbase\\ViewOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, _IS_BOOL, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_maxConcurrentDocs, 0, 1, \\Couchbase\\ViewOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_key, 0, 1, \\Couchbase\\ViewOptions, 0)
+ZEND_ARG_INFO(0, arg)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_keys, 0, 1, \\Couchbase\\ViewOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_ARRAY, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_limit, 0, 1, \\Couchbase\\ViewOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_skip, 0, 1, \\Couchbase\\ViewOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_consistency, 0, 1, \\Couchbase\\ViewOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_order, 0, 1, \\Couchbase\\ViewOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_reduce, 0, 1, \\Couchbase\\ViewOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, _IS_BOOL, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_group, 0, 1, \\Couchbase\\ViewOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, _IS_BOOL, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_groupLevel, 0, 1, \\Couchbase\\ViewOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_range, 0, 2, \\Couchbase\\ViewOptions, 0)
+ZEND_ARG_INFO(0, start)
+ZEND_ARG_TYPE_INFO(0, end, 0, 1)
+ZEND_ARG_TYPE_INFO(0, inclusiveEnd, _IS_BOOL, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_idRange, 0, 2, \\Couchbase\\ViewOptions, 0)
+ZEND_ARG_TYPE_INFO(0, start, IS_STRING, 0)
+ZEND_ARG_TYPE_INFO(0, end, IS_STRING, 1)
+ZEND_ARG_TYPE_INFO(0, inclusiveEnd, _IS_BOOL, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_custom, 0, 2, \\Couchbase\\ViewOptions, 0)
+ZEND_ARG_TYPE_INFO(0, key, IS_STRING, 0)
+ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry pcbc_view_options_methods[] = {
+    PHP_ME(ViewOptions, timeout, ai_ViewOptions_timeout, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewOptions, includeDocs, ai_ViewOptions_includeDocs, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewOptions, maxConcurrentDocs, ai_ViewOptions_maxConcurrentDocs, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewOptions, key, ai_ViewOptions_key, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewOptions, keys, ai_ViewOptions_keys, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewOptions, limit, ai_ViewOptions_limit, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewOptions, skip, ai_ViewOptions_skip, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewOptions, consistency, ai_ViewOptions_consistency, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewOptions, order, ai_ViewOptions_order, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewOptions, reduce, ai_ViewOptions_reduce, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewOptions, group, ai_ViewOptions_group, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewOptions, groupLevel, ai_ViewOptions_groupLevel, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewOptions, range, ai_ViewOptions_range, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewOptions, idRange, ai_ViewOptions_idRange, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewOptions, custom, ai_ViewOptions_custom, ZEND_ACC_PUBLIC)
+    PHP_FE_END
+};
+
+
 PHP_METHOD(Bucket, viewQuery)
 {
     int rv;
@@ -162,7 +573,7 @@ PHP_METHOD(Bucket, viewQuery)
     zend_string *view_name;
     zval *options = NULL;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "SS|z", &design_doc, &view_name, &options);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "SS|O", &design_doc, &view_name, &options, pcbc_view_options_ce);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -176,6 +587,51 @@ PHP_METHOD(Bucket, viewQuery)
     lcb_cmdview_create(&cmd);
     lcb_cmdview_design_document(cmd, ZSTR_VAL(design_doc), ZSTR_LEN(design_doc));
     lcb_cmdview_view_name(cmd, ZSTR_VAL(view_name), ZSTR_LEN(view_name));
+    smart_str query_str = {0}, body_str = {0};
+    if (options) {
+        zval *prop, ret;
+        prop = zend_read_property(pcbc_view_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdview_timeout(cmd, Z_LVAL_P(prop));
+        }
+        prop = zend_read_property(pcbc_view_options_ce, options, ZEND_STRL("include_docs"), 0, &ret);
+        switch (Z_TYPE_P(prop)) {
+            case IS_TRUE:
+                lcb_cmdview_include_docs(cmd, 1);
+                break;
+            case IS_FALSE:
+                lcb_cmdview_include_docs(cmd, 0);
+                break;
+        }
+        prop = zend_read_property(pcbc_view_options_ce, options, ZEND_STRL("max_concurrent_docs"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdview_max_concurrent_docs(cmd, Z_LVAL_P(prop));
+        }
+        prop = zend_read_property(pcbc_view_options_ce, options, ZEND_STRL("query"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_ARRAY) {
+            rv = php_url_encode_hash_ex(HASH_OF(prop), &query_str, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, PHP_QUERY_RFC1738 TSRMLS_CC);
+            if (rv == FAILURE) {
+                pcbc_log(LOGARGS(obj->conn->lcb, WARN), "Failed to encode views query options as RFC1738 string");
+                smart_str_free(&query_str);
+            } else {
+                if (!PCBC_SMARTSTR_EMPTY(query_str)) {
+                    lcb_cmdview_option_string(cmd, ZSTR_VAL(query_str.s), ZSTR_LEN(query_str.s));
+                }
+            }
+        }
+        prop = zend_read_property(pcbc_view_options_ce, options, ZEND_STRL("body"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_ARRAY) {
+            int last_error;
+            PCBC_JSON_ENCODE(&body_str, prop, 0, last_error);
+            if (last_error != 0) {
+                pcbc_log(LOGARGS(obj->conn->lcb, WARN), "Failed to encode query body as JSON: json_last_error=%d", last_error);
+            } else {
+                smart_str_0(&body_str);
+                lcb_cmdview_post_data(cmd, ZSTR_VAL(body_str.s), ZSTR_LEN(body_str.s));
+            }
+        }
+    }
+
     lcb_cmdview_callback(cmd, viewrow_callback);
 
     lcb_VIEW_HANDLE *handle = NULL;
@@ -202,6 +658,8 @@ PHP_METHOD(Bucket, viewQuery)
         return_value
     };
     lcb_STATUS err = lcb_view(obj->conn->lcb, &cookie, cmd);
+    smart_str_free(&query_str);
+    smart_str_free(&body_str);
     lcb_cmdview_destroy(cmd);
     if (err == LCB_SUCCESS) {
         lcb_wait(obj->conn->lcb);
@@ -213,6 +671,34 @@ PHP_METHOD(Bucket, viewQuery)
     if (err != LCB_SUCCESS) {
         throw_lcb_exception(err, NULL);
     }
+}
+
+PHP_MINIT_FUNCTION(CollectionView)
+{
+    zend_class_entry ce;
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "ViewOptions", pcbc_view_options_methods);
+    pcbc_view_options_ce = zend_register_internal_class(&ce TSRMLS_CC);
+
+    zend_declare_property_null(pcbc_view_options_ce, ZEND_STRL("timeout"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_view_options_ce, ZEND_STRL("include_docs"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_view_options_ce, ZEND_STRL("max_concurrent_docs"), ZEND_ACC_PRIVATE TSRMLS_CC);
+
+    zend_declare_property_null(pcbc_view_options_ce, ZEND_STRL("query"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_view_options_ce, ZEND_STRL("body"), ZEND_ACC_PRIVATE TSRMLS_CC);
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "ViewConsistency", pcbc_view_consistency_methods);
+    pcbc_view_consistency_ce = zend_register_internal_interface(&ce TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_view_consistency_ce, ZEND_STRL("NONE"), 0 TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_view_consistency_ce, ZEND_STRL("UPDATE_BEFORE"), 1 TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_view_consistency_ce, ZEND_STRL("UPDATE_AFTER"), 2 TSRMLS_CC);
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "ViewOrder", pcbc_view_order_methods);
+    pcbc_view_order_ce = zend_register_internal_interface(&ce TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_view_order_ce, ZEND_STRL("ASCENDING"), 0 TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_view_order_ce, ZEND_STRL("DESCENDING"), 1 TSRMLS_CC);
+
+    return SUCCESS;
 }
 
 /*
