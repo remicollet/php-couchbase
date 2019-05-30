@@ -431,14 +431,6 @@ typedef struct {
 } pcbc_view_query_t;
 
 typedef struct {
-    char *design_document;
-    char *view_name;
-    zend_bool include_docs;
-    zval options;
-    zend_object std;
-} pcbc_spatial_view_query_t;
-
-typedef struct {
     char *full_name;
     char *password;
     int full_name_len;
@@ -568,8 +560,6 @@ void pcbc_bucket_n1ql_request(pcbc_bucket_t *bucket, lcb_CMDN1QL *cmd, int json_
                               zval *return_value TSRMLS_DC);
 void pcbc_bucket_cbft_request(pcbc_bucket_t *bucket, lcb_CMDFTS *cmd, int json_response, int json_options,
                               zval *return_value TSRMLS_DC);
-void pcbc_spatial_view_query_init(zval *return_value, char *design_document, int design_document_len, char *view_name,
-                                  int view_name_len TSRMLS_DC);
 void pcbc_search_index_manager_init(zval *return_value, pcbc_bucket_manager_t *bucket_manager TSRMLS_DC);
 
 void pcbc_boolean_field_search_query_init(zval *return_value, zend_bool value TSRMLS_DC);
