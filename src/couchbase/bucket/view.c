@@ -443,7 +443,7 @@ PHP_METHOD(ViewOptions, idRange)
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
-PHP_METHOD(ViewOptions, custom)
+PHP_METHOD(ViewOptions, rawParameter)
 {
     zend_string *key, *value;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "SS", &key, &value);
@@ -541,7 +541,7 @@ ZEND_ARG_TYPE_INFO(0, end, IS_STRING, 1)
 ZEND_ARG_TYPE_INFO(0, inclusiveEnd, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_custom, 0, 2, \\Couchbase\\ViewOptions, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_rawParameter, 0, 2, \\Couchbase\\ViewOptions, 0)
 ZEND_ARG_TYPE_INFO(0, key, IS_STRING, 0)
 ZEND_ARG_INFO(0, value)
 ZEND_END_ARG_INFO()
@@ -561,7 +561,7 @@ static const zend_function_entry pcbc_view_options_methods[] = {
     PHP_ME(ViewOptions, groupLevel, ai_ViewOptions_groupLevel, ZEND_ACC_PUBLIC)
     PHP_ME(ViewOptions, range, ai_ViewOptions_range, ZEND_ACC_PUBLIC)
     PHP_ME(ViewOptions, idRange, ai_ViewOptions_idRange, ZEND_ACC_PUBLIC)
-    PHP_ME(ViewOptions, custom, ai_ViewOptions_custom, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewOptions, rawParameter, ai_ViewOptions_rawParameter, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 
@@ -673,7 +673,7 @@ PHP_METHOD(Bucket, viewQuery)
     }
 }
 
-PHP_MINIT_FUNCTION(CollectionView)
+PHP_MINIT_FUNCTION(BucketView)
 {
     zend_class_entry ce;
 

@@ -73,6 +73,9 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_MetaData_metrics, IS_OBJECT, 1)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_MetaData_profile, IS_OBJECT, 1)
+ZEND_END_ARG_INFO()
+
 zend_class_entry *pcbc_meta_data_ce;
 static const zend_function_entry pcbc_meta_data_methods[] = {
     PHP_ABSTRACT_ME(MetaData, status, ai_MetaData_status)
@@ -82,6 +85,7 @@ static const zend_function_entry pcbc_meta_data_methods[] = {
     PHP_ABSTRACT_ME(MetaData, warnings, ai_MetaData_warnings)
     PHP_ABSTRACT_ME(MetaData, errors, ai_MetaData_errors)
     PHP_ABSTRACT_ME(MetaData, metrics, ai_MetaData_metrics)
+    PHP_ABSTRACT_ME(MetaData, profile, ai_MetaData_metrics)
     PHP_FE_END
 };
 
@@ -92,6 +96,7 @@ PHP_METHOD(MetaDataImpl, signature);
 PHP_METHOD(MetaDataImpl, errors);
 PHP_METHOD(MetaDataImpl, warnings);
 PHP_METHOD(MetaDataImpl, metrics);
+PHP_METHOD(MetaDataImpl, profile);
 
 zend_class_entry *pcbc_meta_data_impl_ce;
 static const zend_function_entry pcbc_meta_data_impl_methods[] = {
@@ -102,6 +107,7 @@ static const zend_function_entry pcbc_meta_data_impl_methods[] = {
     PHP_ME(MetaDataImpl, errors, ai_MetaData_errors, ZEND_ACC_PUBLIC)
     PHP_ME(MetaDataImpl, warnings, ai_MetaData_warnings, ZEND_ACC_PUBLIC)
     PHP_ME(MetaDataImpl, metrics, ai_MetaData_metrics, ZEND_ACC_PUBLIC)
+    PHP_ME(MetaDataImpl, profile, ai_MetaData_profile, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 
@@ -1306,6 +1312,18 @@ PHP_METHOD(MetaDataImpl, metrics)
 
     zval *prop, rv;
     prop = zend_read_property(pcbc_meta_data_impl_ce, getThis(), ZEND_STRL("metrics"), 0, &rv);
+    ZVAL_DEREF(prop);
+    ZVAL_COPY(return_value, prop);
+}
+
+PHP_METHOD(MetaDataImpl, profile)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = zend_read_property(pcbc_meta_data_impl_ce, getThis(), ZEND_STRL("profile"), 0, &rv);
     ZVAL_DEREF(prop);
     ZVAL_COPY(return_value, prop);
 }

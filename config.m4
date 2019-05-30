@@ -88,7 +88,6 @@ COUCHBASE_FILES=" \
     src/couchbase/mutation_state.c \
     src/couchbase/mutation_token.c \
     src/couchbase/n1ql_index.c \
-    src/couchbase/n1ql_query.c \
     src/couchbase/password_authenticator.c \
     src/couchbase/pool.c \
     src/couchbase/result.c \

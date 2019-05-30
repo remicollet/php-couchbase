@@ -41,7 +41,6 @@ if (PHP_COUCHBASE != "no") {
             "mutation_state.c " +
             "mutation_token.c " +
             "n1ql_index.c " +
-            "n1ql_query.c " +
             "pool.c " +
             "search_index_manager.c " +
             "search_query.c ";
