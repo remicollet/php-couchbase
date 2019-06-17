@@ -106,19 +106,6 @@ static void viewrow_callback(lcb_INSTANCE *  instance, int ignoreme, const lcb_R
                 }
             }
 
-            const char *geometry_str;
-            size_t geometry_len;
-            lcb_respview_geometry(resp, &geometry_str, &geometry_len);
-            zval geometry;
-            if (geometry_len) {
-                PCBC_JSON_COPY_DECODE(&geometry, geometry_str, geometry_len, PHP_JSON_OBJECT_AS_ARRAY, last_error);
-                if (last_error) {
-                    pcbc_log(LOGARGS(instance, WARN), "Failed to decode VIEW geometry as JSON: json_last_error=%d", last_error);
-                } else {
-                    zend_update_property(pcbc_view_result_entry_ce, &entry, ZEND_STRL("geometry"), &geometry TSRMLS_CC);
-                }
-            }
-
             const lcb_RESPGET *get;
             lcb_respview_document(resp, &get);
             zval document;

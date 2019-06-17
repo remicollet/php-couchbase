@@ -494,16 +494,12 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_ViewResultEntry_value, IS_OBJECT, 1)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_ViewResultEntry_geometry, IS_OBJECT, 1)
-ZEND_END_ARG_INFO()
-
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_ViewResultEntry_document, IS_OBJECT, 1)
 ZEND_END_ARG_INFO()
 
 PHP_METHOD(ViewResultEntry, id);
 PHP_METHOD(ViewResultEntry, key);
 PHP_METHOD(ViewResultEntry, value);
-PHP_METHOD(ViewResultEntry, geometry);
 PHP_METHOD(ViewResultEntry, document);
 
 zend_class_entry *pcbc_view_result_entry_ce;
@@ -511,7 +507,6 @@ static const zend_function_entry pcbc_view_result_entry_methods[] = {
     PHP_ME(ViewResultEntry, id, ai_ViewResultEntry_id, ZEND_ACC_PUBLIC)
     PHP_ME(ViewResultEntry, key, ai_ViewResultEntry_key, ZEND_ACC_PUBLIC)
     PHP_ME(ViewResultEntry, value, ai_ViewResultEntry_value, ZEND_ACC_PUBLIC)
-    PHP_ME(ViewResultEntry, geometry, ai_ViewResultEntry_geometry, ZEND_ACC_PUBLIC)
     PHP_ME(ViewResultEntry, document, ai_ViewResultEntry_document, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
@@ -764,7 +759,6 @@ PHP_MINIT_FUNCTION(Result)
     zend_declare_property_null(pcbc_view_result_entry_ce, ZEND_STRL("id"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_view_result_entry_ce, ZEND_STRL("key"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_view_result_entry_ce, ZEND_STRL("value"), ZEND_ACC_PRIVATE TSRMLS_CC);
-    zend_declare_property_null(pcbc_view_result_entry_ce, ZEND_STRL("geometry"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_view_result_entry_ce, ZEND_STRL("document"), ZEND_ACC_PRIVATE TSRMLS_CC);
 
     return SUCCESS;
@@ -1528,18 +1522,6 @@ PHP_METHOD(ViewResultEntry, value)
 
     zval *prop, rv;
     prop = zend_read_property(pcbc_view_result_entry_ce, getThis(), ZEND_STRL("value"), 0, &rv);
-    ZVAL_DEREF(prop);
-    ZVAL_COPY(return_value, prop);
-}
-
-PHP_METHOD(ViewResultEntry, geometry)
-{
-    if (zend_parse_parameters_none_throw() == FAILURE) {
-        return;
-    }
-
-    zval *prop, rv;
-    prop = zend_read_property(pcbc_view_result_entry_ce, getThis(), ZEND_STRL("geometry"), 0, &rv);
     ZVAL_DEREF(prop);
     ZVAL_COPY(return_value, prop);
 }
