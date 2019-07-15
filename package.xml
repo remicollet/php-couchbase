@@ -71,7 +71,6 @@
             <file role="src" name="log.h" />
             <file role="src" name="opcookie.c" />
             <file role="src" name="php_couchbase.h" />
-            <file role="src" name="src/couchbase/analytics_query.c" />
             <file role="src" name="src/couchbase/authenticator.c" />
             <file role="src" name="src/couchbase/base36.c" />
             <file role="src" name="src/couchbase/bucket.c" />

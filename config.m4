@@ -53,7 +53,6 @@ COUCHBASE_FILES=" \
     exception.c \
     log.c \
     opcookie.c \
-    src/couchbase/analytics_query.c \
     src/couchbase/authenticator.c \
     src/couchbase/base36.c \
     src/couchbase/bucket.c \

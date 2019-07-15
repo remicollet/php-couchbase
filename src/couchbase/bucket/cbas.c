@@ -20,6 +20,7 @@
 
 extern zend_class_entry *pcbc_analytics_query_result_impl_ce;
 extern zend_class_entry *pcbc_meta_data_impl_ce;
+zend_class_entry *pcbc_analytics_query_options_ce;
 
 struct query_cookie {
     lcb_STATUS rc;
@@ -80,13 +81,140 @@ static void analytics_callback(lcb_INSTANCE *  instance, int ignoreme, const lcb
     }
 }
 
+PHP_METHOD(AnalyticsQueryOptions, timeout)
+{
+    zend_long arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_analytics_query_options_ce, getThis(), ZEND_STRL("timeout"), arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(AnalyticsQueryOptions, namedParameters)
+{
+    zval *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "a", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zval params;
+    array_init(&params);
+    HashTable *ht = HASH_OF(arg);
+    zend_string *string_key = NULL;
+    zval *entry;
+    ZEND_HASH_FOREACH_STR_KEY_VAL(ht, string_key, entry) {
+        if (string_key) {
+            smart_str buf = {0};
+            int last_error;
+            PCBC_JSON_ENCODE(&buf, entry, 0, last_error);
+            if (last_error != 0) {
+                pcbc_log(LOGARGS(NULL, WARN), "Failed to encode value of parameter '%.*s' as JSON: json_last_error=%d",
+                        (int) ZSTR_LEN(string_key), ZSTR_VAL(string_key), last_error);
+                smart_str_free(&buf);
+                continue;
+            }
+            smart_str_0(&buf);
+            add_assoc_str_ex(&params, ZSTR_VAL(string_key), ZSTR_LEN(string_key), buf.s TSRMLS_CC);
+        }
+    }
+    ZEND_HASH_FOREACH_END();
+    zend_update_property(pcbc_analytics_query_options_ce, getThis(), ZEND_STRL("named_params"), &params TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(AnalyticsQueryOptions, positionalParameters)
+{
+    zval *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "a", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zval params;
+    array_init(&params);
+    HashTable *ht = HASH_OF(arg);
+    zval *entry;
+    ZEND_HASH_FOREACH_VAL(ht, entry) {
+        smart_str buf = {0};
+        int last_error;
+        PCBC_JSON_ENCODE(&buf, entry, 0, last_error);
+        if (last_error != 0) {
+            pcbc_log(LOGARGS(NULL, WARN), "Failed to encode value of positional parameter as JSON: json_last_error=%d", last_error);
+            smart_str_free(&buf);
+            RETURN_NULL();
+        } else {
+            smart_str_0(&buf);
+            add_next_index_str(&params, buf.s TSRMLS_CC);
+        }
+    }
+    ZEND_HASH_FOREACH_END();
+    zend_update_property(pcbc_analytics_query_options_ce, getThis(), ZEND_STRL("positional_params"), &params TSRMLS_CC);
+
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(AnalyticsQueryOptions, rawParameter)
+{
+    zend_string *key;
+    zval *value = NULL;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Sz!", &key, &value);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zval *data, rv1;
+    data = zend_read_property(pcbc_analytics_query_options_ce, getThis(), ZEND_STRL("raw_params"), 0, &rv1);
+    if (Z_TYPE_P(data) == IS_NULL) {
+        array_init(&rv1);
+        data = &rv1;
+        zend_update_property(pcbc_analytics_query_options_ce, getThis(), ZEND_STRL("raw_params"), data TSRMLS_CC);
+    }
+    smart_str buf = {0};
+    int last_error;
+    PCBC_JSON_ENCODE(&buf, value, 0, last_error);
+    if (last_error != 0) {
+        pcbc_log(LOGARGS(NULL, WARN), "Failed to encode value of raw parameter as JSON: json_last_error=%d", last_error);
+        smart_str_free(&buf);
+        RETURN_NULL();
+    }
+    smart_str_0(&buf);
+    add_assoc_str_ex(data, ZSTR_VAL(key), ZSTR_LEN(key), buf.s TSRMLS_CC);
+
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_AnalyticsQueryOptions_timeout, 0, 1, \\Couchbase\\AnalyticsQueryOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_AnalyticsQueryOptions_namedParameters, 0, 1, \\Couchbase\\AnalyticsQueryOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_ARRAY, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_AnalyticsQueryOptions_positionalParameters, 0, 1, \\Couchbase\\AnalyticsQueryOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_ARRAY, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_AnalyticsQueryOptions_rawParameter, 0, 2, \\Couchbase\\AnalyticsQueryOptions, 0)
+ZEND_ARG_TYPE_INFO(0, key, IS_STRING, 0)
+ZEND_ARG_TYPE_INFO(0, value, 0, 1)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry pcbc_analytics_query_options_methods[] = {
+    PHP_ME(AnalyticsQueryOptions, timeout, ai_AnalyticsQueryOptions_timeout, ZEND_ACC_PUBLIC)
+    PHP_ME(AnalyticsQueryOptions, namedParameters, ai_AnalyticsQueryOptions_namedParameters, ZEND_ACC_PUBLIC)
+    PHP_ME(AnalyticsQueryOptions, positionalParameters, ai_AnalyticsQueryOptions_positionalParameters, ZEND_ACC_PUBLIC)
+    PHP_ME(AnalyticsQueryOptions, rawParameter, ai_AnalyticsQueryOptions_rawParameter, ZEND_ACC_PUBLIC)
+    PHP_FE_END
+};
+
 PHP_METHOD(Bucket, analyticsQuery)
 {
     lcb_STATUS err;
     zend_string *statement;
     zval *options = NULL;
 
-    int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "S|z", &statement, &options);
+    int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "S|O", &statement, &options, pcbc_analytics_query_options_ce);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -97,6 +225,50 @@ PHP_METHOD(Bucket, analyticsQuery)
     lcb_cmdanalytics_create(&cmd);
     lcb_cmdanalytics_callback(cmd, analytics_callback);
     lcb_cmdanalytics_statement(cmd, ZSTR_VAL(statement), ZSTR_LEN(statement));
+    if (options) {
+        zval *prop, ret;
+        prop = zend_read_property(pcbc_analytics_query_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdanalytics_timeout(cmd, Z_LVAL_P(prop));
+        }
+        prop = zend_read_property(pcbc_analytics_query_options_ce, options, ZEND_STRL("named_params"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_ARRAY) {
+            HashTable *ht = HASH_OF(prop);
+            zend_string *string_key = NULL;
+            zval *entry;
+            ZEND_HASH_FOREACH_STR_KEY_VAL(ht, string_key, entry) {
+                if (string_key && Z_TYPE_P(entry) == IS_STRING) {
+                    lcb_cmdanalytics_named_param(cmd, ZSTR_VAL(string_key), ZSTR_LEN(string_key),
+                            Z_STRVAL_P(entry), Z_STRLEN_P(entry));
+                }
+            }
+            ZEND_HASH_FOREACH_END();
+        }
+        prop = zend_read_property(pcbc_analytics_query_options_ce, options, ZEND_STRL("positional_params"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_ARRAY) {
+            HashTable *ht = HASH_OF(prop);
+            zval *entry;
+            ZEND_HASH_FOREACH_VAL(ht, entry) {
+                if (Z_TYPE_P(entry) == IS_STRING) {
+                    lcb_cmdanalytics_positional_param(cmd, Z_STRVAL_P(entry), Z_STRLEN_P(entry));
+                }
+            }
+            ZEND_HASH_FOREACH_END();
+        }
+        prop = zend_read_property(pcbc_analytics_query_options_ce, options, ZEND_STRL("raw_params"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_ARRAY) {
+            HashTable *ht = HASH_OF(prop);
+            zend_string *string_key = NULL;
+            zval *entry;
+            ZEND_HASH_FOREACH_STR_KEY_VAL(ht, string_key, entry) {
+                if (string_key && Z_TYPE_P(entry) == IS_STRING) {
+                    lcb_cmdanalytics_option(cmd, ZSTR_VAL(string_key), ZSTR_LEN(string_key),
+                            Z_STRVAL_P(entry), Z_STRLEN_P(entry));
+                }
+            }
+            ZEND_HASH_FOREACH_END();
+        }
+    }
 
     lcb_ANALYTICS_HANDLE *handle = NULL;
     lcb_cmdanalytics_handle(cmd, &handle);
@@ -132,6 +304,19 @@ PHP_METHOD(Bucket, analyticsQuery)
     if (err != LCB_SUCCESS) {
         throw_lcb_exception(err, NULL);
     }
+}
+
+PHP_MINIT_FUNCTION(AnalyticsQuery)
+{
+    zend_class_entry ce;
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "AnalyticsQueryOptions", pcbc_analytics_query_options_methods);
+    pcbc_analytics_query_options_ce = zend_register_internal_class(&ce TSRMLS_CC);
+
+    zend_declare_property_null(pcbc_analytics_query_options_ce, ZEND_STRL("timeout"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_analytics_query_options_ce, ZEND_STRL("positional_params"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_analytics_query_options_ce, ZEND_STRL("named_params"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_analytics_query_options_ce, ZEND_STRL("raw_params"), ZEND_ACC_PRIVATE TSRMLS_CC);
 }
 
 /*
