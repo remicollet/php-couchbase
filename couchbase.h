@@ -315,6 +315,7 @@ typedef struct {
 typedef struct {
     char *connstr;
     zval auth;
+    pcbc_connection_t *conn;
     zend_object std;
 } pcbc_cluster_t;
 
@@ -505,8 +506,6 @@ void pcbc_cas_encode(zval *return_value, lcb_cas_t cas TSRMLS_DC);
 void pcbc_bucket_subdoc_request(pcbc_bucket_t *data, void *builder, int is_lookup, zval *return_value TSRMLS_DC);
 void pcbc_http_request(zval *return_value, lcb_INSTANCE *conn, lcb_CMDHTTP *cmd, int json_response TSRMLS_DC);
 
-void pcbc_bucket_init(zval *return_value, pcbc_cluster_t *cluster, const char *bucketname,
-                      const char *password TSRMLS_DC);
 void pcbc_bucket_manager_init(zval *return_value, zval *bucket TSRMLS_DC);
 void pcbc_bucket_get(pcbc_bucket_t *obj, pcbc_pp_state *pp_state, pcbc_pp_id *id, zval **lock, zval **expiry,
                      zval **groupid, zval *return_value TSRMLS_DC);
@@ -525,9 +524,6 @@ int pcbc_mutate_in_builder_array_add_unique(pcbc_MUTATE_IN_SPEC *builder, char *
                                             lcb_U32 flags TSRMLS_DC);
 int pcbc_mutate_in_builder_replace(pcbc_MUTATE_IN_SPEC *builder, char *path, int path_len, zval *value,
                                    lcb_U32 flags TSRMLS_DC);
-
-void pcbc_cluster_manager_init(zval *return_value, pcbc_cluster_t *cluster, const char *name,
-                               const char *password TSRMLS_DC);
 
 int pcbc_n1ix_init(zval *return_value, zval *json TSRMLS_DC);
 int pcbc_n1ix_list(pcbc_bucket_manager_t *manager, zval *return_value TSRMLS_DC);
@@ -597,9 +593,9 @@ void pcbc_conjunction_search_query_init(zval *return_value, zval *args, int num_
 void pcbc_doc_id_search_query_init(zval *return_value, zval *args, int num_args TSRMLS_DC);
 void pcbc_phrase_search_query_init(zval *return_value, zval *args, int num_args TSRMLS_DC);
 void pcbc_generate_classic_lcb_auth(pcbc_classic_authenticator_t *auth, lcb_AUTHENTICATOR **result, lcb_type_t type,
-                                    const char *name, const char *password, char **hash TSRMLS_DC);
+                                    char **hash TSRMLS_DC);
 void pcbc_generate_password_lcb_auth(pcbc_password_authenticator_t *auth, lcb_AUTHENTICATOR **result, lcb_type_t type,
-                                     const char *name, const char *password, char **hash TSRMLS_DC);
+                                     char **hash TSRMLS_DC);
 void pcbc_password_authenticator_init(zval *return_value, char *username, int username_len, char *password,
                                       int password_len TSRMLS_DC);
 

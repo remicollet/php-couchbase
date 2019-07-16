@@ -208,7 +208,7 @@ static const zend_function_entry pcbc_analytics_query_options_methods[] = {
     PHP_FE_END
 };
 
-PHP_METHOD(Bucket, analyticsQuery)
+PHP_METHOD(Cluster, analyticsQuery)
 {
     lcb_STATUS err;
     zend_string *statement;
@@ -219,7 +219,7 @@ PHP_METHOD(Bucket, analyticsQuery)
         RETURN_NULL();
     }
 
-    pcbc_bucket_t *bucket = Z_BUCKET_OBJ_P(getThis());
+    pcbc_cluster_t *cluster = Z_CLUSTER_OBJ_P(getThis());
 
     lcb_CMDANALYTICS *cmd;
     lcb_cmdanalytics_create(&cmd);
@@ -274,7 +274,7 @@ PHP_METHOD(Bucket, analyticsQuery)
     lcb_cmdanalytics_handle(cmd, &handle);
 
     lcbtrace_SPAN *span = NULL;
-    lcbtrace_TRACER *tracer = lcb_get_tracer(bucket->conn->lcb);
+    lcbtrace_TRACER *tracer = lcb_get_tracer(cluster->conn->lcb);
     if (tracer) {
         span = lcbtrace_span_start(tracer,"php/analytics", 0, NULL);
         lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
@@ -292,10 +292,10 @@ PHP_METHOD(Bucket, analyticsQuery)
         LCB_SUCCESS,
         return_value
     };
-    err = lcb_analytics(bucket->conn->lcb, &cookie, cmd);
+    err = lcb_analytics(cluster->conn->lcb, &cookie, cmd);
     lcb_cmdanalytics_destroy(cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(cluster->conn->lcb);
         err = cookie.rc;
     }
     if (span) {

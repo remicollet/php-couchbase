@@ -130,7 +130,7 @@ PHP_METHOD(ClassicAuthenticator, bucket)
 
 /* TODO: update to refactored lcb_AUTHENTICATOR after libcouchbase 2.7.4 */
 void pcbc_generate_classic_lcb_auth(pcbc_classic_authenticator_t *auth, lcb_AUTHENTICATOR **result, lcb_type_t type,
-                                    const char *name, const char *password, char **hash TSRMLS_DC)
+                                    char **hash TSRMLS_DC)
 {
     PHP_MD5_CTX md5;
     unsigned char digest[16];
@@ -138,7 +138,6 @@ void pcbc_generate_classic_lcb_auth(pcbc_classic_authenticator_t *auth, lcb_AUTH
     int empty_pass_len = strlen(empty_pass);
     const char *pass;
     int pass_len;
-    int write_null_password = 1;
 
     *result = lcbauth_new();
     lcbauth_set_mode(*result, LCBAUTH_MODE_CLASSIC);
@@ -167,39 +166,12 @@ void pcbc_generate_classic_lcb_auth(pcbc_classic_authenticator_t *auth, lcb_AUTH
                 pass = ptr->password;
                 pass_len = ptr->password_len;
             }
-            if (type == LCB_TYPE_BUCKET && password == NULL && strcmp(ptr->username, name) == 0) {
-                lcbauth_add_pass(*result, ptr->username, ptr->password, LCBAUTH_F_CLUSTER);
-            }
             lcbauth_add_pass(*result, ptr->username, pass, LCBAUTH_F_BUCKET);
             PHP_MD5Update(&md5, "bucket", sizeof("bucket"));
             PHP_MD5Update(&md5, ptr->username, ptr->username_len);
             PHP_MD5Update(&md5, pass, pass_len);
-            if (name && strncmp(ptr->username, name, ptr->username_len) == 0) {
-                /* do not reset password, which has been specified already in the authenticator */
-                write_null_password = 0;
-            }
             ptr = ptr->next;
         }
-    }
-    pass = empty_pass;
-    pass_len = empty_pass_len;
-    if (password) {
-        pass = password;
-        pass_len = strlen(pass);
-    }
-    if (name && pass) {
-        if (type == LCB_TYPE_BUCKET) {
-            if (password || (password == NULL && write_null_password)) {
-                lcbauth_add_pass(*result, name, pass, LCBAUTH_F_BUCKET);
-                lcbauth_add_pass(*result, name, pass, LCBAUTH_F_CLUSTER);
-                PHP_MD5Update(&md5, "extra-bucket", sizeof("extra-bucket"));
-            }
-        } else {
-            lcbauth_add_pass(*result, name, pass, LCBAUTH_F_CLUSTER);
-            PHP_MD5Update(&md5, "extra-cluster", sizeof("extra-cluster"));
-        }
-        PHP_MD5Update(&md5, name, strlen(name));
-        PHP_MD5Update(&md5, pass, pass_len);
     }
     PHP_MD5Final(digest, &md5);
     *hash = ecalloc(sizeof(char), 33);

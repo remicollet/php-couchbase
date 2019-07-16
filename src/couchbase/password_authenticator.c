@@ -106,7 +106,7 @@ PHP_METHOD(PasswordAuthenticator, password)
 } /* }}} */
 
 void pcbc_generate_password_lcb_auth(pcbc_password_authenticator_t *auth, lcb_AUTHENTICATOR **result, lcb_type_t type,
-                                     const char *name, const char *password, char **hash TSRMLS_DC)
+                                     char **hash TSRMLS_DC)
 {
     PHP_MD5_CTX md5;
     unsigned char digest[16];
@@ -115,17 +115,11 @@ void pcbc_generate_password_lcb_auth(pcbc_password_authenticator_t *auth, lcb_AU
     lcbauth_set_mode(*result, LCBAUTH_MODE_RBAC);
     PHP_MD5Init(&md5);
 
-    if (name && password) {
-        lcbauth_add_pass(*result, name, password, LCBAUTH_F_CLUSTER);
-        PHP_MD5Update(&md5, "rbac-extra", sizeof("rbac-extra"));
-        PHP_MD5Update(&md5, name, strlen(name));
-        PHP_MD5Update(&md5, password, strlen(password));
-    } else {
-        lcbauth_add_pass(*result, auth->username, auth->password, LCBAUTH_F_CLUSTER);
-        PHP_MD5Update(&md5, "rbac", sizeof("rbac"));
-        PHP_MD5Update(&md5, auth->username, auth->username_len);
-        PHP_MD5Update(&md5, auth->password, auth->password_len);
-    }
+    lcbauth_add_pass(*result, auth->username, auth->password, LCBAUTH_F_CLUSTER);
+    PHP_MD5Update(&md5, "rbac", sizeof("rbac"));
+    PHP_MD5Update(&md5, auth->username, auth->username_len);
+    PHP_MD5Update(&md5, auth->password, auth->password_len);
+
     PHP_MD5Final(digest, &md5);
     *hash = ecalloc(sizeof(char), 33);
     make_digest(*hash, digest);

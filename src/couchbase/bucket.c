@@ -19,9 +19,6 @@
 #define LOGARGS(obj, lvl) LCB_LOG_##lvl, obj->conn->lcb, "pcbc/bucket", __FILE__, __LINE__
 
 zend_class_entry *pcbc_bucket_ce;
-extern zend_class_entry *pcbc_classic_authenticator_ce;
-extern zend_class_entry *pcbc_password_authenticator_ce;
-extern zend_class_entry *pcbc_cert_authenticator_ce;
 extern zend_class_entry *pcbc_scope_ce;
 
 PHP_METHOD(Bucket, n1ix_list);
@@ -30,10 +27,7 @@ PHP_METHOD(Bucket, n1ix_drop);
 PHP_METHOD(Bucket, ping);
 PHP_METHOD(Bucket, diagnostics);
 
-PHP_METHOD(Bucket, query);
 PHP_METHOD(Bucket, viewQuery);
-PHP_METHOD(Bucket, analyticsQuery);
-PHP_METHOD(Bucket, searchQuery);
 
 /* {{{ proto void Bucket::__construct()
    Should not be called directly */
@@ -215,7 +209,6 @@ PHP_METHOD(Bucket, scope)
     zend_update_property_str(pcbc_scope_ce, return_value, ZEND_STRL("name"), name TSRMLS_CC);
 }
 
-
 ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_none, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
@@ -233,26 +226,10 @@ ZEND_ARG_TYPE_INFO(0, encoder, IS_CALLABLE, 0)
 ZEND_ARG_TYPE_INFO(0, decoder, IS_CALLABLE, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_query, 0, 0, 1)
-ZEND_ARG_INFO(0, statement)
-ZEND_ARG_INFO(0, queryOptions)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_analyticsQuery, 0, 0, 1)
-ZEND_ARG_INFO(0, statement)
-ZEND_ARG_INFO(0, queryOptions)
-ZEND_END_ARG_INFO()
-
 ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_viewQuery, -1, 0, 2)
 ZEND_ARG_INFO(0, designDoc)
 ZEND_ARG_INFO(0, viewName)
 ZEND_ARG_INFO(0, viewOptions)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_searchQuery, 0, 0, 2)
-ZEND_ARG_INFO(0, indexName)
-ZEND_ARG_INFO(0, query)
-ZEND_ARG_INFO(0, queryOptions)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_ping, 0, 0, 2)
@@ -273,7 +250,6 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Bucket_scope, 0, 1, \\Couchbase\\Scope
 ZEND_ARG_TYPE_INFO(0, name, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-
 // clang-format off
 zend_function_entry bucket_methods[] = {
     PHP_ME(Bucket, __construct, ai_Bucket_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
@@ -282,10 +258,7 @@ zend_function_entry bucket_methods[] = {
     PHP_ME(Bucket, setTranscoder, ai_Bucket_setTranscoder, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, name, ai_Bucket_none, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, manager, ai_Bucket_none, ZEND_ACC_PUBLIC)
-    PHP_ME(Bucket, query, ai_Bucket_query, ZEND_ACC_PUBLIC)
-    PHP_ME(Bucket, analyticsQuery, ai_Bucket_analyticsQuery, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, viewQuery, ai_Bucket_viewQuery, ZEND_ACC_PUBLIC)
-    PHP_ME(Bucket, searchQuery, ai_Bucket_searchQuery, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, ping, ai_Bucket_ping, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, diagnostics, ai_Bucket_diag, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, defaultCollection, ai_Bucket_defaultCollection, ZEND_ACC_PUBLIC)
@@ -383,83 +356,6 @@ static HashTable *pcbc_bucket_get_debug_info(zval *object, int *is_temp TSRMLS_D
     return Z_ARRVAL(retval);
 }
 
-#define LOGARGS_(lvl) LCB_LOG_##lvl, NULL, "pcbc/bucket", __FILE__, __LINE__
-
-static int is_cert_auth_good(pcbc_cluster_t *cluster, const char *password TSRMLS_DC)
-{
-    if (!Z_ISUNDEF(cluster->auth) &&
-        instanceof_function(Z_OBJCE_P(&cluster->auth), pcbc_cert_authenticator_ce TSRMLS_CC)) {
-        if (password) {
-            pcbc_log(LOGARGS_(DEBUG), "mixed-auth: bucket password set with CertAuthenticator");
-            return 0;
-        }
-        if (!cluster->connstr) {
-            pcbc_log(LOGARGS_(DEBUG), "mixed-auth: connection string is not set with CertAuthenticator");
-            return 0;
-        }
-        if (strstr(cluster->connstr, "keypath") == NULL) {
-            pcbc_log(LOGARGS_(DEBUG), "mixed-auth: keypath must be in connection string with CertAuthenticator");
-            return 0;
-        }
-        if (strstr(cluster->connstr, "certpath") == NULL) {
-            pcbc_log(LOGARGS_(DEBUG), "mixed-auth: certpath must be in connection string with CertAuthenticator");
-            return 0;
-        }
-    } else if (cluster->connstr) {
-        if (strstr(cluster->connstr, "keypath") != NULL) {
-            pcbc_log(LOGARGS_(DEBUG), "mixed-auth: keypath in connection string requires CertAuthenticator");
-            return 0;
-        }
-    }
-    return 1;
-}
-
-void pcbc_bucket_init(zval *return_value, pcbc_cluster_t *cluster, const char *bucketname,
-                      const char *password TSRMLS_DC)
-{
-    pcbc_bucket_t *bucket;
-    pcbc_connection_t *conn;
-    lcb_STATUS err;
-    pcbc_classic_authenticator_t *authenticator = NULL;
-    pcbc_credential_t extra_creds = {0};
-    lcb_AUTHENTICATOR *auth = NULL;
-    char *auth_hash = NULL;
-
-    if (!is_cert_auth_good(cluster, password TSRMLS_CC)) {
-        throw_pcbc_exception(
-            "Mixed authentication detected. Make sure CertAuthenticator used, and no other credentials supplied",
-            LCB_EINVAL);
-        return;
-    }
-
-    if (!Z_ISUNDEF(cluster->auth)) {
-        if (instanceof_function(Z_OBJCE_P(&cluster->auth), pcbc_classic_authenticator_ce TSRMLS_CC)) {
-            pcbc_generate_classic_lcb_auth(Z_CLASSIC_AUTHENTICATOR_OBJ_P(&cluster->auth), &auth, LCB_TYPE_BUCKET,
-                                           bucketname, password, &auth_hash TSRMLS_CC);
-        } else if (instanceof_function(Z_OBJCE_P(&cluster->auth), pcbc_password_authenticator_ce TSRMLS_CC)) {
-            pcbc_generate_password_lcb_auth(Z_PASSWORD_AUTHENTICATOR_OBJ_P(&cluster->auth), &auth, LCB_TYPE_BUCKET,
-                                            bucketname, password, &auth_hash TSRMLS_CC);
-        }
-    }
-    if (!auth) {
-        pcbc_generate_classic_lcb_auth(NULL, &auth, LCB_TYPE_BUCKET, bucketname, password, &auth_hash TSRMLS_CC);
-    }
-    err = pcbc_connection_get(&conn, LCB_TYPE_BUCKET, cluster->connstr, bucketname, auth, auth_hash TSRMLS_CC);
-    efree(auth_hash);
-    if (err) {
-        throw_lcb_exception(err, NULL);
-        return;
-    }
-
-    object_init_ex(return_value, pcbc_bucket_ce);
-    bucket = Z_BUCKET_OBJ_P(return_value);
-    bucket->conn = conn;
-    lcb_cntl(conn->lcb, LCB_CNTL_GET, LCB_CNTL_BUCKETTYPE, &bucket->type);
-    ZVAL_UNDEF(&bucket->encoder);
-    ZVAL_UNDEF(&bucket->decoder);
-    PCBC_STRING(bucket->encoder, "\\Couchbase\\defaultEncoder");
-    PCBC_STRING(bucket->decoder, "\\Couchbase\\defaultDecoder");
-}
 
 PHP_MINIT_FUNCTION(Bucket)
 {

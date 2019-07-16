@@ -84,7 +84,7 @@ static void ftsrow_callback(lcb_INSTANCE *  instance, int ignoreme, const lcb_RE
     }
 }
 
-PHP_METHOD(Bucket, searchQuery)
+PHP_METHOD(Cluster, searchQuery)
 {
     lcb_STATUS err;
     zend_string *index;
@@ -97,7 +97,7 @@ PHP_METHOD(Bucket, searchQuery)
         RETURN_NULL();
     }
 
-    pcbc_bucket_t *bucket = Z_BUCKET_OBJ_P(getThis());
+    pcbc_cluster_t *cluster = Z_CLUSTER_OBJ_P(getThis());
 
     lcb_CMDFTS *cmd;
     lcb_cmdfts_create(&cmd);
@@ -109,7 +109,8 @@ PHP_METHOD(Bucket, searchQuery)
 
         PCBC_JSON_ENCODE(&buf, query, 0, last_error);
         if (last_error != 0) {
-            pcbc_log(LOGARGS(bucket->conn->lcb, WARN), "Failed to encode FTS query as JSON: json_last_error=%d", last_error);
+            pcbc_log(LOGARGS(cluster->conn->lcb, WARN), "Failed to encode FTS query as JSON: json_last_error=%d",
+                     last_error);
             smart_str_free(&buf);
             RETURN_NULL();
         }
@@ -130,17 +131,17 @@ PHP_METHOD(Bucket, searchQuery)
     lcb_FTS_HANDLE *handle = NULL;
     lcb_cmdfts_handle(cmd, &handle);
     lcbtrace_SPAN *span = NULL;
-    lcbtrace_TRACER *tracer = lcb_get_tracer(bucket->conn->lcb);
+    lcbtrace_TRACER *tracer = lcb_get_tracer(cluster->conn->lcb);
     if (tracer) {
         span = lcbtrace_span_start(tracer, "php/search", 0, NULL);
         lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
         lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_SEARCH);
         lcb_cmdfts_parent_span(cmd, span);
     }
-    err = lcb_fts(bucket->conn->lcb, &cookie, cmd);
+    err = lcb_fts(cluster->conn->lcb, &cookie, cmd);
     lcb_cmdfts_destroy(cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(cluster->conn->lcb);
         err = cookie.rc;
     }
     if (span) {

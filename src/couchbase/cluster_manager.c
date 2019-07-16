@@ -25,8 +25,6 @@
 #define PCBC_CLUSTER_MANAGER_RBAC_DOMAIN_EXTERNAL 2
 
 zend_class_entry *pcbc_cluster_manager_ce;
-extern zend_class_entry *pcbc_classic_authenticator_ce;
-extern zend_class_entry *pcbc_password_authenticator_ce;
 
 PHP_METHOD(ClusterManager, __construct)
 {
@@ -400,41 +398,6 @@ static zend_object *pcbc_cluster_manager_create_object(zend_class_entry *class_t
 
     obj->std.handlers = &pcbc_cluster_manager_handlers;
     return &obj->std;
-}
-
-void pcbc_cluster_manager_init(zval *return_value, pcbc_cluster_t *cluster, const char *username,
-                               const char *password TSRMLS_DC)
-{
-    pcbc_cluster_manager_t *manager;
-    lcb_STATUS err;
-    pcbc_connection_t *conn;
-    pcbc_classic_authenticator_t *authenticator = NULL;
-    pcbc_credential_t extra_creds = {0};
-    lcb_AUTHENTICATOR *auth = NULL;
-    char *auth_hash = NULL;
-
-    if (!Z_ISUNDEF(cluster->auth)) {
-        if (instanceof_function(Z_OBJCE_P(&cluster->auth), pcbc_classic_authenticator_ce TSRMLS_CC)) {
-            pcbc_generate_classic_lcb_auth(Z_CLASSIC_AUTHENTICATOR_OBJ_P(&cluster->auth), &auth, LCB_TYPE_CLUSTER,
-                                           username, password, &auth_hash TSRMLS_CC);
-        } else if (instanceof_function(Z_OBJCE_P(&cluster->auth), pcbc_password_authenticator_ce TSRMLS_CC)) {
-            pcbc_generate_password_lcb_auth(Z_PASSWORD_AUTHENTICATOR_OBJ_P(&cluster->auth), &auth, LCB_TYPE_CLUSTER,
-                                            username, password, &auth_hash TSRMLS_CC);
-        }
-    }
-    if (!auth) {
-        pcbc_generate_classic_lcb_auth(NULL, &auth, LCB_TYPE_CLUSTER, username, password, &auth_hash TSRMLS_CC);
-    }
-    err = pcbc_connection_get(&conn, LCB_TYPE_CLUSTER, cluster->connstr, NULL, auth, auth_hash TSRMLS_CC);
-    efree(auth_hash);
-    if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err, NULL);
-        return;
-    }
-
-    object_init_ex(return_value, pcbc_cluster_manager_ce);
-    manager = Z_CLUSTER_MANAGER_OBJ_P(return_value);
-    manager->conn = conn;
 }
 
 static HashTable *pcbc_cluster_manager_get_debug_info(zval *object, int *is_temp TSRMLS_DC)

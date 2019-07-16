@@ -392,7 +392,7 @@ static const zend_function_entry pcbc_query_options_methods[] = {
     PHP_FE_END
 };
 
-PHP_METHOD(Bucket, query)
+PHP_METHOD(Cluster, query)
 {
     lcb_STATUS err;
     zend_string *statement;
@@ -403,7 +403,7 @@ PHP_METHOD(Bucket, query)
         RETURN_NULL();
     }
 
-    pcbc_bucket_t *bucket = Z_BUCKET_OBJ_P(getThis());
+    pcbc_cluster_t *cluster = Z_CLUSTER_OBJ_P(getThis());
 
     lcb_CMDN1QL *cmd;
     lcb_cmdn1ql_create(&cmd);
@@ -503,7 +503,7 @@ PHP_METHOD(Bucket, query)
     lcb_cmdn1ql_handle(cmd, &handle);
 
     lcbtrace_SPAN *span = NULL;
-    lcbtrace_TRACER *tracer = lcb_get_tracer(bucket->conn->lcb);
+    lcbtrace_TRACER *tracer = lcb_get_tracer(cluster->conn->lcb);
     if (tracer) {
         span = lcbtrace_span_start(tracer,"php/n1ql", 0, NULL);
         lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
@@ -521,10 +521,10 @@ PHP_METHOD(Bucket, query)
         LCB_SUCCESS,
         return_value
     };
-    err = lcb_n1ql(bucket->conn->lcb, &cookie, cmd);
+    err = lcb_n1ql(cluster->conn->lcb, &cookie, cmd);
     lcb_cmdn1ql_destroy(cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(cluster->conn->lcb);
         err = cookie.rc;
     }
     if (span) {
@@ -535,7 +535,7 @@ PHP_METHOD(Bucket, query)
     }
 }
 
-PHP_MINIT_FUNCTION(BucketQuery)
+PHP_MINIT_FUNCTION(N1qlQuery)
 {
     zend_class_entry ce;
 
