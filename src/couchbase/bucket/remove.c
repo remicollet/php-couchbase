@@ -205,7 +205,7 @@ PHP_MINIT_FUNCTION(CollectionRemove)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "RemoveOptions", pcbc_remove_options_methods);
     pcbc_remove_options_ce = zend_register_internal_class(&ce TSRMLS_CC);
     zend_declare_property_null(pcbc_remove_options_ce, ZEND_STRL("timeout"), ZEND_ACC_PRIVATE TSRMLS_CC);
-    zend_declare_property_null(pcbc_remove_options_ce, ZEND_STRL("expiration"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_remove_options_ce, ZEND_STRL("cas"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_remove_options_ce, ZEND_STRL("durability_level"), ZEND_ACC_PRIVATE TSRMLS_CC);
 
     return SUCCESS;

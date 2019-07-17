@@ -556,10 +556,10 @@ PHP_MINIT_FUNCTION(Result)
     zend_declare_property_null(pcbc_search_meta_data_impl_ce, ZEND_STRL("max_score"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_search_meta_data_impl_ce, ZEND_STRL("metrics"), ZEND_ACC_PRIVATE TSRMLS_CC);
 
-    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "ViewMetadata", pcbc_view_meta_data_methods);
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "ViewMetaData", pcbc_view_meta_data_methods);
     pcbc_view_meta_data_ce = zend_register_internal_interface(&ce TSRMLS_CC);
 
-    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "ViewMetadataImpl", pcbc_view_meta_data_impl_methods);
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "ViewMetaDataImpl", pcbc_view_meta_data_impl_methods);
     pcbc_view_meta_data_impl_ce = zend_register_internal_class(&ce TSRMLS_CC);
     zend_class_implements(pcbc_view_meta_data_impl_ce TSRMLS_CC, 1, pcbc_view_meta_data_ce);
     zend_declare_property_null(pcbc_view_meta_data_impl_ce, ZEND_STRL("total_rows"), ZEND_ACC_PRIVATE TSRMLS_CC);

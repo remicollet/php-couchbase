@@ -103,6 +103,7 @@ PHP_MINIT_FUNCTION(LookupInSpec)
 
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "LookupGetFullSpec", pcbc_lookup_get_full_spec_methods);
     pcbc_lookup_get_full_spec_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    zend_class_implements(pcbc_lookup_get_full_spec_ce TSRMLS_CC, 1, pcbc_lookup_in_spec_ce);
 }
 
 

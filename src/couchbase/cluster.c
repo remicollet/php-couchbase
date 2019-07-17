@@ -250,39 +250,39 @@ PHP_METHOD(Cluster, authenticateAs)
 }
 
 ZEND_BEGIN_ARG_INFO_EX(ai_Cluster_constructor, 0, 0, 1)
-ZEND_ARG_INFO(0, connstr)
+ZEND_ARG_TYPE_INFO(0, connstr, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_Cluster_bucket, 0, 0, 1)
-ZEND_ARG_INFO(0, name)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Cluster_bucket, 0, 1, \\Couchbase\\Bucket, 0)
+ZEND_ARG_TYPE_INFO(0, name, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_Cluster_manager, 0, 0, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Cluster_manager, 0, 1, \\Couchbase\\ClusterManager, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(ai_Cluster_authenticate, 0, 0, 1)
-ZEND_ARG_INFO(0, authenticator)
+ZEND_ARG_OBJ_INFO(0, authenticator, \\Couchbase\\Authenticator, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(ai_Cluster_authenticateAs, 0, 0, 2)
-ZEND_ARG_INFO(0, username)
-ZEND_ARG_INFO(0, password)
+ZEND_ARG_TYPE_INFO(0, username, IS_STRING, 0)
+ZEND_ARG_TYPE_INFO(0, password, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_Cluster_query, 0, 0, 1)
-ZEND_ARG_INFO(0, statement)
-ZEND_ARG_INFO(0, queryOptions)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Cluster_query, 0, 1, \\Couchbase\\QueryResult, 0)
+ZEND_ARG_TYPE_INFO(0, statement, IS_STRING, 0)
+ZEND_ARG_OBJ_INFO(0, queryOptions, \\Couchbase\\QueryOptions, 1)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_Cluster_analyticsQuery, 0, 0, 1)
-ZEND_ARG_INFO(0, statement)
-ZEND_ARG_INFO(0, queryOptions)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Cluster_analyticsQuery, 0, 1, \\Couchbase\\AnalyticsResult, 0)
+ZEND_ARG_TYPE_INFO(0, statement, IS_STRING, 0)
+ZEND_ARG_OBJ_INFO(0, queryOptions, \\Couchbase\\AnalyticsQueryOptions, 1)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_Cluster_searchQuery, 0, 0, 2)
-ZEND_ARG_INFO(0, indexName)
-ZEND_ARG_INFO(0, query)
-ZEND_ARG_INFO(0, queryOptions)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Cluster_searchQuery, 0, 2, \\Couchbase\\SearchResult, 0)
+ZEND_ARG_TYPE_INFO(0, indexName, IS_STRING, 0)
+ZEND_ARG_OBJ_INFO(0, query, \\Couchbase\\SearchQuery, 1)
+ZEND_ARG_OBJ_INFO(0, queryOptions, \\Couchbase\\SearchQueryOptions, 1)
 ZEND_END_ARG_INFO()
 
 // clang-format off
