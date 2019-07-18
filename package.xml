@@ -18,9 +18,9 @@
         <active>yes</active>
     </lead>
 
-    <date>2019-05-30</date>
+    <date>2019-07-18</date>
     <version>
-        <release>3.0.0alpha3</release>
+        <release>3.0.0alpha4</release>
         <api>3.0.0</api>
     </version>
     <stability>
@@ -30,7 +30,7 @@
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        * third alpha release
+        * fourth alpha release
     </notes>
     <contents>
         <dir name="/">
