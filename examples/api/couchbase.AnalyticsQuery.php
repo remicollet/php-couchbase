@@ -1,7 +1,7 @@
 <?php
 $cluster = new \Couchbase\Cluster('couchbase://localhost?detailed_errcodes=1');
 $cluster->authenticateAs('Administrator', 'password');
-$bucket = $cluster->openBucket('default');
+$bucket = $cluster->bucket('default');
 
 $query = \Couchbase\AnalyticsQuery::fromString('
     SELECT "Hello, " || $name || "!" AS greeting,

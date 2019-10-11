@@ -58,7 +58,7 @@ $cluster->authenticateAs("cbtestuser", "cbtestuserpwd");
 
 // Open a known, existing bucket (created by the administrator).
 echo("Opening travel-sample bucket as user.\n");
-$travelSample = $cluster->openBucket("travel-sample");
+$travelSample = $cluster->bucket("travel-sample");
 
 // Create a N1QL Primary Index (but ignore if one already exists).
 $travelSample->manager()->createN1qlPrimaryIndex('', true, false);

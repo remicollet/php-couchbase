@@ -23,7 +23,7 @@ typedef struct {
     zval bytes;
 } opcookie_http_res;
 
-void http_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPHTTP *resp)
+void http_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPHTTP *resp)
 {
     opcookie_http_res *result = ecalloc(1, sizeof(opcookie_http_res));
     TSRMLS_FETCH();
@@ -88,7 +88,7 @@ static lcb_STATUS proc_http_results(zval *return_value, opcookie *cookie TSRMLS_
     return err;
 }
 
-void pcbc_http_request(zval *return_value, lcb_INSTANCE *  conn, lcb_CMDHTTP *cmd, int json_response TSRMLS_DC)
+void pcbc_http_request(zval *return_value, lcb_INSTANCE *conn, lcb_CMDHTTP *cmd, int json_response TSRMLS_DC)
 {
     lcb_STATUS err;
     opcookie *cookie;

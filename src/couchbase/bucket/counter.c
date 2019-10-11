@@ -26,7 +26,7 @@ struct counter_cookie {
     zval *return_value;
 };
 
-void counter_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPCOUNTER *resp)
+void counter_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPCOUNTER *resp)
 {
     TSRMLS_FETCH();
 
@@ -59,108 +59,129 @@ void counter_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPCOUNTE
                 zval val;
                 object_init_ex(&val, pcbc_mutation_token_impl_ce);
 
-                zend_update_property_long(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("partition_id"), token.vbid_ TSRMLS_CC);
+                zend_update_property_long(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("partition_id"),
+                                          token.vbid_ TSRMLS_CC);
                 b64 = php_base64_encode((unsigned char *)&token.uuid_, sizeof(token.uuid_));
                 zend_update_property_str(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("partition_uuid"), b64 TSRMLS_CC);
                 b64 = php_base64_encode((unsigned char *)&token.seqno_, sizeof(token.seqno_));
-                zend_update_property_str(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("sequence_number"), b64 TSRMLS_CC);
+                zend_update_property_str(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("sequence_number"),
+                                         b64 TSRMLS_CC);
 
                 const char *bucket;
                 lcb_cntl(instance, LCB_CNTL_GET, LCB_CNTL_BUCKETNAME, &bucket);
-                zend_update_property_string(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("bucket_name"), bucket TSRMLS_CC);
+                zend_update_property_string(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("bucket_name"),
+                                            bucket TSRMLS_CC);
 
-                zend_update_property(pcbc_counter_result_impl_ce, return_value, ZEND_STRL("mutation_token"), &val TSRMLS_CC);
+                zend_update_property(pcbc_counter_result_impl_ce, return_value, ZEND_STRL("mutation_token"),
+                                     &val TSRMLS_CC);
             }
         }
     }
 }
 
-zend_class_entry *pcbc_counter_options_ce;
+zend_class_entry *pcbc_increment_options_ce;
 
-PHP_METHOD(CounterOptions, expiration)
+PHP_METHOD(IncrementOptions, expiry)
 {
     zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_counter_options_ce, getThis(), ZEND_STRL("expiration"), arg TSRMLS_CC);
+    zend_update_property_long(pcbc_increment_options_ce, getThis(), ZEND_STRL("expiry"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
-PHP_METHOD(CounterOptions, timeout)
+PHP_METHOD(IncrementOptions, timeout)
 {
     zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_counter_options_ce, getThis(), ZEND_STRL("timeout"), arg TSRMLS_CC);
+    zend_update_property_long(pcbc_increment_options_ce, getThis(), ZEND_STRL("timeout"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
-PHP_METHOD(CounterOptions, durabilityLevel)
+PHP_METHOD(IncrementOptions, durabilityLevel)
 {
     zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_counter_options_ce, getThis(), ZEND_STRL("durability_level"), arg TSRMLS_CC);
+    zend_update_property_long(pcbc_increment_options_ce, getThis(), ZEND_STRL("durability_level"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
-PHP_METHOD(CounterOptions, delta)
+PHP_METHOD(IncrementOptions, delta)
 {
     zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_counter_options_ce, getThis(), ZEND_STRL("delta"), arg TSRMLS_CC);
+    zend_update_property_long(pcbc_increment_options_ce, getThis(), ZEND_STRL("delta"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
-PHP_METHOD(CounterOptions, initial)
+PHP_METHOD(IncrementOptions, initial)
 {
     zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_counter_options_ce, getThis(), ZEND_STRL("initial"), arg TSRMLS_CC);
+    zend_update_property_long(pcbc_increment_options_ce, getThis(), ZEND_STRL("initial"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_CounterOptions_expiration, 0, 1, \\Couchbase\\CounterOptions, 0)
+PHP_METHOD(IncrementOptions, cas)
+{
+    zend_string *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "S", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_str(pcbc_increment_options_ce, getThis(), ZEND_STRL("cas"), arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_IncrementOptions_expiry, 0, 1, \\Couchbase\\IncrementOptions, 0)
 ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_CounterOptions_timeout, 0, 1, \\Couchbase\\CounterOptions, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_IncrementOptions_timeout, 0, 1, \\Couchbase\\IncrementOptions, 0)
 ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_CounterOptions_durabilityLevel, 0, 1, \\Couchbase\\CounterOptions, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_IncrementOptions_durabilityLevel, 0, 1, \\Couchbase\\IncrementOptions, 0)
 ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_CounterOptions_delta, 0, 1, \\Couchbase\\CounterOptions, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_IncrementOptions_delta, 0, 1, \\Couchbase\\IncrementOptions, 0)
 ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_CounterOptions_initial, 0, 1, \\Couchbase\\CounterOptions, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_IncrementOptions_initial, 0, 1, \\Couchbase\\IncrementOptions, 0)
 ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-static const zend_function_entry pcbc_counter_options_methods[] = {
-    PHP_ME(CounterOptions, expiration, ai_CounterOptions_expiration, ZEND_ACC_PUBLIC)
-    PHP_ME(CounterOptions, timeout, ai_CounterOptions_timeout, ZEND_ACC_PUBLIC)
-    PHP_ME(CounterOptions, durabilityLevel, ai_CounterOptions_durabilityLevel, ZEND_ACC_PUBLIC)
-    PHP_ME(CounterOptions, delta, ai_CounterOptions_delta, ZEND_ACC_PUBLIC)
-    PHP_ME(CounterOptions, initial, ai_CounterOptions_initial, ZEND_ACC_PUBLIC)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_IncrementOptions_cas, 0, 1, \\Couchbase\\IncrementOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+// clang-format off
+static const zend_function_entry pcbc_increment_options_methods[] = {
+    PHP_ME(IncrementOptions, expiry, ai_IncrementOptions_expiry, ZEND_ACC_PUBLIC)
+    PHP_ME(IncrementOptions, timeout, ai_IncrementOptions_timeout, ZEND_ACC_PUBLIC)
+    PHP_ME(IncrementOptions, durabilityLevel, ai_IncrementOptions_durabilityLevel, ZEND_ACC_PUBLIC)
+    PHP_ME(IncrementOptions, delta, ai_IncrementOptions_delta, ZEND_ACC_PUBLIC)
+    PHP_ME(IncrementOptions, initial, ai_IncrementOptions_initial, ZEND_ACC_PUBLIC)
+    PHP_ME(IncrementOptions, cas, ai_IncrementOptions_cas, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
-
+// clang-format on
 
 PHP_METHOD(Collection, increment)
 {
@@ -168,7 +189,7 @@ PHP_METHOD(Collection, increment)
     zend_string *id;
     zval *options = NULL;
 
-    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "S|O", &id, &options, pcbc_counter_options_ce);
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "S|O", &id, &options, pcbc_increment_options_ce);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -181,26 +202,38 @@ PHP_METHOD(Collection, increment)
     lcb_cmdcounter_delta(cmd, +1);
     if (options) {
         zval *prop, ret;
-        prop = zend_read_property(pcbc_counter_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
+        prop = zend_read_property(pcbc_increment_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdcounter_timeout(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_counter_options_ce, options, ZEND_STRL("durability_level"), 0, &ret);
+        prop = zend_read_property(pcbc_increment_options_ce, options, ZEND_STRL("durability_level"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdcounter_durability(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_counter_options_ce, options, ZEND_STRL("expiration"), 0, &ret);
+        prop = zend_read_property(pcbc_increment_options_ce, options, ZEND_STRL("expiry"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
-            lcb_cmdcounter_expiration(cmd, Z_LVAL_P(prop));
+            lcb_cmdcounter_expiry(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_counter_options_ce, options, ZEND_STRL("delta"), 0, &ret);
+        prop = zend_read_property(pcbc_increment_options_ce, options, ZEND_STRL("delta"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG && Z_LVAL_P(prop) > 0) {
             lcb_cmdcounter_delta(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_counter_options_ce, options, ZEND_STRL("initial"), 0, &ret);
+        prop = zend_read_property(pcbc_increment_options_ce, options, ZEND_STRL("initial"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdcounter_initial(cmd, Z_LVAL_P(prop));
         }
+        /* FIXME
+        prop = zend_read_property(pcbc_decrement_options_ce, options, ZEND_STRL("cas"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_STRING) {
+            zend_string *decoded = php_base64_decode_str(Z_STR_P(prop));
+            if (decoded) {
+                uint64_t cas = 0;
+                memcpy(&cas, ZSTR_VAL(decoded), ZSTR_LEN(decoded));
+                lcb_cmdcounter_cas(cmd, cas);
+                zend_string_free(decoded);
+            }
+        }
+         */
     }
 
     lcbtrace_SPAN *span = NULL;
@@ -213,10 +246,7 @@ PHP_METHOD(Collection, increment)
     }
 
     object_init_ex(return_value, pcbc_counter_result_impl_ce);
-    struct counter_cookie cookie = {
-        LCB_SUCCESS,
-        return_value
-    };
+    struct counter_cookie cookie = {LCB_SUCCESS, return_value};
     err = lcb_counter(bucket->conn->lcb, &cookie, cmd);
     lcb_cmdcounter_destroy(cmd);
     if (err == LCB_SUCCESS) {
@@ -233,13 +263,117 @@ PHP_METHOD(Collection, increment)
     }
 }
 
+zend_class_entry *pcbc_decrement_options_ce;
+
+PHP_METHOD(DecrementOptions, expiry)
+{
+    zend_long arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_decrement_options_ce, getThis(), ZEND_STRL("expiry"), arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(DecrementOptions, timeout)
+{
+    zend_long arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_decrement_options_ce, getThis(), ZEND_STRL("timeout"), arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(DecrementOptions, durabilityLevel)
+{
+    zend_long arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_decrement_options_ce, getThis(), ZEND_STRL("durability_level"), arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(DecrementOptions, delta)
+{
+    zend_long arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_decrement_options_ce, getThis(), ZEND_STRL("delta"), arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(DecrementOptions, initial)
+{
+    zend_long arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_decrement_options_ce, getThis(), ZEND_STRL("initial"), arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(DecrementOptions, cas)
+{
+    zend_string *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "S", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_str(pcbc_decrement_options_ce, getThis(), ZEND_STRL("cas"), arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_DecrementOptions_expiry, 0, 1, \\Couchbase\\DecrementOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_DecrementOptions_timeout, 0, 1, \\Couchbase\\DecrementOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_DecrementOptions_durabilityLevel, 0, 1, \\Couchbase\\DecrementOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_DecrementOptions_delta, 0, 1, \\Couchbase\\DecrementOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_DecrementOptions_initial, 0, 1, \\Couchbase\\DecrementOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_DecrementOptions_cas, 0, 1, \\Couchbase\\DecrementOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+// clang-format off
+static const zend_function_entry pcbc_decrement_options_methods[] = {
+    PHP_ME(DecrementOptions, expiry, ai_DecrementOptions_expiry, ZEND_ACC_PUBLIC)
+    PHP_ME(DecrementOptions, timeout, ai_DecrementOptions_timeout, ZEND_ACC_PUBLIC)
+    PHP_ME(DecrementOptions, durabilityLevel, ai_DecrementOptions_durabilityLevel, ZEND_ACC_PUBLIC)
+    PHP_ME(DecrementOptions, delta, ai_DecrementOptions_delta, ZEND_ACC_PUBLIC)
+    PHP_ME(DecrementOptions, initial, ai_DecrementOptions_initial, ZEND_ACC_PUBLIC)
+    PHP_ME(DecrementOptions, cas, ai_DecrementOptions_cas, ZEND_ACC_PUBLIC)
+    PHP_FE_END
+};
+
+// clang-format on
 PHP_METHOD(Collection, decrement)
 {
     lcb_STATUS err = LCB_SUCCESS;
     zend_string *id;
     zval *options = NULL;
 
-    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "S|O", &id, &options, pcbc_counter_options_ce);
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "S|O", &id, &options, pcbc_decrement_options_ce);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -252,26 +386,38 @@ PHP_METHOD(Collection, decrement)
     lcb_cmdcounter_delta(cmd, -1);
     if (options) {
         zval *prop, ret;
-        prop = zend_read_property(pcbc_counter_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
+        prop = zend_read_property(pcbc_decrement_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdcounter_timeout(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_counter_options_ce, getThis(), ZEND_STRL("durability_level"), 0, &ret);
+        prop = zend_read_property(pcbc_decrement_options_ce, options, ZEND_STRL("durability_level"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdcounter_durability(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_counter_options_ce, getThis(), ZEND_STRL("expiration"), 0, &ret);
+        prop = zend_read_property(pcbc_decrement_options_ce, options, ZEND_STRL("expiry"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
-            lcb_cmdcounter_expiration(cmd, Z_LVAL_P(prop));
+            lcb_cmdcounter_expiry(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_counter_options_ce, options, ZEND_STRL("delta"), 0, &ret);
+        prop = zend_read_property(pcbc_decrement_options_ce, options, ZEND_STRL("delta"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG && Z_LVAL_P(prop) > 0) {
             lcb_cmdcounter_delta(cmd, -1 * Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_counter_options_ce, options, ZEND_STRL("initial"), 0, &ret);
+        prop = zend_read_property(pcbc_decrement_options_ce, options, ZEND_STRL("initial"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdcounter_initial(cmd, Z_LVAL_P(prop));
         }
+        /* FIXME
+        prop = zend_read_property(pcbc_decrement_options_ce, options, ZEND_STRL("cas"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_STRING) {
+            zend_string *decoded = php_base64_decode_str(Z_STR_P(prop));
+            if (decoded) {
+                uint64_t cas = 0;
+                memcpy(&cas, ZSTR_VAL(decoded), ZSTR_LEN(decoded));
+                lcb_cmdcounter_cas(cmd, cas);
+                zend_string_free(decoded);
+            }
+        }
+         */
     }
 
     lcbtrace_SPAN *span = NULL;
@@ -284,10 +430,7 @@ PHP_METHOD(Collection, decrement)
     }
 
     object_init_ex(return_value, pcbc_counter_result_impl_ce);
-    struct counter_cookie cookie = {
-        LCB_SUCCESS,
-        return_value
-    };
+    struct counter_cookie cookie = {LCB_SUCCESS, return_value};
     err = lcb_counter(bucket->conn->lcb, &cookie, cmd);
     lcb_cmdcounter_destroy(cmd);
     if (err == LCB_SUCCESS) {
@@ -308,16 +451,26 @@ PHP_MINIT_FUNCTION(CollectionCounter)
 {
     zend_class_entry ce;
 
-    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "CounterOptions", pcbc_counter_options_methods);
-    pcbc_counter_options_ce = zend_register_internal_class(&ce TSRMLS_CC);
-    zend_declare_property_null(pcbc_counter_options_ce, ZEND_STRL("timeout"), ZEND_ACC_PRIVATE TSRMLS_CC);
-    zend_declare_property_null(pcbc_counter_options_ce, ZEND_STRL("expiration"), ZEND_ACC_PRIVATE TSRMLS_CC);
-    zend_declare_property_null(pcbc_counter_options_ce, ZEND_STRL("durability_level"), ZEND_ACC_PRIVATE TSRMLS_CC);
-    zend_declare_property_null(pcbc_counter_options_ce, ZEND_STRL("delta"), ZEND_ACC_PRIVATE TSRMLS_CC);
-    zend_declare_property_null(pcbc_counter_options_ce, ZEND_STRL("initial"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "IncrementOptions", pcbc_increment_options_methods);
+    pcbc_increment_options_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    zend_declare_property_null(pcbc_increment_options_ce, ZEND_STRL("timeout"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_increment_options_ce, ZEND_STRL("expiry"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_increment_options_ce, ZEND_STRL("durability_level"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_increment_options_ce, ZEND_STRL("delta"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_increment_options_ce, ZEND_STRL("initial"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_increment_options_ce, ZEND_STRL("cas"), ZEND_ACC_PRIVATE TSRMLS_CC);
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "DecrementOptions", pcbc_decrement_options_methods);
+    pcbc_decrement_options_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    zend_declare_property_null(pcbc_decrement_options_ce, ZEND_STRL("timeout"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_decrement_options_ce, ZEND_STRL("expiry"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_decrement_options_ce, ZEND_STRL("durability_level"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_decrement_options_ce, ZEND_STRL("delta"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_decrement_options_ce, ZEND_STRL("initial"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_decrement_options_ce, ZEND_STRL("cas"), ZEND_ACC_PRIVATE TSRMLS_CC);
+
     return SUCCESS;
 }
-
 
 /*
  * vim: et ts=4 sw=4 sts=4

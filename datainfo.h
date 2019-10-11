@@ -147,9 +147,9 @@ static datainfo_t parse_oldflags(lcb_uint32_t flags)
     return out;
 }
 
-static lcb_uint8_t make_datatype(datainfo_t dt)
+static uint8_t make_datatype(datainfo_t dt)
 {
-    lcb_uint8_t value;
+    uint8_t value;
     if (dt.format > FMT_MAX_VAL) {
         value |= ((FMT_PRIVATE & 0x7) << 0);
     } else {
@@ -159,7 +159,7 @@ static lcb_uint8_t make_datatype(datainfo_t dt)
     return value;
 }
 
-static datainfo_t parse_datatype(lcb_uint8_t datatype)
+static datainfo_t parse_datatype(uint8_t datatype)
 {
     datainfo_t out;
     out.format = ((datatype >> 0) & 0x7);
@@ -175,7 +175,7 @@ static lcb_uint32_t make_flags(datainfo_t dt)
     return flags;
 }
 
-static datainfo_t get_datainfo(lcb_uint32_t flags, lcb_uint8_t datatype)
+static datainfo_t get_datainfo(lcb_uint32_t flags, uint8_t datatype)
 {
     datainfo_t out;
 

@@ -18,8 +18,8 @@
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/transcoding", __FILE__, __LINE__
 
-int pcbc_decode_value(zval *return_value, pcbc_bucket_t *bucket, const char *bytes, int bytes_len, lcb_U32 flags,
-                      lcb_datatype_t datatype TSRMLS_DC)
+int pcbc_decode_value(zval *return_value, pcbc_bucket_t *bucket, const char *bytes, int bytes_len, uint32_t flags,
+                      uint8_t datatype TSRMLS_DC)
 {
     int rv;
     zval params[3];
@@ -41,7 +41,7 @@ int pcbc_decode_value(zval *return_value, pcbc_bucket_t *bucket, const char *byt
 }
 
 int pcbc_encode_value(pcbc_bucket_t *bucket, zval *value, void **bytes, lcb_size_t *nbytes, lcb_uint32_t *flags,
-                      lcb_uint8_t *datatype TSRMLS_DC)
+                      uint8_t *datatype TSRMLS_DC)
 {
     zval retval;
     int rv;
@@ -80,7 +80,7 @@ int pcbc_encode_value(pcbc_bucket_t *bucket, zval *value, void **bytes, lcb_size
         *nbytes = Z_STRLEN_P(zbytes);
         *bytes = estrndup(Z_STRVAL_P(zbytes), *nbytes);
         *flags = (uint32_t)Z_LVAL_P(zflags);
-        *datatype = (lcb_uint8_t)Z_LVAL_P(zdatatype);
+        *datatype = (uint8_t)Z_LVAL_P(zdatatype);
     }
 
     zval_ptr_dtor(&retval);

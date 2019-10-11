@@ -11,7 +11,7 @@ class DnsSrvTest extends PHPUnit_Framework_TestCase {
         // By default the library always tries to bootstrap using DNS SRV record.
         // To turn off this behaviour, append '?dnssrv=off to connection string.
         $cluster = new \Couchbase\Cluster('couchbase://couchbase.avsej.net/');
-        $bucket = $cluster->openBucket('default');
+        $bucket = $cluster->bucket('default');
         $res = $bucket->upsert('hello-DNS-SRV', ['success' => true]);
         $this->assertNotNull($res->cas);
     }

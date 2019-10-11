@@ -15,7 +15,7 @@ $cb = new \Couchbase\Cluster('couchbase://localhost');
 /*
  * We open the default bucket to store our cached data in.
  */
-$db = $cb->openBucket('default');
+$db = $cb->bucket('default');
 
 
 /*

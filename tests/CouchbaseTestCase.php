@@ -9,7 +9,6 @@ class CouchbaseTestCase extends \PHPUnit_Framework_TestCase {
     public $testAdminPassword;
     public $testUser;
     public $testPassword;
-    public $testAuthenticator;
     public $mock = null;
 
     protected function setUp() {
@@ -47,20 +46,13 @@ class CouchbaseTestCase extends \PHPUnit_Framework_TestCase {
 
             $this->testUser = getenv('CB_USER');
             if ($this->testUser === FALSE) {
-                $this->testUser = 'default';
+                $this->testUser = 'Administrator';
             }
 
             $this->testPassword = getenv('CB_PASSWORD');
             if ($this->testPassword === FALSE) {
-                $this->testPassword = '';
+                $this->testPassword = 'password';
             }
-        }
-        if ($this->serverVersion() >= 5.0) {
-            $this->testAuthenticator = new \Couchbase\PasswordAuthenticator();
-            $this->testAuthenticator->username($this->testUser)->password($this->testPassword);
-        } else {
-            $this->testAuthenticator = new \Couchbase\ClassicAuthenticator();
-            $this->testAuthenticator->bucket($this->testBucket, $this->testPassword);
         }
     }
 

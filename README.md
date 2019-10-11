@@ -77,7 +77,7 @@ into the bucket and then retrieving its contents:
 
 ```php
 $cluster = new \Couchbase\Cluster('localhost');
-$db = $cluster->openBucket('default');
+$db = $cluster->bucket('default');
 $db->upsert('testdoc', array('name'=>'Frank'));
 $res = $db->get('testdoc');
 var_dump($res->value);

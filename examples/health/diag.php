@@ -3,7 +3,7 @@
 $cluster = new \Couchbase\Cluster('couchbase://localhost');
 $cluster->authenticateAs("Administrator", "password");
 
-$bucket = $cluster->openBucket("default");
+$bucket = $cluster->bucket("default");
 $bucket->upsert("foo", ["bar" => 42]);
 var_dump($bucket->diag("my_app"));
 //=> array(4) {

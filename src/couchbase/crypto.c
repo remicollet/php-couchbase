@@ -89,8 +89,8 @@ static lcb_STATUS pcbc_crypto_generate_iv(struct lcbcrypto_PROVIDER *provider, u
     return LCB_EINVAL;
 }
 
-static lcb_STATUS pcbc_crypto_sign(struct lcbcrypto_PROVIDER *provider, const lcbcrypto_SIGV *inputs,
-                                    size_t inputs_num, uint8_t **sig, size_t *sig_len)
+static lcb_STATUS pcbc_crypto_sign(struct lcbcrypto_PROVIDER *provider, const lcbcrypto_SIGV *inputs, size_t inputs_num,
+                                   uint8_t **sig, size_t *sig_len)
 {
     zval *zprovider = (zval *)provider->cookie;
     int rv;
@@ -126,7 +126,7 @@ static lcb_STATUS pcbc_crypto_sign(struct lcbcrypto_PROVIDER *provider, const lc
 }
 
 static lcb_STATUS pcbc_crypto_verify_signature(struct lcbcrypto_PROVIDER *provider, const lcbcrypto_SIGV *inputs,
-                                                size_t inputs_num, uint8_t *sig, size_t sig_len)
+                                               size_t inputs_num, uint8_t *sig, size_t sig_len)
 {
     zval *zprovider = (zval *)provider->cookie;
     int rv;
@@ -165,7 +165,7 @@ static lcb_STATUS pcbc_crypto_verify_signature(struct lcbcrypto_PROVIDER *provid
 }
 
 static lcb_STATUS pcbc_crypto_encrypt(struct lcbcrypto_PROVIDER *provider, const uint8_t *input, size_t input_len,
-                                       const uint8_t *iv, size_t iv_len, uint8_t **output, size_t *output_len)
+                                      const uint8_t *iv, size_t iv_len, uint8_t **output, size_t *output_len)
 {
     zval *zprovider = (zval *)provider->cookie;
     int rv;
@@ -204,7 +204,7 @@ static lcb_STATUS pcbc_crypto_encrypt(struct lcbcrypto_PROVIDER *provider, const
 }
 
 static lcb_STATUS pcbc_crypto_decrypt(struct lcbcrypto_PROVIDER *provider, const uint8_t *input, size_t input_len,
-                                       const uint8_t *iv, size_t iv_len, uint8_t **output, size_t *output_len)
+                                      const uint8_t *iv, size_t iv_len, uint8_t **output, size_t *output_len)
 {
     zval *zprovider = (zval *)provider->cookie;
     int rv;

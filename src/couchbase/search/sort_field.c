@@ -19,182 +19,147 @@
  */
 #include "couchbase.h"
 
-typedef struct {
-
-    zend_bool descending;
-    char *field;
-    char *type;
-    char *mode;
-    char *missing;
-    zend_object std;
-} pcbc_search_sort_field_t;
-
-static inline pcbc_search_sort_field_t *pcbc_search_sort_field_fetch_object(zend_object *obj)
-{
-    return (pcbc_search_sort_field_t *)((char *)obj - XtOffsetOf(pcbc_search_sort_field_t, std));
-}
-#define Z_SEARCH_SORT_FIELD_OBJ(zo) (pcbc_search_sort_field_fetch_object(zo))
-#define Z_SEARCH_SORT_FIELD_OBJ_P(zv) (pcbc_search_sort_field_fetch_object(Z_OBJ_P(zv)))
-
-#define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/search_sort_field", __FILE__, __LINE__
-
 zend_class_entry *pcbc_search_sort_field_ce;
 
-/* {{{ proto void SearchSortField::__construct() */
 PHP_METHOD(SearchSortField, __construct)
 {
-    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
-}
-/* }}} */
+    zend_string *field = NULL;
+    int rv;
 
-/* {{{ proto \Couchbase\SearchSortField SearchSortField::descending(boolean $val)
- */
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "S", &field);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+
+    zend_update_property_str(pcbc_search_sort_field_ce, getThis(), ZEND_STRL("field"), field TSRMLS_CC);
+}
+
 PHP_METHOD(SearchSortField, descending)
 {
-    pcbc_search_sort_field_t *obj;
     zend_bool descending = 0;
     int rv;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "b", &descending);
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "b", &descending);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
-    obj = Z_SEARCH_SORT_FIELD_OBJ_P(getThis());
-    obj->descending = descending;
+    zend_update_property_bool(pcbc_search_sort_field_ce, getThis(), ZEND_STRL("desc"), descending TSRMLS_CC);
 
     RETURN_ZVAL(getThis(), 1, 0);
-} /* }}} */
+}
 
-/* {{{ proto \Couchbase\SearchSortField SearchSortField::type(string $type)
- */
 PHP_METHOD(SearchSortField, type)
 {
-    pcbc_search_sort_field_t *obj;
-    char *type = NULL;
-    size_t type_len;
+    zend_string *type = NULL;
     int rv;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &type, &type_len);
-    if (rv == FAILURE) {
-        return;
-    }
-
-    obj = Z_SEARCH_SORT_FIELD_OBJ_P(getThis());
-    if (obj->type) {
-        efree(obj->type);
-        obj->type = NULL;
-    }
-    if (type) {
-        obj->type = estrndup(type, type_len);
-    }
-
-    RETURN_ZVAL(getThis(), 1, 0);
-} /* }}} */
-
-/* {{{ proto \Couchbase\SearchSortField SearchSortField::mode(string $mode)
- */
-PHP_METHOD(SearchSortField, mode)
-{
-    pcbc_search_sort_field_t *obj;
-    char *mode = NULL;
-    size_t mode_len;
-    int rv;
-
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &mode, &mode_len);
-    if (rv == FAILURE) {
-        return;
-    }
-
-    obj = Z_SEARCH_SORT_FIELD_OBJ_P(getThis());
-    if (obj->mode) {
-        efree(obj->mode);
-        obj->mode = NULL;
-    }
-    if (mode) {
-        obj->mode = estrndup(mode, mode_len);
-    }
-
-    RETURN_ZVAL(getThis(), 1, 0);
-} /* }}} */
-
-/* {{{ proto \Couchbase\SearchSortField SearchSortField::missing(string $missing)
- */
-PHP_METHOD(SearchSortField, missing)
-{
-    pcbc_search_sort_field_t *obj;
-    char *missing = NULL;
-    size_t missing_len;
-    int rv;
-
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &missing, &missing_len);
-    if (rv == FAILURE) {
-        return;
-    }
-
-    obj = Z_SEARCH_SORT_FIELD_OBJ_P(getThis());
-    if (obj->missing) {
-        efree(obj->missing);
-        obj->missing = NULL;
-    }
-    if (missing) {
-        obj->missing = estrndup(missing, missing_len);
-    }
-
-    RETURN_ZVAL(getThis(), 1, 0);
-} /* }}} */
-
-/* {{{ proto array SearchSortField::jsonSerialize()
- */
-PHP_METHOD(SearchSortField, jsonSerialize)
-{
-    pcbc_search_sort_field_t *obj;
-    int rv;
-
-    rv = zend_parse_parameters_none();
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "S", &type);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
-    obj = Z_SEARCH_SORT_FIELD_OBJ_P(getThis());
+    zend_update_property_str(pcbc_search_sort_field_ce, getThis(), ZEND_STRL("type"), type TSRMLS_CC);
+
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(SearchSortField, mode)
+{
+    zend_string *mode = NULL;
+    int rv;
+
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "S", &mode);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+
+    zend_update_property_str(pcbc_search_sort_field_ce, getThis(), ZEND_STRL("mode"), mode TSRMLS_CC);
+
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(SearchSortField, missing)
+{
+    zend_string *missing = NULL;
+    int rv;
+
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "S", &missing);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+
+    zend_update_property_str(pcbc_search_sort_field_ce, getThis(), ZEND_STRL("missing"), missing TSRMLS_CC);
+
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(SearchSortField, jsonSerialize)
+{
+    int rv;
+
+    rv = zend_parse_parameters_none_throw();
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+
     array_init(return_value);
-    ADD_ASSOC_STRING(return_value, "by", "field");
-    ADD_ASSOC_BOOL_EX(return_value, "desc", obj->descending);
-    ADD_ASSOC_STRING(return_value, "field", obj->field);
-    if (obj->type != NULL) {
-        ADD_ASSOC_STRING(return_value, "type", obj->type);
+    add_assoc_string(return_value, "by", "field");
+    zval *prop, ret;
+    prop = zend_read_property(pcbc_search_sort_field_ce, getThis(), ZEND_STRL("desc"), 0, &ret);
+    if (Z_TYPE_P(prop) != IS_NULL) {
+        add_assoc_zval(return_value, "desc", prop);
+        Z_TRY_ADDREF_P(prop);
     }
-    if (obj->mode != NULL) {
-        ADD_ASSOC_STRING(return_value, "mode", obj->mode);
+    prop = zend_read_property(pcbc_search_sort_field_ce, getThis(), ZEND_STRL("field"), 0, &ret);
+    if (Z_TYPE_P(prop) != IS_NULL) {
+        add_assoc_zval(return_value, "field", prop);
+        Z_TRY_ADDREF_P(prop);
     }
-    if (obj->missing != NULL) {
-        ADD_ASSOC_STRING(return_value, "missing", obj->missing);
+    prop = zend_read_property(pcbc_search_sort_field_ce, getThis(), ZEND_STRL("type"), 0, &ret);
+    if (Z_TYPE_P(prop) != IS_NULL) {
+        add_assoc_zval(return_value, "type", prop);
+        Z_TRY_ADDREF_P(prop);
     }
-} /* }}} */
+    prop = zend_read_property(pcbc_search_sort_field_ce, getThis(), ZEND_STRL("mode"), 0, &ret);
+    if (Z_TYPE_P(prop) != IS_NULL) {
+        add_assoc_zval(return_value, "mode", prop);
+        Z_TRY_ADDREF_P(prop);
+    }
+    prop = zend_read_property(pcbc_search_sort_field_ce, getThis(), ZEND_STRL("missing"), 0, &ret);
+    if (Z_TYPE_P(prop) != IS_NULL) {
+        add_assoc_zval(return_value, "missing", prop);
+        Z_TRY_ADDREF_P(prop);
+    }
+}
 
-ZEND_BEGIN_ARG_INFO_EX(ai_SearchSortField_none, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(ai_SearchSortField_jsonSerialize, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_SearchSortField_descending, 0, 0, 1)
-ZEND_ARG_INFO(0, descending)
+ZEND_BEGIN_ARG_INFO_EX(ai_SearchSortField_construct, 0, 0, 0)
+ZEND_ARG_TYPE_INFO(0, field, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_SearchSortField_type, 0, 0, 1)
-ZEND_ARG_INFO(0, type)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_SearchSortField_descending, 0, 1, \\Couchbase\\SearchSortField, 0)
+ZEND_ARG_TYPE_INFO(0, descending, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_SearchSortField_mode, 0, 0, 1)
-ZEND_ARG_INFO(0, mode)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_SearchSortField_type, 0, 1, \\Couchbase\\SearchSortField, 0)
+ZEND_ARG_TYPE_INFO(0, type, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_SearchSortField_missing, 0, 0, 1)
-ZEND_ARG_INFO(0, missing)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_SearchSortField_mode, 0, 1, \\Couchbase\\SearchSortField, 0)
+ZEND_ARG_TYPE_INFO(0, mode, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_SearchSortField_missing, 0, 1, \\Couchbase\\SearchSortField, 0)
+ZEND_ARG_TYPE_INFO(0, missing, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
 // clang-format off
 zend_function_entry search_sort_field_methods[] = {
-    PHP_ME(SearchSortField, __construct, ai_SearchSortField_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(SearchSortField, jsonSerialize, ai_SearchSortField_none, ZEND_ACC_PUBLIC)
+    PHP_ME(SearchSortField, __construct, ai_SearchSortField_construct, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    PHP_ME(SearchSortField, jsonSerialize, ai_SearchSortField_jsonSerialize, ZEND_ACC_PUBLIC)
     PHP_ME(SearchSortField, descending, ai_SearchSortField_descending, ZEND_ACC_PUBLIC)
     PHP_ME(SearchSortField, type, ai_SearchSortField_type, ZEND_ACC_PUBLIC)
     PHP_ME(SearchSortField, mode, ai_SearchSortField_mode, ZEND_ACC_PUBLIC)
@@ -203,108 +168,43 @@ zend_function_entry search_sort_field_methods[] = {
 };
 // clang-format on
 
-void pcbc_search_sort_field_init(zval *return_value, const char *field, int field_len TSRMLS_DC)
-{
-    pcbc_search_sort_field_t *obj;
-
-    object_init_ex(return_value, pcbc_search_sort_field_ce);
-    obj = Z_SEARCH_SORT_FIELD_OBJ_P(return_value);
-    obj->descending = 0;
-    obj->field = estrndup(field, field_len);
-    obj->type = NULL;
-    obj->mode = NULL;
-    obj->missing = NULL;
-}
-
-zend_object_handlers search_sort_field_handlers;
-
-static void search_sort_field_free_object(zend_object *object TSRMLS_DC) /* {{{ */
-{
-    pcbc_search_sort_field_t *obj = Z_SEARCH_SORT_FIELD_OBJ(object);
-
-    if (obj->field) {
-        efree(obj->field);
-    }
-    if (obj->type) {
-        efree(obj->type);
-    }
-    if (obj->mode) {
-        efree(obj->mode);
-    }
-    if (obj->missing) {
-        efree(obj->missing);
-    }
-    zend_object_std_dtor(&obj->std TSRMLS_CC);
-} /* }}} */
-
-static zend_object *search_sort_field_create_object(zend_class_entry *class_type TSRMLS_DC)
-{
-    pcbc_search_sort_field_t *obj = NULL;
-
-    obj = PCBC_ALLOC_OBJECT_T(pcbc_search_sort_field_t, class_type);
-
-    zend_object_std_init(&obj->std, class_type TSRMLS_CC);
-    object_properties_init(&obj->std, class_type);
-
-    obj->std.handlers = &search_sort_field_handlers;
-    return &obj->std;
-}
-
-static HashTable *pcbc_search_sort_field_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
-{
-    pcbc_search_sort_field_t *obj = NULL;
-    zval retval;
-
-    *is_temp = 1;
-    obj = Z_SEARCH_SORT_FIELD_OBJ_P(object);
-
-    array_init(&retval);
-    ADD_ASSOC_STRING(&retval, "by", "field");
-    ADD_ASSOC_BOOL_EX(&retval, "desc", obj->descending);
-    ADD_ASSOC_STRING(&retval, "field", obj->field);
-    if (obj->type != NULL) {
-        ADD_ASSOC_STRING(&retval, "type", obj->type);
-    }
-    if (obj->mode != NULL) {
-        ADD_ASSOC_STRING(&retval, "mode", obj->mode);
-    }
-    if (obj->missing != NULL) {
-        ADD_ASSOC_STRING(&retval, "missing", obj->missing);
-    }
-    return Z_ARRVAL(retval);
-} /* }}} */
+zend_class_entry *pcbc_search_sort_type_ce;
+static const zend_function_entry search_sort_type_interface[] = {PHP_FE_END};
+zend_class_entry *pcbc_search_sort_mode_ce;
+static const zend_function_entry search_sort_mode_interface[] = {PHP_FE_END};
+zend_class_entry *pcbc_search_sort_missing_ce;
+static const zend_function_entry search_sort_missing_interface[] = {PHP_FE_END};
 
 PHP_MINIT_FUNCTION(SearchSortField)
 {
     zend_class_entry ce;
 
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "SearchSortField", search_sort_field_methods);
-    pcbc_search_sort_field_ce = zend_register_internal_class_ex(&ce, pcbc_search_sort_ce TSRMLS_CC);
-    pcbc_search_sort_field_ce->create_object = search_sort_field_create_object;
-    PCBC_CE_DISABLE_SERIALIZATION(pcbc_search_sort_field_ce);
+    pcbc_search_sort_field_ce = zend_register_internal_class(&ce TSRMLS_CC);
 
-    zend_class_implements(pcbc_search_sort_field_ce TSRMLS_CC, 1, pcbc_json_serializable_ce);
+    zend_class_implements(pcbc_search_sort_field_ce TSRMLS_CC, 2, pcbc_json_serializable_ce, pcbc_search_sort_ce);
+    zend_declare_property_null(pcbc_search_sort_field_ce, ZEND_STRL("desc"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_search_sort_field_ce, ZEND_STRL("field"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_search_sort_field_ce, ZEND_STRL("type"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_search_sort_field_ce, ZEND_STRL("mode"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_search_sort_field_ce, ZEND_STRL("missing"), ZEND_ACC_PRIVATE TSRMLS_CC);
 
-    zend_declare_class_constant_stringl(pcbc_search_sort_field_ce, ZEND_STRL("TYPE_AUTO"), ZEND_STRL("auto") TSRMLS_CC);
-    zend_declare_class_constant_stringl(pcbc_search_sort_field_ce, ZEND_STRL("TYPE_STRING"),
-                                        ZEND_STRL("string") TSRMLS_CC);
-    zend_declare_class_constant_stringl(pcbc_search_sort_field_ce, ZEND_STRL("TYPE_NUMBER"),
-                                        ZEND_STRL("number") TSRMLS_CC);
-    zend_declare_class_constant_stringl(pcbc_search_sort_field_ce, ZEND_STRL("TYPE_DATE"), ZEND_STRL("date") TSRMLS_CC);
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "SearchSortType", search_sort_type_interface);
+    pcbc_search_sort_type_ce = zend_register_internal_interface(&ce TSRMLS_CC);
+    zend_declare_class_constant_stringl(pcbc_search_sort_type_ce, ZEND_STRL("AUTO"), ZEND_STRL("auto") TSRMLS_CC);
+    zend_declare_class_constant_stringl(pcbc_search_sort_type_ce, ZEND_STRL("STRING"), ZEND_STRL("string") TSRMLS_CC);
+    zend_declare_class_constant_stringl(pcbc_search_sort_type_ce, ZEND_STRL("NUMBER"), ZEND_STRL("number") TSRMLS_CC);
+    zend_declare_class_constant_stringl(pcbc_search_sort_type_ce, ZEND_STRL("DATE"), ZEND_STRL("date") TSRMLS_CC);
 
-    zend_declare_class_constant_stringl(pcbc_search_sort_field_ce, ZEND_STRL("MODE_DEFAULT"),
-                                        ZEND_STRL("default") TSRMLS_CC);
-    zend_declare_class_constant_stringl(pcbc_search_sort_field_ce, ZEND_STRL("MODE_MIN"), ZEND_STRL("min") TSRMLS_CC);
-    zend_declare_class_constant_stringl(pcbc_search_sort_field_ce, ZEND_STRL("MODE_MAX"), ZEND_STRL("max") TSRMLS_CC);
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "SearchSortMode", search_sort_mode_interface);
+    pcbc_search_sort_mode_ce = zend_register_internal_interface(&ce TSRMLS_CC);
+    zend_declare_class_constant_stringl(pcbc_search_sort_mode_ce, ZEND_STRL("DEFAULT"), ZEND_STRL("default") TSRMLS_CC);
+    zend_declare_class_constant_stringl(pcbc_search_sort_mode_ce, ZEND_STRL("MIN"), ZEND_STRL("min") TSRMLS_CC);
+    zend_declare_class_constant_stringl(pcbc_search_sort_mode_ce, ZEND_STRL("MAX"), ZEND_STRL("max") TSRMLS_CC);
 
-    zend_declare_class_constant_stringl(pcbc_search_sort_field_ce, ZEND_STRL("MISSING_FIRST"),
-                                        ZEND_STRL("first") TSRMLS_CC);
-    zend_declare_class_constant_stringl(pcbc_search_sort_field_ce, ZEND_STRL("MISSING_LAST"),
-                                        ZEND_STRL("last") TSRMLS_CC);
-
-    memcpy(&search_sort_field_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-    search_sort_field_handlers.get_debug_info = pcbc_search_sort_field_get_debug_info;
-    search_sort_field_handlers.free_obj = search_sort_field_free_object;
-    search_sort_field_handlers.offset = XtOffsetOf(pcbc_search_sort_field_t, std);
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "SearchSortMissing", search_sort_missing_interface);
+    pcbc_search_sort_missing_ce = zend_register_internal_interface(&ce TSRMLS_CC);
+    zend_declare_class_constant_stringl(pcbc_search_sort_missing_ce, ZEND_STRL("FIRST"), ZEND_STRL("first") TSRMLS_CC);
+    zend_declare_class_constant_stringl(pcbc_search_sort_missing_ce, ZEND_STRL("LAST"), ZEND_STRL("last") TSRMLS_CC);
     return SUCCESS;
 }

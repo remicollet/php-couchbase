@@ -25,7 +25,7 @@ struct unlock_cookie {
     zval *return_value;
 };
 
-void unlock_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPUNLOCK *resp)
+void unlock_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPUNLOCK *resp)
 {
     TSRMLS_FETCH();
 
@@ -67,11 +67,12 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_UnlockOptions_timeout, 0, 1, \\Couchba
 ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
+// clang-format off
 static const zend_function_entry pcbc_unlock_options_methods[] = {
     PHP_ME(UnlockOptions, timeout, ai_UnlockOptions_timeout, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
-
+// clang-format on
 
 PHP_METHOD(Collection, unlock)
 {
@@ -90,7 +91,7 @@ PHP_METHOD(Collection, unlock)
     lcb_cmdunlock_create(&cmd);
     lcb_cmdunlock_collection(cmd, scope_str, scope_len, collection_str, collection_len);
     lcb_cmdunlock_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
-    zend_string *decoded = php_base64_decode(ZSTR_VAL(cas), ZSTR_LEN(cas));
+    zend_string *decoded = php_base64_decode_str(cas);
     if (decoded) {
         uint64_t cas_val = 0;
         memcpy(&cas_val, ZSTR_VAL(decoded), ZSTR_LEN(decoded));
@@ -115,10 +116,7 @@ PHP_METHOD(Collection, unlock)
     }
 
     object_init_ex(return_value, pcbc_result_impl_ce);
-    struct unlock_cookie cookie = {
-        LCB_SUCCESS,
-        return_value
-    };
+    struct unlock_cookie cookie = {LCB_SUCCESS, return_value};
     err = lcb_unlock(bucket->conn->lcb, &cookie, cmd);
     if (err == LCB_SUCCESS) {
         lcb_wait(bucket->conn->lcb);

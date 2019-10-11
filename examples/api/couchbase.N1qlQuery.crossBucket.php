@@ -6,7 +6,7 @@ $authenticator->bucket('orders', '123456');
 $cluster = new \Couchbase\Cluster("couchbase://localhost");
 $cluster->authenticate($authenticator);
 
-$bucket = $cluster->openBucket('orders');
+$bucket = $cluster->bucket('orders');
 
 $query = \Couchbase\N1qlQuery::fromString(
     "SELECT * FROM `orders` JOIN `people` ON KEYS `orders`.person_id ORDER BY `orders`.name");

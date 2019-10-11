@@ -26,7 +26,7 @@ struct remove_cookie {
     zval *return_value;
 };
 
-void remove_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPREMOVE *resp)
+void remove_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPREMOVE *resp)
 {
     TSRMLS_FETCH();
 
@@ -55,17 +55,21 @@ void remove_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPREMOVE 
                 zval val;
                 object_init_ex(&val, pcbc_mutation_token_impl_ce);
 
-                zend_update_property_long(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("partition_id"), token.vbid_ TSRMLS_CC);
+                zend_update_property_long(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("partition_id"),
+                                          token.vbid_ TSRMLS_CC);
                 b64 = php_base64_encode((unsigned char *)&token.uuid_, sizeof(token.uuid_));
                 zend_update_property_str(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("partition_uuid"), b64 TSRMLS_CC);
                 b64 = php_base64_encode((unsigned char *)&token.seqno_, sizeof(token.seqno_));
-                zend_update_property_str(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("sequence_number"), b64 TSRMLS_CC);
+                zend_update_property_str(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("sequence_number"),
+                                         b64 TSRMLS_CC);
 
                 const char *bucket;
                 lcb_cntl(instance, LCB_CNTL_GET, LCB_CNTL_BUCKETNAME, &bucket);
-                zend_update_property_string(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("bucket_name"), bucket TSRMLS_CC);
+                zend_update_property_string(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("bucket_name"),
+                                            bucket TSRMLS_CC);
 
-                zend_update_property(pcbc_mutation_result_impl_ce, return_value, ZEND_STRL("mutation_token"), &val TSRMLS_CC);
+                zend_update_property(pcbc_mutation_result_impl_ce, return_value, ZEND_STRL("mutation_token"),
+                                     &val TSRMLS_CC);
             }
         }
     }
@@ -80,7 +84,7 @@ PHP_METHOD(RemoveOptions, cas)
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_string *decoded = php_base64_decode(ZSTR_VAL(arg), ZSTR_LEN(arg));
+    zend_string *decoded = php_base64_decode_str(arg);
     if (decoded) {
         if (ZSTR_LEN(decoded) == sizeof(uint64_t)) {
             zend_update_property_str(pcbc_remove_options_ce, getThis(), ZEND_STRL("cas"), arg TSRMLS_CC);
@@ -124,13 +128,14 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_RemoveOptions_durabilityLevel, 0, 1, \
 ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
+// clang-format off
 static const zend_function_entry pcbc_remove_options_methods[] = {
     PHP_ME(RemoveOptions, cas, ai_RemoveOptions_cas, ZEND_ACC_PUBLIC)
     PHP_ME(RemoveOptions, timeout, ai_RemoveOptions_timeout, ZEND_ACC_PUBLIC)
     PHP_ME(RemoveOptions, durabilityLevel, ai_RemoveOptions_durabilityLevel, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
-
+// clang-format on
 
 PHP_METHOD(Collection, remove)
 {
@@ -160,7 +165,7 @@ PHP_METHOD(Collection, remove)
         }
         prop = zend_read_property(pcbc_remove_options_ce, options, ZEND_STRL("cas"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_STRING) {
-            zend_string *decoded = php_base64_decode(Z_STRVAL_P(prop), Z_STRLEN_P(prop));
+            zend_string *decoded = php_base64_decode_str(Z_STR_P(prop));
             if (decoded) {
                 uint64_t cas = 0;
                 memcpy(&cas, ZSTR_VAL(decoded), ZSTR_LEN(decoded));
@@ -179,10 +184,7 @@ PHP_METHOD(Collection, remove)
         lcb_cmdremove_parent_span(cmd, span);
     }
     object_init_ex(return_value, pcbc_mutation_result_impl_ce);
-    struct remove_cookie cookie = {
-        LCB_SUCCESS,
-        return_value
-    };
+    struct remove_cookie cookie = {LCB_SUCCESS, return_value};
     err = lcb_remove(bucket->conn->lcb, &cookie, cmd);
     lcb_cmdremove_destroy(cmd);
     if (err == LCB_SUCCESS) {

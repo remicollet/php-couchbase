@@ -20,14 +20,14 @@
 
 extern zend_class_entry *pcbc_search_result_impl_ce;
 extern zend_class_entry *pcbc_search_meta_data_impl_ce;
-extern zend_class_entry *pcbc_search_query_ce;
+extern zend_class_entry *pcbc_search_options_ce;
 
 struct search_cookie {
     lcb_STATUS rc;
     zval *return_value;
 };
 
-static void ftsrow_callback(lcb_INSTANCE *  instance, int ignoreme, const lcb_RESPFTS *resp)
+static void ftsrow_callback(lcb_INSTANCE *instance, int ignoreme, const lcb_RESPFTS *resp)
 {
     TSRMLS_FETCH();
 
@@ -48,7 +48,7 @@ static void ftsrow_callback(lcb_INSTANCE *  instance, int ignoreme, const lcb_RE
 
         int last_error;
         PCBC_JSON_COPY_DECODE(&value, row, nrow, PHP_JSON_OBJECT_AS_ARRAY, last_error);
-        if(last_error != 0) {
+        if (last_error != 0) {
             pcbc_log(LOGARGS(instance, WARN), "Failed to decode FTS response as JSON: json_last_error=%d", last_error);
         }
         if (lcb_respfts_is_final(resp)) {
@@ -57,34 +57,60 @@ static void ftsrow_callback(lcb_INSTANCE *  instance, int ignoreme, const lcb_RE
             HashTable *marr = Z_ARRVAL(value);
 
             mval = zend_symtable_str_find(marr, ZEND_STRL("took"));
-            if (mval) zend_update_property(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("took"), mval TSRMLS_CC);
+            if (mval) {
+                zend_update_property(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("took"), mval TSRMLS_CC);
+            }
             mval = zend_symtable_str_find(marr, ZEND_STRL("total_hits"));
-            if (mval) zend_update_property(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("total_hits"), mval TSRMLS_CC);
+            if (mval) {
+                zend_update_property(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("total_hits"), mval TSRMLS_CC);
+            }
             mval = zend_symtable_str_find(marr, ZEND_STRL("max_score"));
-            if (mval) zend_update_property(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("max_score"), mval TSRMLS_CC);
+            if (mval) {
+                zend_update_property(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("max_score"), mval TSRMLS_CC);
+            }
             mval = zend_symtable_str_find(marr, ZEND_STRL("metrics"));
-            if (mval) zend_update_property(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("metrics"), mval TSRMLS_CC);
+            if (mval) {
+                zend_update_property(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("metrics"), mval TSRMLS_CC);
+            }
             zend_update_property(pcbc_search_result_impl_ce, return_value, ZEND_STRL("meta"), &meta TSRMLS_CC);
 
             mstatus = zend_symtable_str_find(marr, ZEND_STRL("status"));
             if (mstatus) {
-                mval = zend_symtable_str_find(Z_ARRVAL_P(mstatus), ZEND_STRL("successful"));
-                if (mval) zend_update_property(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("success_count"), mval TSRMLS_CC);
-                mval = zend_symtable_str_find(Z_ARRVAL_P(mstatus), ZEND_STRL("failed"));
-                if (mval) zend_update_property(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("error_count"), mval TSRMLS_CC);
+                switch (Z_TYPE_P(mstatus)) {
+                case IS_STRING:
+                    // TODO: read and expose value in "error" key
+                    zend_update_property_stringl(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("status"),
+                                                 Z_STRVAL_P(mstatus), Z_STRLEN_P(mstatus) TSRMLS_CC);
+                    break;
+                case IS_ARRAY:
+                    zend_update_property_string(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("status"),
+                                                "success" TSRMLS_CC);
+                    mval = zend_symtable_str_find(Z_ARRVAL_P(mstatus), ZEND_STRL("successful"));
+                    if (mval) {
+                        zend_update_property(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("success_count"),
+                                             mval TSRMLS_CC);
+                    }
+                    mval = zend_symtable_str_find(Z_ARRVAL_P(mstatus), ZEND_STRL("failed"));
+                    if (mval) {
+                        zend_update_property(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("error_count"),
+                                             mval TSRMLS_CC);
+                    }
+                    break;
+                }
             }
-
             mval = zend_symtable_str_find(marr, ZEND_STRL("facets"));
-            if (mval) zend_update_property(pcbc_search_result_impl_ce, return_value, ZEND_STRL("facets"), mval TSRMLS_CC);
+            if (mval) {
+                zend_update_property(pcbc_search_result_impl_ce, return_value, ZEND_STRL("facets"), mval TSRMLS_CC);
+            }
         } else {
             zval *hits, rv;
-            hits = zend_read_property(pcbc_search_result_impl_ce, return_value, ZEND_STRL("hits"), 0, &rv);
+            hits = zend_read_property(pcbc_search_result_impl_ce, return_value, ZEND_STRL("rows"), 0, &rv);
             add_next_index_zval(hits, &value);
         }
     }
 }
 
-PHP_METHOD(Cluster, searchQuery)
+PHP_METHOD(Cluster, search)
 {
     lcb_STATUS err;
     zend_string *index;
@@ -92,9 +118,25 @@ PHP_METHOD(Cluster, searchQuery)
     zval *options = NULL;
     int rv;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "SO|z", &index, &query, pcbc_search_query_ce, &options);
+    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "SO|O", &index, &query, pcbc_search_query_ce, &options,
+                               pcbc_search_options_ce);
     if (rv == FAILURE) {
         RETURN_NULL();
+    }
+
+    zval payload;
+    array_init(&payload);
+    add_assoc_str(&payload, "indexName", index);
+    add_assoc_zval(&payload, "query", query);
+    if (options && Z_TYPE_P(options) != IS_NULL) {
+        zval fname;
+        zval values;
+        PCBC_STRING(fname, "jsonSerialize");
+        ZVAL_UNDEF(&values);
+        rv = call_user_function_ex(EG(function_table), options, &fname, &values, 0, NULL, 1, NULL TSRMLS_CC);
+        if (rv != FAILURE && !EG(exception) && !Z_ISUNDEF(values)) {
+            zend_hash_merge(HASH_OF(&payload), HASH_OF(&values), NULL, 0);
+        }
     }
 
     pcbc_cluster_t *cluster = Z_CLUSTER_OBJ_P(getThis());
@@ -103,30 +145,24 @@ PHP_METHOD(Cluster, searchQuery)
     lcb_cmdfts_create(&cmd);
     lcb_cmdfts_callback(cmd, ftsrow_callback);
 
-    {
-        smart_str buf = {0};
-        int last_error;
-
-        PCBC_JSON_ENCODE(&buf, query, 0, last_error);
-        if (last_error != 0) {
-            pcbc_log(LOGARGS(cluster->conn->lcb, WARN), "Failed to encode FTS query as JSON: json_last_error=%d",
-                     last_error);
-            smart_str_free(&buf);
-            RETURN_NULL();
-        }
-        smart_str_0(&buf);
-        lcb_cmdfts_query(cmd, ZSTR_VAL(buf.s), ZSTR_LEN(buf.s));
+    smart_str buf = {0};
+    int last_error;
+    PCBC_JSON_ENCODE(&buf, &payload, 0, last_error);
+    if (last_error != 0) {
+        pcbc_log(LOGARGS(cluster->conn->lcb, WARN), "Failed to encode FTS query as JSON: json_last_error=%d",
+                 last_error);
         smart_str_free(&buf);
+        RETURN_NULL();
     }
+    smart_str_0(&buf);
+    lcb_cmdfts_payload(cmd, ZSTR_VAL(buf.s), ZSTR_LEN(buf.s));
 
     object_init_ex(return_value, pcbc_search_result_impl_ce);
     zval hits;
     array_init(&hits);
-    zend_update_property(pcbc_search_result_impl_ce, return_value, ZEND_STRL("hits"), &hits TSRMLS_CC);
-    struct search_cookie cookie = {
-        LCB_SUCCESS,
-        return_value
-    };
+    zend_update_property(pcbc_search_result_impl_ce, return_value, ZEND_STRL("rows"), &hits TSRMLS_CC);
+    Z_DELREF(hits);
+    struct search_cookie cookie = {LCB_SUCCESS, return_value};
 
     lcb_FTS_HANDLE *handle = NULL;
     lcb_cmdfts_handle(cmd, &handle);
@@ -140,6 +176,7 @@ PHP_METHOD(Cluster, searchQuery)
     }
     err = lcb_fts(cluster->conn->lcb, &cookie, cmd);
     lcb_cmdfts_destroy(cmd);
+    smart_str_free(&buf);
     if (err == LCB_SUCCESS) {
         lcb_wait(cluster->conn->lcb);
         err = cookie.rc;

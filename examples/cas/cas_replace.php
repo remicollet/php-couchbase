@@ -12,7 +12,7 @@ $cluster = new \Couchbase\Cluster('couchbase://localhost');
 /*
  * We open the default bucket to store our docuemtns in.
  */
-$bucket = $cluster->openBucket('default');
+$bucket = $cluster->bucket('default');
 
 /*
  * Now insert a document with id 'foo'

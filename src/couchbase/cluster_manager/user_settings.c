@@ -20,7 +20,6 @@
 
 zend_class_entry *pcbc_user_settings_ce;
 
-/* {{{ proto void UserSettings::__construct() */
 PHP_METHOD(UserSettings, __construct)
 {
     pcbc_user_settings_t *obj;
@@ -38,10 +37,7 @@ PHP_METHOD(UserSettings, __construct)
     obj->password_len = 0;
     memset(&obj->roles, 0, sizeof(obj->roles));
 }
-/* }}} */
 
-/* {{{ proto \Couchbase\UserSettings UserSettings::fullName(string $fullName)
- */
 PHP_METHOD(UserSettings, fullName)
 {
     pcbc_user_settings_t *obj;
@@ -62,10 +58,8 @@ PHP_METHOD(UserSettings, fullName)
     obj->full_name_len = full_name_len;
 
     RETURN_ZVAL(getThis(), 1, 0);
-} /* }}} */
+}
 
-/* {{{ proto \Couchbase\UserSettings UserSettings::password(string $password)
- */
 PHP_METHOD(UserSettings, password)
 {
     pcbc_user_settings_t *obj;
@@ -86,10 +80,8 @@ PHP_METHOD(UserSettings, password)
     obj->password_len = password_len;
 
     RETURN_ZVAL(getThis(), 1, 0);
-} /* }}} */
+}
 
-/* {{{ proto \Couchbase\UserSettings UserSettings::role(string $role, string $bucket = NULL)
- */
 PHP_METHOD(UserSettings, role)
 {
     pcbc_user_settings_t *obj;
@@ -114,7 +106,7 @@ PHP_METHOD(UserSettings, role)
     }
 
     RETURN_ZVAL(getThis(), 1, 0);
-} /* }}} */
+}
 
 ZEND_BEGIN_ARG_INFO_EX(ai_UserSettings_none, 0, 0, 0)
 ZEND_END_ARG_INFO()
@@ -144,7 +136,7 @@ zend_function_entry user_settings_methods[] = {
 
 zend_object_handlers user_settings_handlers;
 
-static void user_settings_free_object(zend_object *object TSRMLS_DC) /* {{{ */
+static void user_settings_free_object(zend_object *object TSRMLS_DC)
 {
     pcbc_user_settings_t *obj = Z_USER_SETTINGS_OBJ(object);
 
@@ -159,7 +151,7 @@ static void user_settings_free_object(zend_object *object TSRMLS_DC) /* {{{ */
     }
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-} /* }}} */
+}
 
 static zend_object *user_settings_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
@@ -174,7 +166,7 @@ static zend_object *user_settings_create_object(zend_class_entry *class_type TSR
     return &obj->std;
 }
 
-static HashTable *pcbc_user_settings_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
+static HashTable *pcbc_user_settings_get_debug_info(zval *object, int *is_temp TSRMLS_DC)
 {
     pcbc_user_settings_t *obj = NULL;
     zval retval;
@@ -184,13 +176,13 @@ static HashTable *pcbc_user_settings_get_debug_info(zval *object, int *is_temp T
 
     array_init(&retval);
     if (obj->full_name) {
-        ADD_ASSOC_STRINGL(&retval, "fullName", obj->full_name, obj->full_name_len);
+        add_assoc_stringl(&retval, "fullName", obj->full_name, obj->full_name_len);
     }
     if (PCBC_SMARTSTR_LEN(obj->roles)) {
-        ADD_ASSOC_STRINGL(&retval, "roles", PCBC_SMARTSTR_VAL(obj->roles), PCBC_SMARTSTR_LEN(obj->roles));
+        add_assoc_stringl(&retval, "roles", PCBC_SMARTSTR_VAL(obj->roles), PCBC_SMARTSTR_LEN(obj->roles));
     }
     return Z_ARRVAL(retval);
-} /* }}} */
+}
 
 PHP_MINIT_FUNCTION(UserSettings)
 {

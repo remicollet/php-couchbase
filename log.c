@@ -41,26 +41,27 @@ static const char *level_to_string(int severity)
 
 #define PCBC_LOG_MSG_SIZE 1024
 
-static void log_handler(struct lcb_logprocs_st *procs, unsigned int iid, const char *subsys, int severity,
+static void log_handler(const lcb_LOGGER *logger, uint64_t iid, const char *subsys, lcb_LOG_SEVERITY severity,
                         const char *srcfile, int srcline, const char *fmt, va_list ap)
 {
-    struct pcbc_logger_st *logger = (struct pcbc_logger_st *)procs;
-    char buf[PCBC_LOG_MSG_SIZE] = {0};
-    TSRMLS_FETCH();
+    struct pcbc_logger_st *pl = NULL;
+    lcb_logger_cookie(logger, (void **)&pl);
 
-    if (severity < logger->minlevel) {
+    if (severity < pl->minlevel) {
         return;
     }
+
+    char buf[PCBC_LOG_MSG_SIZE] = {0};
+    TSRMLS_FETCH();
 
     pcbc_log_formatter(buf, PCBC_LOG_MSG_SIZE, level_to_string(severity), subsys, srcline, iid, NULL, 1, fmt, ap);
     php_log_err(buf TSRMLS_CC);
 }
 
-struct pcbc_logger_st pcbc_logger = {{0 /* version */, {{log_handler} /* v1 */} /*v*/},
-                                     /** Minimum severity */
-                                     LCB_LOG_INFO};
+struct pcbc_logger_st pcbc_logger = {LCB_LOG_INFO, log_handler};
 
-void pcbc_log(int severity, lcb_INSTANCE *instance, const char *subsys, const char *srcfile, int srcline, const char *fmt, ...)
+void pcbc_log(int severity, lcb_INSTANCE *instance, const char *subsys, const char *srcfile, int srcline,
+              const char *fmt, ...)
 {
     va_list ap;
     char buf[PCBC_LOG_MSG_SIZE] = {0};

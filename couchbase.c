@@ -198,18 +198,18 @@ PHP_MINIT_FUNCTION(ClusterManager);
 PHP_MINIT_FUNCTION(UserSettings);
 PHP_MINIT_FUNCTION(Bucket);
 PHP_MINIT_FUNCTION(BucketManager);
+PHP_MINIT_FUNCTION(QueryIndexManager);
 PHP_MINIT_FUNCTION(Authenticator);
 PHP_MINIT_FUNCTION(CertAuthenticator);
 PHP_MINIT_FUNCTION(ClassicAuthenticator);
 PHP_MINIT_FUNCTION(PasswordAuthenticator);
-PHP_MINIT_FUNCTION(MutationToken);
 PHP_MINIT_FUNCTION(MutationState);
 PHP_MINIT_FUNCTION(AnalyticsQuery);
 PHP_MINIT_FUNCTION(N1qlIndex);
 PHP_MINIT_FUNCTION(LookupInSpec);
 PHP_MINIT_FUNCTION(MutateInSpec);
+PHP_MINIT_FUNCTION(SearchOptions);
 PHP_MINIT_FUNCTION(SearchQuery);
-PHP_MINIT_FUNCTION(SearchQueryPart);
 PHP_MINIT_FUNCTION(BooleanFieldSearchQuery);
 PHP_MINIT_FUNCTION(BooleanSearchQuery);
 PHP_MINIT_FUNCTION(ConjunctionSearchQuery);
@@ -252,6 +252,8 @@ PHP_MINIT_FUNCTION(CollectionRemove);
 PHP_MINIT_FUNCTION(CollectionSubdoc);
 PHP_MINIT_FUNCTION(BucketView);
 PHP_MINIT_FUNCTION(N1qlQuery);
+PHP_MINIT_FUNCTION(ViewIndexManager);
+PHP_MINIT_FUNCTION(ClusterOptions);
 
 PHP_MINIT_FUNCTION(couchbase)
 {
@@ -277,18 +279,18 @@ PHP_MINIT_FUNCTION(couchbase)
     PHP_MINIT(UserSettings)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(Bucket)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(BucketManager)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(QueryIndexManager)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(Authenticator)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(CertAuthenticator)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(ClassicAuthenticator)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(PasswordAuthenticator)(INIT_FUNC_ARGS_PASSTHRU);
-    PHP_MINIT(MutationToken)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(MutationState)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(AnalyticsQuery)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(N1qlIndex)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(LookupInSpec)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(MutateInSpec)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(SearchOptions)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(SearchQuery)(INIT_FUNC_ARGS_PASSTHRU);
-    PHP_MINIT(SearchQueryPart)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(BooleanFieldSearchQuery)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(BooleanSearchQuery)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(ConjunctionSearchQuery)(INIT_FUNC_ARGS_PASSTHRU);
@@ -318,7 +320,7 @@ PHP_MINIT_FUNCTION(couchbase)
     PHP_MINIT(SearchSortGeoDistance)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(SearchSortId)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(SearchSortScore)(INIT_FUNC_ARGS_PASSTHRU);
-//  PHP_MINIT(CryptoProvider)(INIT_FUNC_ARGS_PASSTHRU);
+    //  PHP_MINIT(CryptoProvider)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(SearchIndexManager)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(CollectionGet)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(CollectionGetReplica)(INIT_FUNC_ARGS_PASSTHRU);
@@ -331,6 +333,8 @@ PHP_MINIT_FUNCTION(couchbase)
     PHP_MINIT(CollectionSubdoc)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(BucketView)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(N1qlQuery)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(ViewIndexManager)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(ClusterOptions)(INIT_FUNC_ARGS_PASSTHRU);
 
     PCBC_REGISTER_CONST(PERSISTTO_MASTER);
     PCBC_REGISTER_CONST(PERSISTTO_ONE);
@@ -884,8 +888,6 @@ PHP_FUNCTION(basicDecoderV1)
     basic_decoder_v1(bytes, (int)bytes_len, flags, datatype, json_array, return_value TSRMLS_CC);
 }
 
-/* {{{ proto \Couchbase\couchbase_passthru_encoder(string $value)
-   Default passthru encoder which simply passes data as-is rather than performing any transcoding */
 PHP_FUNCTION(passthruEncoder)
 {
     zval *value;
@@ -898,10 +900,8 @@ PHP_FUNCTION(passthruEncoder)
     PCBC_ADDREF_P(value);
     add_index_long(return_value, 1, 0);
     add_index_long(return_value, 2, 0);
-} /* }}} */
+}
 
-/* {{{ proto \Couchbase\couchbase_passthru_decoder(string $value, int $flags, int $datatype)
-   Default passthru decoder which simply passes data as-is rather than performing any transcoding */
 PHP_FUNCTION(passthruDecoder)
 {
     zval *value, *flags, *datatype;
@@ -910,7 +910,7 @@ PHP_FUNCTION(passthruDecoder)
     }
 
     RETURN_ZVAL(value, 1, 0);
-} /* }}} */
+}
 
 /**
  * The default encoder for the client.  Currently invokes the
@@ -921,7 +921,6 @@ PHP_FUNCTION(passthruDecoder)
 PHP_FUNCTION(defaultEncoder)
 {
     zval *value = NULL;
-    zval *options = NULL;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|a", &value);
@@ -944,7 +943,6 @@ PHP_FUNCTION(defaultDecoder)
     char *bytes = NULL;
     size_t bytes_len = -1;
     unsigned long flags = 0, datatype = 0;
-    zval *options = NULL;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sll|a", &bytes, &bytes_len, &flags, &datatype);

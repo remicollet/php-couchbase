@@ -17,5 +17,5 @@ $key = "/tmp/x509-cert/SSLCA/clientdir/client.key";
 
 // NOTE: that it have to use "couchbases://" schema ("https://" will also work)
 $cluster = new \Couchbase\Cluster("couchbases://127.0.0.1?certpath=$cert&keypath=$key");
-$bucket = $cluster->openBucket("default");
+$bucket = $cluster->bucket("default");
 $bucket->upsert("foo", ["bar" => 42]);

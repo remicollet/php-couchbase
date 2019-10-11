@@ -63,17 +63,6 @@ static const zend_function_entry pcbc_lookup_exists_spec_methods[] = {
     PHP_FE_END
 };
 
-PHP_METHOD(LookupGetFullSpec, __construct);
-
-ZEND_BEGIN_ARG_INFO_EX(ai_LookupGetFullSpec_constructor, 0, 0, 0)
-ZEND_END_ARG_INFO()
-
-zend_class_entry *pcbc_lookup_get_full_spec_ce;
-static const zend_function_entry pcbc_lookup_get_full_spec_methods[] = {
-    PHP_ME(LookupGetSpec, __construct, ai_LookupGetFullSpec_constructor, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
-    PHP_FE_END
-};
-
 // clang-format on
 
 PHP_MINIT_FUNCTION(LookupInSpec)
@@ -100,12 +89,8 @@ PHP_MINIT_FUNCTION(LookupInSpec)
     zend_class_implements(pcbc_lookup_exists_spec_ce TSRMLS_CC, 1, pcbc_lookup_in_spec_ce);
     zend_declare_property_null(pcbc_lookup_exists_spec_ce, ZEND_STRL("path"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_lookup_exists_spec_ce, ZEND_STRL("is_xattr"), ZEND_ACC_PRIVATE TSRMLS_CC);
-
-    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "LookupGetFullSpec", pcbc_lookup_get_full_spec_methods);
-    pcbc_lookup_get_full_spec_ce = zend_register_internal_class(&ce TSRMLS_CC);
-    zend_class_implements(pcbc_lookup_get_full_spec_ce TSRMLS_CC, 1, pcbc_lookup_in_spec_ce);
+    return SUCCESS;
 }
-
 
 PHP_METHOD(LookupGetSpec, __construct)
 {
@@ -144,17 +129,6 @@ PHP_METHOD(LookupExistsSpec, __construct)
     }
     zend_update_property_str(pcbc_lookup_exists_spec_ce, getThis(), ZEND_STRL("path"), path TSRMLS_CC);
     zend_update_property_bool(pcbc_lookup_exists_spec_ce, getThis(), ZEND_STRL("is_xattr"), is_xattr TSRMLS_CC);
-}
-
-PHP_METHOD(LookupGetFullGetSpec, __construct)
-{
-    zend_string *path;
-    zend_bool is_xattr = 0;
-
-    int rv = zend_parse_parameters_none_throw();
-    if (rv == FAILURE) {
-        RETURN_NULL();
-    }
 }
 
 /*

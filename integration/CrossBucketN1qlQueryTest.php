@@ -18,13 +18,13 @@ class SearchTest extends PHPUnit_Framework_TestCase {
     }
 
     protected function populatePeople() {
-        $bucket = $this->cluster->openBucket('people', 'secret');
+        $bucket = $this->cluster->bucket('people', 'secret');
         $bucket->upsert("john", ['name' => 'John Doe', 'city' => 'New York']);
         $bucket->upsert("jane", ['name' => 'Jane Doe', 'city' => 'Miami']);
     }
 
     protected function populateOrders() {
-        $bucket = $this->cluster->openBucket('orders', '123456');
+        $bucket = $this->cluster->bucket('orders', '123456');
         $bucket->upsert("soap-12", ['name' => 'Green Soap', 'person_id' => 'john']);
         $bucket->upsert("soap-42", ['name' => 'Red Soap', 'person_id' => 'jane']);
         $bucket->upsert("rope-3",  ['name' => 'Rope 5m', 'person_id' => 'john']);
@@ -40,7 +40,7 @@ class SearchTest extends PHPUnit_Framework_TestCase {
         $authenticator->bucket('orders', '123456');
         $this->cluster->authenticate($authenticator);
 
-        $bucket = $this->cluster->openBucket('orders');
+        $bucket = $this->cluster->bucket('orders');
 
         $query = \Couchbase\N1qlQuery::fromString(
             "SELECT * FROM `orders` JOIN `people` ON KEYS `orders`.person_id ORDER BY `orders`.name");

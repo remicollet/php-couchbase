@@ -3,7 +3,7 @@
 $cluster = new \Couchbase\Cluster('couchbase://192.168.1.194');
 $cluster->authenticateAs('Administrator', 'password');
 
-$bucket = $cluster->openBucket('travel-sample');
+$bucket = $cluster->bucket('travel-sample');
 
 // Add key-value pairs to hotel_10138, representing traveller-Ids and associated discount percentages
 $bucket->mutateIn('hotel_10138')
@@ -33,7 +33,7 @@ $cluster->manager()->upsertUser('cbtestuser', $userSettings);
 $cluster = new \Couchbase\Cluster('couchbase://192.168.1.194');
 $cluster->authenticateAs('jsmith123', 'jsmith123pwd');
 
-$bucket = $cluster->openBucket('travel-sample');
+$bucket = $cluster->bucket('travel-sample');
 
 // Perform a N1QL Query to return document IDs from the bucket. These IDs will be
 // used to reference each document in turn, and check for extended attributes

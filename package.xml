@@ -71,7 +71,6 @@
             <file role="src" name="opcookie.c" />
             <file role="src" name="php_couchbase.h" />
             <file role="src" name="src/couchbase/authenticator.c" />
-            <file role="src" name="src/couchbase/base36.c" />
             <file role="src" name="src/couchbase/bucket.c" />
             <file role="src" name="src/couchbase/bucket/cbft.c" />
             <file role="src" name="src/couchbase/bucket/exists.c" />
@@ -90,9 +89,6 @@
             <file role="src" name="src/couchbase/bucket/unlock.c" />
             <file role="src" name="src/couchbase/bucket/view.c" />
             <file role="src" name="src/couchbase/bucket_manager.c" />
-            <file role="src" name="src/couchbase/bucket_manager/n1ix_create.c" />
-            <file role="src" name="src/couchbase/bucket_manager/n1ix_drop.c" />
-            <file role="src" name="src/couchbase/bucket_manager/n1ix_list.c" />
             <file role="src" name="src/couchbase/cert_authenticator.c" />
             <file role="src" name="src/couchbase/classic_authenticator.c" />
             <file role="src" name="src/couchbase/cluster.c" />
@@ -103,10 +99,13 @@
             <file role="src" name="src/couchbase/lookup_spec.c" />
             <file role="src" name="src/couchbase/mutate_spec.c" />
             <file role="src" name="src/couchbase/mutation_state.c" />
-            <file role="src" name="src/couchbase/mutation_token.c" />
             <file role="src" name="src/couchbase/n1ql_index.c" />
             <file role="src" name="src/couchbase/password_authenticator.c" />
             <file role="src" name="src/couchbase/pool.c" />
+            <file role="src" name="src/couchbase/query_index_manager.c" />
+            <file role="src" name="src/couchbase/query_index_manager/n1ix_create.c" />
+            <file role="src" name="src/couchbase/query_index_manager/n1ix_drop.c" />
+            <file role="src" name="src/couchbase/query_index_manager/n1ix_list.c" />
             <file role="src" name="src/couchbase/result.c" />
             <file role="src" name="src/couchbase/search/boolean_field_query.c" />
             <file role="src" name="src/couchbase/search/boolean_query.c" />
@@ -126,7 +125,7 @@
             <file role="src" name="src/couchbase/search/numeric_range_query.c" />
             <file role="src" name="src/couchbase/search/phrase_query.c" />
             <file role="src" name="src/couchbase/search/prefix_query.c" />
-            <file role="src" name="src/couchbase/search/query_part.c" />
+            <file role="src" name="src/couchbase/search/search_query.c" />
             <file role="src" name="src/couchbase/search/query_string_query.c" />
             <file role="src" name="src/couchbase/search/regexp_query.c" />
             <file role="src" name="src/couchbase/search/sort.c" />
@@ -139,7 +138,8 @@
             <file role="src" name="src/couchbase/search/term_range_query.c" />
             <file role="src" name="src/couchbase/search/wildcard_query.c" />
             <file role="src" name="src/couchbase/search_index_manager.c" />
-            <file role="src" name="src/couchbase/search_query.c" />
+            <file role="src" name="src/couchbase/view_index_manager.c" />
+            <file role="src" name="src/couchbase/search_options.c" />
             <file role="src" name="transcoding.c" />
         </dir>
     </contents>
@@ -316,7 +316,7 @@
             <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
             </license>
             <notes>
-                * PCBC-515: allow to specify expiration for subdocument mutations
+                * PCBC-515: allow to specify expiry for subdocument mutations
                 * PCBC-509: implement fulldoc operations for subdoc API
                 * PCBC-442: fail fast view requests on ephemeral buckets
                 * PCBC-513: make public API non-final (remove final attribute from classes and methods)
@@ -456,7 +456,7 @@
                 * PCBC-465: check encoded ViewQuery before sending to libcouchbase
                 * PCBC-467: intermediate values in Datastructures API might leak.
                   (e.g. result of internal "get" to find out size of the list)
-                * PCBC-469: implement SearchQuery->sort() function to support sorting FTS
+                * PCBC-469: implement SearchOptions->sort() function to support sorting FTS
                   results, which is accessible in Couchbase Server 4.6+
                 * PCBC-471: fixed issue, when the library always use credentials for the
                   first bucket in Authenticator.

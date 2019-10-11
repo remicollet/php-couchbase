@@ -20,13 +20,12 @@
 
 extern zend_class_entry *pcbc_get_result_impl_ce;
 
-
 struct get_cookie {
     lcb_STATUS rc;
     zval *return_value;
 };
 
-void get_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPGET *resp)
+void get_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPGET *resp)
 {
     TSRMLS_FETCH();
 
@@ -53,7 +52,6 @@ void get_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPGET *resp)
     }
 }
 
-
 zend_class_entry *pcbc_get_options_ce;
 
 PHP_METHOD(GetOptions, timeout)
@@ -67,14 +65,14 @@ PHP_METHOD(GetOptions, timeout)
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
-PHP_METHOD(GetOptions, withExpiration)
+PHP_METHOD(GetOptions, withExpiry)
 {
     zend_bool arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "b", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_bool(pcbc_get_options_ce, getThis(), ZEND_STRL("with_expiration"), arg TSRMLS_CC);
+    zend_update_property_bool(pcbc_get_options_ce, getThis(), ZEND_STRL("with_expiry"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
@@ -93,7 +91,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_GetOptions_timeout, 0, 1, \\Couchbase\
 ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_GetOptions_withExpiration, 0, 1, \\Couchbase\\GetOptions, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_GetOptions_withExpiry, 0, 1, \\Couchbase\\GetOptions, 0)
 ZEND_ARG_TYPE_INFO(0, arg, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
@@ -101,13 +99,14 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_GetOptions_project, 0, 1, \\Couchbase\
 ZEND_ARG_TYPE_INFO(0, arg, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
 
+// clang-format off
 static const zend_function_entry pcbc_get_options_methods[] = {
     PHP_ME(GetOptions, timeout, ai_GetOptions_timeout, ZEND_ACC_PUBLIC)
-    PHP_ME(GetOptions, withExpiration, ai_GetOptions_withExpiration, ZEND_ACC_PUBLIC)
+    PHP_ME(GetOptions, withExpiry, ai_GetOptions_withExpiry, ZEND_ACC_PUBLIC)
     PHP_ME(GetOptions, project, ai_GetOptions_project, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
-
+// clang-format on
 
 PHP_METHOD(Collection, get)
 {
@@ -143,10 +142,7 @@ PHP_METHOD(Collection, get)
     }
 
     object_init_ex(return_value, pcbc_get_result_impl_ce);
-    struct get_cookie cookie = {
-        LCB_SUCCESS,
-        return_value
-    };
+    struct get_cookie cookie = {LCB_SUCCESS, return_value};
     err = lcb_get(bucket->conn->lcb, &cookie, cmd);
     lcb_cmdget_destroy(cmd);
 
@@ -191,7 +187,8 @@ PHP_METHOD(Collection, getAndLock)
     zend_long expiry;
     lcb_STATUS err;
 
-    int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "Sl|O", &id, &expiry, &options, pcbc_get_and_lock_options_ce);
+    int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "Sl|O", &id, &expiry, &options,
+                                         pcbc_get_and_lock_options_ce);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -220,10 +217,7 @@ PHP_METHOD(Collection, getAndLock)
         lcb_cmdget_parent_span(cmd, span);
     }
     object_init_ex(return_value, pcbc_get_result_impl_ce);
-    struct get_cookie cookie = {
-        LCB_SUCCESS,
-        return_value
-    };
+    struct get_cookie cookie = {LCB_SUCCESS, return_value};
     err = lcb_get(bucket->conn->lcb, &cookie, cmd);
     lcb_cmdget_destroy(cmd);
     if (err == LCB_SUCCESS) {
@@ -255,10 +249,12 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_GetAndTouchOptions_timeout, 0, 1, \\Co
 ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
+// clang-format off
 static const zend_function_entry pcbc_get_and_touch_options_methods[] = {
     PHP_ME(GetAndTouchOptions, timeout, ai_GetAndTouchOptions_timeout, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
+// clang-format on
 
 PHP_METHOD(Collection, getAndTouch)
 {
@@ -267,7 +263,8 @@ PHP_METHOD(Collection, getAndTouch)
     zend_long expiry;
     lcb_STATUS err;
 
-    int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "Sl|O", &id, &expiry, &options, pcbc_get_and_touch_options_ce);
+    int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "Sl|O", &id, &expiry, &options,
+                                         pcbc_get_and_touch_options_ce);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -277,7 +274,7 @@ PHP_METHOD(Collection, getAndTouch)
     lcb_cmdget_create(&cmd);
     lcb_cmdget_collection(cmd, scope_str, scope_len, collection_str, collection_len);
     lcb_cmdget_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
-    lcb_cmdget_expiration(cmd, expiry);
+    lcb_cmdget_expiry(cmd, expiry);
 
     if (options) {
         zval *prop, ret;
@@ -296,10 +293,7 @@ PHP_METHOD(Collection, getAndTouch)
         lcb_cmdget_parent_span(cmd, span);
     }
     object_init_ex(return_value, pcbc_get_result_impl_ce);
-    struct get_cookie cookie = {
-        LCB_SUCCESS,
-        return_value
-    };
+    struct get_cookie cookie = {LCB_SUCCESS, return_value};
     err = lcb_get(bucket->conn->lcb, &cookie, cmd);
     lcb_cmdget_destroy(cmd);
     if (err == LCB_SUCCESS) {
@@ -321,7 +315,7 @@ PHP_MINIT_FUNCTION(CollectionGet)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "GetOptions", pcbc_get_options_methods);
     pcbc_get_options_ce = zend_register_internal_class(&ce TSRMLS_CC);
     zend_declare_property_null(pcbc_get_options_ce, ZEND_STRL("timeout"), ZEND_ACC_PRIVATE TSRMLS_CC);
-    zend_declare_property_null(pcbc_get_options_ce, ZEND_STRL("with_expiration"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_get_options_ce, ZEND_STRL("with_expiry"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_get_options_ce, ZEND_STRL("project"), ZEND_ACC_PRIVATE TSRMLS_CC);
 
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "GetAndTouchOptions", pcbc_get_and_touch_options_methods);
@@ -334,7 +328,6 @@ PHP_MINIT_FUNCTION(CollectionGet)
 
     return SUCCESS;
 }
-
 
 /*
  * vim: et ts=4 sw=4 sts=4

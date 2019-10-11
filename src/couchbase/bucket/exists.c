@@ -25,7 +25,7 @@ struct exists_cookie {
     zval *return_value;
 };
 
-void exists_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPEXISTS *resp)
+void exists_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPEXISTS *resp)
 {
     TSRMLS_FETCH();
 
@@ -38,8 +38,10 @@ void exists_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPEXISTS 
     set_property_str(lcb_respexists_error_context, pcbc_exists_result_impl_ce, "err_ctx");
     set_property_str(lcb_respexists_error_ref, pcbc_exists_result_impl_ce, "err_ref");
     set_property_str(lcb_respexists_key, pcbc_exists_result_impl_ce, "key");
-    zend_update_property_bool(pcbc_exists_result_impl_ce, return_value, ZEND_STRL("is_found"), lcb_respexists_is_found(resp) TSRMLS_CC);
-    zend_update_property_bool(pcbc_exists_result_impl_ce, return_value, ZEND_STRL("is_persisted"), lcb_respexists_is_persisted(resp) TSRMLS_CC);
+    zend_update_property_bool(pcbc_exists_result_impl_ce, return_value, ZEND_STRL("is_found"),
+                              lcb_respexists_is_found(resp) TSRMLS_CC);
+    zend_update_property_bool(pcbc_exists_result_impl_ce, return_value, ZEND_STRL("is_persisted"),
+                              lcb_respexists_is_persisted(resp) TSRMLS_CC);
     if (cookie->rc == LCB_SUCCESS) {
         uint64_t data;
         lcb_respexists_cas(resp, &data);
@@ -66,10 +68,12 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ExistsOptions_timeout, 0, 1, \\Couchba
 ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
+// clang-format off
 static const zend_function_entry pcbc_exists_options_methods[] = {
     PHP_ME(ExistsOptions, timeout, ai_ExistsOptions_timeout, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
+// clang-format on
 
 PHP_METHOD(Collection, exists)
 {
@@ -105,10 +109,7 @@ PHP_METHOD(Collection, exists)
     }
 
     object_init_ex(return_value, pcbc_exists_result_impl_ce);
-    struct exists_cookie cookie = {
-        LCB_SUCCESS,
-        return_value
-    };
+    struct exists_cookie cookie = {LCB_SUCCESS, return_value};
     err = lcb_exists(bucket->conn->lcb, &cookie, cmd);
     lcb_cmdexists_destroy(cmd);
 

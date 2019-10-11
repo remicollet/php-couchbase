@@ -25,7 +25,7 @@ struct touch_cookie {
     zval *return_value;
 };
 
-void touch_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPTOUCH *resp)
+void touch_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPTOUCH *resp)
 {
     TSRMLS_FETCH();
 
@@ -67,20 +67,23 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_TouchOptions_timeout, 0, 1, \\Couchbas
 ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
+// clang-format off
 static const zend_function_entry pcbc_touch_options_methods[] = {
     PHP_ME(TouchOptions, timeout, ai_TouchOptions_timeout, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
+// clang-format on
 
 PHP_METHOD(Collection, touch)
 {
     lcb_STATUS err;
 
     zend_string *id;
-    zend_long expiration;
+    zend_long expiry;
     zval *options = NULL;
 
-    int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "Sl|O", &id, &expiration, &options, pcbc_touch_options_ce);
+    int rv =
+        zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "Sl|O", &id, &expiry, &options, pcbc_touch_options_ce);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -90,7 +93,7 @@ PHP_METHOD(Collection, touch)
     lcb_cmdtouch_create(&cmd);
     lcb_cmdtouch_collection(cmd, scope_str, scope_len, collection_str, collection_len);
     lcb_cmdtouch_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
-    lcb_cmdtouch_expiration(cmd, expiration);
+    lcb_cmdtouch_expiry(cmd, expiry);
     if (options) {
         zval *prop, ret;
         prop = zend_read_property(pcbc_touch_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
@@ -109,10 +112,7 @@ PHP_METHOD(Collection, touch)
     }
 
     object_init_ex(return_value, pcbc_result_impl_ce);
-    struct touch_cookie cookie = {
-        LCB_SUCCESS,
-        return_value
-    };
+    struct touch_cookie cookie = {LCB_SUCCESS, return_value};
     err = lcb_touch(bucket->conn->lcb, &cookie, cmd);
     if (err == LCB_SUCCESS) {
         lcb_wait(bucket->conn->lcb);

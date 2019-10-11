@@ -54,7 +54,6 @@ COUCHBASE_FILES=" \
     log.c \
     opcookie.c \
     src/couchbase/authenticator.c \
-    src/couchbase/base36.c \
     src/couchbase/bucket.c \
     src/couchbase/bucket/cbas.c \
     src/couchbase/bucket/cbft.c \
@@ -72,23 +71,24 @@ COUCHBASE_FILES=" \
     src/couchbase/bucket/unlock.c \
     src/couchbase/bucket/view.c \
     src/couchbase/bucket_manager.c \
-    src/couchbase/bucket_manager/n1ix_create.c \
-    src/couchbase/bucket_manager/n1ix_drop.c \
-    src/couchbase/bucket_manager/n1ix_list.c \
     src/couchbase/cert_authenticator.c \
     src/couchbase/classic_authenticator.c \
     src/couchbase/cluster.c \
     src/couchbase/cluster_manager.c \
     src/couchbase/cluster_manager/user_settings.c \
+    src/couchbase/cluster_options.c \
     src/couchbase/collection.c \
     src/couchbase/log_formatter.c \
     src/couchbase/lookup_spec.c \
     src/couchbase/mutate_spec.c \
     src/couchbase/mutation_state.c \
-    src/couchbase/mutation_token.c \
     src/couchbase/n1ql_index.c \
     src/couchbase/password_authenticator.c \
     src/couchbase/pool.c \
+    src/couchbase/query_index_manager.c \
+    src/couchbase/query_index_manager/n1ix_create.c \
+    src/couchbase/query_index_manager/n1ix_drop.c \
+    src/couchbase/query_index_manager/n1ix_list.c \
     src/couchbase/result.c \
     src/couchbase/search/boolean_field_query.c \
     src/couchbase/search/boolean_query.c \
@@ -108,9 +108,9 @@ COUCHBASE_FILES=" \
     src/couchbase/search/numeric_range_query.c \
     src/couchbase/search/phrase_query.c \
     src/couchbase/search/prefix_query.c \
-    src/couchbase/search/query_part.c \
     src/couchbase/search/query_string_query.c \
     src/couchbase/search/regexp_query.c \
+    src/couchbase/search/search_query.c \
     src/couchbase/search/sort.c \
     src/couchbase/search/sort_field.c \
     src/couchbase/search/sort_geo.c \
@@ -121,7 +121,8 @@ COUCHBASE_FILES=" \
     src/couchbase/search/term_range_query.c \
     src/couchbase/search/wildcard_query.c \
     src/couchbase/search_index_manager.c \
-    src/couchbase/search_query.c \
+    src/couchbase/search_options.c \
+    src/couchbase/view_index_manager.c \
     transcoding.c \
 "
 

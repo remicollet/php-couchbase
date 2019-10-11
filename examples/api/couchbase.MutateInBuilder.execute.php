@@ -1,7 +1,7 @@
 <?php
 $cluster = new \Couchbase\Cluster("couchbase://localhost");
 $cluster = new \Couchbase\Cluster("couchbase://192.168.1.194");
-$bucket = $cluster->openBucket('default');
+$bucket = $cluster->bucket('default');
 
 $bucket->upsert('bar', [
     'field1' => 'value1',

@@ -75,7 +75,7 @@ PHP_METHOD(SearchIndexManager, getIndex)
     lcb_CMDHTTP *cmd;
     lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_FTS);
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
-    lcb_cmdhttp_path(cmd, path, strlen(path));
+    lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
     pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
     efree(path);
@@ -99,7 +99,7 @@ PHP_METHOD(SearchIndexManager, deleteIndex)
     lcb_CMDHTTP *cmd;
     lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_FTS);
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_DELETE);
-    lcb_cmdhttp_path(cmd, path, strlen(path));
+    lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
     pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
     efree(path);
@@ -124,7 +124,7 @@ PHP_METHOD(SearchIndexManager, createIndex)
     lcb_CMDHTTP *cmd;
     lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_FTS);
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_PUT);
-    lcb_cmdhttp_path(cmd, path, strlen(path));
+    lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_body(cmd, def, def_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_JSON, strlen(PCBC_CONTENT_TYPE_JSON));
     pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
@@ -149,7 +149,7 @@ PHP_METHOD(SearchIndexManager, getIndexedDocumentsCount)
     lcb_CMDHTTP *cmd;
     lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_FTS);
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
-    lcb_cmdhttp_path(cmd, path, strlen(path));
+    lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
     pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
     efree(path);
@@ -195,14 +195,14 @@ zend_function_entry search_index_manager_methods[] = {
 
 zend_object_handlers pcbc_search_index_manager_handlers;
 
-static void pcbc_search_index_manager_free_object(zend_object *object TSRMLS_DC) /* {{{ */
+static void pcbc_search_index_manager_free_object(zend_object *object TSRMLS_DC)
 {
     pcbc_search_index_manager_t *obj = Z_SEARCH_INDEX_MANAGER_OBJ(object);
     pcbc_connection_delref(obj->conn TSRMLS_CC);
     obj->conn = NULL;
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-} /* }}} */
+}
 
 static zend_object *pcbc_search_index_manager_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
@@ -227,7 +227,7 @@ void pcbc_search_index_manager_init(zval *return_value, pcbc_bucket_manager_t *b
     pcbc_connection_addref(manager->conn TSRMLS_CC);
 }
 
-static HashTable *pcbc_search_index_manager_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
+static HashTable *pcbc_search_index_manager_get_debug_info(zval *object, int *is_temp TSRMLS_DC)
 {
     /* pcbc_search_index_manager_t *obj = NULL; */
     zval retval;
@@ -238,7 +238,7 @@ static HashTable *pcbc_search_index_manager_get_debug_info(zval *object, int *is
     array_init(&retval);
 
     return Z_ARRVAL(retval);
-} /* }}} */
+}
 
 PHP_MINIT_FUNCTION(SearchIndexManager)
 {

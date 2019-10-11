@@ -14,7 +14,7 @@
 
 use \Couchbase\Cluster;
 use \Couchbase\Bucket;
-use \Couchbase\SearchQuery;
+use \Couchbase\SearchOptions;
 
 function printResult($label, $resultObject) {
     echo("\n");
@@ -44,8 +44,8 @@ function printResult($label, $resultObject) {
 // unstored.
 function simpleTextQuery(Bucket $bucket) {
     $indexName = "travel-sample-index-unstored";
-    $query = new SearchQuery($indexName,
-                             SearchQuery::match("swanky"));
+    $query = new SearchOptions($indexName,
+                             SearchOptions::match("swanky"));
     $query->limit(10);
     $result = $bucket->query($query);
     printResult("Simple Text Query", $result);
@@ -56,9 +56,9 @@ function simpleTextQuery(Bucket $bucket) {
 // is included in the return object.
 function simpleTextQueryOnStoredField(Bucket $bucket) {
     $indexName = "travel-sample-index-stored";
-    $query = new SearchQuery($indexName,
-                             SearchQuery::match("MDG")->field("destinationairport"));
-    $query->limit(10)->highlight(SearchQuery::HIGHLIGHT_HTML);
+    $query = new SearchOptions($indexName,
+                             SearchOptions::match("MDG")->field("destinationairport"));
+    $query->limit(10)->highlight(SearchOptions::HIGHLIGHT_HTML);
     $result = $bucket->query($query);
     printResult("Simple Text Query on Stored Field", $result);
 }
@@ -67,8 +67,8 @@ function simpleTextQueryOnStoredField(Bucket $bucket) {
 // only of content derived from a specific field from a specific document-type.
 function simpleTextQueryOnNonDefaultIndex(Bucket $bucket) {
     $indexName = "travel-sample-index-hotel-description";
-    $query = new SearchQuery($indexName,
-                             SearchQuery::match("swanky"));
+    $query = new SearchOptions($indexName,
+                             SearchOptions::match("swanky"));
     $query->limit(10);
     $result = $bucket->query($query);
     printResult("Simple Text Query on Non-Default Index", $result);
@@ -79,10 +79,10 @@ function simpleTextQueryOnNonDefaultIndex(Bucket $bucket) {
 // aggregation-data.
 function textQueryOnStoredFieldWithFacet(Bucket $bucket) {
     $indexName = "travel-sample-index-stored";
-    $query = new SearchQuery($indexName,
-                             SearchQuery::match("La Rue Saint Denis!!")->field("reviews.content"));
-    $query->limit(10)->highlight(SearchQuery::HIGHLIGHT_HTML);
-    $query->addFacet('Countries Referenced', SearchQuery::termFacet('country', 5));
+    $query = new SearchOptions($indexName,
+                             SearchOptions::match("La Rue Saint Denis!!")->field("reviews.content"));
+    $query->limit(10)->highlight(SearchOptions::HIGHLIGHT_HTML);
+    $query->addFacet('Countries Referenced', SearchOptions::termFacet('country', 5));
     $result = $bucket->query($query);
     printResult("Match Query with Facet, Result by Row", $result);
 
@@ -93,8 +93,8 @@ function textQueryOnStoredFieldWithFacet(Bucket $bucket) {
 // DocId Query, showing results of a query on two document IDs.
 function docIdQueryMethod(Bucket $bucket) {
     $indexName = "travel-sample-index-unstored";
-    $query = new SearchQuery($indexName,
-                             SearchQuery::docId("hotel_26223", "hotel_28960"));
+    $query = new SearchOptions($indexName,
+                             SearchOptions::docId("hotel_26223", "hotel_28960"));
     $result = $bucket->query($query);
     printResult("DocId Query", $result);
 }
@@ -104,9 +104,9 @@ function docIdQueryMethod(Bucket $bucket) {
 // are exact. With a fuzziness factor of 2, allowing partial matches to be made.
 function unAnalyzedTermQuery(Bucket $bucket, int $fuzzinessLevel) {
     $indexName = "travel-sample-index-stored";
-    $query = new SearchQuery($indexName,
-                             SearchQuery::term("sushi")->field("reviews.content")->fuzziness($fuzzinessLevel));
-    $query->limit(50)->highlight(SearchQuery::HIGHLIGHT_HTML);
+    $query = new SearchOptions($indexName,
+                             SearchOptions::term("sushi")->field("reviews.content")->fuzziness($fuzzinessLevel));
+    $query->limit(50)->highlight(SearchOptions::HIGHLIGHT_HTML);
     $result = $bucket->query($query);
     printResult("Unanalyzed Term Query with Fuzziness Level of " . $fuzzinessLevel . ":", $result);
 }
@@ -114,9 +114,9 @@ function unAnalyzedTermQuery(Bucket $bucket, int $fuzzinessLevel) {
 // Match Phrase Query, using Analysis, for searching on a phrase.
 function matchPhraseQueryOnStoredField(Bucket $bucket) {
     $indexName = "travel-sample-index-stored";
-    $query = new SearchQuery($indexName,
-                             SearchQuery::matchPhrase("Eiffel Tower")->field("description"));
-    $query->limit(10)->highlight(SearchQuery::HIGHLIGHT_HTML);
+    $query = new SearchOptions($indexName,
+                             SearchOptions::matchPhrase("Eiffel Tower")->field("description"));
+    $query->limit(10)->highlight(SearchOptions::HIGHLIGHT_HTML);
     $result = $bucket->query($query);
     printResult("Match Phrase Query, using Analysis", $result);
 }
@@ -124,9 +124,9 @@ function matchPhraseQueryOnStoredField(Bucket $bucket) {
 // Phrase Query, without Analysis, for searching on a phrase without analysis supported.
 function unAnalyzedPhraseQuery(Bucket $bucket) {
     $indexName = "travel-sample-index-stored";
-    $query = new SearchQuery($indexName,
-                             SearchQuery::phrase("dorm", "rooms")->field("description"));
-    $query->limit(10)->highlight(SearchQuery::HIGHLIGHT_HTML);
+    $query = new SearchOptions($indexName,
+                             SearchOptions::phrase("dorm", "rooms")->field("description"));
+    $query->limit(10)->highlight(SearchOptions::HIGHLIGHT_HTML);
     $result = $bucket->query($query);
     printResult("Phrase Query, without Analysis", $result);
 }
@@ -136,11 +136,11 @@ function unAnalyzedPhraseQuery(Bucket $bucket) {
 // result-object.
 function conjunctionQuery(Bucket $bucket) {
     $indexName = "travel-sample-index-stored";
-    $firstQuery = SearchQuery::match("La Rue Saint Denis!!")->field("reviews.content");
-    $secondQuery = SearchQuery::match("boutique")->field("description");
-    $query = new SearchQuery($indexName,
-                             SearchQuery::conjuncts($firstQuery, $secondQuery));
-    $query->limit(10)->highlight(SearchQuery::HIGHLIGHT_HTML);
+    $firstQuery = SearchOptions::match("La Rue Saint Denis!!")->field("reviews.content");
+    $secondQuery = SearchOptions::match("boutique")->field("description");
+    $query = new SearchOptions($indexName,
+                             SearchOptions::conjuncts($firstQuery, $secondQuery));
+    $query->limit(10)->highlight(SearchOptions::HIGHLIGHT_HTML);
     $result = $bucket->query($query);
     printResult("Conjunction Query", $result);
 }
@@ -148,8 +148,8 @@ function conjunctionQuery(Bucket $bucket) {
 // Query String Query, showing how a query string is specified as search-input.
 function queryStringQuery(Bucket $bucket) {
     $indexName = "travel-sample-index-unstored";
-    $query = new SearchQuery($indexName,
-                             SearchQuery::queryString("description: Imperial"));
+    $query = new SearchOptions($indexName,
+                             SearchOptions::queryString("description: Imperial"));
     $query->limit(10);
     $result = $bucket->query($query);
     printResult("Query String Query", $result);
@@ -159,9 +159,9 @@ function queryStringQuery(Bucket $bucket) {
 // search.
 function wildCardQuery(Bucket $bucket) {
     $indexName = "travel-sample-index-stored";
-    $query = new SearchQuery($indexName,
-                             SearchQuery::wildcard("bouti*ue")->field("description"));
-    $query->limit(10)->highlight(SearchQuery::HIGHLIGHT_HTML);
+    $query = new SearchOptions($indexName,
+                             SearchOptions::wildcard("bouti*ue")->field("description"));
+    $query->limit(10)->highlight(SearchOptions::HIGHLIGHT_HTML);
     $result = $bucket->query($query);
     printResult("Wild Card Query", $result);
 }
@@ -170,8 +170,8 @@ function wildCardQuery(Bucket $bucket) {
 // matches within the range returned.
 function numericRangeQuery(Bucket $bucket) {
     $indexName = "travel-sample-index-unstored";
-    $query = new SearchQuery($indexName,
-                             SearchQuery::numericRange()->min(10100)->max(10200)->field("id"));
+    $query = new SearchOptions($indexName,
+                             SearchOptions::numericRange()->min(10100)->max(10200)->field("id"));
     $query->limit(10);
     $result = $bucket->query($query);
     printResult("Numeric Range Query", $result);
@@ -181,16 +181,16 @@ function numericRangeQuery(Bucket $bucket) {
 // conditions for successful matches.
 function regexpQuery(Bucket $bucket) {
     $indexName = "travel-sample-index-stored";
-    $query = new SearchQuery($indexName,
-                             SearchQuery::regexp("[a-z]")->field("description"));
-    $query->limit(10)->highlight(SearchQuery::HIGHLIGHT_HTML);
+    $query = new SearchOptions($indexName,
+                             SearchOptions::regexp("[a-z]")->field("description"));
+    $query->limit(10)->highlight(SearchOptions::HIGHLIGHT_HTML);
     $result = $bucket->query($query);
     printResult("Regexp Query", $result);
 }
 
 $cluster = new Cluster('couchbase://localhost');
 $cluster->authenticateAs('Administrator', 'password');
-$bucket = $cluster->openBucket('travel-sample');
+$bucket = $cluster->bucket('travel-sample');
 
 simpleTextQuery($bucket);
 simpleTextQueryOnStoredField($bucket);

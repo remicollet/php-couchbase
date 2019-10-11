@@ -9,7 +9,7 @@ class DatastructuresTest extends CouchbaseTestCase {
         parent::setUp();
         $this->cluster = new \Couchbase\Cluster($this->testDsn);
         $this->cluster->authenticate($this->testAuthenticator);
-        $this->bucket = $this->cluster->openBucket($this->testBucket);
+        $this->bucket = $this->cluster->bucket($this->testBucket);
         $this->setTimeouts($this->bucket);
     }
 

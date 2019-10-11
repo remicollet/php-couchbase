@@ -1,6 +1,6 @@
 <?php
 $cluster = new \Couchbase\Cluster("couchbase://localhost");
-$bucket = $cluster->openBucket('default');
+$bucket = $cluster->bucket('default');
 
 $bucket->upsert('foo', ['path1' => 'value1']);
 

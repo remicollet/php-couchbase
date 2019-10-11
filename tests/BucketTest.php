@@ -1,0 +1,744 @@
+<?php
+require_once('CouchbaseTestCase.php');
+
+class BucketTest extends CouchbaseTestCase {
+
+    /**
+     * Test that connections with invalid details fail.
+     */
+    function testBadPass() {
+        ini_set('couchbase.log_level', 'FATAL');
+        $options = new \Couchbase\ClusterOptions();
+        $options->credentials($this->testUser, 'bad_pass');
+        $this->wrapException(function() use($options) {
+            new \Couchbase\Cluster($this->testDsn, $options);
+        }, '\Couchbase\AuthenticationException', 2);
+    }
+
+    /**
+     * Test that connections with invalid details fail.
+     */
+    function testBadBucket() {
+        ini_set('couchbase.log_level', 'FATAL');
+        $options = new \Couchbase\ClusterOptions();
+        $options->credentials($this->testUser, $this->testPassword);
+        $h = new \Couchbase\Cluster($this->testDsn, $options);
+
+        $exceptionClass = '\Couchbase\BucketMissingException';
+        if ($this->usingMock()) {
+            $exceptionClass = '\Couchbase\NetworkException';
+        }
+
+        $this->wrapException(function() use($h) {
+            $h->bucket('bad_bucket');
+        }, $exceptionClass);
+    }
+
+    /**
+     * Test that a connection with accurate details works.
+     */
+    function testConnect() {
+        ini_set('couchbase.log_level', 'WARN');
+        $options = new \Couchbase\ClusterOptions();
+        $options->credentials($this->testUser, $this->testPassword);
+        $h = new \Couchbase\Cluster($this->testDsn, $options);
+        $b = $h->bucket($this->testBucket);
+        $this->setTimeouts($b);
+        return $b->defaultCollection();
+    }
+
+    /**
+     * Test basic upsert
+     *
+     * @depends testConnect
+     */
+    function testBasicUpsert($c) {
+        $key = $this->makeKey('basicUpsert');
+        $res = $c->upsert($key, ['name' => 'bob']);
+        $this->assertNotNull($res->cas());
+        return $key;
+    }
+
+    /**
+     * Test basic get
+     *
+     * @depends testConnect
+     * @depends testBasicUpsert
+     */
+    function testBasicGet($c, $key) {
+        $res = $c->get($key);
+
+        $this->assertNotNull($res->cas());
+        $this->assertEquals($res->content(), ['name' => 'bob']);
+        return $key;
+    }
+
+    /**
+     * Test basic remove
+     *
+     * @depends testConnect
+     * @depends testBasicGet
+     */
+    function testBasicRemove($c, $key) {
+        $res = $c->remove($key);
+
+        $this->assertNotNull($res->cas());
+        $this->wrapException(function() use($c, $key) {
+            $c->get($key);
+        }, '\Couchbase\KeyNotFoundException', COUCHBASE_KEYNOTFOUND);
+    }
+
+    /**
+     * Test basic counter operations w/ an initial value
+     *
+     * @depends testConnect
+     */
+    function testCounterInitial($c) {
+        $key = $this->makeKey('counterInitial');
+
+        $options = new \Couchbase\IncrementOptions();
+        $options->initial(1);
+        $res = $c->increment($key, $options);
+        $this->assertNotNull($res->cas());
+        $this->assertEquals(1, $res->content());
+
+        $res = $c->increment($key);
+        $this->assertNotNull($res->cas());
+        $this->assertEquals(2, $res->content());
+
+        $res = $c->decrement($key);
+        $this->assertNotNull($res->cas());
+        $this->assertEquals(1, $res->content());
+    }
+
+    /**
+     * @test
+     * Test counter operations on missing keys
+     *
+     * @depends testConnect
+     */
+    function testCounterBadKey($c) {
+        $key = $this->makeKey('counterBadKey');
+
+        $this->wrapException(function() use($c, $key) {
+            $c->increment($key);
+        }, '\Couchbase\KeyNotFoundException', COUCHBASE_KEYNOTFOUND);
+
+        $this->wrapException(function() use($c, $key) {
+            $c->decrement($key);
+        }, '\Couchbase\KeyNotFoundException', COUCHBASE_KEYNOTFOUND);
+
+        $options = (new \Couchbase\DecrementOptions())->initial(42);
+        $res = $c->decrement($key, $options);
+        $this->assertNotNull($res->cas());
+        $this->assertEquals(42, $res->content());
+    }
+
+    /**
+     * Test expiry operations on keys
+     *
+     * @depends testConnect
+     */
+    function testExpiry($c) {
+        $key = $this->makeKey('expiry');
+
+        $options = (new \Couchbase\UpsertOptions())->expiry(1);
+        $c->upsert($key, 'dog', $options);
+
+        sleep(2);
+
+        $this->wrapException(function() use($c, $key) {
+            $c->get($key);
+        }, '\Couchbase\KeyNotFoundException', COUCHBASE_KEYNOTFOUND);
+    }
+
+    /**
+     * Test CAS works
+     *
+     * @depends testConnect
+     */
+    function testCas($c) {
+        $key = $this->makeKey('cas');
+
+        $res = $c->upsert($key, 'dog');
+        $this->assertNotNull($res->cas());
+        $old_cas = $res->cas();
+
+        $res = $c->upsert($key, 'cat');
+        $this->assertNotNull($res->cas());
+        $this->assertNotEquals($old_cas, $res->cas());
+
+        $this->wrapException(function() use($c, $key, $old_cas) {
+            $options = (new \Couchbase\ReplaceOptions())->cas($old_cas);
+            $c->replace($key, 'ferret', $options);
+        }, '\Couchbase\KeyExistsException', COUCHBASE_KEYALREADYEXISTS);
+    }
+
+    /**
+     * Test Locks work
+     *
+     * @depends testConnect
+     */
+    function testLocks($c) {
+        $key = $this->makeKey('locks');
+
+        $res = $c->upsert($key, 'jog');
+        $this->assertNotNull($res->cas());
+
+        // lock for 10 seconds
+        $res = $c->getAndLock($key, 10);
+        $this->assertNotNull($res->content());
+        $this->assertNotNull($res->cas());
+        $lockedCas = $res->cas();
+
+        $this->wrapException(function() use($c, $key) {
+            // key is not accessible for locking
+            $c->getAndLock($key, 1);
+        }, '\Couchbase\TempFailException', COUCHBASE_TMPFAIL);
+
+        $res = $c->unlock($key, $lockedCas);
+
+        // accessible for locking again
+        $res = $c->getAndLock($key, 1);
+        $this->assertNotNull($res->content());
+        $this->assertNotNull($res->cas());
+    }
+
+    /**
+     * Test big upserts
+     *
+     * @depends testConnect
+     */
+    function testBigUpsert($c) {
+        $key = $this->makeKey('bigUpsert');
+
+        // $v = str_repeat("*", 0x1000000);
+        $v = str_repeat("*", 0x100000);
+        $res = $c->upsert($key, $v);
+        $this->assertNotNull($res->cas());
+
+        $c->remove($key);
+
+        return $key;
+    }
+
+    /**
+     * @test
+     * Test upsert with no key specified
+     *
+     * @depends testConnect
+     */
+    function testNoKeyUpsert($c) {
+        $this->wrapException(function() use($c) {
+            $c->upsert('', 'joe');
+        }, '\Couchbase\BadInputException', COUCHBASE_EMPTY_KEY);
+    }
+
+    /**
+     * Test all option values to make sure they save/load
+     * We open a new bucket for this test to make sure our settings
+     * changes do not affect later tests. Console log level option used
+     * to generate unique (for these test suites) connection string,
+     * so that the lcb_t won't be reused from the pool
+     */
+    function testOptionVals() {
+        $options = new \Couchbase\ClusterOptions();
+        $options->credentials($this->testUser, $this->testPassword);
+        $h = new \Couchbase\Cluster($this->testDsn . "?console_log_level=42", $options);
+        $b = $h->bucket($this->testBucket);
+
+        $checkVal = 50243;
+
+        $b->operationTimeout = $checkVal;
+        $b->viewTimeout = $checkVal;
+        $b->durabilityInterval = $checkVal;
+        $b->durabilityTimeout = $checkVal;
+        $b->httpTimeout = $checkVal;
+        $b->configTimeout = $checkVal;
+        $b->configDelay = $checkVal;
+        $b->configNodeTimeout = $checkVal;
+        $b->htconfigIdleTimeout = $checkVal;
+        $b->configPollInterval = $checkVal;
+
+        $this->assertEquals($b->operationTimeout, $checkVal);
+        $this->assertEquals($b->viewTimeout, $checkVal);
+        $this->assertEquals($b->durabilityInterval, $checkVal);
+        $this->assertEquals($b->durabilityTimeout, $checkVal);
+        $this->assertEquals($b->httpTimeout, $checkVal);
+        $this->assertEquals($b->configTimeout, $checkVal);
+        $this->assertEquals($b->configDelay, $checkVal);
+        $this->assertEquals($b->configNodeTimeout, $checkVal);
+        $this->assertEquals($b->htconfigIdleTimeout, $checkVal);
+        $this->assertEquals($b->configPollInterval, $checkVal);
+    }
+
+    /**
+     * @depends testConnect
+     */
+    function testLookupInFulldoc($c) {
+        $key = $this->makeKey('lookup_in_fulldoc');
+        $c->upsert($key, ['path1' => 42, 'path2' => 'foo']);
+
+        $result = $c->lookupIn($key, [
+            new \Couchbase\LookupGetSpec(''),
+            new \Couchbase\LookupGetSpec('path2'),
+        ]);
+        $this->assertNotNull($result->cas());
+        $this->assertEquals(['path1' => 42, 'path2' => 'foo'], $result->content(0));
+        $this->assertEquals('foo', $result->content(1));
+    }
+
+    /**
+     * @depends testConnect
+     */
+    function testLookupIn($c) {
+        $key = $this->makeKey('lookup_in');
+        $c->upsert($key, ['path1' => 'value1']);
+
+        $result = $c->lookupIn($key, [
+            new \Couchbase\LookupGetSpec('path1')
+        ]);
+        $this->assertEquals('value1', $result->content(0));
+        $this->assertNotEmpty($result->cas());
+
+        # Try when path is not found
+        $result = $c->lookupIn($key, [
+            new \Couchbase\LookupGetSpec('path2')
+        ]);
+        $this->assertNull($result->cas());
+        $this->assertNull($result->content(0));
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_ENOENT, $result->status(0));
+
+        # Try when there is a mismatch
+        $result = $c->lookupIn($key, [
+            new \Couchbase\LookupGetSpec('path1[0]')
+        ]);
+        $this->assertNull($result->cas());
+        $this->assertNull($result->content(0));
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_MISMATCH, $result->status(0));
+
+        # Try existence
+        $result = $c->lookupIn($key, [
+            new \Couchbase\LookupExistsSpec('path1')
+        ]);
+        $this->assertNotNull($result->cas());
+        $this->assertTrue($result->exists(0));
+
+        # Not found
+        $result = $c->lookupIn($key, [
+            new \Couchbase\LookupExistsSpec('p')
+        ]);
+        $this->assertNull($result->cas());
+        $this->assertFalse($result->exists(0));
+
+        # Insert a non-JSON document
+        $key = $this->makeKey('lookup_in_nonjson');
+        $c->upsert($key, 'value');
+
+        $result = $c->lookupIn($key, [
+            new \Couchbase\LookupExistsSpec('path')
+        ]);
+        $this->assertNull($result->cas());
+        $this->assertNull($result->content(0));
+        $this->assertEquals(COUCHBASE_SUBDOC_DOC_NOTJSON, $result->status(0));
+
+        # Try on non-existing document. Should fail
+        $key = $this->makeKey('lookup_in_with_missing_key');
+        $this->wrapException(function() use($c, $key) {
+            $c->lookupIn($key, [
+                new \Couchbase\LookupExistsSpec('path')
+            ]);
+        }, '\Couchbase\KeyNotFoundException');
+    }
+
+    /**
+     * @depends testConnect
+     */
+    function testGetCount($c) {
+        $key = $this->makeKey('get_count');
+        $c->upsert($key, ['list' => [1, 2, 42], 'object' => ['foo' => 42]]);
+
+        $result = $c->lookupIn($key, [
+            new \Couchbase\LookupCountSpec('list'),
+            new \Couchbase\LookupCountSpec('object')
+        ]);
+        $this->assertNotNull($result->cas());
+        $this->assertEquals(3, $result->content(0));
+        $this->assertEquals(1, $result->content(1));
+    }
+
+    /**
+     * @expectedException Couchbase\BadInputException
+     * @depends testConnect
+     */
+    function testLookupInWithEmptyPath($c) {
+        $key = $this->makeKey('lookup_in_with_empty_path');
+        $c->upsert($key, array('path1' => 'value1'));
+
+        $c->lookupIn($key, [
+            new \Couchbase\LookupExistsSpec(''),
+        ]);
+    }
+
+    /**
+     * @depends testConnect
+     */
+    function testMutateInWithExpiry($c) {
+        $key = $this->makeKey('mutate_in_with_expiry');
+        $key = 'mutate_in_with_expiry';
+        $c->upsert($key, new stdClass());
+
+        $options = (new \Couchbase\MutateInOptions())->expiry(1);
+        $result = $c->mutateIn($key, [
+            new \Couchbase\MutateUpsertSpec('foo', 'bar')
+        ], $options);
+        $this->assertEquals(COUCHBASE_SUCCESS, $result->status(0));
+
+        sleep(2);
+
+        $this->wrapException(function() use($c, $key) {
+            $c->get($key);
+        }, '\Couchbase\KeyNotFoundException', COUCHBASE_KEYNOTFOUND);
+    }
+
+    /**
+     * @depends testConnect
+     */
+    function testMutateInFulldoc($c) {
+        $key = $this->makeKey('mutate_in_fulldoc');
+
+        $options = (new \Couchbase\MutateInOptions())->storeSemantics(\Couchbase\StoreSemantics::UPSERT);
+        $result = $c->mutateIn($key, [
+            new \Couchbase\MutateUpsertSpec('created_at', time(), true, true),
+            new \Couchbase\MutateReplaceSpec('', ["new" => "yes"])
+        ], $options);
+        $this->assertNotNull($result->cas());
+
+        $result = $c->lookupIn($key, [
+            new \Couchbase\LookupGetSpec('new')
+        ]);
+        $this->assertEquals("yes", $result->content(0));
+
+        $this->wrapException(function() use($c, $key) {
+            $options = (new \Couchbase\MutateInOptions())->storeSemantics(\Couchbase\StoreSemantics::INSERT);
+            $result = $c->mutateIn($key, [
+                new \Couchbase\MutateUpsertSpec('created_at', time(), true, true),
+                new \Couchbase\MutateReplaceSpec('', ["duplicate" => "yes"])
+            ], $options);
+        }, '\Couchbase\KeyExistsException');
+
+        $options = (new \Couchbase\MutateInOptions())->storeSemantics(\Couchbase\StoreSemantics::REPLACE);
+        $result = $c->mutateIn($key, [
+            new \Couchbase\MutateUpsertSpec('created_at', time(), true, true),
+            new \Couchbase\MutateReplaceSpec('', ["updated" => "yes"])
+        ], $options);
+        $this->assertNotNull($result->cas());
+
+        $result = $c->lookupIn($key, [
+            new \Couchbase\LookupGetSpec('updated')
+        ]);
+        $this->assertEquals("yes", $result->content(0));
+    }
+
+    /**
+     * @depends testConnect
+     */
+    function testMutateIn($c) {
+        $key = $this->makeKey('mutate_in');
+        $c->upsert($key, new stdClass());
+
+        $result = $c->mutateIn($key, [
+            new \Couchbase\MutateUpsertSpec('newDict', ['hello']),
+        ]);
+        $this->assertNotNull($result->cas());
+        $result = $c->lookupIn($key, [
+            new \Couchbase\LookupGetSpec('newDict'),
+        ]);
+        $this->assertNotNull($result->cas());
+        $this->assertEquals(['hello'], $result->content(0));
+
+        # Does not create deep path without create_parents
+        $result = $c->mutateIn($key, [
+            new \Couchbase\MutateUpsertSpec('path.with.missing.parents', 'value'),
+        ]);
+        $this->assertNull($result->cas());
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_ENOENT, $result->status(0));
+
+        # Creates deep path without create_parents
+        $result = $c->mutateIn($key, [
+            new \Couchbase\MutateUpsertSpec('path.with.missing.parents', 'value', false, true),
+        ]);
+        $this->assertNotNull($result->cas());
+        $result = $c->lookupIn($key, [
+            new \Couchbase\LookupGetSpec('path.with.missing.parents'),
+        ]);
+        $this->assertNotNull($result->cas());
+        $this->assertEquals('value', $result->content(0));
+        $cas = $result->cas();
+
+        $this->wrapException(function() use($c, $key) {
+            $options = (new \Couchbase\MutateInOptions())->cas(base64_encode("deadbeef"));
+            $result = $c->mutateIn($key, [
+                new \Couchbase\MutateUpsertSpec('newDict', 'withWrongCAS'),
+            ], $options);
+        }, '\Couchbase\KeyExistsException');
+
+        # once again with correct CAS
+        $options = (new \Couchbase\MutateInOptions())->cas($cas);
+        $result = $c->mutateIn($key, [
+            new \Couchbase\MutateUpsertSpec('newDict', 'withCorrectCAS'),
+        ], $options);
+        $result = $c->lookupIn($key, [
+            new \Couchbase\LookupGetSpec('newDict'),
+        ]);
+        $this->assertEquals('withCorrectCAS', $result->content(0));
+
+        # insert into existing path should fail
+        $result = $c->mutateIn($key, [
+            new \Couchbase\MutateInsertSpec('newDict', ['foo' => 42]),
+        ]);
+        $this->assertNull($result->cas());
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_EEXISTS, $result->status(0));
+
+        # insert into new path should succeed
+        $result = $c->mutateIn($key, [
+            new \Couchbase\MutateInsertSpec('anotherDict', ['foo' => 42]),
+        ]);
+        $result = $c->lookupIn($key, [
+            new \Couchbase\LookupGetSpec('anotherDict'),
+        ]);
+        $this->assertEquals(['foo' => 42], $result->content(0));
+
+        # replace of existing path should not fail
+        $result = $c->mutateIn($key, [
+            new \Couchbase\MutateReplaceSpec('newDict', [42 => 'foo']),
+        ]);
+        $result = $c->lookupIn($key, [
+            new \Couchbase\LookupGetSpec('newDict'),
+        ]);
+        $this->assertEquals([42 => 'foo'], $result->content(0));
+
+        # replace of missing path should not fail
+        $result = $c->mutateIn($key, [
+            new \Couchbase\MutateReplaceSpec('missingDict', [42 => 'foo']),
+        ]);
+        $this->assertNull($result->cas());
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_ENOENT, $result->status(0));
+
+        $result = $c->mutateIn($key, [new \Couchbase\MutateUpsertSpec('empty', '')]);
+        $result = $c->lookupIn($key, [new \Couchbase\LookupGetSpec('empty')]);
+        $this->assertEquals('', $result->content(0));
+
+        $result = $c->mutateIn($key, [new \Couchbase\MutateUpsertSpec('null', null)]);
+        $result = $c->lookupIn($key, [new \Couchbase\LookupGetSpec('null')]);
+        $this->assertEquals(null, $result->content(0));
+
+        $result = $c->mutateIn($key, [new \Couchbase\MutateUpsertSpec('array', [1, 2, 3])]);
+        $result = $c->lookupIn($key, [new \Couchbase\LookupGetSpec('array')]);
+        $this->assertEquals([1, 2, 3], $result->content(0));
+
+        $result = $c->mutateIn($key, [new \Couchbase\MutateUpsertSpec('array.newKey', 'newVal')]);
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_MISMATCH, $result->status(0));
+
+        $result = $c->mutateIn($key, [new \Couchbase\MutateUpsertSpec('array[0]', 'newVal')]);
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_EINVAL, $result->status(0));
+
+        $result = $c->mutateIn($key, [new \Couchbase\MutateUpsertSpec('array[1].bleh', 'newVal')]);
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_MISMATCH, $result->status(0));
+    }
+
+    /**
+     * @expectedException \Couchbase\BadInputException
+     * @depends testConnect
+     */
+    function testMutationInWithEmptyPath($c) {
+        $key = $this->makeKey('lookup_in_with_empty_path');
+        $c->upsert($key, ['path1' => 'value1']);
+
+        $result = $c->mutateIn($key, [new \Couchbase\MutateUpsertSpec('', 'value')]);
+    }
+
+    /**
+     * @depends testConnect
+     */
+    function testCounterIn($c) {
+        $key = $this->makeKey('mutate_in');
+        $c->upsert($key, new stdClass());
+
+        $result = $c->mutateIn($key, [new \Couchbase\MutateCounterSpec('counter', 100)]);
+        $this->assertNotEmpty($result->cas());
+        $this->assertEquals(100, $result->content(0));
+
+        $result = $c->mutateIn($key, [new \Couchbase\MutateUpsertSpec('not_a_counter', 'foobar')]);
+        $this->assertNotEmpty($result->cas());
+
+        $result = $c->mutateIn($key, [new \Couchbase\MutateCounterSpec('not_a_counter', 100)]);
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_MISMATCH, $result->status(0));
+
+        $result = $c->mutateIn($key, [new \Couchbase\MutateCounterSpec('path.to.new.counter', 100)]);
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_ENOENT, $result->status(0));
+
+        $result = $c->mutateIn($key, [new \Couchbase\MutateCounterSpec('path.to.new.counter', 100, false, true)]);
+        $this->assertNotEmpty($result->cas());
+        $this->assertEquals(100, $result->content(0));
+
+        $result = $c->mutateIn($key, [new \Couchbase\MutateCounterSpec('counter', -25)]);
+        $this->assertNotEmpty($result->cas());
+        $this->assertEquals(75, $result->content(0));
+
+        $result = $c->mutateIn($key, [new \Couchbase\MutateCounterSpec('counter', 0)]);
+        $this->assertEquals(COUCHBASE_SUBDOC_BAD_DELTA, $result->status(0));
+    }
+
+    /**
+     * @depends testConnect
+     */
+    function testMultiLookupIn($c) {
+        $key = $this->makeKey('multi_lookup_in');
+        $c->upsert($key, [
+            'field1' => 'value1',
+            'field2' => 'value2',
+            'array' =>  [1, 2, 3],
+            'boolean' => false,
+        ]);
+
+        $result = $c->lookupIn($key, [
+            new \Couchbase\LookupGetSpec('field1'),
+            new \Couchbase\LookupExistsSpec('field2'),
+            new \Couchbase\LookupExistsSpec('field3'),
+        ]);
+        $this->assertEquals('value1', $result->content(0));
+        $this->assertEquals(null, $result->content(1));
+        $this->assertTrue($result->exists(1));
+        $this->assertFalse($result->exists(2));
+    }
+
+    /**
+     * @depends testConnect
+     */
+    function testMultiMutateIn($c) {
+        $key = $this->makeKey('multi_mutate_in');
+        $c->upsert($key, array(
+            'field1' => 'value1',
+            'field2' => 'value2',
+            'array' =>  array(1, 2, 3),
+        ));
+
+        $result = $c->mutateIn($key, [
+            new \Couchbase\MutateUpsertSpec('field1', ['foo' => 'bar']),
+            new \Couchbase\MutateRemoveSpec('array'),
+            new \Couchbase\MutateReplaceSpec('missing', 'hello world'),
+        ]);
+        $this->assertEquals(COUCHBASE_SUCCESS, $result->status(0));
+        $this->assertEquals(COUCHBASE_SUCCESS, $result->status(1));
+        $this->assertEquals(COUCHBASE_SUBDOC_PATH_ENOENT, $result->status(2));
+
+        $result = $c->lookupIn($key, [
+            new \Couchbase\LookupGetSpec('field1'),
+            new \Couchbase\LookupExistsSpec('array'),
+        ]);
+        $this->assertEquals('value1', $result->content(0));
+        $this->assertTrue($result->exists(1));
+    }
+
+    /**
+     * @depends testConnect
+     */
+    function testMultiValue($c) {
+        $key = $this->makeKey('multi_value');
+        $c->upsert($key, ['array' => []]);
+
+        $result = $c->mutateIn($key, [new \Couchbase\MutateArrayAppendSpec('array', [true])]);
+        $result = $c->lookupIn($key, [new \Couchbase\LookupGetSpec('array')]);
+        $this->assertEquals([true], $result->content(0));
+
+        $result = $c->mutateIn($key, [new \Couchbase\MutateArrayAppendSpec('array', [1, 2, 3])]);
+        $result = $c->lookupIn($key, [new \Couchbase\LookupGetSpec('array')]);
+        $this->assertEquals([true, 1, 2, 3], $result->content(0));
+
+        $result = $c->mutateIn($key, [new \Couchbase\MutateArrayPrependSpec('array', [[42]])]);
+        $result = $c->lookupIn($key, [new \Couchbase\LookupGetSpec('array')]);
+        $this->assertEquals([[42], true, 1, 2, 3], $result->content(0));
+    }
+
+    /**
+     * @depends testConnect
+     */
+    function testSubdocAttributes($c) {
+        $key = $this->makeKey('subdoc_attributes');
+        $c->upsert($key, ['foo' => 'bar']);
+
+        $result = $c->mutateIn($key, [
+            new \Couchbase\MutateUpsertSpec('app.created_by', ['name' => 'John Doe', 'role' => 'DB administrator'], true, true),
+        ]);
+        $result = $c->lookupIn($key, [new \Couchbase\LookupGetSpec('app.created_by', true)]);
+        $this->assertEquals(['name' => 'John Doe', 'role' => 'DB administrator'], $result->content(0));
+    }
+
+//  /**
+//   * @test
+//   * Test recursive transcoder functions
+//   */
+//  function testRecursiveTranscode() {
+//      global $recursive_transcoder_bucket;
+//      global $recursive_transcoder_key2;
+//      global $recursive_transcoder_key3;
+
+//      $h = new \Couchbase\Cluster($this->testDsn);
+//      $h->authenticate($this->testAuthenticator);
+//      $c = $h->bucket($this->testBucket)->defaultCollection();
+//      $this->setTimeouts($c);
+
+//      $key1 = $this->makeKey('basicUpsertKey1');
+//      $key2 = $this->makeKey('basicUpsertKey2');
+//      $key3 = $this->makeKey('basicUpsertKey3');
+
+//      // Set up a transcoder that upserts key2 when it sees key1
+//      $recursive_transcoder_bucket = $c;
+//      $recursive_transcoder_key2 = $key2;
+//      $recursive_transcoder_key3 = $key3;
+//      $c->setTranscoder(
+//          'recursive_transcoder_encoder',  // defined at bottom of file
+//          'recursive_transcoder_decoder'); // defined at bottom of file
+
+//      // Upsert key1, transcoder should set key2
+//      $res = $c->upsert($key1, 'key1');
+//      $this->assertValidMetaDoc($res, 'cas');
+
+//      // Check key1 was upserted
+//      $res = $c->get($key1);
+//      $this->assertValidMetaDoc($res, 'cas');
+//      $this->assertEquals($res->value, 'key1');
+
+//      // Check key2 was upserted, trasncoder should set key3
+//      $res = $c->get($key2);
+//      $this->assertValidMetaDoc($res, 'cas');
+//      $this->assertEquals($res->value, 'key2');
+
+//      // Check key3 was upserted
+//      $res = $c->get($key3);
+//      $this->assertValidMetaDoc($res, 'cas');
+//      $this->assertEquals($res->value, 'key3');
+//  }
+}
+
+// function recursive_transcoder_encoder($value) {
+//     global $recursive_transcoder_bucket;
+//     global $recursive_transcoder_key2;
+//     if ($value == 'key1') {
+//         $recursive_transcoder_bucket->upsert(
+//             $recursive_transcoder_key2, 'key2');
+//     }
+//     return couchbase_default_encoder($value);
+// }
+//
+// function recursive_transcoder_decoder($bytes, $flags, $datatype) {
+//     global $recursive_transcoder_bucket;
+//     global $recursive_transcoder_key3;
+//     $value = couchbase_default_decoder($bytes, $flags, $datatype);
+//     if ($value == 'key2') {
+//         $recursive_transcoder_bucket->upsert(
+//             $recursive_transcoder_key3, 'key3');
+//     }
+//     return $value;
+// }

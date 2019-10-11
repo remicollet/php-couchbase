@@ -23,32 +23,13 @@ static inline pcbc_cert_authenticator_t *pcbc_cert_authenticator_fetch_object(ze
     return (pcbc_cert_authenticator_t *)((char *)obj - XtOffsetOf(pcbc_cert_authenticator_t, std));
 }
 #define Z_CERT_AUTHENTICATOR_OBJ(zo) (pcbc_cert_authenticator_fetch_object(zo))
-#define Z_CERT_AUTHENTICATOR_OBJ_P(zv) (pcbc_cert_authenticator_fetch_object(Z_OBJ_P(zv)))
 
 zend_class_entry *pcbc_cert_authenticator_ce;
 extern zend_class_entry *pcbc_authenticator_ce;
 
-/* {{{ proto void CertAuthenticator::__construct() */
 PHP_METHOD(CertAuthenticator, __construct)
 {
-    pcbc_cert_authenticator_t *obj;
-    int rv;
-
-    rv = zend_parse_parameters_none();
-    if (rv == FAILURE) {
-        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
-        RETURN_NULL();
-    }
-    obj = Z_CERT_AUTHENTICATOR_OBJ_P(getThis());
-}
-/* }}} */
-
-void pcbc_cert_authenticator_init(zval *return_value TSRMLS_DC)
-{
-    pcbc_cert_authenticator_t *obj;
-
-    object_init_ex(return_value, pcbc_cert_authenticator_ce);
-    obj = Z_CERT_AUTHENTICATOR_OBJ_P(return_value);
+    zend_parse_parameters_none_throw();
 }
 
 ZEND_BEGIN_ARG_INFO_EX(ai_CertAuthenticator_none, 0, 0, 0)
@@ -63,12 +44,12 @@ zend_function_entry cert_authenticator_methods[] = {
 
 zend_object_handlers cert_authenticator_handlers;
 
-static void cert_authenticator_free_object(zend_object *object TSRMLS_DC) /* {{{ */
+static void cert_authenticator_free_object(zend_object *object TSRMLS_DC)
 {
     pcbc_cert_authenticator_t *obj = Z_CERT_AUTHENTICATOR_OBJ(object);
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-} /* }}} */
+}
 
 static zend_object *authenticator_create_object(zend_class_entry *class_type TSRMLS_DC)
 {

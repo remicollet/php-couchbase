@@ -92,7 +92,7 @@ namespace Couchbase {
     }
 
 
-    interface MetaData
+    interface QueryMetaData
     {
         public function status(): ?string;
 
@@ -100,15 +100,15 @@ namespace Couchbase {
 
         public function clientContextId(): ?string;
 
-        public function signature(): ?object;
+        public function signature(): ?array;
 
         public function warnings(): ?array;
 
         public function errors(): ?array;
 
-        public function metrics(): ?object;
+        public function metrics(): ?array;
 
-        public function profile(): ?object;
+        public function profile(): ?array;
     }
 
     interface SearchMetaData
@@ -123,32 +123,32 @@ namespace Couchbase {
 
         public function maxScore(): ?float;
 
-        public function metrics(): ?object;
+        public function metrics(): ?array;
     }
 
     interface ViewMetaData
     {
         public function totalRows(): ?int;
+
+        public function debug(): ?array;
     }
 
     interface Result
     {
         public function cas(): ?string;
-
-        public function expiration(): ?int;
     }
 
     interface GetResult extends Result
     {
-        public function content(): ?object;
+        public function content(): ?array;
     }
 
     interface GetReplicaResult extends Result
     {
 
-        public function content(): ?object;
+        public function content(): ?array;
 
-        public function isMaster(): bool;
+        public function isReplica(): bool;
     }
 
     interface ExistsResult extends Result
@@ -161,41 +161,42 @@ namespace Couchbase {
         public function mutationToken(): ?MutationToken;
     }
 
-    interface CounterResult extends Result
+    interface CounterResult extends MutationResult
     {
         public function content(): int;
     }
-
 
     interface LookupInResult extends Result
     {
         public function content(int $index): ?object;
 
         public function exists(int $index): bool;
+
+        public function status(int $index): int;
     }
 
     interface MutateInResult extends MutationResult, Result
     {
-        public function content(int $index): ?object;
+        public function content(int $index): ?array;
     }
 
     interface QueryResult
     {
-        public function metadata(): ?MetaData;
+        public function metaData(): ?QueryMetaData;
 
         public function rows(): ?array;
     }
 
-    interface AnalyticsQueryResult
+    interface AnalyticsResult
     {
-        public function metadata(): ?MetaData;
+        public function metaData(): ?QueryMetaData;
 
         public function rows(): ?array;
     }
 
     interface SearchResult
     {
-        public function metadata(): ?SearchMetaData;
+        public function metaData(): ?SearchMetaData;
 
         public function facets(): ?array;
 
@@ -204,26 +205,26 @@ namespace Couchbase {
 
     interface ViewResult
     {
-        public function metadata(): ?ViewMetaData;
+        public function metaData(): ?ViewMetaData;
 
         public function rows(): ?array;
     }
 
-    class ViewResultEntry
+    class ViewRow
     {
         public function id(): ?string
         {
         }
 
-        public function key(): ?object
+        public function key(): ?array
         {
         }
 
-        public function value(): ?object
+        public function value(): ?array
         {
         }
 
-        public function document(): ?object
+        public function document(): ?array
         {
         }
     }
@@ -370,7 +371,7 @@ namespace Couchbase {
 
     class Cluster
     {
-        public function __construct(string $connstr)
+        public function __construct(string $connstr, ClusterOptions $options)
         {
         }
 
@@ -378,29 +379,57 @@ namespace Couchbase {
         {
         }
 
-        public function manager(): ClusterManager
-        {
-        }
-
-        public function authenticate(Authenticator $authenticator)
-        {
-        }
-
-        public function authenticateAs(string $username, string $password)
-        {
-        }
-
         public function query(string $statement, QueryOptions $options = null)
         {
         }
 
-        public function analyticsQuery(string $statement, AnalyticsQueryOptions $options = null)
+        public function analyticsQuery(string $statement, AnalyticsOptions $options = null)
         {
         }
 
         public function searchQuery(string $indexName, SearchQuery $query, SearchQueryOptions $options = null)
         {
         }
+
+        public function queryIndexes(): QueryIndexManager
+        {
+        }
+    }
+
+    class QueryIndexManager
+     {
+        public function getAllIndexes(): array
+        {
+        }
+
+        public function createPrimaryIndex(string $bucketName, $ignoreIfExist = false, $defer = false)
+        {
+        }
+
+        public function createIndex(string $bucketName, string $indexName, $fields = null, $whereClause = null, $ignoreIfExist = false, $defer = false)
+        {
+        }
+
+        public function dropPrimaryIndex(string $bucketName, $ignoreIfNotExist = false, $defer = false)
+        {
+        }
+
+        public function dropIndex(string $bucketName, string $indexName, $ignoreIfNotExist = false, $defer = false)
+        {
+        }
+    }
+
+
+    class MutationState
+     {
+         public function __construct()
+         {
+         }
+
+         public function add(MutationResult $source): MutationState
+         {
+         }
+      }
     }
 
     class Collection
@@ -429,7 +458,7 @@ namespace Couchbase {
         {
         }
 
-        public function getAllReplica(string $id, GetAllReplicaOptions $options = null): GetReplicaResult
+        public function getAllReplicas(string $id, GetAllReplicaOptions $options = null): array
         {
         }
 
@@ -493,78 +522,9 @@ namespace Couchbase {
         }
     }
 
-    class ClusterManager
-    {
-        public const RBAC_DOMAIN_LOCAL = 1;
-        public const RBAC_DOMAIN_EXTERNAL 2;
-
-        final private function __construct()
-        {
-        }
-
-        public function listBuckets()
-        {
-        }
-
-        public function createBucket($name, $options)
-        {
-        }
-
-        public function removeBucket($name)
-        {
-        }
-
-        public function listUsers($dodmain)
-        {
-        }
-
-        public function upsertUser($name, $settings, $domain)
-        {
-        }
-
-        public function getUser($name, $domain)
-        {
-        }
-
-        public function remove($name)
-        {
-        }
-
-        public function info()
-        {
-        }
-    }
-
-    class UserSettings
-    {
-        public function __construct()
-        {
-        }
-
-        public function fullName($fullName)
-        {
-        }
-
-        public function password($password)
-        {
-        }
-
-        public function role($role)
-        {
-        }
-    }
-
     class Bucket
     {
         final private function __construct()
-        {
-        }
-
-        private function __get($name)
-        {
-        }
-
-        private function __set($name, $value)
         {
         }
 
@@ -601,173 +561,37 @@ namespace Couchbase {
         }
     }
 
-    class BucketManager
+    class AnalyticsOptions
     {
-        final private function __construct()
+        public function timeout(int $arg): AnalyticsOptions
         {
         }
 
-        public function info()
+        public function namedParameters(array $pairs): AnalyticsOptions
         {
         }
 
-        public function flush()
+        public function positionalParameters(array $args): AnalyticsOptions
         {
         }
 
-        public function listDesignDocuments()
+        public function raw(string $key, $value): AnalyticsOptions
         {
         }
 
-        public function getDesignDocument($name)
+        public function clientContextId(string $value): AnalyticsOptions
         {
         }
 
-        public function removeDesignDocument($name)
+        public function priority(bool $urgent): AnalyticsOptions
         {
         }
 
-        public function upsertDesignDocument($name, $document)
+        public function readonly(bool $arg): AnalyticsOptions
         {
         }
 
-        public function insertDesignDocument($name, $document)
-        {
-        }
-
-        public function listN1qlIndexes()
-        {
-        }
-
-        public function createN1qlPrimaryIndex($customName, $ignoreIfExists, $defer)
-        {
-        }
-
-        public function createN1qlIndex($indexName, $fields, $whereClause, $ignoreIfExists, $defer)
-        {
-        }
-
-        public function dropN1qlPrimaryIndex($customName, $ignoreIfNotExists, $defer)
-        {
-        }
-
-        public function dropN1qlIndex($indexName, $ignoreIfNotExists, $defer)
-        {
-        }
-
-        public function searchIndexManager()
-        {
-        }
-    }
-
-    /**
-     * Interface of authentication containers.
-     *
-     * @see \Couchbase\Cluster::authenticate()
-     * @see \Couchbase\ClassicAuthenticator
-     * @see \Couchbase\PasswordAuthenticator
-     * @see \Couchbase\CertAuthenticator
-     */
-    interface Authenticator
-    {
-    }
-
-    /**
-     * Authenticator for Client Certificate authentication feature of Couchbase Server 5+.
-     *
-     * This authenticator does not have any attributes, but ensures that
-     * "certpath" and "keypath" options specified in the connection string
-     *
-     * @see \Couchbase\Cluster::authenticate()
-     * @see \Couchbase\Authenticator
-     */
-    class CertAuthenticator implements Authenticator
-    {
-    }
-
-
-    /**
-     * Authenticator based on login/password credentials.
-     *
-     * This authenticator uses separate credentials for Cluster management interface
-     * as well as for each bucket.
-     *
-     * @example examples/api/couchbase.Authenticator.php Cluster authentication
-     *
-     * @example examples/api/couchbase.N1qlQuery.crossBucket.php Cross-bucket N1QL query
-     *
-     * @see \Couchbase\Cluster::authenticate()
-     * @see \Couchbase\Authenticator
-     */
-    class ClassicAuthenticator implements Authenticator
-    {
-        /**
-         * Registers cluster management credentials in the container
-         *
-         * @param string $username admin username
-         * @param string $password admin password
-         */
-        public function cluster($username, $password)
-        {
-        }
-
-        /**
-         * Registers bucket credentials in the container
-         *
-         * @param string $name bucket name
-         * @param string $password bucket password
-         */
-        public function bucket($name, $password)
-        {
-        }
-    }
-
-    /**
-     * Authenticator based on RBAC feature of Couchbase Server 5+.
-     *
-     * This authenticator uses single credentials for all operations (data and management).
-     *
-     * @see \Couchbase\Cluster::authenticate()
-     * @see \Couchbase\Authenticator
-     */
-    class PasswordAuthenticator implements Authenticator
-    {
-        /**
-         * Sets username
-         *
-         * @param string $username username
-         * @return \Couchbase\PasswordAuthenticator
-         */
-        public function username($username)
-        {
-        }
-
-        /**
-         * Sets password
-         *
-         * @param string $password password
-         * @return \Couchbase\PasswordAuthenticator
-         */
-        public function password($password)
-        {
-        }
-    }
-
-    class AnalyticsQueryOptions
-    {
-        public function timeout(int $arg): AnalyticsQueryOptions
-        {
-        }
-
-        public function namedParameters(array $pairs): AnalyticsQueryOptions
-        {
-        }
-
-        public function positionalParameters(array $args): AnalyticsQueryOptions
-        {
-        }
-
-        public function rawParameter(string $key, $value): AnalyticsQueryOptions
+        public function scanConsistency(string $arg): AnalyticsOptions
         {
         }
     }
@@ -864,27 +688,6 @@ namespace Couchbase {
         }
     }
 
-    class MutateInsertFullSpec implements MutateInSpec
-    {
-        public function __construct($value)
-        {
-        }
-    }
-
-    class MutateUpsertFullSpec implements MutateInSpec
-    {
-        public function __construct($value)
-        {
-        }
-    }
-
-    class MutateReplaceFullSpec implements MutateInSpec
-    {
-        public function __construct($value)
-        {
-        }
-    }
-
     class MutateCounterSpec implements MutateInSpec
     {
         public function __construct(string $path, int $delta, bool $isXattr, bool $createPath)
@@ -893,13 +696,1036 @@ namespace Couchbase {
     }
 
 
+    class SearchOptions implements JsonSerializable
+    {
+        /**
+         * Sets the server side timeout in milliseconds
+         *
+         * @param int $serverSideTimeout the server side timeout to apply
+         * @return SearchQuery
+         */
+        public function timeout(int $ms): SearchOptions
+        {
+        }
+
+        /**
+         * Add a limit to the query on the number of hits it can return
+         *
+         * @param int $limit the maximum number of hits to return
+         */
+        public function limit(int $limit): SearchOptions
+        {
+        }
+
+        /**
+         * Set the number of hits to skip (eg. for pagination).
+         *
+         * @param int $skip the number of results to skip
+         * @return SearchQuery
+         */
+        public function skip(int $skip): SearchOptions
+        {
+        }
+
+        /**
+         * Activates the explanation of each result hit in the response
+         *
+         * @param bool $explain
+         * @return SearchQuery
+         */
+        public function explain(bool $explain): SearchOptions
+        {
+        }
+
+        /**
+         * Sets the consistency to consider for this FTS query to AT_PLUS and
+         * uses the MutationState to parameterize the consistency.
+         *
+         * This replaces any consistency tuning previously set.
+         *
+         * @param MutationState $state the mutation state information to work with
+         * @return SearchQuery
+         */
+        public function consistentWith(string $index, MutationState $state): SearchOptions
+        {
+        }
+
+        /**
+         * Configures the list of fields for which the whole value should be included in the response.
+         *
+         * If empty, no field values are included. This drives the inclusion of the fields in each hit.
+         * Note that to be highlighted, the fields must be stored in the FTS index.
+         *
+         * @param string ...$fields
+         * @return SearchQuery
+         */
+        public function fields(array $fields): SearchOptions
+        {
+        }
+
+        /**
+         * Adds one SearchFacet-s to the query
+         *
+         * This is an additive operation (the given facets are added to any facet previously requested),
+         * but if an existing facet has the same name it will be replaced.
+         *
+         * Note that to be faceted, a field's value must be stored in the FTS index.
+         *
+         * @param array[SearchFacet] $facet
+         * @return SearchOptions
+         *
+         * @see \SearchFacet
+         * @see \TermSearchFacet
+         * @see \NumericRangeSearchFacet
+         * @see \DateRangeSearchFacet
+         */
+        public function facets(array $facets): SearchOptions
+        {
+        }
+
+        /**
+         * Configures the list of fields (including special fields) which are used for sorting purposes.
+         * If empty, the default sorting (descending by score) is used by the server.
+         *
+         * The list of sort fields can include actual fields (like "firstname" but then they must be stored in the
+         * index, configured in the server side mapping). Fields provided first are considered first and in a "tie" case
+         * the next sort field is considered. So sorting by "firstname" and then "lastname" will first sort ascending by
+         * the firstname and if the names are equal then sort ascending by lastname. Special fields like "_id" and
+         * "_score" can also be used. If prefixed with "-" the sort order is set to descending.
+         *
+         * If no sort is provided, it is equal to sort("-_score"), since the server will sort it by score in descending
+         * order.
+         *
+         * @param sort the fields that should take part in the sorting.
+         * @return SearchQuery
+         */
+        public function sort(array $specs): SearchOptions
+        {
+        }
+
+        /**
+         * Configures the highlighting of matches in the response
+         *
+         * @param string $style highlight style to apply. Use constants HIGHLIGHT_HTML,
+         *   HIGHLIGHT_ANSI, HIGHLIGHT_SIMPLE.
+         * @param string ...$fields the optional fields on which to highlight.
+         *   If none, all fields where there is a match are highlighted.
+         * @return SearchQuery
+         *
+         * @see \SearchHighlightMode::HTML
+         * @see \SearchHighlightMode::ANSI
+         * @see \SearchHighlightMode::SIMPLE
+         */
+        public function highlight(string $style = null, array $fields = null): SearchOptions
+        {
+        }
+      }
+    }
+
+    interface SearchHighlightMode
+    {
+	    public const HTML = "html";
+	    public const ANSI = "ansi";
+	    public const SIMPLE = "simple";
+    }
+
+    /**
+     * Common interface for all classes, which could be used as a body of SearchQuery
+     *
+     * Represents full text search query
+     *
+     * @see https://developer.couchbase.com/documentation/server/4.6/sdk/php/full-text-searching-with-sdk.html
+     *   Searching from the SDK
+     */
+    interface SearchQuery
+    {
+    }
+
+    /**
+     * A FTS query that queries fields explicitly indexed as boolean.
+     */
+    class BooleanFieldSearchQuery implements JsonSerializable, SearchQuery
+    {
+        public function __construct(bool $arg)
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return BooleanFieldSearchQuery
+         */
+        public function boost(float $boost): BooleanFieldSearchQuery
+        {
+        }
+
+        /**
+         * @param string $field
+         * @return BooleanFieldSearchQuery
+         */
+        public function field(string $field): BooleanFieldSearchQuery
+        {
+        }
+    }
+
+    /**
+     * A compound FTS query that allows various combinations of sub-queries.
+     */
+    class BooleanSearchQuery implements JsonSerializable, SearchQuery
+    {
+        public function __construct()
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return BooleanSearchQuery
+         */
+        public function boost($boost): BooleanSearchQuery
+        {
+        }
+
+        /**
+         * @param SearchQuery ...$queries
+         * @return BooleanSearchQuery
+         */
+        public function must(SearchQuery ...$queries): BooleanSearchQuery
+        {
+        }
+
+        /**
+         * @param SearchQuery ...$queries
+         * @return BooleanSearchQuery
+         */
+        public function mustNot(SearchQuery ...$queries): BooleanSearchQuery
+        {
+        }
+
+        /**
+         * @param SearchQuery ...$queries
+         * @return BooleanSearchQuery
+         */
+        public function should(SearchQuery ...$queries): BooleanSearchQuery
+        {
+        }
+    }
+
+    /**
+     * A compound FTS query that performs a logical AND between all its sub-queries (conjunction).
+     */
+    class ConjunctionSearchQuery implements JsonSerializable, SearchQuery
+    {
+        public function __construct(array $queries)
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return ConjunctionSearchQuery
+         */
+        public function boost($boost): ConjunctionSearchQuery
+        {
+        }
+
+        /**
+         * @param SearchQuery ...$queries
+         * @return ConjunctionSearchQuery
+         */
+        public function every(SearchQuery ...$queries): ConjunctionSearchQuery
+        {
+        }
+    }
+
+    /**
+     * A FTS query that matches documents on a range of values. At least one bound is required, and the
+     * inclusiveness of each bound can be configured.
+     */
+    class DateRangeSearchQuery implements JsonSerializable, SearchQuery
+    {
+        public function __construct()
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return DateRangeSearchQuery
+         */
+        public function boost(float $boost): DateRangeSearchQuery
+        {
+        }
+
+        /**
+         * @param string $field
+         * @return DateRangeSearchQuery
+         */
+        public function field(string $field): DateRangeSearchQuery
+        {
+        }
+
+        /**
+         * @param int|string $start The strings will be taken verbatim and supposed to be formatted with custom date
+         *      time formatter (see dateTimeParser). Integers interpreted as unix timestamps and represented as RFC3339
+         *      strings.
+         * @param bool $inclusive
+         * @return DateRangeSearchQuery
+         */
+        public function start($start, bool $inclusive = false): DateRangeSearchQuery
+        {
+        }
+
+        /**
+         * @param int|string $end The strings will be taken verbatim and supposed to be formatted with custom date
+         *      time formatter (see dateTimeParser). Integers interpreted as unix timestamps and represented as RFC3339
+         *      strings.
+         * @param bool $inclusive
+         * @return DateRangeSearchQuery
+         */
+        public function end($end, bool $inclusive = false): DateRangeSearchQuery
+        {
+        }
+
+        /**
+         * @param string $dateTimeParser
+         * @return DateRangeSearchQuery
+         */
+        public function dateTimeParser(string $dateTimeParser): DateRangeSearchQuery
+        {
+        }
+    }
+
+    /**
+     * A compound FTS query that performs a logical OR between all its sub-queries (disjunction). It requires that a
+     * minimum of the queries match. The minimum is configurable (default 1).
+     */
+    class DisjunctionSearchQuery implements JsonSerializable, SearchQuery
+    {
+        public function __construct(array $queries)
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return DisjunctionSearchQuery
+         */
+        public function boost(float $boost): DisjunctionSearchQuery
+        {
+        }
+
+        /**
+         * @param SearchQuery ...$queries
+         * @return DisjunctionSearchQuery
+         */
+        public function either(SearchQuery ...$queries): DisjunctionSearchQuery
+        {
+        }
+
+        /**
+         * @param int $min
+         * @return DisjunctionSearchQuery
+         */
+        public function min(int $min): DisjunctionSearchQuery
+        {
+        }
+    }
+
+    /**
+     * A FTS query that matches on Couchbase document IDs. Useful to restrict the search space to a list of keys (by using
+     * this in a compound query).
+     */
+    class DocIdSearchQuery implements JsonSerializable, SearchQuery
+    {
+        /** @ignore */
+        public function __construct()
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return DocIdSearchQuery
+         */
+        public function boost(float $boost): DocIdSearchQuery
+        {
+        }
+
+        /**
+         * @param string $field
+         * @return DocIdSearchQuery
+         */
+        public function field(string $field): DocIdSearchQuery
+        {
+        }
+
+        /**
+         * @param string ...$documentIds
+         * @return DocIdSearchQuery
+         */
+        public function docIds(string ...$documentIds): DocIdSearchQuery
+        {
+        }
+    }
+
+    /**
+     * A FTS query which allows to match geo bounding boxes.
+     */
+    class GeoBoundingBoxSearchQuery implements JsonSerializable, SearchQuery
+    {
+        public function __construct(float $top_left_longitude, float $top_left_latitude, float $buttom_right_longitude, float $buttom_right_latitude)
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return GeoBoundingBoxSearchQuery
+         */
+        public function boost(float $boost): GeoBoundingBoxSearchQuery
+        {
+        }
+
+        /**
+         * @param string $field
+         * @return GeoBoundingBoxSearchQuery
+         */
+        public function field(string $field): GeoBoundingBoxSearchQuery
+        {
+        }
+    }
+
+    /**
+     * A FTS query that finds all matches from a given location (point) within the given distance.
+     *
+     * Both the point and the distance are required.
+     */
+    class GeoDistanceSearchQuery implements JsonSerializable, SearchQuery
+    {
+        public function __construct(float $longitude, float $latitude, string $distance = NULL)
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return GeoDistanceSearchQuery
+         */
+        public function boost(float $boost): GeoDistanceSearchQuery
+        {
+        }
+
+        /**
+         * @param string $field
+         * @return GeoDistanceSearchQuery
+         */
+        public function field(string $field): GeoDistanceSearchQuery
+        {
+        }
+    }
+
+    /**
+     * A FTS query that matches all indexed documents (usually for debugging purposes).
+     */
+    class MatchAllSearchQuery implements JsonSerializable, SearchQuery
+    {
+        public function __construct()
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return MatchAllSearchQuery
+         */
+        public function boost(float $boost): MatchAllSearchQuery
+        {
+        }
+    }
+
+    /**
+     * A FTS query that matches 0 document (usually for debugging purposes).
+     */
+    class MatchNoneSearchQuery implements JsonSerializable, SearchQuery
+    {
+        public function __construct()
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return MatchNoneSearchQuery
+         */
+        public function boost(float $boost): MatchNoneSearchQuery
+        {
+        }
+    }
+
+    /**
+     * A FTS query that matches several given terms (a "phrase"), applying further processing
+     * like analyzers to them.
+     */
+    class MatchPhraseSearchQuery implements JsonSerializable, SearchQuery
+    {
+        public function __construct(string $value)
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return MatchPhraseSearchQuery
+         */
+        public function boost(float $boost): MatchPhraseSearchQuery
+        {
+        }
+
+        /**
+         * @param string $field
+         * @return MatchPhraseSearchQuery
+         */
+        public function field(string $field): MatchPhraseSearchQuery
+        {
+        }
+
+        /**
+         * @param string $analyzer
+         * @return MatchPhraseSearchQuery
+         */
+        public function analyzer(string $analyzer): MatchPhraseSearchQuery
+        {
+        }
+    }
+
+    /**
+     * A FTS query that matches a given term, applying further processing to it
+     * like analyzers, stemming and even #fuzziness(int).
+     */
+    class MatchSearchQuery implements JsonSerializable, SearchQuery
+    {
+        public function __construct(string $value)
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return MatchSearchQuery
+         */
+        public function boost(float $boost): MatchSearchQuery
+        {
+        }
+
+        /**
+         * @param string $field
+         * @return MatchSearchQuery
+         */
+        public function field(string $field): MatchSearchQuery
+        {
+        }
+
+        /**
+         * @param string $analyzer
+         * @return MatchSearchQuery
+         */
+        public function analyzer(string $analyzer): MatchSearchQuery
+        {
+        }
+
+        /**
+         * @param int $prefixLength
+         * @return MatchSearchQuery
+         */
+        public function prefixLength(int $prefixLength): MatchSearchQuery
+        {
+        }
+
+        /**
+         * @param int $fuzziness
+         * @return MatchSearchQuery
+         */
+        public function fuzziness(int $fuzziness): MatchSearchQuery
+        {
+        }
+    }
+
+    /**
+     * A FTS query that matches documents on a range of values. At least one bound is required, and the
+     * inclusiveness of each bound can be configured.
+     */
+    class NumericRangeSearchQuery implements JsonSerializable, SearchQuery
+    {
+        public function __construct()
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return NumericRangeSearchQuery
+         */
+        public function boost(float $boost): NumericRangeSearchQuery
+        {
+        }
+
+        /**
+         * @param string $field
+         * @return NumericRangeSearchQuery
+         */
+        public function field($field): NumericRangeSearchQuery
+        {
+        }
+
+        /**
+         * @param float $min
+         * @param bool $inclusive
+         * @return NumericRangeSearchQuery
+         */
+        public function min(loat $min, bool $inclusive = false): NumericRangeSearchQuery
+        {
+        }
+
+        /**
+         * @param float $max
+         * @param bool $inclusive
+         * @return NumericRangeSearchQuery
+         */
+        public function max(float $max, bool $inclusive = false): NumericRangeSearchQuery
+        {
+        }
+    }
+
+    /**
+     * A FTS query that matches several terms (a "phrase") as is. The order of the terms mater and no further processing is
+     * applied to them, so they must appear in the index exactly as provided.  Usually for debugging purposes, prefer
+     * MatchPhraseQuery.
+     */
+    class PhraseSearchQuery implements JsonSerializable, SearchQuery
+    {
+        public function __construct(string ...$terms)
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return PhraseSearchQuery
+         */
+        public function boost(float $boost): PhraseSearchQuery
+        {
+        }
+
+        /**
+         * @param string $field
+         * @return PhraseSearchQuery
+         */
+        public function field(string $field): PhraseSearchQuery
+        {
+        }
+    }
+
+    /**
+     * A FTS query that allows for simple matching on a given prefix.
+     */
+    class PrefixSearchQuery implements JsonSerializable, SearchQuery
+    {
+        public function __construct(string $prefix)
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return PrefixSearchQuery
+         */
+        public function boost(float $boost): PrefixSearchQuery
+        {
+        }
+
+        /**
+         * @param string $field
+         * @return PrefixSearchQuery
+         */
+        public function field(string $field): PrefixSearchQuery
+        {
+        }
+    }
+
+    /**
+     * A FTS query that performs a search according to the "string query" syntax.
+     */
+    class QueryStringSearchQuery implements JsonSerializable, SearchQuery
+    {
+        public function __construct(string $query_string)
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return QueryStringSearchQuery
+         */
+        public function boost(float $boost): QueryStringSearchQuery
+        {
+        }
+    }
+
+    /**
+     * A FTS query that allows for simple matching of regular expressions.
+     */
+    class RegexpSearchQuery implements JsonSerializable, SearchQuery
+    {
+        public function __construct(string $regexp)
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return RegexpSearchQuery
+         */
+        public function boost(float $boost): RegexpSearchQuery
+        {
+        }
+
+        /**
+         * @param string $field
+         * @return RegexpSearchQuery
+         */
+        public function field(string $field): RegexpSearchQuery
+        {
+        }
+    }
+
+    /**
+     * A facet that gives the number of occurrences of the most recurring terms in all hits.
+     */
+    class TermSearchQuery implements JsonSerializable, SearchQuery
+    {
+        public function __construct(string $term)
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return TermSearchQuery
+         */
+        public function boost(float $boost): TermSearchQuery
+        {
+        }
+
+        /**
+         * @param string $field
+         * @return TermSearchQuery
+         */
+        public function field(string $field): TermSearchQuery
+        {
+        }
+
+        /**
+         * @param int $prefixLength
+         * @return TermSearchQuery
+         */
+        public function prefixLength(int $prefixLength): TermSearchQuery
+        {
+        }
+
+        /**
+         * @param int $fuzziness
+         * @return TermSearchQuery
+         */
+        public function fuzziness(int $fuzziness): TermSearchQuery
+        {
+        }
+    }
+
+    /**
+     * A FTS query that matches documents on a range of values. At least one bound is required, and the
+     * inclusiveness of each bound can be configured.
+     */
+    class TermRangeSearchQuery implements JsonSerializable, SearchQuery
+    {
+        public function __construct()
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return TermRangeSearchQuery
+         */
+        public function boost(float $boost): TermRangeSearchQuery
+        {
+        }
+
+        /**
+         * @param string $field
+         * @return TermRangeSearchQuery
+         */
+        public function field(string $field): TermRangeSearchQuery
+        {
+        }
+
+        /**
+         * @param string $min
+         * @param bool $inclusive
+         * @return TermRangeSearchQuery
+         */
+        public function min(string $min, bool $inclusive = true): TermRangeSearchQuery
+        {
+        }
+
+        /**
+         * @param string $max
+         * @param bool $inclusive
+         * @return TermRangeSearchQuery
+         */
+        public function max(string $max, bool $inclusive = false): TermRangeSearchQuery
+        {
+        }
+    }
+
+    /**
+     * A FTS query that allows for simple matching using wildcard characters (* and ?).
+     */
+    class WildcardSearchQuery implements JsonSerializable, SearchQuery
+    {
+        public function __construct(string $wildcard)
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return WildcardSearchQuery
+         */
+        public function boost(float $boost): WildcardSearchQuery
+        {
+        }
+
+        /**
+         * @param string $field
+         * @return WildcardSearchQuery
+         */
+        public function field(string $field): WildcardSearchQuery
+        {
+        }
+    }
+
+    /**
+     * Common interface for all search facets
+     *
+     * @see \SearchQuery::addFacet()
+     * @see \TermSearchFacet
+     * @see \DateRangeSearchFacet
+     * @see \NumericRangeSearchFacet
+     */
+    interface SearchFacet
+    {
+    }
+
+    /**
+     * A facet that gives the number of occurrences of the most recurring terms in all hits.
+     */
+    class TermSearchFacet implements JsonSerializable, SearchFacet
+    {
+        public function __construct(string $field, int $limit)
+        {
+        }
+    }
+
+    /**
+     * A facet that categorizes hits into numerical ranges (or buckets) provided by the user.
+     */
+    class NumericRangeSearchFacet implements JsonSerializable, SearchFacet
+    {
+        public function __construct(string $field, int $limit)
+        {
+        }
+
+        /**
+         * @param string $name
+         * @param float $min
+         * @param float $max
+         * @return NumericSearchFacet
+         */
+        public function addRange(string $name, float $min = NULL, float $max = NULL): NumericRangeSearchFacet
+        {
+        }
+    }
+
+    /**
+     * A facet that categorizes hits inside date ranges (or buckets) provided by the user.
+     */
+    class DateRangeSearchFacet implements JsonSerializable, SearchFacet
+    {
+        public function __construct(string $field, int $limit)
+        {
+        }
+
+        /**
+         * @param string $name
+         * @param int|string $start
+         * @param int|string $end
+         * @return DateSearchFacet
+         */
+        public function addRange(string $name, $start = NULL, $end = NULL): DateRangeSearchFacet
+        {
+        }
+    }
+
+    /**
+     * Base interface for all FTS sort options in querying.
+     */
+    interface SearchSort
+    {
+    }
+
+    /**
+     * Sort by a field in the hits.
+     */
+    class SearchSortField implements JsonSerializable, SearchSort
+    {
+        public function __construct(string $field)
+        {
+        }
+
+        /**
+         * Direction of the sort
+         *
+         * @param bool $descending
+         *
+         * @return SearchSortField
+         */
+        public function descending(bool $descending): SearchSortField
+        {
+        }
+
+        /**
+         * Set type of the field
+         *
+         * @param string type the type
+         *
+         * @see SearchSortType::AUTO
+         * @see SearchSortType::STRING
+         * @see SearchSortType::NUMBER
+         * @see SearchSortType::DATE
+         */
+        public function type(string $type): SearchSortField
+        {
+        }
+
+        /**
+         * Set mode of the sort
+         *
+         * @param string mode the mode
+         *
+         * @see SearchSortMode::MIN
+         * @see SearchSortMode::MAX
+         */
+        public function mode(string $mode): SearchSortField
+        {
+        }
+
+        /**
+         * Set where the hits with missing field will be inserted
+         *
+         * @param string missing strategy for hits with missing fields
+         *
+         * @see SearchSortMissing::FIRST
+         * @see SearchSortMissing::LAST
+         */
+        public function missing(string $missing): SearchSortField
+        {
+        }
+    }
+
+    interface SearchSortType
+    {
+        public const AUTO = "auto";
+        public const STRING = "string";
+        public const NUMBER = "number";
+        public const DATE = "date";
+    }
+
+    interface SearchSortMode
+    {
+        public const DEFAULT = "default";
+        public const MIN = "min";
+        public const MAX = "max";
+    }
+
+    interface SearchSortMissing
+    {
+
+        public const FIRST = "first";
+        public const LAST = "last";
+    }
+
+    /**
+     * Sort by a location and unit in the hits.
+     */
+    class SearchSortGeoDistance implements JsonSerializable, SearchSort
+    {
+        public function __construct(string $field, float $logitude, float $latitude)
+        {
+        }
+
+        /**
+         * Direction of the sort
+         *
+         * @param bool $descending
+         *
+         * @return SearchSortGeoDistance
+         */
+        public function descending(bool $descending): SearchSortGeoDistance
+        {
+        }
+
+        /**
+         * Name of the units
+         *
+         * @param string $unit
+         *
+         * @return SearchSortGeoDistance
+         */
+        public function unit(string $unit): SearchSortGeoDistance
+        {
+        }
+    }
+
+    /**
+     * Sort by the document identifier.
+     */
+    class SearchSortId implements JsonSerializable, SearchSort
+    {
+        public function __construct()
+        {
+        }
+
+        /**
+         * Direction of the sort
+         *
+         * @param bool $descending
+         *
+         * @return SearchSortId
+         */
+        public function descending(bool $descending): SearchSortId
+        {
+        }
+    }
+
+    /**
+     * Sort by the hit score.
+     */
+    class SearchSortScore implements JsonSerializable, SearchSort
+    {
+        public function __construct()
+        {
+        }
+
+        /**
+         * Direction of the sort
+         *
+         * @param bool $descending
+         *
+         * @return SearchSortScore
+         */
+        public function descending(bool $descending): SearchSortScore
+        {
+        }
+    }
+
     class GetOptions
     {
         public function timeout(int $arg): GetOptions
         {
         }
 
-        public function withExpiration(bool $arg): GetOptions
+        public function withExpiry(bool $arg): GetOptions
         {
         }
 
@@ -956,7 +1782,7 @@ namespace Couchbase {
         {
         }
 
-        public function expiration(int $arg): InsertOptions
+        public function expiry(int $arg): InsertOptions
         {
         }
 
@@ -971,7 +1797,7 @@ namespace Couchbase {
         {
         }
 
-        public function expiration(int $arg): UpsertOptions
+        public function expiry(int $arg): UpsertOptions
         {
         }
 
@@ -990,7 +1816,7 @@ namespace Couchbase {
         {
         }
 
-        public function expiration(int $arg): ReplaceOptions
+        public function expiry(int $arg): ReplaceOptions
         {
         }
 
@@ -1009,7 +1835,7 @@ namespace Couchbase {
         {
         }
 
-        public function expiration(int $arg): AppendOptions
+        public function expiry(int $arg): AppendOptions
         {
         }
 
@@ -1024,7 +1850,7 @@ namespace Couchbase {
         {
         }
 
-        public function expiration(int $arg): PrependOptions
+        public function expiry(int $arg): PrependOptions
         {
         }
 
@@ -1054,7 +1880,7 @@ namespace Couchbase {
         {
         }
 
-        public function expiration(int $arg): CounterOptions
+        public function expiry(int $arg): CounterOptions
         {
         }
 
@@ -1092,7 +1918,7 @@ namespace Couchbase {
         {
         }
 
-        public function withExpiration(bool $arg): LookupInOptions
+        public function withExpiry(bool $arg): LookupInOptions
         {
         }
     }
@@ -1107,7 +1933,7 @@ namespace Couchbase {
         {
         }
 
-        public function expiration(int $arg): MutateInOptions
+        public function expiry(int $arg): MutateInOptions
         {
         }
 
@@ -1174,7 +2000,7 @@ namespace Couchbase {
         {
         }
 
-        public function rawParameter(string $key, $value): ViewOptions
+        public function raw(string $key, $value): ViewOptions
         {
         }
     }
@@ -1186,7 +2012,7 @@ namespace Couchbase {
         public const UPDATE_AFTER = 2;
     }
 
-    interface ViewOrder
+    interface ViewOrdering
     {
         public const ASCENDING = 0;
         public const DESCENDING = 1;
@@ -1238,12 +2064,12 @@ namespace Couchbase {
         {
         }
 
-        public function rawParameter(string $key, $value): QueryOptions
+        public function raw(string $key, $value): QueryOptions
         {
         }
     }
 
-    interface QueryConsistency
+    interface QueryScanConsistency
     {
         public const NOT_BOUNDED = 1;
         public const REQUEST_PLUS = 2;
@@ -1255,1537 +2081,6 @@ namespace Couchbase {
         public const NONE = 1;
         public const PHASES = 2;
         public const TIMINGS = 3;
-    }
-
-
-    /**
-     * Represents full text search query
-     *
-     * @see https://developer.couchbase.com/documentation/server/4.6/sdk/php/full-text-searching-with-sdk.html
-     *   Searching from the SDK
-     */
-    class SearchQuery implements JsonSerializable
-    {
-        const HIGHLIGHT_HTML = 'html';
-        const HIGHLIGHT_ANSI = 'ansi';
-        const HIGHLIGHT_SIMPLE = 'simple';
-
-        /**
-         * Prepare boolean search query
-         *
-         * @return BooleanSearchQuery
-         */
-        public static function boolean()
-        {
-        }
-
-        /**
-         * Prepare date range search query
-         *
-         * @return DateRangeSearchQuery
-         */
-        public static function dateRange()
-        {
-        }
-
-        /**
-         * Prepare numeric range search query
-         *
-         * @return NumericRangeSearchQuery
-         */
-        public static function numericRange()
-        {
-        }
-
-        /**
-         * Prepare term range search query
-         *
-         * @return TermRangeSearchQuery
-         */
-        public static function termRange()
-        {
-        }
-
-        /**
-         * Prepare boolean field search query
-         *
-         * @param bool $value
-         * @return BooleanFieldSearchQuery
-         */
-        public static function booleanField($value)
-        {
-        }
-
-        /**
-         * Prepare compound conjunction search query
-         *
-         * @param SearchQueryPart ...$queries list of inner query parts
-         * @return ConjunctionSearchQuery
-         */
-        public static function conjuncts(...$queries)
-        {
-        }
-
-        /**
-         * Prepare compound disjunction search query
-         *
-         * @param SearchQueryPart ...$queries list of inner query parts
-         * @return DisjunctionSearchQuery
-         */
-        public static function disjuncts(...$queries)
-        {
-        }
-
-        /**
-         * Prepare document ID search query
-         *
-         * @param string ...$documentIds
-         * @return DocIdSearchQuery
-         */
-        public static function docId(...$documentIds)
-        {
-        }
-
-        /**
-         * Prepare match search query
-         *
-         * @param string $match
-         * @return MatchSearchQuery
-         */
-        public static function match($match)
-        {
-        }
-
-        /**
-         * Prepare match all search query
-         *
-         * @return MatchAllSearchQuery
-         */
-        public static function matchAll()
-        {
-        }
-
-        /**
-         * Prepare match non search query
-         *
-         * @return MatchNoneSearchQuery
-         */
-        public static function matchNone()
-        {
-        }
-
-        /**
-         * Prepare phrase search query
-         *
-         * @param string ...$terms
-         * @return MatchPhraseSearchQuery
-         */
-        public static function matchPhrase(...$terms)
-        {
-        }
-
-        /**
-         * Prepare prefix search query
-         *
-         * @param string $prefix
-         * @return PrefixSearchQuery
-         */
-        public static function prefix($prefix)
-        {
-        }
-
-        /**
-         * Prepare query string search query
-         *
-         * @param string $queryString
-         * @return QueryStringSearchQuery
-         */
-        public static function queryString($queryString)
-        {
-        }
-
-        /**
-         * Prepare regexp search query
-         *
-         * @param string $regexp
-         * @return RegexpSearchQuery
-         */
-        public static function regexp($regexp)
-        {
-        }
-
-        /**
-         * Prepare term search query
-         *
-         * @param string $term
-         * @return TermSearchQuery
-         */
-        public static function term($term)
-        {
-        }
-
-        /**
-         * Prepare wildcard search query
-         *
-         * @param string $wildcard
-         * @return WildcardSearchQuery
-         */
-        public static function wildcard($wildcard)
-        {
-        }
-
-        /**
-         * Prepare geo distance search query
-         *
-         * @param float $longitude
-         * @param float $latitude
-         * @param string $distance e.g. "10mi"
-         * @return GeoDistanceSearchQuery
-         */
-        public static function geoDistance($longitude, $latitude, $distance)
-        {
-        }
-
-        /**
-         * Prepare geo bounding box search query
-         *
-         * @param float $topLeftLongitude
-         * @param float $topLeftLatitude
-         * @param float $bottomRightLongitude
-         * @param float $bottomRightLatitude
-         * @return GeoBoundingBoxSearchQuery
-         */
-        public static function geoBoundingBox($topLeftLongitude, $topLeftLatitude, $bottomRightLongitude, $bottomRightLatitude)
-        {
-        }
-
-        /**
-         * Prepare term search facet
-         *
-         * @param string $field
-         * @param int $limit
-         * @return TermSearchFacet
-         */
-        public static function termFacet($field, $limit)
-        {
-        }
-
-        /**
-         * Prepare date range search facet
-         *
-         * @param string $field
-         * @param int $limit
-         * @return DateRangeSearchFacet
-         */
-        public static function dateRangeFacet($field, $limit)
-        {
-        }
-
-        /**
-         * Prepare numeric range search facet
-         *
-         * @param string $field
-         * @param int $limit
-         * @return NumericRangeSearchFacet
-         */
-        public static function numericRangeFacet($field, $limit)
-        {
-        }
-
-        /**
-         * Prepare an FTS SearchQuery on an index.
-         *
-         * Top level query parameters can be set after that by using the fluent API.
-         *
-         * @param string $indexName the FTS index to search in
-         * @param SearchQueryPart $queryPart the body of the FTS query (e.g. a match phrase query)
-         */
-        public function __construct($indexName, $queryPart)
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * Add a limit to the query on the number of hits it can return
-         *
-         * @param int $limit the maximum number of hits to return
-         * @return SearchQuery
-         */
-        public function limit($limit)
-        {
-        }
-
-        /**
-         * Set the number of hits to skip (eg. for pagination).
-         *
-         * @param int $skip the number of results to skip
-         * @return SearchQuery
-         */
-        public function skip($skip)
-        {
-        }
-
-        /**
-         * Activates the explanation of each result hit in the response
-         *
-         * @param bool $explain
-         * @return SearchQuery
-         */
-        public function explain($explain)
-        {
-        }
-
-        /**
-         * Sets the server side timeout in milliseconds
-         *
-         * @param int $serverSideTimeout the server side timeout to apply
-         * @return SearchQuery
-         */
-        public function serverSideTimeout($serverSideTimeout)
-        {
-        }
-
-        /**
-         * Sets the consistency to consider for this FTS query to AT_PLUS and
-         * uses the MutationState to parameterize the consistency.
-         *
-         * This replaces any consistency tuning previously set.
-         *
-         * @param MutationState $state the mutation state information to work with
-         * @return SearchQuery
-         */
-        public function consistentWith($state)
-        {
-        }
-
-        /**
-         * Configures the list of fields for which the whole value should be included in the response.
-         *
-         * If empty, no field values are included. This drives the inclusion of the fields in each hit.
-         * Note that to be highlighted, the fields must be stored in the FTS index.
-         *
-         * @param string ...$fields
-         * @return SearchQuery
-         */
-        public function fields(...$fields)
-        {
-        }
-
-        /**
-         * Configures the highlighting of matches in the response
-         *
-         * @param string $style highlight style to apply. Use constants HIGHLIGHT_HTML,
-         *   HIGHLIGHT_ANSI, HIGHLIGHT_SIMPLE.
-         * @param string ...$fields the optional fields on which to highlight.
-         *   If none, all fields where there is a match are highlighted.
-         * @return SearchQuery
-         *
-         * @see \Couchbase\SearchQuery::HIGHLIGHT_HTML
-         * @see \Couchbase\SearchQuery::HIGHLIGHT_ANSI
-         * @see \Couchbase\SearchQuery::HIGHLIGHT_SIMPLE
-         */
-        public function highlight($style, ...$fields)
-        {
-        }
-
-        /**
-         * Configures the list of fields (including special fields) which are used for sorting purposes.
-         * If empty, the default sorting (descending by score) is used by the server.
-         *
-         * The list of sort fields can include actual fields (like "firstname" but then they must be stored in the
-         * index, configured in the server side mapping). Fields provided first are considered first and in a "tie" case
-         * the next sort field is considered. So sorting by "firstname" and then "lastname" will first sort ascending by
-         * the firstname and if the names are equal then sort ascending by lastname. Special fields like "_id" and
-         * "_score" can also be used. If prefixed with "-" the sort order is set to descending.
-         *
-         * If no sort is provided, it is equal to sort("-_score"), since the server will sort it by score in descending
-         * order.
-         *
-         * @param sort the fields that should take part in the sorting.
-         * @return SearchQuery
-         */
-        public function sort(...$sort)
-        {
-        }
-
-        /**
-         * Adds one SearchFacet to the query
-         *
-         * This is an additive operation (the given facets are added to any facet previously requested),
-         * but if an existing facet has the same name it will be replaced.
-         *
-         * Note that to be faceted, a field's value must be stored in the FTS index.
-         *
-         * @param string $name
-         * @param SearchFacet $facet
-         * @return SearchQuery
-         *
-         * @see \Couchbase\SearchFacet
-         * @see \Couchbase\TermSearchFacet
-         * @see \Couchbase\NumericRangeSearchFacet
-         * @see \Couchbase\DateRangeSearchFacet
-         */
-        public function addFacet($name, $facet)
-        {
-        }
-    }
-
-    /**
-     * Common interface for all classes, which could be used as a body of SearchQuery
-     *
-     * @see \Couchbase\SearchQuery::__construct()
-     */
-    interface SearchQueryPart
-    {
-    }
-
-    /**
-     * A FTS query that queries fields explicitly indexed as boolean.
-     */
-    class BooleanFieldSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return BooleanFieldSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-
-        /**
-         * @param string $field
-         * @return BooleanFieldSearchQuery
-         */
-        public function field($field)
-        {
-        }
-    }
-
-    /**
-     * A compound FTS query that allows various combinations of sub-queries.
-     */
-    class BooleanSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return BooleanSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-
-        /**
-         * @param SearchQueryPart ...$queries
-         * @return BooleanSearchQuery
-         */
-        public function must(...$queries)
-        {
-        }
-
-        /**
-         * @param SearchQueryPart ...$queries
-         * @return BooleanSearchQuery
-         */
-        public function mustNot(...$queries)
-        {
-        }
-
-        /**
-         * @param SearchQueryPart ...$queries
-         * @return BooleanSearchQuery
-         */
-        public function should(...$queries)
-        {
-        }
-    }
-
-    /**
-     * A compound FTS query that performs a logical AND between all its sub-queries (conjunction).
-     */
-    class ConjunctionSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return ConjunctionSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-
-        /**
-         * @param SearchQueryPart ...$queries
-         * @return ConjunctionSearchQuery
-         */
-        public function every(...$queries)
-        {
-        }
-    }
-
-
-    /**
-     * A compound FTS query that performs a logical OR between all its sub-queries (disjunction). It requires that a
-     * minimum of the queries match. The minimum is configurable (default 1).
-     */
-    class DisjunctionSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return DisjunctionSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-
-        /**
-         * @param SearchQueryPart ...$queries
-         * @return DisjunctionSearchQuery
-         */
-        public function either(...$queries)
-        {
-        }
-
-        /**
-         * @param int $min
-         * @return DisjunctionSearchQuery
-         */
-        public function min($min)
-        {
-        }
-
-    }
-
-    /**
-     * A FTS query that matches documents on a range of values. At least one bound is required, and the
-     * inclusiveness of each bound can be configured.
-     */
-    class DateRangeSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return DateRangeSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-
-        /**
-         * @param string $field
-         * @return DateRangeSearchQuery
-         */
-        public function field($field)
-        {
-        }
-
-        /**
-         * @param int|string $start The strings will be taken verbatim and supposed to be formatted with custom date
-         *      time formatter (see dateTimeParser). Integers interpreted as unix timestamps and represented as RFC3339
-         *      strings.
-         * @param bool $inclusive
-         * @return DateRangeSearchQuery
-         */
-        public function start($start, $inclusive = true)
-        {
-        }
-
-        /**
-         * @param int|string $end The strings will be taken verbatim and supposed to be formatted with custom date
-         *      time formatter (see dateTimeParser). Integers interpreted as unix timestamps and represented as RFC3339
-         *      strings.
-         * @param bool $inclusive
-         * @return DateRangeSearchQuery
-         */
-        public function end($end, $inclusive = false)
-        {
-        }
-
-        /**
-         * @param string $dateTimeParser
-         * @return DateRangeSearchQuery
-         */
-        public function dateTimeParser($dateTimeParser)
-        {
-        }
-    }
-
-    /**
-     * A FTS query that matches documents on a range of values. At least one bound is required, and the
-     * inclusiveness of each bound can be configured.
-     */
-    class NumericRangeSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return NumericRangeSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-
-        /**
-         * @param string $field
-         * @return NumericRangeSearchQuery
-         */
-        public function field($field)
-        {
-        }
-
-        /**
-         * @param float $min
-         * @param bool $inclusive
-         * @return NumericRangeSearchQuery
-         */
-        public function min($min, $inclusive = true)
-        {
-        }
-
-        /**
-         * @param float $max
-         * @param bool $inclusive
-         * @return NumericRangeSearchQuery
-         */
-        public function max($max, $inclusive = false)
-        {
-        }
-    }
-
-    /**
-     * A FTS query that matches on Couchbase document IDs. Useful to restrict the search space to a list of keys (by using
-     * this in a compound query).
-     */
-    class DocIdSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return DocIdSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-
-        /**
-         * @param string $field
-         * @return DocIdSearchQuery
-         */
-        public function field($field)
-        {
-        }
-
-        /**
-         * @param string ...$documentIds
-         * @return DocIdSearchQuery
-         */
-        public function docIds(...$documentIds)
-        {
-        }
-    }
-
-    /**
-     * A FTS query that matches all indexed documents (usually for debugging purposes).
-     */
-    class MatchAllSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return MatchAllSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-    }
-
-    /**
-     * A FTS query that matches 0 document (usually for debugging purposes).
-     */
-    class MatchNoneSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return MatchNoneSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-    }
-
-    /**
-     * A FTS query that matches several given terms (a "phrase"), applying further processing
-     * like analyzers to them.
-     */
-    class MatchPhraseSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return MatchPhraseSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-
-        /**
-         * @param string $field
-         * @return MatchPhraseSearchQuery
-         */
-        public function field($field)
-        {
-        }
-
-        /**
-         * @param string $analyzer
-         * @return MatchPhraseSearchQuery
-         */
-        public function analyzer($analyzer)
-        {
-        }
-    }
-
-    /**
-     * A FTS query that matches a given term, applying further processing to it
-     * like analyzers, stemming and even #fuzziness(int).
-     */
-    class MatchSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return MatchSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-
-        /**
-         * @param string $field
-         * @return MatchSearchQuery
-         */
-        public function field($field)
-        {
-        }
-
-        /**
-         * @param string $analyzer
-         * @return MatchSearchQuery
-         */
-        public function analyzer($analyzer)
-        {
-        }
-
-        /**
-         * @param int $prefixLength
-         * @return MatchSearchQuery
-         */
-        public function prefixLength($prefixLength)
-        {
-        }
-
-        /**
-         * @param int $fuzziness
-         * @return MatchSearchQuery
-         */
-        public function fuzziness($fuzziness)
-        {
-        }
-    }
-
-    /**
-     * A FTS query that matches several terms (a "phrase") as is. The order of the terms mater and no further processing is
-     * applied to them, so they must appear in the index exactly as provided.  Usually for debugging purposes, prefer
-     * MatchPhraseQuery.
-     */
-    class PhraseSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return PhraseSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-
-        /**
-         * @param string $field
-         * @return PhraseSearchQuery
-         */
-        public function field($field)
-        {
-        }
-    }
-
-    /**
-     * A FTS query that allows for simple matching of regular expressions.
-     */
-    class RegexpSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return RegexpSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-
-        /**
-         * @param string $field
-         * @return RegexpSearchQuery
-         */
-        public function field($field)
-        {
-        }
-    }
-
-    /**
-     * A FTS query that allows for simple matching using wildcard characters (* and ?).
-     */
-    class WildcardSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return WildcardSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-
-        /**
-         * @param string $field
-         * @return WildcardSearchQuery
-         */
-        public function field($field)
-        {
-        }
-    }
-
-    /**
-     * A FTS query that allows for simple matching on a given prefix.
-     */
-    class PrefixSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return PrefixSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-
-        /**
-         * @param string $field
-         * @return PrefixSearchQuery
-         */
-        public function field($field)
-        {
-        }
-    }
-
-    /**
-     * A FTS query that performs a search according to the "string query" syntax.
-     */
-    class QueryStringSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return QueryStringSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-    }
-
-    /**
-     * A facet that gives the number of occurrences of the most recurring terms in all hits.
-     */
-    class TermSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return TermSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-
-        /**
-         * @param string $field
-         * @return TermSearchQuery
-         */
-        public function field($field)
-        {
-        }
-
-        /**
-         * @param int $prefixLength
-         * @return TermSearchQuery
-         */
-        public function prefixLength($prefixLength)
-        {
-        }
-
-        /**
-         * @param int $fuzziness
-         * @return TermSearchQuery
-         */
-        public function fuzziness($fuzziness)
-        {
-        }
-    }
-
-    /**
-     * A FTS query that matches documents on a range of values. At least one bound is required, and the
-     * inclusiveness of each bound can be configured.
-     */
-    class TermRangeSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return TermRangeSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-
-        /**
-         * @param string $field
-         * @return TermRangeSearchQuery
-         */
-        public function field($field)
-        {
-        }
-
-        /**
-         * @param string $min
-         * @param bool $inclusive
-         * @return TermRangeSearchQuery
-         */
-        public function min($min, $inclusive = true)
-        {
-        }
-
-        /**
-         * @param string $max
-         * @param bool $inclusive
-         * @return TermRangeSearchQuery
-         */
-        public function max($max, $inclusive = false)
-        {
-        }
-    }
-
-    /**
-     * A FTS query that finds all matches from a given location (point) within the given distance.
-     *
-     * Both the point and the distance are required.
-     */
-    class GeoDistanceSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return GeoDistanceSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-
-        /**
-         * @param string $field
-         * @return GeoDistanceSearchQuery
-         */
-        public function field($field)
-        {
-        }
-    }
-
-    /**
-     * A FTS query which allows to match geo bounding boxes.
-     */
-    class GeoBoundingBoxSearchQuery implements JsonSerializable, SearchQueryPart
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param float $boost
-         * @return GeoBoundingBoxSearchQuery
-         */
-        public function boost($boost)
-        {
-        }
-
-        /**
-         * @param string $field
-         * @return GeoBoundingBoxSearchQuery
-         */
-        public function field($field)
-        {
-        }
-    }
-
-    /**
-     * Common interface for all search facets
-     *
-     * @see \Couchbase\SearchQuery::addFacet()
-     * @see \Couchbase\TermSearchFacet
-     * @see \Couchbase\DateRangeSearchFacet
-     * @see \Couchbase\NumericRangeSearchFacet
-     */
-    interface SearchFacet
-    {
-    }
-
-    /**
-     * A facet that gives the number of occurrences of the most recurring terms in all hits.
-     */
-    class TermSearchFacet implements JsonSerializable, SearchFacet
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-    }
-
-    /**
-     * A facet that categorizes hits inside date ranges (or buckets) provided by the user.
-     */
-    class DateRangeSearchFacet implements JsonSerializable, SearchFacet
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param string $name
-         * @param int|string $start
-         * @param int|string $end
-         * @return DateSearchFacet
-         */
-        public function addRange($name, $start, $end)
-        {
-        }
-    }
-
-    /**
-     * A facet that categorizes hits into numerical ranges (or buckets) provided by the user.
-     */
-    class NumericRangeSearchFacet implements JsonSerializable, SearchFacet
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * @return array
-         * @ignore
-         */
-        public function jsonSerialize()
-        {
-        }
-
-        /**
-         * @param string $name
-         * @param float $min
-         * @param float $max
-         * @return NumericSearchFacet
-         */
-        public function addRange($name, $min, $max)
-        {
-        }
-    }
-
-    /**
-     * Base class for all FTS sort options in querying.
-     */
-    class SearchSort
-    {
-        /** @ignore */
-        private function __construct()
-        {
-        }
-
-        /**
-         * Sort by the document identifier.
-         *
-         * @return SearchSortId
-         */
-        public static function id()
-        {
-        }
-
-        /**
-         * Sort by the hit score.
-         *
-         * @return SearchSortScore
-         */
-        public static function score()
-        {
-        }
-
-        /**
-         * Sort by a field in the hits.
-         *
-         * @param string $field the field name
-         *
-         * @return SearchSortField
-         */
-        public static function field($field)
-        {
-        }
-
-        /**
-         * Sort by geo location.
-         *
-         * @param string $field the field name
-         * @param float $longitude the longitude of the location
-         * @param float $latitude the latitude of the location
-         *
-         * @return SearchSortGeoDistance
-         */
-        public static function geoDistance($field, $longitude, $latitude)
-        {
-        }
-    }
-
-    /**
-     * Sort by the document identifier.
-     */
-    class SearchSortId extends SearchSort implements JsonSerializable
-    {
-        /** @ignore */
-        private function __construct()
-        {
-        }
-
-        /**
-         * Direction of the sort
-         *
-         * @param bool $descending
-         *
-         * @return SearchSortId
-         */
-        public function descending($descending)
-        {
-        }
-
-        public function jsonSerialize()
-        {
-        }
-    }
-
-    /**
-     * Sort by the hit score.
-     */
-    class SearchSortScore extends SearchSort implements JsonSerializable
-    {
-        /** @ignore */
-        private function __construct()
-        {
-        }
-
-        /**
-         * Direction of the sort
-         *
-         * @param bool $descending
-         *
-         * @return SearchSortScore
-         */
-        public function descending($descending)
-        {
-        }
-
-        public function jsonSerialize()
-        {
-        }
-    }
-
-    /**
-     * Sort by a field in the hits.
-     */
-    class SearchSortField extends SearchSort implements JsonSerializable
-    {
-        const TYPE_AUTO = "auto";
-        const TYPE_STRING = "string";
-        const TYPE_NUMBER = "number";
-        const TYPE_DATE = "date";
-
-        const MODE_DEFAULT = "default";
-        const MODE_MIN = "min";
-        const MODE_MAX = "max";
-
-        const MISSING_FIRST = "first";
-        const MISSING_LAST = "last";
-
-        /** @ignore */
-        private function __construct()
-        {
-        }
-
-        /**
-         * Direction of the sort
-         *
-         * @param bool $descending
-         *
-         * @return SearchSortField
-         */
-        public function descending($descending)
-        {
-        }
-
-        /**
-         * Set type of the field
-         *
-         * @param string type the type
-         *
-         * @see SearchSortField::TYPE_AUTO
-         * @see SearchSortField::TYPE_STRING
-         * @see SearchSortField::TYPE_NUMBER
-         * @see SearchSortField::TYPE_DATE
-         */
-        public function type($type)
-        {
-        }
-
-        /**
-         * Set mode of the sort
-         *
-         * @param string mode the mode
-         *
-         * @see SearchSortField::MODE_MIN
-         * @see SearchSortField::MODE_MAX
-         */
-        public function mode($mode)
-        {
-        }
-
-        /**
-         * Set where the hits with missing field will be inserted
-         *
-         * @param string missing strategy for hits with missing fields
-         *
-         * @see SearchSortField::MISSING_FIRST
-         * @see SearchSortField::MISSING_LAST
-         */
-        public function missing($missing)
-        {
-        }
-
-        public function jsonSerialize()
-        {
-        }
-    }
-
-    /**
-     * Sort by a location and unit in the hits.
-     */
-    class SearchSortGeoDistance extends SearchSort implements JsonSerializable
-    {
-        /** @ignore */
-        private function __construct()
-        {
-        }
-
-        /**
-         * Direction of the sort
-         *
-         * @param bool $descending
-         *
-         * @return SearchSortGeoDistance
-         */
-        public function descending($descending)
-        {
-        }
-
-        /**
-         * Name of the units
-         *
-         * @param string $unit
-         *
-         * @return SearchSortGeoDistance
-         */
-        public function unit($unit)
-        {
-        }
-
-        public function jsonSerialize()
-        {
-        }
     }
 
     /**
@@ -2850,3 +2145,6 @@ namespace Couchbase {
     }
 }
 
+/**
+ * vim: ts=4 sts=4 sw=4 et
+ */

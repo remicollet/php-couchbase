@@ -15,170 +15,151 @@
  */
 
 /**
- * A FTS query that matches terms (without further analysis). Usually for debugging purposes, prefer using MatchQuery.
+ * A FTS query that termes terms (without further analysis). Usually for debugging purposes, prefer using MatchQuery.
  */
 #include "couchbase.h"
 
-typedef struct {
-
-    double boost;
-    char *field;
-    char *term;
-    int prefix_length;
-    int fuzziness;
-    zend_object std;
-} pcbc_term_search_query_t;
-
-static inline pcbc_term_search_query_t *pcbc_term_search_query_fetch_object(zend_object *obj)
-{
-    return (pcbc_term_search_query_t *)((char *)obj - XtOffsetOf(pcbc_term_search_query_t, std));
-}
-#define Z_TERM_SEARCH_QUERY_OBJ(zo) (pcbc_term_search_query_fetch_object(zo))
-#define Z_TERM_SEARCH_QUERY_OBJ_P(zv) (pcbc_term_search_query_fetch_object(Z_OBJ_P(zv)))
-
-#define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/term_search_query", __FILE__, __LINE__
-
 zend_class_entry *pcbc_term_search_query_ce;
 
-/* {{{ proto void TermSearchQuery::__construct() */
 PHP_METHOD(TermSearchQuery, __construct)
 {
-    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
-}
-/* }}} */
+    zend_string *value = NULL;
+    int rv;
 
-/* {{{ proto \Couchbase\TermSearchQuery TermSearchQuery::field(string $field)
- */
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "S", &value);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+
+    zend_update_property_str(pcbc_term_search_query_ce, getThis(), ZEND_STRL("term"), value TSRMLS_CC);
+}
+
 PHP_METHOD(TermSearchQuery, field)
 {
-    pcbc_term_search_query_t *obj;
-    char *field = NULL;
+    zend_string *field = NULL;
     int rv;
-    size_t field_len;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &field, &field_len);
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "S", &field);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
-    obj = Z_TERM_SEARCH_QUERY_OBJ_P(getThis());
-    if (obj->field) {
-        efree(obj->field);
-    }
-    obj->field = estrndup(field, field_len);
+    zend_update_property_str(pcbc_term_search_query_ce, getThis(), ZEND_STRL("field"), field TSRMLS_CC);
 
     RETURN_ZVAL(getThis(), 1, 0);
-} /* }}} */
+}
 
-/* {{{ proto \Couchbase\TermSearchQuery TermSearchQuery::prefixLength(int $prefixLength)
- */
 PHP_METHOD(TermSearchQuery, prefixLength)
 {
-    pcbc_term_search_query_t *obj;
-    long prefix_length = 0;
+    zend_long prefix_length = 0;
     int rv;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &prefix_length);
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "l", &prefix_length);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
-    obj = Z_TERM_SEARCH_QUERY_OBJ_P(getThis());
-    obj->prefix_length = prefix_length;
+    zend_update_property_long(pcbc_term_search_query_ce, getThis(), ZEND_STRL("prefix_length"),
+                              prefix_length TSRMLS_CC);
 
     RETURN_ZVAL(getThis(), 1, 0);
-} /* }}} */
+}
 
-/* {{{ proto \Couchbase\TermSearchQuery TermSearchQuery::fuzziness(int $fuzziness)
- */
 PHP_METHOD(TermSearchQuery, fuzziness)
 {
-    pcbc_term_search_query_t *obj;
-    long fuzziness = 0;
+    zend_long fuzziness = 0;
     int rv;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &fuzziness);
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "l", &fuzziness);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
-    obj = Z_TERM_SEARCH_QUERY_OBJ_P(getThis());
-    obj->fuzziness = fuzziness;
+    zend_update_property_long(pcbc_term_search_query_ce, getThis(), ZEND_STRL("fuzziness"), fuzziness TSRMLS_CC);
 
     RETURN_ZVAL(getThis(), 1, 0);
-} /* }}} */
+}
 
-/* {{{ proto \Couchbase\TermSearchQuery TermSearchQuery::boost(double $boost)
- */
 PHP_METHOD(TermSearchQuery, boost)
 {
-    pcbc_term_search_query_t *obj;
     double boost = 0;
     int rv;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "d", &boost);
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "d", &boost);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
-    obj = Z_TERM_SEARCH_QUERY_OBJ_P(getThis());
-    obj->boost = boost;
+    zend_update_property_long(pcbc_term_search_query_ce, getThis(), ZEND_STRL("boost"), boost TSRMLS_CC);
 
     RETURN_ZVAL(getThis(), 1, 0);
-} /* }}} */
+}
 
-/* {{{ proto array TermSearchQuery::jsonSerialize()
- */
 PHP_METHOD(TermSearchQuery, jsonSerialize)
 {
-    pcbc_term_search_query_t *obj;
     int rv;
 
-    rv = zend_parse_parameters_none();
+    rv = zend_parse_parameters_none_throw();
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
-    obj = Z_TERM_SEARCH_QUERY_OBJ_P(getThis());
     array_init(return_value);
-    ADD_ASSOC_STRING(return_value, "term", obj->term);
-    if (obj->field) {
-        ADD_ASSOC_STRING(return_value, "field", obj->field);
+    zval *prop, ret;
+    prop = zend_read_property(pcbc_term_search_query_ce, getThis(), ZEND_STRL("term"), 0, &ret);
+    if (Z_TYPE_P(prop) != IS_NULL) {
+        add_assoc_zval(return_value, "term", prop);
+        Z_TRY_ADDREF_P(prop);
     }
-    if (obj->prefix_length >= 0) {
-        ADD_ASSOC_LONG_EX(return_value, "prefix_length", obj->prefix_length);
+    prop = zend_read_property(pcbc_term_search_query_ce, getThis(), ZEND_STRL("field"), 0, &ret);
+    if (Z_TYPE_P(prop) != IS_NULL) {
+        add_assoc_zval(return_value, "field", prop);
+        Z_TRY_ADDREF_P(prop);
     }
-    if (obj->fuzziness >= 0) {
-        ADD_ASSOC_LONG_EX(return_value, "fuzziness", obj->fuzziness);
+    prop = zend_read_property(pcbc_term_search_query_ce, getThis(), ZEND_STRL("prefix_length"), 0, &ret);
+    if (Z_TYPE_P(prop) != IS_NULL) {
+        add_assoc_zval(return_value, "prefix_length", prop);
+        Z_TRY_ADDREF_P(prop);
     }
-    if (obj->boost >= 0) {
-        ADD_ASSOC_DOUBLE_EX(return_value, "boost", obj->boost);
+    prop = zend_read_property(pcbc_term_search_query_ce, getThis(), ZEND_STRL("fuzziness"), 0, &ret);
+    if (Z_TYPE_P(prop) != IS_NULL) {
+        add_assoc_zval(return_value, "fuzziness", prop);
+        Z_TRY_ADDREF_P(prop);
     }
-} /* }}} */
+    prop = zend_read_property(pcbc_term_search_query_ce, getThis(), ZEND_STRL("boost"), 0, &ret);
+    if (Z_TYPE_P(prop) != IS_NULL) {
+        add_assoc_zval(return_value, "boost", prop);
+        Z_TRY_ADDREF_P(prop);
+    }
+}
 
-ZEND_BEGIN_ARG_INFO_EX(ai_TermSearchQuery_none, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(ai_TermSearchQuery_jsonSerialize, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_TermSearchQuery_field, 0, 0, 1)
-ZEND_ARG_INFO(0, field)
+ZEND_BEGIN_ARG_INFO_EX(ai_TermSearchQuery_construct, 0, 0, 1)
+ZEND_ARG_TYPE_INFO(0, term, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_TermSearchQuery_prefixLength, 0, 0, 1)
-ZEND_ARG_INFO(0, prefixLength)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_TermSearchQuery_field, 0, 1, \\Couchbase\\TermSearchQuery, 0)
+ZEND_ARG_TYPE_INFO(0, field, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_TermSearchQuery_fuzziness, 0, 0, 1)
-ZEND_ARG_INFO(0, fuzziness)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_TermSearchQuery_prefixLength, 0, 1, \\Couchbase\\TermSearchQuery, 0)
+ZEND_ARG_TYPE_INFO(0, prefix_length, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_TermSearchQuery_boost, 0, 0, 1)
-ZEND_ARG_INFO(0, boost)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_TermSearchQuery_fuzziness, 0, 1, \\Couchbase\\TermSearchQuery, 0)
+ZEND_ARG_TYPE_INFO(0, fuzziness, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_TermSearchQuery_boost, 0, 1, \\Couchbase\\TermSearchQuery, 0)
+ZEND_ARG_TYPE_INFO(0, boost, IS_DOUBLE, 0)
 ZEND_END_ARG_INFO()
 
 // clang-format off
 zend_function_entry term_search_query_methods[] = {
-    PHP_ME(TermSearchQuery, __construct, ai_TermSearchQuery_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(TermSearchQuery, jsonSerialize, ai_TermSearchQuery_none, ZEND_ACC_PUBLIC)
+    PHP_ME(TermSearchQuery, __construct, ai_TermSearchQuery_construct, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    PHP_ME(TermSearchQuery, jsonSerialize, ai_TermSearchQuery_jsonSerialize, ZEND_ACC_PUBLIC)
     PHP_ME(TermSearchQuery, boost, ai_TermSearchQuery_boost, ZEND_ACC_PUBLIC)
     PHP_ME(TermSearchQuery, field, ai_TermSearchQuery_field, ZEND_ACC_PUBLIC)
     PHP_ME(TermSearchQuery, prefixLength, ai_TermSearchQuery_prefixLength, ZEND_ACC_PUBLIC)
@@ -187,90 +168,21 @@ zend_function_entry term_search_query_methods[] = {
 };
 // clang-format on
 
-void pcbc_term_search_query_init(zval *return_value, char *term, int term_len TSRMLS_DC)
-{
-    pcbc_term_search_query_t *obj;
-
-    object_init_ex(return_value, pcbc_term_search_query_ce);
-    obj = Z_TERM_SEARCH_QUERY_OBJ_P(return_value);
-    obj->boost = -1;
-    obj->term = estrndup(term, term_len);
-    obj->field = NULL;
-    obj->prefix_length = -1;
-    obj->fuzziness = -1;
-}
-
-zend_object_handlers term_search_query_handlers;
-
-static void term_search_query_free_object(zend_object *object TSRMLS_DC) /* {{{ */
-{
-    pcbc_term_search_query_t *obj = Z_TERM_SEARCH_QUERY_OBJ(object);
-
-    if (obj->term != NULL) {
-        efree(obj->term);
-    }
-    if (obj->field != NULL) {
-        efree(obj->field);
-    }
-
-    zend_object_std_dtor(&obj->std TSRMLS_CC);
-} /* }}} */
-
-static zend_object *term_search_query_create_object(zend_class_entry *class_type TSRMLS_DC)
-{
-    pcbc_term_search_query_t *obj = NULL;
-
-    obj = PCBC_ALLOC_OBJECT_T(pcbc_term_search_query_t, class_type);
-
-    zend_object_std_init(&obj->std, class_type TSRMLS_CC);
-    object_properties_init(&obj->std, class_type);
-
-    obj->std.handlers = &term_search_query_handlers;
-    return &obj->std;
-}
-
-static HashTable *pcbc_term_search_query_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
-{
-    pcbc_term_search_query_t *obj = NULL;
-    zval retval;
-
-    *is_temp = 1;
-    obj = Z_TERM_SEARCH_QUERY_OBJ_P(object);
-
-    array_init(&retval);
-    ADD_ASSOC_STRING(&retval, "term", obj->term);
-    if (obj->field) {
-        ADD_ASSOC_STRING(&retval, "field", obj->field);
-    }
-    if (obj->prefix_length >= 0) {
-        ADD_ASSOC_LONG_EX(&retval, "prefix_length", obj->prefix_length);
-    }
-    if (obj->fuzziness >= 0) {
-        ADD_ASSOC_LONG_EX(&retval, "fuzziness", obj->fuzziness);
-    }
-    if (obj->boost >= 0) {
-        ADD_ASSOC_DOUBLE_EX(&retval, "boost", obj->boost);
-    }
-    return Z_ARRVAL(retval);
-} /* }}} */
-
 PHP_MINIT_FUNCTION(TermSearchQuery)
 {
     zend_class_entry ce;
 
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "TermSearchQuery", term_search_query_methods);
     pcbc_term_search_query_ce = zend_register_internal_class(&ce TSRMLS_CC);
-    pcbc_term_search_query_ce->create_object = term_search_query_create_object;
-    PCBC_CE_DISABLE_SERIALIZATION(pcbc_term_search_query_ce);
 
-    zend_class_implements(pcbc_term_search_query_ce TSRMLS_CC, 1, pcbc_json_serializable_ce);
-    zend_class_implements(pcbc_term_search_query_ce TSRMLS_CC, 1, pcbc_search_query_part_ce);
+    zend_class_implements(pcbc_term_search_query_ce TSRMLS_CC, 2, pcbc_json_serializable_ce, pcbc_search_query_ce);
 
-    memcpy(&term_search_query_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-    term_search_query_handlers.get_debug_info = pcbc_term_search_query_get_debug_info;
-    term_search_query_handlers.free_obj = term_search_query_free_object;
-    term_search_query_handlers.offset = XtOffsetOf(pcbc_term_search_query_t, std);
+    zend_declare_property_null(pcbc_term_search_query_ce, ZEND_STRL("boost"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_term_search_query_ce, ZEND_STRL("field"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_term_search_query_ce, ZEND_STRL("term"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_term_search_query_ce, ZEND_STRL("analyzer"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_term_search_query_ce, ZEND_STRL("prefix_length"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_term_search_query_ce, ZEND_STRL("fuzziness"), ZEND_ACC_PRIVATE TSRMLS_CC);
 
-     
     return SUCCESS;
 }

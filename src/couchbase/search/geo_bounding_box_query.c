@@ -20,198 +20,136 @@
  */
 #include "couchbase.h"
 
-typedef struct {
-
-    double boost;
-    char *field;
-    double top_left_longitude;
-    double top_left_latitude;
-    double bottom_right_longitude;
-    double bottom_right_latitude;
-    zend_object std;
-} pcbc_geo_bounding_box_search_query_t;
-
-static inline pcbc_geo_bounding_box_search_query_t *pcbc_geo_bounding_box_search_query_fetch_object(zend_object *obj)
-{
-    return (pcbc_geo_bounding_box_search_query_t *)((char *)obj -
-                                                    XtOffsetOf(pcbc_geo_bounding_box_search_query_t, std));
-}
-#define Z_GEO_BOUNDING_BOX_SEARCH_QUERY_OBJ(zo) (pcbc_geo_bounding_box_search_query_fetch_object(zo))
-#define Z_GEO_BOUNDING_BOX_SEARCH_QUERY_OBJ_P(zv) (pcbc_geo_bounding_box_search_query_fetch_object(Z_OBJ_P(zv)))
-
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/geo_bounding_box_search_query", __FILE__, __LINE__
 
 zend_class_entry *pcbc_geo_bounding_box_search_query_ce;
 
-/* {{{ proto void GeoBoundingBoxSearchQuery::__construct() */
 PHP_METHOD(GeoBoundingBoxSearchQuery, __construct)
 {
-    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
-}
-/* }}} */
+    int rv;
+    double tl_lon, tl_lat, br_lon, br_lat;
 
-/* {{{ proto \Couchbase\GeoBoundingBoxSearchQuery GeoBoundingBoxSearchQuery::field(string $field)
- */
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "dddd", &tl_lon, &tl_lat, &br_lon, &br_lat);
+    if (rv == FAILURE) {
+        return;
+    }
+    zend_update_property_double(pcbc_geo_bounding_box_search_query_ce, getThis(), ZEND_STRL("top_left_longitude"),
+                                tl_lon TSRMLS_CC);
+    zend_update_property_double(pcbc_geo_bounding_box_search_query_ce, getThis(), ZEND_STRL("top_left_latitude"),
+                                tl_lat TSRMLS_CC);
+    zend_update_property_double(pcbc_geo_bounding_box_search_query_ce, getThis(), ZEND_STRL("bottom_right_longitude"),
+                                br_lon TSRMLS_CC);
+    zend_update_property_double(pcbc_geo_bounding_box_search_query_ce, getThis(), ZEND_STRL("bottom_right_latitude"),
+                                br_lat TSRMLS_CC);
+}
+
 PHP_METHOD(GeoBoundingBoxSearchQuery, field)
 {
-    pcbc_geo_bounding_box_search_query_t *obj;
-    char *field = NULL;
+    zend_string *field = NULL;
     int rv;
-    size_t field_len;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &field, &field_len);
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "S", &field);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
-    obj = Z_GEO_BOUNDING_BOX_SEARCH_QUERY_OBJ_P(getThis());
-    if (obj->field) {
-        efree(obj->field);
-    }
-    obj->field = estrndup(field, field_len);
+    zend_update_property_str(pcbc_geo_bounding_box_search_query_ce, getThis(), ZEND_STRL("field"), field TSRMLS_CC);
 
     RETURN_ZVAL(getThis(), 1, 0);
-} /* }}} */
+}
 
-/* {{{ proto \Couchbase\GeoBoundingBoxSearchQuery GeoBoundingBoxSearchQuery::boost(string $boost)
- */
 PHP_METHOD(GeoBoundingBoxSearchQuery, boost)
 {
-    pcbc_geo_bounding_box_search_query_t *obj;
     double boost = 0;
     int rv;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "d", &boost);
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "d", &boost);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
-    obj = Z_GEO_BOUNDING_BOX_SEARCH_QUERY_OBJ_P(getThis());
-    obj->boost = boost;
+    zend_update_property_double(pcbc_geo_bounding_box_search_query_ce, getThis(), ZEND_STRL("boost"), boost TSRMLS_CC);
 
     RETURN_ZVAL(getThis(), 1, 0);
-} /* }}} */
+}
 
-/* {{{ proto array GeoBoundingBoxSearchQuery::jsonSerialize()
- */
 PHP_METHOD(GeoBoundingBoxSearchQuery, jsonSerialize)
 {
-    pcbc_geo_bounding_box_search_query_t *obj;
     int rv;
-    zval top_left;
-    zval bottom_right;
 
     rv = zend_parse_parameters_none();
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
-    obj = Z_GEO_BOUNDING_BOX_SEARCH_QUERY_OBJ_P(getThis());
     array_init(return_value);
 
-    ZVAL_UNDEF(&top_left);
+    zval *prop, ret;
+
+    zval top_left;
     array_init(&top_left);
-    add_next_index_double(&top_left, obj->top_left_longitude);
-    add_next_index_double(&top_left, obj->top_left_latitude);
-    ADD_ASSOC_ZVAL_EX(return_value, "top_left", &top_left);
+    prop =
+        zend_read_property(pcbc_geo_bounding_box_search_query_ce, getThis(), ZEND_STRL("top_left_longitude"), 0, &ret);
+    add_next_index_zval(&top_left, prop);
+    prop =
+        zend_read_property(pcbc_geo_bounding_box_search_query_ce, getThis(), ZEND_STRL("top_left_latitude"), 0, &ret);
+    add_next_index_zval(&top_left, prop);
+    add_assoc_zval(return_value, "top_left", &top_left);
+    Z_TRY_ADDREF(top_left);
 
-    ZVAL_UNDEF(&bottom_right);
+    zval bottom_right;
     array_init(&bottom_right);
-    add_next_index_double(&bottom_right, obj->bottom_right_longitude);
-    add_next_index_double(&bottom_right, obj->bottom_right_latitude);
-    ADD_ASSOC_ZVAL_EX(return_value, "bottom_right", &bottom_right);
+    prop = zend_read_property(pcbc_geo_bounding_box_search_query_ce, getThis(), ZEND_STRL("bottom_right_longitude"), 0,
+                              &ret);
+    add_next_index_zval(&bottom_right, prop);
+    prop = zend_read_property(pcbc_geo_bounding_box_search_query_ce, getThis(), ZEND_STRL("bottom_right_latitude"), 0,
+                              &ret);
+    add_next_index_zval(&bottom_right, prop);
+    add_assoc_zval(return_value, "bottom_right", &bottom_right);
+    Z_TRY_ADDREF(bottom_right);
 
-    if (obj->field) {
-        ADD_ASSOC_STRING(return_value, "field", obj->field);
+    prop = zend_read_property(pcbc_geo_bounding_box_search_query_ce, getThis(), ZEND_STRL("field"), 0, &ret);
+    if (Z_TYPE_P(prop) != IS_NULL) {
+        add_assoc_zval(return_value, "field", prop);
+        Z_TRY_ADDREF_P(prop);
     }
-    if (obj->boost >= 0) {
-        ADD_ASSOC_DOUBLE_EX(return_value, "boost", obj->boost);
-    }
-} /* }}} */
 
-ZEND_BEGIN_ARG_INFO_EX(ai_GeoBoundingBoxSearchQuery_none, 0, 0, 0)
+    prop = zend_read_property(pcbc_geo_bounding_box_search_query_ce, getThis(), ZEND_STRL("boost"), 0, &ret);
+    if (Z_TYPE_P(prop) != IS_NULL) {
+        add_assoc_zval(return_value, "boost", prop);
+        Z_TRY_ADDREF_P(prop);
+    }
+}
+
+ZEND_BEGIN_ARG_INFO_EX(ai_GeoBoundingBoxSearchQuery_jsonSerialize, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_GeoBoundingBoxSearchQuery_field, 0, 0, 1)
-ZEND_ARG_INFO(0, field)
+ZEND_BEGIN_ARG_INFO_EX(ai_GeoBoundingBoxSearchQuery_construct, 0, 0, 4)
+ZEND_ARG_TYPE_INFO(0, top_left_longitude, IS_DOUBLE, 0)
+ZEND_ARG_TYPE_INFO(0, top_left_latitude, IS_DOUBLE, 0)
+ZEND_ARG_TYPE_INFO(0, buttom_right_longitude, IS_DOUBLE, 0)
+ZEND_ARG_TYPE_INFO(0, buttom_right_latitude, IS_DOUBLE, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(ai_GeoBoundingBoxSearchQuery_boost, 0, 0, 1)
-ZEND_ARG_INFO(0, boost)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_GeoBoundingBoxSearchQuery_field, 0, 1, \\Couchbase\\GeoBoundingBoxSearchQuery,
+                                       0)
+ZEND_ARG_TYPE_INFO(0, field, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_GeoBoundingBoxSearchQuery_boost, 0, 1, \\Couchbase\\GeoBoundingBoxSearchQuery,
+                                       0)
+ZEND_ARG_TYPE_INFO(0, boost, IS_DOUBLE, 0)
 ZEND_END_ARG_INFO()
 
 // clang-format off
 zend_function_entry geo_bounding_box_search_query_methods[] = {
-    PHP_ME(GeoBoundingBoxSearchQuery, __construct, ai_GeoBoundingBoxSearchQuery_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(GeoBoundingBoxSearchQuery, jsonSerialize, ai_GeoBoundingBoxSearchQuery_none, ZEND_ACC_PUBLIC)
+    PHP_ME(GeoBoundingBoxSearchQuery, __construct, ai_GeoBoundingBoxSearchQuery_construct, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    PHP_ME(GeoBoundingBoxSearchQuery, jsonSerialize, ai_GeoBoundingBoxSearchQuery_jsonSerialize, ZEND_ACC_PUBLIC)
     PHP_ME(GeoBoundingBoxSearchQuery, boost, ai_GeoBoundingBoxSearchQuery_boost, ZEND_ACC_PUBLIC)
     PHP_ME(GeoBoundingBoxSearchQuery, field, ai_GeoBoundingBoxSearchQuery_field, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
-
-void pcbc_geo_bounding_box_search_query_init(zval *return_value, double top_left_longitude, double top_left_latitude,
-                                             double bottom_right_longitude, double bottom_right_latitude TSRMLS_DC)
-{
-    pcbc_geo_bounding_box_search_query_t *obj;
-
-    object_init_ex(return_value, pcbc_geo_bounding_box_search_query_ce);
-    obj = Z_GEO_BOUNDING_BOX_SEARCH_QUERY_OBJ_P(return_value);
-    obj->boost = -1;
-    obj->field = NULL;
-    obj->top_left_longitude = top_left_longitude;
-    obj->top_left_latitude = top_left_latitude;
-    obj->bottom_right_longitude = bottom_right_longitude;
-    obj->bottom_right_latitude = bottom_right_latitude;
-}
-
-zend_object_handlers geo_bounding_box_search_query_handlers;
-
-static void geo_bounding_box_search_query_free_object(zend_object *object TSRMLS_DC) /* {{{ */
-{
-    pcbc_geo_bounding_box_search_query_t *obj = Z_GEO_BOUNDING_BOX_SEARCH_QUERY_OBJ(object);
-
-    if (obj->field != NULL) {
-        efree(obj->field);
-    }
-
-    zend_object_std_dtor(&obj->std TSRMLS_CC);
-} /* }}} */
-
-static zend_object *geo_bounding_box_search_query_create_object(zend_class_entry *class_type TSRMLS_DC)
-{
-    pcbc_geo_bounding_box_search_query_t *obj = NULL;
-
-    obj = PCBC_ALLOC_OBJECT_T(pcbc_geo_bounding_box_search_query_t, class_type);
-
-    zend_object_std_init(&obj->std, class_type TSRMLS_CC);
-    object_properties_init(&obj->std, class_type);
-
-    obj->std.handlers = &geo_bounding_box_search_query_handlers;
-    return &obj->std;
-}
-
-static HashTable *pcbc_geo_bounding_box_search_query_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
-{
-    pcbc_geo_bounding_box_search_query_t *obj = NULL;
-    zval retval;
-
-    *is_temp = 1;
-    obj = Z_GEO_BOUNDING_BOX_SEARCH_QUERY_OBJ_P(object);
-
-    array_init(&retval);
-    ADD_ASSOC_DOUBLE_EX(&retval, "topLeftLongitude", obj->top_left_longitude);
-    ADD_ASSOC_DOUBLE_EX(&retval, "topLeftLatitude", obj->top_left_latitude);
-    ADD_ASSOC_DOUBLE_EX(&retval, "bottomRightLongitude", obj->bottom_right_longitude);
-    ADD_ASSOC_DOUBLE_EX(&retval, "bottomRightLatitude", obj->bottom_right_latitude);
-    if (obj->field) {
-        ADD_ASSOC_STRING(&retval, "field", obj->field);
-    }
-    if (obj->boost >= 0) {
-        ADD_ASSOC_DOUBLE_EX(&retval, "boost", obj->boost);
-    }
-    return Z_ARRVAL(retval);
-} /* }}} */
 
 PHP_MINIT_FUNCTION(GeoBoundingBoxSearchQuery)
 {
@@ -219,17 +157,19 @@ PHP_MINIT_FUNCTION(GeoBoundingBoxSearchQuery)
 
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "GeoBoundingBoxSearchQuery", geo_bounding_box_search_query_methods);
     pcbc_geo_bounding_box_search_query_ce = zend_register_internal_class(&ce TSRMLS_CC);
-    pcbc_geo_bounding_box_search_query_ce->create_object = geo_bounding_box_search_query_create_object;
-    PCBC_CE_DISABLE_SERIALIZATION(pcbc_geo_bounding_box_search_query_ce);
 
-    zend_class_implements(pcbc_geo_bounding_box_search_query_ce TSRMLS_CC, 1, pcbc_json_serializable_ce);
-    zend_class_implements(pcbc_geo_bounding_box_search_query_ce TSRMLS_CC, 1, pcbc_search_query_part_ce);
+    zend_class_implements(pcbc_geo_bounding_box_search_query_ce TSRMLS_CC, 2, pcbc_json_serializable_ce,
+                          pcbc_search_query_ce);
 
-    memcpy(&geo_bounding_box_search_query_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-    geo_bounding_box_search_query_handlers.get_debug_info = pcbc_geo_bounding_box_search_query_get_debug_info;
-    geo_bounding_box_search_query_handlers.free_obj = geo_bounding_box_search_query_free_object;
-    geo_bounding_box_search_query_handlers.offset = XtOffsetOf(pcbc_geo_bounding_box_search_query_t, std);
-
-     
+    zend_declare_property_null(pcbc_geo_bounding_box_search_query_ce, ZEND_STRL("boost"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_geo_bounding_box_search_query_ce, ZEND_STRL("field"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_geo_bounding_box_search_query_ce, ZEND_STRL("top_left_longitude"),
+                               ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_geo_bounding_box_search_query_ce, ZEND_STRL("top_left_latitude"),
+                               ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_geo_bounding_box_search_query_ce, ZEND_STRL("bottom_right_longitude"),
+                               ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_geo_bounding_box_search_query_ce, ZEND_STRL("bottom_right_latitude"),
+                               ZEND_ACC_PRIVATE TSRMLS_CC);
     return SUCCESS;
 }

@@ -20,8 +20,8 @@
 #include <libcouchbase/couchbase.h>
 
 struct pcbc_logger_st {
-    struct lcb_logprocs_st base;
     int minlevel;
+    lcb_LOGGER_CALLBACK callback;
 };
 
 void pcbc_log_formatter(char *buf, int buf_size, const char *severity, const char *subsystem, int srcline,

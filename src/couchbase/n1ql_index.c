@@ -18,18 +18,20 @@
 
 zend_class_entry *n1ix_spec_ce;
 
-/* {{{ proto void N1qlIndex::__construct() Should not be called directly */
 PHP_METHOD(N1qlIndex, __construct)
 {
     throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
 }
-/* }}} */
 
 ZEND_BEGIN_ARG_INFO_EX(ai_N1qlIndex_none, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
+// clang-format off
 zend_function_entry n1ix_spec_methods[] = {
-    PHP_ME(N1qlIndex, __construct, ai_N1qlIndex_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR) PHP_FE_END};
+    PHP_ME(N1qlIndex, __construct, ai_N1qlIndex_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
+    PHP_FE_END
+};
+// clang-format on
 
 #define PROPERTIES(X)                                                                                                  \
     X("name", name)                                                                                                    \

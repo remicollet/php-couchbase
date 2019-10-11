@@ -22,7 +22,7 @@ class MockTest extends \PHPUnit_Framework_TestCase {
 
     protected function checkRetryVerify($errorCode) {
         $cluster = new \Couchbase\Cluster($this->mock->connectionString(['enable_errmap' => true]));
-        $bucket = $cluster->openBucket('default');
+        $bucket = $cluster->bucket('default');
 
         // Establish data connection
         $bucket->upsert('key', 'var');

@@ -27,7 +27,10 @@ PHP_METHOD(Scope, __construct)
     zend_string *name = NULL;
     zval *bucket;
 
-    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "OS!", &bucket, pcbc_bucket_ce, &name);
+    int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "OS!", &bucket, pcbc_bucket_ce, &name);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
 
     zend_update_property(pcbc_collection_ce, getThis(), ZEND_STRL("bucket"), bucket TSRMLS_CC);
     if (name) {
@@ -40,7 +43,7 @@ PHP_METHOD(Scope, collection)
     int rv;
     zend_string *name;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "S", &name);
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "S", &name);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -77,7 +80,10 @@ PHP_METHOD(Collection, __construct)
     zend_string *scope = NULL, *name = NULL;
     zval *bucket;
 
-    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "OS!S!", &bucket, pcbc_bucket_ce, &scope, &name);
+    int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "OS!S!", &bucket, pcbc_bucket_ce, &scope, &name);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
 
     zend_update_property(pcbc_collection_ce, getThis(), ZEND_STRL("bucket"), bucket TSRMLS_CC);
     if (scope) {
@@ -133,35 +139,35 @@ ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\GetAllReplicaOptions, 0)
 ZEND_END_ARG_INFO()
 
 PHP_METHOD(Collection, upsert);
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_upsert, 0, 2, \\Couchbase\\StoreResult, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_upsert, 0, 2, \\Couchbase\\MutationResult, 0)
 ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
 ZEND_ARG_INFO(0, value)
 ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\UpsertOptions, 0)
 ZEND_END_ARG_INFO()
 
 PHP_METHOD(Collection, insert);
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_insert, 0, 2, \\Couchbase\\StoreResult, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_insert, 0, 2, \\Couchbase\\MutationResult, 0)
 ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
 ZEND_ARG_INFO(0, value)
 ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\InsertOptions, 0)
 ZEND_END_ARG_INFO()
 
 PHP_METHOD(Collection, replace);
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_replace, 0, 2, \\Couchbase\\StoreResult, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_replace, 0, 2, \\Couchbase\\MutationResult, 0)
 ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
 ZEND_ARG_INFO(0, value)
 ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\ReplaceOptions, 0)
 ZEND_END_ARG_INFO()
 
 PHP_METHOD(Collection, append);
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_append, 0, 2, \\Couchbase\\StoreResult, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_append, 0, 2, \\Couchbase\\MutationResult, 0)
 ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
 ZEND_ARG_TYPE_INFO(0, value, IS_STRING, 0)
 ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\AppendOptions, 0)
 ZEND_END_ARG_INFO()
 
 PHP_METHOD(Collection, prepend);
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_prepend, 0, 2, \\Couchbase\\StoreResult, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_prepend, 0, 2, \\Couchbase\\MutationResult, 0)
 ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
 ZEND_ARG_TYPE_INFO(0, value, IS_STRING, 0)
 ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\PrependOptions, 0)
@@ -190,13 +196,13 @@ ZEND_END_ARG_INFO()
 PHP_METHOD(Collection, increment);
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_increment, 0, 1, \\Couchbase\\CounterResult, 0)
 ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
-ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\CounterOptions, 0)
+ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\IncrementOptions, 0)
 ZEND_END_ARG_INFO()
 
 PHP_METHOD(Collection, decrement);
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_decrement, 0, 1, \\Couchbase\\CounterResult, 0)
 ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
-ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\CounterOptions, 0)
+ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\DecrementOptions, 0)
 ZEND_END_ARG_INFO()
 
 PHP_METHOD(Collection, lookupIn);
@@ -212,7 +218,6 @@ ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
 ZEND_ARG_TYPE_INFO(0, specs, IS_ARRAY, 0)
 ZEND_ARG_TYPE_INFO(0, options, IS_OBJECT, 0)
 ZEND_END_ARG_INFO()
-
 
 // clang-format off
 zend_function_entry collection_methods[] = {

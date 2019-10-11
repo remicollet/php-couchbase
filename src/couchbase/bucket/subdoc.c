@@ -18,11 +18,9 @@
 
 #define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/subdoc", __FILE__, __LINE__
 
-
 extern zend_class_entry *pcbc_lookup_get_spec_ce;
 extern zend_class_entry *pcbc_lookup_count_spec_ce;
 extern zend_class_entry *pcbc_lookup_exists_spec_ce;
-extern zend_class_entry *pcbc_lookup_get_full_spec_ce;
 
 extern zend_class_entry *pcbc_lookup_in_result_impl_ce;
 extern zend_class_entry *pcbc_lookup_in_result_entry_ce;
@@ -35,9 +33,6 @@ extern zend_class_entry *pcbc_mutate_array_append_spec_ce;
 extern zend_class_entry *pcbc_mutate_array_prepend_spec_ce;
 extern zend_class_entry *pcbc_mutate_array_insert_spec_ce;
 extern zend_class_entry *pcbc_mutate_array_add_unique_spec_ce;
-extern zend_class_entry *pcbc_mutate_insert_full_spec_ce;
-extern zend_class_entry *pcbc_mutate_upsert_full_spec_ce;
-extern zend_class_entry *pcbc_mutate_replace_full_spec_ce;
 extern zend_class_entry *pcbc_mutate_counter_spec_ce;
 
 extern zend_class_entry *pcbc_mutate_in_result_impl_ce;
@@ -49,7 +44,7 @@ struct subdoc_cookie {
     zval *return_value;
 };
 
-void subdoc_lookup_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPSUBDOC *resp)
+void subdoc_lookup_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPSUBDOC *resp)
 {
     TSRMLS_FETCH();
 
@@ -74,12 +69,14 @@ void subdoc_lookup_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESP
     zval data;
     array_init(&data);
     zend_update_property(pcbc_lookup_in_result_impl_ce, return_value, ZEND_STRL("data"), &data TSRMLS_CC);
+    Z_DELREF(data);
     for (idx = 0; idx < num_results; idx++) {
         zval entry;
         array_init(&entry);
         object_init_ex(&entry, pcbc_lookup_in_result_entry_ce);
 
-        zend_update_property_long(pcbc_lookup_in_result_entry_ce, &entry, ZEND_STRL("code"), lcb_respsubdoc_result_status(resp, idx) TSRMLS_CC);
+        zend_update_property_long(pcbc_lookup_in_result_entry_ce, &entry, ZEND_STRL("code"),
+                                  lcb_respsubdoc_result_status(resp, idx) TSRMLS_CC);
         const char *bytes;
         size_t nbytes;
         lcb_respsubdoc_result_value(resp, idx, &bytes, &nbytes);
@@ -88,17 +85,19 @@ void subdoc_lookup_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESP
         if (nbytes > 0) {
             int last_error;
             PCBC_JSON_COPY_DECODE(&value, bytes, nbytes, PHP_JSON_OBJECT_AS_ARRAY, last_error);
-            if(last_error != 0) {
-                pcbc_log(LOGARGS(instance, WARN), "Failed to decode subdoc lookup response idx=%d as JSON: json_last_error=%d",
-                         (int)idx, last_error);
+            if (last_error != 0) {
+                pcbc_log(LOGARGS(instance, WARN),
+                         "Failed to decode subdoc lookup response idx=%d as JSON: json_last_error=%d", (int)idx,
+                         last_error);
             }
         }
         zend_update_property(pcbc_lookup_in_result_entry_ce, &entry, ZEND_STRL("value"), &value TSRMLS_CC);
         add_index_zval(&data, idx, &entry);
+        Z_TRY_ADDREF(entry);
     }
 }
 
-void subdoc_mutate_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPSUBDOC *resp)
+void subdoc_mutate_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPSUBDOC *resp)
 {
     TSRMLS_FETCH();
 
@@ -124,17 +123,21 @@ void subdoc_mutate_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESP
                 zval val;
                 object_init_ex(&val, pcbc_mutation_token_impl_ce);
 
-                zend_update_property_long(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("partition_id"), token.vbid_ TSRMLS_CC);
+                zend_update_property_long(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("partition_id"),
+                                          token.vbid_ TSRMLS_CC);
                 b64 = php_base64_encode((unsigned char *)&token.uuid_, sizeof(token.uuid_));
                 zend_update_property_str(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("partition_uuid"), b64 TSRMLS_CC);
                 b64 = php_base64_encode((unsigned char *)&token.seqno_, sizeof(token.seqno_));
-                zend_update_property_str(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("sequence_number"), b64 TSRMLS_CC);
+                zend_update_property_str(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("sequence_number"),
+                                         b64 TSRMLS_CC);
 
                 const char *bucket;
                 lcb_cntl(instance, LCB_CNTL_GET, LCB_CNTL_BUCKETNAME, &bucket);
-                zend_update_property_string(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("bucket_name"), bucket TSRMLS_CC);
+                zend_update_property_string(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("bucket_name"),
+                                            bucket TSRMLS_CC);
 
-                zend_update_property(pcbc_mutate_in_result_impl_ce, return_value, ZEND_STRL("mutation_token"), &val TSRMLS_CC);
+                zend_update_property(pcbc_mutate_in_result_impl_ce, return_value, ZEND_STRL("mutation_token"),
+                                     &val TSRMLS_CC);
             }
         }
     }
@@ -143,12 +146,14 @@ void subdoc_mutate_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESP
     zval data;
     array_init(&data);
     zend_update_property(pcbc_mutate_in_result_impl_ce, return_value, ZEND_STRL("data"), &data TSRMLS_CC);
+    Z_DELREF(data);
     for (idx = 0; idx < num_results; idx++) {
         zval entry;
         array_init(&entry);
         object_init_ex(&entry, pcbc_mutate_in_result_entry_ce);
 
-        zend_update_property_long(pcbc_mutate_in_result_entry_ce, &entry, ZEND_STRL("code"), lcb_respsubdoc_result_status(resp, idx) TSRMLS_CC);
+        zend_update_property_long(pcbc_mutate_in_result_entry_ce, &entry, ZEND_STRL("code"),
+                                  lcb_respsubdoc_result_status(resp, idx) TSRMLS_CC);
         const char *bytes;
         size_t nbytes;
         lcb_respsubdoc_result_value(resp, idx, &bytes, &nbytes);
@@ -157,13 +162,15 @@ void subdoc_mutate_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESP
         if (nbytes > 0) {
             int last_error;
             PCBC_JSON_COPY_DECODE(&value, bytes, nbytes, PHP_JSON_OBJECT_AS_ARRAY, last_error);
-            if(last_error != 0) {
-                pcbc_log(LOGARGS(instance, WARN), "Failed to decode subdoc mutate response idx=%d as JSON: json_last_error=%d",
-                         (int)idx, last_error);
+            if (last_error != 0) {
+                pcbc_log(LOGARGS(instance, WARN),
+                         "Failed to decode subdoc mutate response idx=%d as JSON: json_last_error=%d", (int)idx,
+                         last_error);
             }
         }
         zend_update_property(pcbc_mutate_in_result_entry_ce, &entry, ZEND_STRL("value"), &value TSRMLS_CC);
         add_index_zval(&data, idx, &entry);
+        Z_TRY_ADDREF(entry);
     }
 }
 
@@ -180,14 +187,14 @@ PHP_METHOD(LookupInOptions, timeout)
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
-PHP_METHOD(LookupInOptions, withExpiration)
+PHP_METHOD(LookupInOptions, withExpiry)
 {
     zend_bool arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "b", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_bool(pcbc_lookup_in_options_ce, getThis(), ZEND_STRL("with_expiration"), arg TSRMLS_CC);
+    zend_update_property_bool(pcbc_lookup_in_options_ce, getThis(), ZEND_STRL("with_expiry"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
@@ -195,16 +202,17 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_LookupInOptions_timeout, 0, 1, \\Couch
 ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_LookupInOptions_withExpiration, 0, 1, \\Couchbase\\LookupInOptions, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_LookupInOptions_withExpiry, 0, 1, \\Couchbase\\LookupInOptions, 0)
 ZEND_ARG_TYPE_INFO(0, arg, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
+// clang-format off
 static const zend_function_entry pcbc_lookup_in_options_methods[] = {
     PHP_ME(LookupInOptions, timeout, ai_LookupInOptions_timeout, ZEND_ACC_PUBLIC)
-    PHP_ME(LookupInOptions, withExpiration, ai_LookupInOptions_withExpiration, ZEND_ACC_PUBLIC)
+    PHP_ME(LookupInOptions, withExpiry, ai_LookupInOptions_withExpiry, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
-
+// clang-format on
 
 PHP_METHOD(Collection, lookupIn)
 {
@@ -213,46 +221,49 @@ PHP_METHOD(Collection, lookupIn)
     HashTable *spec = NULL;
     int rv;
 
-    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "Sh|O", &id, &spec, &options, pcbc_lookup_in_options_ce);
+    rv =
+        zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "Sh|O", &id, &spec, &options, pcbc_lookup_in_options_ce);
     if (rv == FAILURE) {
         return;
     }
     PCBC_RESOLVE_COLLECTION;
 
-    lcb_SUBDOCOPS *operations;
-    lcb_subdocops_create(&operations, zend_hash_num_elements(spec));
+    lcb_SUBDOCSPECS *operations;
+    lcb_subdocspecs_create(&operations, zend_hash_num_elements(spec));
     zval *val, *prop, tmp;
     int idx = 0;
     uint32_t flags;
-    ZEND_HASH_FOREACH_VAL(spec, val) {
+    ZEND_HASH_FOREACH_VAL(spec, val)
+    {
         flags = 0;
         if (Z_OBJCE_P(val) == pcbc_lookup_get_spec_ce) {
             if (Z_TYPE_P(zend_read_property(pcbc_lookup_get_spec_ce, val, ZEND_STRL("is_xattr"), 0, &tmp)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_XATTRPATH;
+                flags |= LCB_SUBDOCSPECS_F_XATTRPATH;
             }
             prop = zend_read_property(pcbc_lookup_get_spec_ce, val, ZEND_STRL("path"), 0, &tmp);
-            lcb_subdocops_get(operations, idx, flags, Z_STRVAL_P(prop), Z_STRLEN_P(prop));
+            lcb_subdocspecs_get(operations, idx, flags, Z_STRVAL_P(prop), Z_STRLEN_P(prop));
         } else if (Z_OBJCE_P(val) == pcbc_lookup_count_spec_ce) {
-            if (Z_TYPE_P(zend_read_property(pcbc_lookup_count_spec_ce, val, ZEND_STRL("is_xattr"), 0, &tmp)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_XATTRPATH;
+            if (Z_TYPE_P(zend_read_property(pcbc_lookup_count_spec_ce, val, ZEND_STRL("is_xattr"), 0, &tmp)) ==
+                IS_TRUE) {
+                flags |= LCB_SUBDOCSPECS_F_XATTRPATH;
             }
             prop = zend_read_property(pcbc_lookup_count_spec_ce, val, ZEND_STRL("path"), 0, &tmp);
-            lcb_subdocops_get_count(operations, idx, flags, Z_STRVAL_P(prop), Z_STRLEN_P(prop));
+            lcb_subdocspecs_get_count(operations, idx, flags, Z_STRVAL_P(prop), Z_STRLEN_P(prop));
         } else if (Z_OBJCE_P(val) == pcbc_lookup_exists_spec_ce) {
-            if (Z_TYPE_P(zend_read_property(pcbc_lookup_exists_spec_ce, val, ZEND_STRL("is_xattr"), 0, &tmp)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_XATTRPATH;
+            if (Z_TYPE_P(zend_read_property(pcbc_lookup_exists_spec_ce, val, ZEND_STRL("is_xattr"), 0, &tmp)) ==
+                IS_TRUE) {
+                flags |= LCB_SUBDOCSPECS_F_XATTRPATH;
             }
             prop = zend_read_property(pcbc_lookup_exists_spec_ce, val, ZEND_STRL("path"), 0, &tmp);
-            lcb_subdocops_exists(operations, idx, flags, Z_STRVAL_P(prop), Z_STRLEN_P(prop));
-        } else if (Z_OBJCE_P(val) == pcbc_lookup_get_full_spec_ce) {
-            lcb_subdocops_fulldoc_get(operations, idx, 0);
+            lcb_subdocspecs_exists(operations, idx, flags, Z_STRVAL_P(prop), Z_STRLEN_P(prop));
         } else {
             /* TODO: raise argument exception */
-            lcb_subdocops_destroy(operations);
+            lcb_subdocspecs_destroy(operations);
             return;
         }
         idx++;
-    } ZEND_HASH_FOREACH_END();
+    }
+    ZEND_HASH_FOREACH_END();
 
     lcb_CMDSUBDOC *cmd;
     lcb_cmdsubdoc_create(&cmd);
@@ -267,10 +278,7 @@ PHP_METHOD(Collection, lookupIn)
     }
 
     object_init_ex(return_value, pcbc_lookup_in_result_impl_ce);
-    struct subdoc_cookie cookie = {
-        LCB_SUCCESS,
-        return_value
-    };
+    struct subdoc_cookie cookie = {LCB_SUCCESS, return_value};
     lcbtrace_SPAN *span = NULL;
     lcbtrace_TRACER *tracer = lcb_get_tracer(bucket->conn->lcb);
     if (tracer) {
@@ -279,10 +287,10 @@ PHP_METHOD(Collection, lookupIn)
         lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
         lcb_cmdsubdoc_parent_span(cmd, span);
     }
-    lcb_cmdsubdoc_operations(cmd, operations);
+    lcb_cmdsubdoc_specs(cmd, operations);
     lcb_STATUS err = lcb_subdoc(bucket->conn->lcb, &cookie, cmd);
     lcb_cmdsubdoc_destroy(cmd);
-    lcb_subdocops_destroy(operations);
+    lcb_subdocspecs_destroy(operations);
     if (err == LCB_SUCCESS) {
         lcb_wait(bucket->conn->lcb);
         err = cookie.rc;
@@ -306,7 +314,7 @@ PHP_METHOD(MutateInOptions, cas)
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_string *decoded = php_base64_decode(ZSTR_VAL(arg), ZSTR_LEN(arg));
+    zend_string *decoded = php_base64_decode_str(arg);
     if (decoded) {
         if (ZSTR_LEN(decoded) == sizeof(uint64_t)) {
             zend_update_property_str(pcbc_mutate_in_options_ce, getThis(), ZEND_STRL("cas"), arg TSRMLS_CC);
@@ -327,14 +335,14 @@ PHP_METHOD(MutateInOptions, timeout)
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
-PHP_METHOD(MutateInOptions, expiration)
+PHP_METHOD(MutateInOptions, expiry)
 {
     zend_long arg;
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    zend_update_property_long(pcbc_mutate_in_options_ce, getThis(), ZEND_STRL("expiration"), arg TSRMLS_CC);
+    zend_update_property_long(pcbc_mutate_in_options_ce, getThis(), ZEND_STRL("expiry"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
@@ -349,6 +357,17 @@ PHP_METHOD(MutateInOptions, durabilityLevel)
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
+PHP_METHOD(MutateInOptions, storeSemantics)
+{
+    zend_long arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_long(pcbc_mutate_in_options_ce, getThis(), ZEND_STRL("store_semantics"), arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_MutateInOptions_cas, 0, 1, \\Couchbase\\MutateInOptions, 0)
 ZEND_ARG_TYPE_INFO(0, arg, IS_STRING, 0)
 ZEND_END_ARG_INFO()
@@ -357,7 +376,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_MutateInOptions_timeout, 0, 1, \\Couch
 ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_MutateInOptions_expiration, 0, 1, \\Couchbase\\MutateInOptions, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_MutateInOptions_expiry, 0, 1, \\Couchbase\\MutateInOptions, 0)
 ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
@@ -365,14 +384,20 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_MutateInOptions_durabilityLevel, 0, 1,
 ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_MutateInOptions_storeSemantics, 0, 1, \\Couchbase\\MutateInOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+// clang-format off
 static const zend_function_entry pcbc_mutate_in_options_methods[] = {
     PHP_ME(MutateInOptions, cas, ai_MutateInOptions_cas, ZEND_ACC_PUBLIC)
     PHP_ME(MutateInOptions, timeout, ai_MutateInOptions_timeout, ZEND_ACC_PUBLIC)
-    PHP_ME(MutateInOptions, expiration, ai_MutateInOptions_expiration, ZEND_ACC_PUBLIC)
+    PHP_ME(MutateInOptions, expiry, ai_MutateInOptions_expiry, ZEND_ACC_PUBLIC)
     PHP_ME(MutateInOptions, durabilityLevel, ai_MutateInOptions_durabilityLevel, ZEND_ACC_PUBLIC)
+    PHP_ME(MutateInOptions, storeSemantics, ai_MutateInOptions_storeSemantics, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
-
+// clang-format on
 
 PHP_METHOD(Collection, mutateIn)
 {
@@ -381,139 +406,140 @@ PHP_METHOD(Collection, mutateIn)
     HashTable *spec = NULL;
     int rv;
 
-    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "Sh|O", &id, &spec, &options, pcbc_mutate_in_options_ce);
+    rv =
+        zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "Sh|O", &id, &spec, &options, pcbc_mutate_in_options_ce);
     if (rv == FAILURE) {
         return;
     }
     PCBC_RESOLVE_COLLECTION;
 
-    lcb_SUBDOCOPS *operations;
-    lcb_subdocops_create(&operations, zend_hash_num_elements(spec));
+    lcb_SUBDOCSPECS *operations;
+    lcb_subdocspecs_create(&operations, zend_hash_num_elements(spec));
     zval *entry, *path, *value, rv1, rv2;
     int idx = 0;
     uint32_t flags;
-    ZEND_HASH_FOREACH_VAL(spec, entry) {
+    ZEND_HASH_FOREACH_VAL(spec, entry)
+    {
         flags = 0;
         if (Z_OBJCE_P(entry) == pcbc_mutate_insert_spec_ce) {
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("is_xattr"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_XATTRPATH;
+                flags |= LCB_SUBDOCSPECS_F_XATTRPATH;
             }
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("create_path"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_MKINTERMEDIATES;
+                flags |= LCB_SUBDOCSPECS_F_MKINTERMEDIATES;
             }
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("expand_macros"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_XATTR_MACROVALUES;
+                flags |= LCB_SUBDOCSPECS_F_XATTR_MACROVALUES;
             }
             path = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("path"), 0, &rv1);
             value = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("value"), 0, &rv2);
-            lcb_subdocops_dict_add(operations, idx, flags, Z_STRVAL_P(path), Z_STRLEN_P(path), Z_STRVAL_P(value), Z_STRLEN_P(value));
+            lcb_subdocspecs_dict_add(operations, idx, flags, Z_STRVAL_P(path), Z_STRLEN_P(path), Z_STRVAL_P(value),
+                                     Z_STRLEN_P(value));
         } else if (Z_OBJCE_P(entry) == pcbc_mutate_upsert_spec_ce) {
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("is_xattr"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_XATTRPATH;
+                flags |= LCB_SUBDOCSPECS_F_XATTRPATH;
             }
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("create_path"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_MKINTERMEDIATES;
+                flags |= LCB_SUBDOCSPECS_F_MKINTERMEDIATES;
             }
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("expand_macros"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_XATTR_MACROVALUES;
+                flags |= LCB_SUBDOCSPECS_F_XATTR_MACROVALUES;
             }
             path = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("path"), 0, &rv1);
             value = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("value"), 0, &rv2);
-            lcb_subdocops_dict_upsert(operations, idx, flags, Z_STRVAL_P(path), Z_STRLEN_P(path), Z_STRVAL_P(value), Z_STRLEN_P(value));
+            lcb_subdocspecs_dict_upsert(operations, idx, flags, Z_STRVAL_P(path), Z_STRLEN_P(path), Z_STRVAL_P(value),
+                                        Z_STRLEN_P(value));
         } else if (Z_OBJCE_P(entry) == pcbc_mutate_replace_spec_ce) {
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("is_xattr"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_XATTRPATH;
+                flags |= LCB_SUBDOCSPECS_F_XATTRPATH;
             }
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("expand_macros"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_XATTR_MACROVALUES;
+                flags |= LCB_SUBDOCSPECS_F_XATTR_MACROVALUES;
             }
             path = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("path"), 0, &rv1);
             value = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("value"), 0, &rv2);
-            lcb_subdocops_replace(operations, idx, flags, Z_STRVAL_P(path), Z_STRLEN_P(path), Z_STRVAL_P(value), Z_STRLEN_P(value));
+            lcb_subdocspecs_replace(operations, idx, flags, Z_STRVAL_P(path), Z_STRLEN_P(path), Z_STRVAL_P(value),
+                                    Z_STRLEN_P(value));
         } else if (Z_OBJCE_P(entry) == pcbc_mutate_remove_spec_ce) {
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("is_xattr"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_XATTRPATH;
+                flags |= LCB_SUBDOCSPECS_F_XATTRPATH;
             }
             path = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("path"), 0, &rv1);
-            lcb_subdocops_remove(operations, idx, flags, Z_STRVAL_P(path), Z_STRLEN_P(path));
+            lcb_subdocspecs_remove(operations, idx, flags, Z_STRVAL_P(path), Z_STRLEN_P(path));
         } else if (Z_OBJCE_P(entry) == pcbc_mutate_array_append_spec_ce) {
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("is_xattr"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_XATTRPATH;
+                flags |= LCB_SUBDOCSPECS_F_XATTRPATH;
             }
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("create_path"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_MKINTERMEDIATES;
+                flags |= LCB_SUBDOCSPECS_F_MKINTERMEDIATES;
             }
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("expand_macros"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_XATTR_MACROVALUES;
+                flags |= LCB_SUBDOCSPECS_F_XATTR_MACROVALUES;
             }
             path = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("path"), 0, &rv1);
             value = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("value"), 0, &rv2);
-            lcb_subdocops_array_add_last(operations, idx, flags, Z_STRVAL_P(path), Z_STRLEN_P(path), Z_STRVAL_P(value), Z_STRLEN_P(value));
+            lcb_subdocspecs_array_add_last(operations, idx, flags, Z_STRVAL_P(path), Z_STRLEN_P(path),
+                                           Z_STRVAL_P(value), Z_STRLEN_P(value));
         } else if (Z_OBJCE_P(entry) == pcbc_mutate_array_prepend_spec_ce) {
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("is_xattr"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_XATTRPATH;
+                flags |= LCB_SUBDOCSPECS_F_XATTRPATH;
             }
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("create_path"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_MKINTERMEDIATES;
+                flags |= LCB_SUBDOCSPECS_F_MKINTERMEDIATES;
             }
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("expand_macros"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_XATTR_MACROVALUES;
+                flags |= LCB_SUBDOCSPECS_F_XATTR_MACROVALUES;
             }
             path = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("path"), 0, &rv1);
             value = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("value"), 0, &rv2);
-            lcb_subdocops_array_add_first(operations, idx, flags, Z_STRVAL_P(path), Z_STRLEN_P(path), Z_STRVAL_P(value), Z_STRLEN_P(value));
+            lcb_subdocspecs_array_add_first(operations, idx, flags, Z_STRVAL_P(path), Z_STRLEN_P(path),
+                                            Z_STRVAL_P(value), Z_STRLEN_P(value));
         } else if (Z_OBJCE_P(entry) == pcbc_mutate_array_insert_spec_ce) {
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("is_xattr"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_XATTRPATH;
+                flags |= LCB_SUBDOCSPECS_F_XATTRPATH;
             }
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("create_path"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_MKINTERMEDIATES;
+                flags |= LCB_SUBDOCSPECS_F_MKINTERMEDIATES;
             }
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("expand_macros"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_XATTR_MACROVALUES;
+                flags |= LCB_SUBDOCSPECS_F_XATTR_MACROVALUES;
             }
             path = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("path"), 0, &rv1);
             value = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("value"), 0, &rv2);
-            lcb_subdocops_array_insert(operations, idx, flags, Z_STRVAL_P(path), Z_STRLEN_P(path), Z_STRVAL_P(value), Z_STRLEN_P(value));
+            lcb_subdocspecs_array_insert(operations, idx, flags, Z_STRVAL_P(path), Z_STRLEN_P(path), Z_STRVAL_P(value),
+                                         Z_STRLEN_P(value));
         } else if (Z_OBJCE_P(entry) == pcbc_mutate_array_add_unique_spec_ce) {
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("is_xattr"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_XATTRPATH;
+                flags |= LCB_SUBDOCSPECS_F_XATTRPATH;
             }
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("create_path"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_MKINTERMEDIATES;
+                flags |= LCB_SUBDOCSPECS_F_MKINTERMEDIATES;
             }
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("expand_macros"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_XATTR_MACROVALUES;
+                flags |= LCB_SUBDOCSPECS_F_XATTR_MACROVALUES;
             }
             path = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("path"), 0, &rv1);
             value = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("value"), 0, &rv2);
-            lcb_subdocops_array_add_unique(operations, idx, flags, Z_STRVAL_P(path), Z_STRLEN_P(path), Z_STRVAL_P(value), Z_STRLEN_P(value));
-        } else if (Z_OBJCE_P(entry) == pcbc_mutate_insert_full_spec_ce) {
-            value = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("value"), 0, &rv2);
-            lcb_subdocops_fulldoc_add(operations, idx, flags, Z_STRVAL_P(value), Z_STRLEN_P(value));
-        } else if (Z_OBJCE_P(entry) == pcbc_mutate_upsert_full_spec_ce) {
-            value = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("value"), 0, &rv2);
-            lcb_subdocops_fulldoc_upsert(operations, idx, flags, Z_STRVAL_P(value), Z_STRLEN_P(value));
-        } else if (Z_OBJCE_P(entry) == pcbc_mutate_replace_full_spec_ce) {
-            value = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("value"), 0, &rv2);
-            lcb_subdocops_fulldoc_replace(operations, idx, flags, Z_STRVAL_P(value), Z_STRLEN_P(value));
+            lcb_subdocspecs_array_add_unique(operations, idx, flags, Z_STRVAL_P(path), Z_STRLEN_P(path),
+                                             Z_STRVAL_P(value), Z_STRLEN_P(value));
         } else if (Z_OBJCE_P(entry) == pcbc_mutate_counter_spec_ce) {
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("is_xattr"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_XATTRPATH;
+                flags |= LCB_SUBDOCSPECS_F_XATTRPATH;
             }
             if (Z_TYPE_P(zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("create_path"), 0, &rv1)) == IS_TRUE) {
-                flags |= LCB_SUBDOCOPS_F_MKINTERMEDIATES;
+                flags |= LCB_SUBDOCSPECS_F_MKINTERMEDIATES;
             }
             path = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("path"), 0, &rv1);
             value = zend_read_property(Z_OBJCE_P(entry), entry, ZEND_STRL("delta"), 0, &rv2);
-            lcb_subdocops_counter(operations, idx, flags, Z_STRVAL_P(path), Z_STRLEN_P(path), Z_LVAL_P(value));
+            lcb_subdocspecs_counter(operations, idx, flags, Z_STRVAL_P(path), Z_STRLEN_P(path), Z_LVAL_P(value));
         } else {
             /* TODO: raise argument exception */
-            lcb_subdocops_destroy(operations);
+            lcb_subdocspecs_destroy(operations);
             return;
         }
         idx++;
-    } ZEND_HASH_FOREACH_END();
+    }
+    ZEND_HASH_FOREACH_END();
 
     lcb_CMDSUBDOC *cmd;
     lcb_cmdsubdoc_create(&cmd);
@@ -525,17 +551,21 @@ PHP_METHOD(Collection, mutateIn)
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdsubdoc_timeout(cmd, Z_LVAL_P(prop));
         }
-        prop = zend_read_property(pcbc_mutate_in_options_ce, options, ZEND_STRL("expiration"), 0, &ret);
+        prop = zend_read_property(pcbc_mutate_in_options_ce, options, ZEND_STRL("expiry"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
-            lcb_cmdsubdoc_expiration(cmd, Z_LVAL_P(prop));
+            lcb_cmdsubdoc_expiry(cmd, Z_LVAL_P(prop));
         }
         prop = zend_read_property(pcbc_mutate_in_options_ce, options, ZEND_STRL("durability_level"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdsubdoc_durability(cmd, Z_LVAL_P(prop));
         }
+        prop = zend_read_property(pcbc_mutate_in_options_ce, options, ZEND_STRL("store_semantics"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            lcb_cmdsubdoc_store_semantics(cmd, Z_LVAL_P(prop));
+        }
         prop = zend_read_property(pcbc_mutate_in_options_ce, options, ZEND_STRL("cas"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_STRING) {
-            zend_string *decoded = php_base64_decode(Z_STRVAL_P(prop), Z_STRLEN_P(prop));
+            zend_string *decoded = php_base64_decode_str(Z_STR_P(prop));
             if (decoded) {
                 uint64_t cas = 0;
                 memcpy(&cas, ZSTR_VAL(decoded), ZSTR_LEN(decoded));
@@ -546,10 +576,7 @@ PHP_METHOD(Collection, mutateIn)
     }
 
     object_init_ex(return_value, pcbc_mutate_in_result_impl_ce);
-    struct subdoc_cookie cookie = {
-        LCB_SUCCESS,
-        return_value
-    };
+    struct subdoc_cookie cookie = {LCB_SUCCESS, return_value};
     lcbtrace_SPAN *span = NULL;
     lcbtrace_TRACER *tracer = lcb_get_tracer(bucket->conn->lcb);
     if (tracer) {
@@ -558,10 +585,10 @@ PHP_METHOD(Collection, mutateIn)
         lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
         lcb_cmdsubdoc_parent_span(cmd, span);
     }
-    lcb_cmdsubdoc_operations(cmd, operations);
+    lcb_cmdsubdoc_specs(cmd, operations);
     lcb_STATUS err = lcb_subdoc(bucket->conn->lcb, &cookie, cmd);
     lcb_cmdsubdoc_destroy(cmd);
-    lcb_subdocops_destroy(operations);
+    lcb_subdocspecs_destroy(operations);
     if (err == LCB_SUCCESS) {
         lcb_wait(bucket->conn->lcb);
         err = cookie.rc;
@@ -576,6 +603,9 @@ PHP_METHOD(Collection, mutateIn)
     }
 }
 
+zend_class_entry *pcbc_store_semantics_ce;
+static const zend_function_entry pcbc_store_semantics_methods[] = {PHP_FE_END};
+
 PHP_MINIT_FUNCTION(CollectionSubdoc)
 {
     zend_class_entry ce;
@@ -583,19 +613,24 @@ PHP_MINIT_FUNCTION(CollectionSubdoc)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "LookupInOptions", pcbc_lookup_in_options_methods);
     pcbc_lookup_in_options_ce = zend_register_internal_class(&ce TSRMLS_CC);
     zend_declare_property_null(pcbc_lookup_in_options_ce, ZEND_STRL("timeout"), ZEND_ACC_PRIVATE TSRMLS_CC);
-    zend_declare_property_null(pcbc_lookup_in_options_ce, ZEND_STRL("with_expiration"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_lookup_in_options_ce, ZEND_STRL("with_expiry"), ZEND_ACC_PRIVATE TSRMLS_CC);
 
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "MutateInOptions", pcbc_mutate_in_options_methods);
     pcbc_mutate_in_options_ce = zend_register_internal_class(&ce TSRMLS_CC);
     zend_declare_property_null(pcbc_mutate_in_options_ce, ZEND_STRL("cas"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_mutate_in_options_ce, ZEND_STRL("timeout"), ZEND_ACC_PRIVATE TSRMLS_CC);
-    zend_declare_property_null(pcbc_mutate_in_options_ce, ZEND_STRL("expiration"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_mutate_in_options_ce, ZEND_STRL("expiry"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_mutate_in_options_ce, ZEND_STRL("durability_level"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_mutate_in_options_ce, ZEND_STRL("store_semantics"), ZEND_ACC_PRIVATE TSRMLS_CC);
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "StoreSemantics", pcbc_store_semantics_methods);
+    pcbc_store_semantics_ce = zend_register_internal_interface(&ce TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_store_semantics_ce, ZEND_STRL("REPLACE"), LCB_SUBDOC_STORE_REPLACE TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_store_semantics_ce, ZEND_STRL("UPSERT"), LCB_SUBDOC_STORE_UPSERT TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_store_semantics_ce, ZEND_STRL("INSERT"), LCB_SUBDOC_STORE_INSERT TSRMLS_CC);
 
     return SUCCESS;
 }
-
-
 
 /*
  * vim: et ts=4 sw=4 sts=4

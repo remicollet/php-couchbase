@@ -44,7 +44,7 @@ static lcb_STATUS proc_health_results(zval *return_value, opcookie *cookie TSRML
     return err;
 }
 
-void ping_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPPING *resp)
+void ping_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPPING *resp)
 {
     opcookie_health_res *result = ecalloc(1, sizeof(opcookie_health_res));
     TSRMLS_FETCH();
@@ -53,9 +53,9 @@ void ping_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPPING *res
     if (result->header.err == LCB_SUCCESS) {
         int last_error = 0;
         ZVAL_UNDEF(&result->val);
-	const char *json = NULL;
-	size_t njson = 0;
-	lcb_respping_value(resp, &json, &njson);
+        const char *json = NULL;
+        size_t njson = 0;
+        lcb_respping_value(resp, &json, &njson);
         PCBC_JSON_COPY_DECODE(&result->val, json, njson, PHP_JSON_OBJECT_AS_ARRAY, last_error);
         if (last_error != 0) {
             pcbc_log(LOGARGS(instance, WARN), "Failed to decode PING response as JSON: json_last_error=%d", last_error);
@@ -99,7 +99,7 @@ PHP_METHOD(Bucket, ping)
     }
 }
 
-void diag_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPDIAG *resp)
+void diag_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPDIAG *resp)
 {
     opcookie_health_res *result = ecalloc(1, sizeof(opcookie_health_res));
 
@@ -109,9 +109,9 @@ void diag_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPDIAG *res
     if (result->header.err == LCB_SUCCESS) {
         int last_error = 0;
         ZVAL_UNDEF(&result->val);
-	const char *json = NULL;
-	size_t njson = 0;
-	lcb_respdiag_value(resp, &json, &njson);
+        const char *json = NULL;
+        size_t njson = 0;
+        lcb_respdiag_value(resp, &json, &njson);
         PCBC_JSON_COPY_DECODE(&result->val, json, njson, PHP_JSON_OBJECT_AS_ARRAY, last_error);
         if (last_error != 0) {
             pcbc_log(LOGARGS(instance, WARN), "Failed to decode PING response as JSON: json_last_error=%d", last_error);

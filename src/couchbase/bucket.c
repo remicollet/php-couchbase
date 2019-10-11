@@ -21,21 +21,15 @@
 zend_class_entry *pcbc_bucket_ce;
 extern zend_class_entry *pcbc_scope_ce;
 
-PHP_METHOD(Bucket, n1ix_list);
-PHP_METHOD(Bucket, n1ix_create);
-PHP_METHOD(Bucket, n1ix_drop);
 PHP_METHOD(Bucket, ping);
 PHP_METHOD(Bucket, diagnostics);
 
 PHP_METHOD(Bucket, viewQuery);
 
-/* {{{ proto void Bucket::__construct()
-   Should not be called directly */
 PHP_METHOD(Bucket, __construct)
 {
     throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
 }
-/* }}} */
 
 PHP_METHOD(Bucket, setTranscoder)
 {
@@ -169,7 +163,9 @@ PHP_METHOD(Bucket, name)
     RETURN_NULL();
 }
 
-PHP_METHOD(Bucket, manager)
+void pcbc_view_index_manager_init(zval *return_value, zval *bucket TSRMLS_DC);
+
+PHP_METHOD(Bucket, viewIndexes)
 {
     int rv;
 
@@ -178,7 +174,7 @@ PHP_METHOD(Bucket, manager)
         RETURN_NULL();
     }
 
-    pcbc_bucket_manager_init(return_value, getThis() TSRMLS_CC);
+    pcbc_view_index_manager_init(return_value, getThis() TSRMLS_CC);
 }
 
 PHP_METHOD(Bucket, defaultCollection)
@@ -213,9 +209,6 @@ ZEND_BEGIN_ARG_INFO_EX(ai_Bucket_none, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_Bucket_name, IS_STRING, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Bucket_manager, 0, 0, \\Couchbase\\BucketManager, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(ai_Bucket___get, 0, 0, 1)
@@ -263,19 +256,19 @@ zend_function_entry bucket_methods[] = {
     PHP_ME(Bucket, __set, ai_Bucket___set, ZEND_ACC_PRIVATE)
     PHP_ME(Bucket, setTranscoder, ai_Bucket_setTranscoder, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, name, ai_Bucket_name, ZEND_ACC_PUBLIC)
-    PHP_ME(Bucket, manager, ai_Bucket_manager, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, viewQuery, ai_Bucket_viewQuery, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, ping, ai_Bucket_ping, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, diagnostics, ai_Bucket_diag, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, defaultCollection, ai_Bucket_defaultCollection, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, scope, ai_Bucket_scope, ZEND_ACC_PUBLIC)
+    PHP_ME(Bucket, viewIndexes, ai_Bucket_none, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
 
 zend_object_handlers pcbc_bucket_handlers;
 
-static void pcbc_bucket_free_object(zend_object *object TSRMLS_DC) /* {{{ */
+static void pcbc_bucket_free_object(zend_object *object TSRMLS_DC)
 {
     pcbc_bucket_t *obj = Z_BUCKET_OBJ(object);
 
@@ -304,7 +297,7 @@ static void pcbc_bucket_free_object(zend_object *object TSRMLS_DC) /* {{{ */
     }
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-} /* }}} */
+}
 
 static zend_object *pcbc_bucket_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
@@ -330,38 +323,37 @@ static HashTable *pcbc_bucket_get_debug_info(zval *object, int *is_temp TSRMLS_D
     array_init(&retval);
     switch (obj->type) {
     case LCB_BTYPE_COUCHBASE:
-        ADD_ASSOC_STRING(&retval, "type", "couchbase");
+        add_assoc_string(&retval, "type", "couchbase");
         break;
     case LCB_BTYPE_MEMCACHED:
-        ADD_ASSOC_STRING(&retval, "type", "memcached");
+        add_assoc_string(&retval, "type", "memcached");
         break;
     case LCB_BTYPE_EPHEMERAL:
-        ADD_ASSOC_STRING(&retval, "type", "ephemeral");
+        add_assoc_string(&retval, "type", "ephemeral");
         break;
     case LCB_BTYPE_UNSPEC:
     default:
-        ADD_ASSOC_STRING(&retval, "type", "unknown");
+        add_assoc_string(&retval, "type", "unknown");
         break;
     }
-    ADD_ASSOC_STRING(&retval, "connstr", obj->conn->connstr);
-    ADD_ASSOC_STRING(&retval, "bucket", obj->conn->bucketname);
-    ADD_ASSOC_STRING(&retval, "auth", obj->conn->auth_hash);
+    add_assoc_string(&retval, "connstr", obj->conn->connstr);
+    add_assoc_string(&retval, "bucket", obj->conn->bucketname);
+    add_assoc_string(&retval, "username", obj->conn->username);
     if (!Z_ISUNDEF(obj->encoder)) {
-        ADD_ASSOC_ZVAL_EX(&retval, "encoder", &obj->encoder);
+        add_assoc_zval(&retval, "encoder", &obj->encoder);
         PCBC_ADDREF_P(&obj->encoder);
     } else {
-        ADD_ASSOC_NULL_EX(&retval, "encoder");
+        add_assoc_null(&retval, "encoder");
     }
     if (!Z_ISUNDEF(obj->decoder)) {
-        ADD_ASSOC_ZVAL_EX(&retval, "decoder", &obj->decoder);
+        add_assoc_zval(&retval, "decoder", &obj->decoder);
         PCBC_ADDREF_P(&obj->decoder);
     } else {
-        ADD_ASSOC_NULL_EX(&retval, "decoder");
+        add_assoc_null(&retval, "decoder");
     }
 
     return Z_ARRVAL(retval);
 }
-
 
 PHP_MINIT_FUNCTION(Bucket)
 {

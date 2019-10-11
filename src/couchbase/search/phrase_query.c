@@ -17,133 +17,29 @@
 /**
  * A FTS query that matches several terms (a "phrase") as is. The order of the terms mater and no further processing is
  * applied to them, so they must appear in the index exactly as provided.  Usually for debugging purposes, prefer
- * MatchPhraseQuery.
+ * MatchPhraseSearchQuery.
  */
 #include "couchbase.h"
-
-typedef struct {
-
-    double boost;
-    char *field;
-    zval terms;
-    zend_object std;
-} pcbc_phrase_search_query_t;
-
-static inline pcbc_phrase_search_query_t *pcbc_phrase_search_query_fetch_object(zend_object *obj)
-{
-    return (pcbc_phrase_search_query_t *)((char *)obj - XtOffsetOf(pcbc_phrase_search_query_t, std));
-}
-#define Z_PHRASE_SEARCH_QUERY_OBJ(zo) (pcbc_phrase_search_query_fetch_object(zo))
-#define Z_PHRASE_SEARCH_QUERY_OBJ_P(zv) (pcbc_phrase_search_query_fetch_object(Z_OBJ_P(zv)))
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/phrase_search_query", __FILE__, __LINE__
 
 zend_class_entry *pcbc_phrase_search_query_ce;
-/* {{{ proto void PhraseSearchQuery::__construct() */
+
 PHP_METHOD(PhraseSearchQuery, __construct)
 {
-    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
-}
-/* }}} */
-
-/* {{{ proto \Couchbase\PhraseSearchQuery PhraseSearchQuery::field(string $field)
- */
-PHP_METHOD(PhraseSearchQuery, field)
-{
-    pcbc_phrase_search_query_t *obj;
-    char *field = NULL;
-    int rv;
-    size_t field_len;
-
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &field, &field_len);
-    if (rv == FAILURE) {
-        RETURN_NULL();
-    }
-
-    obj = Z_PHRASE_SEARCH_QUERY_OBJ_P(getThis());
-    if (obj->field) {
-        efree(obj->field);
-    }
-    obj->field = estrndup(field, field_len);
-
-    RETURN_ZVAL(getThis(), 1, 0);
-} /* }}} */
-
-/* {{{ proto \Couchbase\PhraseSearchQuery PhraseSearchQuery::boost(double $boost)
- */
-PHP_METHOD(PhraseSearchQuery, boost)
-{
-    pcbc_phrase_search_query_t *obj;
-    double boost = 0;
+    zval *args = NULL;
+    int num_args = 0;
     int rv;
 
-    rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "d", &boost);
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "+", &args, &num_args);
     if (rv == FAILURE) {
-        RETURN_NULL();
+        return;
     }
 
-    obj = Z_PHRASE_SEARCH_QUERY_OBJ_P(getThis());
-    obj->boost = boost;
-
-    RETURN_ZVAL(getThis(), 1, 0);
-} /* }}} */
-
-/* {{{ proto array PhraseSearchQuery::jsonSerialize()
- */
-PHP_METHOD(PhraseSearchQuery, jsonSerialize)
-{
-    pcbc_phrase_search_query_t *obj;
-    int rv;
-
-    rv = zend_parse_parameters_none();
-    if (rv == FAILURE) {
-        RETURN_NULL();
-    }
-
-    obj = Z_PHRASE_SEARCH_QUERY_OBJ_P(getThis());
-    array_init(return_value);
-    ADD_ASSOC_ZVAL_EX(return_value, "terms", &obj->terms);
-    PCBC_ADDREF_P(&obj->terms);
-    if (obj->field) {
-        ADD_ASSOC_STRING(return_value, "field", obj->field);
-    }
-    if (obj->boost >= 0) {
-        ADD_ASSOC_DOUBLE_EX(return_value, "boost", obj->boost);
-    }
-} /* }}} */
-
-ZEND_BEGIN_ARG_INFO_EX(ai_PhraseSearchQuery_none, 0, 0, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(ai_PhraseSearchQuery_field, 0, 0, 1)
-ZEND_ARG_INFO(0, field)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(ai_PhraseSearchQuery_boost, 0, 0, 1)
-ZEND_ARG_INFO(0, boost)
-ZEND_END_ARG_INFO()
-
-// clang-format off
-zend_function_entry phrase_search_query_methods[] = {
-    PHP_ME(PhraseSearchQuery, __construct, ai_PhraseSearchQuery_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(PhraseSearchQuery, jsonSerialize, ai_PhraseSearchQuery_none, ZEND_ACC_PUBLIC)
-    PHP_ME(PhraseSearchQuery, boost, ai_PhraseSearchQuery_boost, ZEND_ACC_PUBLIC)
-    PHP_ME(PhraseSearchQuery, field, ai_PhraseSearchQuery_field, ZEND_ACC_PUBLIC)
-    PHP_FE_END
-};
-// clang-format on
-
-void pcbc_phrase_search_query_init(zval *return_value, zval *args, int num_args TSRMLS_DC)
-{
-    pcbc_phrase_search_query_t *obj;
-
-    object_init_ex(return_value, pcbc_phrase_search_query_ce);
-    obj = Z_PHRASE_SEARCH_QUERY_OBJ_P(return_value);
-    obj->boost = -1;
-    obj->field = NULL;
-
-    ZVAL_UNDEF(&obj->terms);
-    array_init(&obj->terms);
+    zval container;
+    array_init(&container);
+    zend_update_property(pcbc_phrase_search_query_ce, getThis(), ZEND_STRL("terms"), &container TSRMLS_CC);
+    Z_DELREF(container);
 
     if (num_args && args) {
         int i;
@@ -151,61 +47,99 @@ void pcbc_phrase_search_query_init(zval *return_value, zval *args, int num_args 
             zval *id;
             id = &args[i];
             if (Z_TYPE_P(id) != IS_STRING) {
-                pcbc_log(LOGARGS(WARN), "term has to be a string (skipping argument #%d)", i);
+                zend_type_error("Expected term to be a String for a FTS phrase query");
                 continue;
             }
-            add_next_index_zval(&obj->terms, id);
-            PCBC_ADDREF_P(id);
+            add_next_index_zval(&container, id);
+            Z_TRY_ADDREF_P(id);
         }
     }
 }
 
-zend_object_handlers phrase_search_query_handlers;
-
-static void phrase_search_query_free_object(zend_object *object TSRMLS_DC) /* {{{ */
+PHP_METHOD(PhraseSearchQuery, field)
 {
-    pcbc_phrase_search_query_t *obj = Z_PHRASE_SEARCH_QUERY_OBJ(object);
+    zend_string *field = NULL;
+    int rv;
 
-    if (obj->field != NULL) {
-        efree(obj->field);
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "S", &field);
+    if (rv == FAILURE) {
+        RETURN_NULL();
     }
-    zval_ptr_dtor(&obj->terms);
 
-    zend_object_std_dtor(&obj->std TSRMLS_CC);
-} /* }}} */
+    zend_update_property_str(pcbc_phrase_search_query_ce, getThis(), ZEND_STRL("field"), field TSRMLS_CC);
 
-static zend_object *phrase_search_query_create_object(zend_class_entry *class_type TSRMLS_DC)
-{
-    pcbc_phrase_search_query_t *obj = NULL;
-
-    obj = PCBC_ALLOC_OBJECT_T(pcbc_phrase_search_query_t, class_type);
-
-    zend_object_std_init(&obj->std, class_type TSRMLS_CC);
-    object_properties_init(&obj->std, class_type);
-
-    obj->std.handlers = &phrase_search_query_handlers;
-    return &obj->std;
+    RETURN_ZVAL(getThis(), 1, 0);
 }
 
-static HashTable *pcbc_phrase_search_query_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
+PHP_METHOD(PhraseSearchQuery, boost)
 {
-    pcbc_phrase_search_query_t *obj = NULL;
-    zval retval;
+    double boost = 0;
+    int rv;
 
-    *is_temp = 1;
-    obj = Z_PHRASE_SEARCH_QUERY_OBJ_P(object);
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "d", &boost);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
 
-    array_init(&retval);
-    ADD_ASSOC_ZVAL_EX(&retval, "terms", &obj->terms);
-    PCBC_ADDREF_P(&obj->terms);
-    if (obj->field) {
-        ADD_ASSOC_STRING(&retval, "field", obj->field);
+    zend_update_property_long(pcbc_phrase_search_query_ce, getThis(), ZEND_STRL("boost"), boost TSRMLS_CC);
+
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(PhraseSearchQuery, jsonSerialize)
+{
+    int rv;
+
+    rv = zend_parse_parameters_none_throw();
+    if (rv == FAILURE) {
+        RETURN_NULL();
     }
-    if (obj->boost >= 0) {
-        ADD_ASSOC_DOUBLE_EX(&retval, "boost", obj->boost);
+
+    array_init(return_value);
+    zval *prop, ret;
+    prop = zend_read_property(pcbc_phrase_search_query_ce, getThis(), ZEND_STRL("terms"), 0, &ret);
+    if (Z_TYPE_P(prop) != IS_NULL) {
+        add_assoc_zval(return_value, "terms", prop);
+        Z_TRY_ADDREF_P(prop);
     }
-    return Z_ARRVAL(retval);
-} /* }}} */
+
+    prop = zend_read_property(pcbc_phrase_search_query_ce, getThis(), ZEND_STRL("field"), 0, &ret);
+    if (Z_TYPE_P(prop) != IS_NULL) {
+        add_assoc_zval(return_value, "field", prop);
+        Z_TRY_ADDREF_P(prop);
+    }
+
+    prop = zend_read_property(pcbc_phrase_search_query_ce, getThis(), ZEND_STRL("boost"), 0, &ret);
+    if (Z_TYPE_P(prop) != IS_NULL) {
+        add_assoc_zval(return_value, "boost", prop);
+        Z_TRY_ADDREF_P(prop);
+    }
+}
+
+ZEND_BEGIN_ARG_INFO_EX(ai_PhraseSearchQuery_jsonSerialize, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_PhraseSearchQuery_construct, 0, 0, 1)
+ZEND_ARG_VARIADIC_INFO(0, terms)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_PhraseSearchQuery_field, 0, 1, \\Couchbase\\PhraseSearchQuery, 0)
+ZEND_ARG_TYPE_INFO(0, field, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_PhraseSearchQuery_boost, 0, 1, \\Couchbase\\PhraseSearchQuery, 0)
+ZEND_ARG_TYPE_INFO(0, boost, IS_DOUBLE, 0)
+ZEND_END_ARG_INFO()
+
+// clang-format off
+zend_function_entry phrase_search_query_methods[] = {
+    PHP_ME(PhraseSearchQuery, __construct, ai_PhraseSearchQuery_construct, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    PHP_ME(PhraseSearchQuery, jsonSerialize, ai_PhraseSearchQuery_jsonSerialize, ZEND_ACC_PUBLIC)
+    PHP_ME(PhraseSearchQuery, boost, ai_PhraseSearchQuery_boost, ZEND_ACC_PUBLIC)
+    PHP_ME(PhraseSearchQuery, field, ai_PhraseSearchQuery_field, ZEND_ACC_PUBLIC)
+    PHP_FE_END
+};
+// clang-format on
 
 PHP_MINIT_FUNCTION(PhraseSearchQuery)
 {
@@ -213,17 +147,12 @@ PHP_MINIT_FUNCTION(PhraseSearchQuery)
 
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "PhraseSearchQuery", phrase_search_query_methods);
     pcbc_phrase_search_query_ce = zend_register_internal_class(&ce TSRMLS_CC);
-    pcbc_phrase_search_query_ce->create_object = phrase_search_query_create_object;
-    PCBC_CE_DISABLE_SERIALIZATION(pcbc_phrase_search_query_ce);
 
-    zend_class_implements(pcbc_phrase_search_query_ce TSRMLS_CC, 1, pcbc_json_serializable_ce);
-    zend_class_implements(pcbc_phrase_search_query_ce TSRMLS_CC, 1, pcbc_search_query_part_ce);
+    zend_class_implements(pcbc_phrase_search_query_ce TSRMLS_CC, 2, pcbc_json_serializable_ce, pcbc_search_query_ce);
 
-    memcpy(&phrase_search_query_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-    phrase_search_query_handlers.get_debug_info = pcbc_phrase_search_query_get_debug_info;
-    phrase_search_query_handlers.free_obj = phrase_search_query_free_object;
-    phrase_search_query_handlers.offset = XtOffsetOf(pcbc_phrase_search_query_t, std);
+    zend_declare_property_null(pcbc_phrase_search_query_ce, ZEND_STRL("boost"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_phrase_search_query_ce, ZEND_STRL("field"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_phrase_search_query_ce, ZEND_STRL("terms"), ZEND_ACC_PRIVATE TSRMLS_CC);
 
-     
     return SUCCESS;
 }

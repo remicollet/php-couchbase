@@ -23,7 +23,6 @@
 zend_class_entry *pcbc_classic_authenticator_ce;
 extern zend_class_entry *pcbc_authenticator_ce;
 
-/* {{{ proto void ClassicAuthenticator::__construct() */
 PHP_METHOD(ClassicAuthenticator, __construct)
 {
     pcbc_classic_authenticator_t *obj;
@@ -43,10 +42,7 @@ PHP_METHOD(ClassicAuthenticator, __construct)
     obj->tail = NULL;
     obj->nbuckets = 0;
 }
-/* }}} */
 
-/* {{{ proto \Couchbase\ClassicAuthenticator ClassicAuthenticator::cluster(string $username, string $password)
- */
 PHP_METHOD(ClassicAuthenticator, cluster)
 {
     pcbc_classic_authenticator_t *obj;
@@ -74,10 +70,8 @@ PHP_METHOD(ClassicAuthenticator, cluster)
     obj->cluster.password = estrndup(password, password_len);
 
     RETURN_ZVAL(getThis(), 1, 0);
-} /* }}} */
+}
 
-/* {{{ proto \Couchbase\ClassicAuthenticator ClassicAuthenticator::bucket(string $name, string $password)
- */
 PHP_METHOD(ClassicAuthenticator, bucket)
 {
     pcbc_classic_authenticator_t *obj;
@@ -126,11 +120,11 @@ PHP_METHOD(ClassicAuthenticator, bucket)
     }
 
     RETURN_ZVAL(getThis(), 1, 0);
-} /* }}} */
+}
 
 /* TODO: update to refactored lcb_AUTHENTICATOR after libcouchbase 2.7.4 */
-void pcbc_generate_classic_lcb_auth(pcbc_classic_authenticator_t *auth, lcb_AUTHENTICATOR **result, lcb_type_t type,
-                                    char **hash TSRMLS_DC)
+void pcbc_generate_classic_lcb_auth(pcbc_classic_authenticator_t *auth, lcb_AUTHENTICATOR **result,
+                                    lcb_INSTANCE_TYPE type, char **hash TSRMLS_DC)
 {
     PHP_MD5_CTX md5;
     unsigned char digest[16];
@@ -202,7 +196,7 @@ zend_function_entry classic_authenticator_methods[] = {
 
 zend_object_handlers classic_authenticator_handlers;
 
-static void classic_authenticator_free_object(zend_object *object TSRMLS_DC) /* {{{ */
+static void classic_authenticator_free_object(zend_object *object TSRMLS_DC)
 {
     pcbc_classic_authenticator_t *obj = Z_CLASSIC_AUTHENTICATOR_OBJ(object);
     pcbc_credential_t *ptr;
@@ -228,7 +222,7 @@ static void classic_authenticator_free_object(zend_object *object TSRMLS_DC) /* 
     obj->buckets = obj->tail = NULL;
 
     zend_object_std_dtor(&obj->std TSRMLS_CC);
-} /* }}} */
+}
 
 static zend_object *authenticator_create_object(zend_class_entry *class_type TSRMLS_DC)
 {
@@ -243,7 +237,7 @@ static zend_object *authenticator_create_object(zend_class_entry *class_type TSR
     return &obj->std;
 }
 
-static HashTable *pcbc_classic_authenticator_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
+static HashTable *pcbc_classic_authenticator_get_debug_info(zval *object, int *is_temp TSRMLS_DC)
 {
     pcbc_classic_authenticator_t *obj = NULL;
     zval retval;
@@ -255,7 +249,7 @@ static HashTable *pcbc_classic_authenticator_get_debug_info(zval *object, int *i
 
     array_init(&retval);
     if (obj->cluster.username) {
-        ADD_ASSOC_STRING(&retval, "cluster", obj->cluster.username);
+        add_assoc_string(&retval, "cluster", obj->cluster.username);
     }
     ZVAL_UNDEF(&buckets);
     array_init_size(&buckets, obj->nbuckets);
@@ -267,7 +261,7 @@ static HashTable *pcbc_classic_authenticator_get_debug_info(zval *object, int *i
     }
     add_assoc_zval(&retval, "buckets", &buckets);
     return Z_ARRVAL(retval);
-} /* }}} */
+}
 
 PHP_MINIT_FUNCTION(ClassicAuthenticator)
 {
@@ -285,6 +279,5 @@ PHP_MINIT_FUNCTION(ClassicAuthenticator)
     classic_authenticator_handlers.free_obj = classic_authenticator_free_object;
     classic_authenticator_handlers.offset = XtOffsetOf(pcbc_classic_authenticator_t, std);
 
-     
     return SUCCESS;
 }

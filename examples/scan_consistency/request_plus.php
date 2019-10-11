@@ -19,7 +19,7 @@ $cluster = new \Couchbase\Cluster('couchbase://localhost');
 /*
  * We open the default bucket to store our docuemtns in.
  */
-$bucket = $cluster->openBucket('default');
+$bucket = $cluster->bucket('default');
 
 
 function get_next_doc_id($bucket, $consistency)

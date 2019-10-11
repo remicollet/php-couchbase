@@ -3,7 +3,7 @@
 $cluster = new \Couchbase\Cluster('couchbase://localhost');
 $cluster->authenticateAs('Administrator', 'password');
 
-$bucket = $cluster->openBucket('travel-sample');
+$bucket = $cluster->bucket('travel-sample');
 
 $manager = $bucket->manager()->searchIndexManager();
 

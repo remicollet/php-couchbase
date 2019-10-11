@@ -19,110 +19,61 @@
  */
 #include "couchbase.h"
 
-typedef struct {
-
-    double boost;
-    char *field;
-    int limit;
-    zend_object std;
-} pcbc_term_search_facet_t;
-
-static inline pcbc_term_search_facet_t *pcbc_term_search_facet_fetch_object(zend_object *obj)
-{
-    return (pcbc_term_search_facet_t *)((char *)obj - XtOffsetOf(pcbc_term_search_facet_t, std));
-}
-#define Z_TERM_SEARCH_FACET_OBJ(zo) (pcbc_term_search_facet_fetch_object(zo))
-#define Z_TERM_SEARCH_FACET_OBJ_P(zv) (pcbc_term_search_facet_fetch_object(Z_OBJ_P(zv)))
-
-#define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/term_search_facet", __FILE__, __LINE__
-
 zend_class_entry *pcbc_term_search_facet_ce;
 
-/* {{{ proto void TermSearchFacet::__construct() */
 PHP_METHOD(TermSearchFacet, __construct)
 {
-    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
-}
-/* }}} */
-
-/* {{{ proto array TermSearchFacet::jsonSerialize()
- */
-PHP_METHOD(TermSearchFacet, jsonSerialize)
-{
-    pcbc_term_search_facet_t *obj;
+    zend_string *field = NULL;
+    zend_long limit;
     int rv;
 
-    rv = zend_parse_parameters_none();
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "Sl", &field, &limit);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
-    obj = Z_TERM_SEARCH_FACET_OBJ_P(getThis());
-    array_init(return_value);
-    ADD_ASSOC_STRING(return_value, "field", obj->field);
-    ADD_ASSOC_LONG_EX(return_value, "size", obj->limit);
-} /* }}} */
+    zend_update_property_str(pcbc_term_search_facet_ce, getThis(), ZEND_STRL("field"), field TSRMLS_CC);
+    zend_update_property_long(pcbc_term_search_facet_ce, getThis(), ZEND_STRL("limit"), limit TSRMLS_CC);
+}
 
-ZEND_BEGIN_ARG_INFO_EX(ai_TermSearchFacet_none, 0, 0, 0)
+PHP_METHOD(TermSearchFacet, jsonSerialize)
+{
+    int rv;
+
+    rv = zend_parse_parameters_none_throw();
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+
+    array_init(return_value);
+    zval *prop, ret;
+    prop = zend_read_property(pcbc_term_search_facet_ce, getThis(), ZEND_STRL("field"), 0, &ret);
+    if (Z_TYPE_P(prop) != IS_NULL) {
+        add_assoc_zval(return_value, "field", prop);
+        Z_TRY_ADDREF_P(prop);
+    }
+    prop = zend_read_property(pcbc_term_search_facet_ce, getThis(), ZEND_STRL("limit"), 0, &ret);
+    if (Z_TYPE_P(prop) != IS_NULL) {
+        add_assoc_zval(return_value, "size", prop);
+        Z_TRY_ADDREF_P(prop);
+    }
+}
+
+ZEND_BEGIN_ARG_INFO_EX(ai_TermSearchFacet_jsonSerialize, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_TermSearchFacet_construct, 0, 0, 2)
+ZEND_ARG_TYPE_INFO(0, field, IS_STRING, 0)
+ZEND_ARG_TYPE_INFO(0, limit, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 // clang-format off
 zend_function_entry term_search_facet_methods[] = {
-    PHP_ME(TermSearchFacet, __construct, ai_TermSearchFacet_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
-    PHP_ME(TermSearchFacet, jsonSerialize, ai_TermSearchFacet_none, ZEND_ACC_PUBLIC)
+    PHP_ME(TermSearchFacet, __construct, ai_TermSearchFacet_construct, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    PHP_ME(TermSearchFacet, jsonSerialize, ai_TermSearchFacet_jsonSerialize, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
-
-void pcbc_term_search_facet_init(zval *return_value, char *field, int field_len, int limit TSRMLS_DC)
-{
-    pcbc_term_search_facet_t *obj;
-
-    object_init_ex(return_value, pcbc_term_search_facet_ce);
-    obj = Z_TERM_SEARCH_FACET_OBJ_P(return_value);
-    obj->field = estrndup(field, field_len);
-    obj->limit = limit;
-}
-
-zend_object_handlers term_search_facet_handlers;
-
-static void term_search_facet_free_object(zend_object *object TSRMLS_DC) /* {{{ */
-{
-    pcbc_term_search_facet_t *obj = Z_TERM_SEARCH_FACET_OBJ(object);
-
-    if (obj->field != NULL) {
-        efree(obj->field);
-    }
-
-    zend_object_std_dtor(&obj->std TSRMLS_CC);
-} /* }}} */
-
-static zend_object *term_search_facet_create_object(zend_class_entry *class_type TSRMLS_DC)
-{
-    pcbc_term_search_facet_t *obj = NULL;
-
-    obj = PCBC_ALLOC_OBJECT_T(pcbc_term_search_facet_t, class_type);
-
-    zend_object_std_init(&obj->std, class_type TSRMLS_CC);
-    object_properties_init(&obj->std, class_type);
-
-    obj->std.handlers = &term_search_facet_handlers;
-    return &obj->std;
-}
-
-static HashTable *pcbc_term_search_facet_get_debug_info(zval *object, int *is_temp TSRMLS_DC) /* {{{ */
-{
-    pcbc_term_search_facet_t *obj = NULL;
-    zval retval;
-
-    *is_temp = 1;
-    obj = Z_TERM_SEARCH_FACET_OBJ_P(object);
-
-    array_init(&retval);
-    ADD_ASSOC_STRING(&retval, "field", obj->field);
-    ADD_ASSOC_LONG_EX(&retval, "limit", obj->limit);
-    return Z_ARRVAL(retval);
-} /* }}} */
 
 PHP_MINIT_FUNCTION(TermSearchFacet)
 {
@@ -130,17 +81,10 @@ PHP_MINIT_FUNCTION(TermSearchFacet)
 
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "TermSearchFacet", term_search_facet_methods);
     pcbc_term_search_facet_ce = zend_register_internal_class(&ce TSRMLS_CC);
-    pcbc_term_search_facet_ce->create_object = term_search_facet_create_object;
-    PCBC_CE_DISABLE_SERIALIZATION(pcbc_term_search_facet_ce);
 
-    zend_class_implements(pcbc_term_search_facet_ce TSRMLS_CC, 1, pcbc_json_serializable_ce);
-    zend_class_implements(pcbc_term_search_facet_ce TSRMLS_CC, 1, pcbc_search_facet_ce);
+    zend_class_implements(pcbc_term_search_facet_ce TSRMLS_CC, 2, pcbc_json_serializable_ce, pcbc_search_facet_ce);
 
-    memcpy(&term_search_facet_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-    term_search_facet_handlers.get_debug_info = pcbc_term_search_facet_get_debug_info;
-    term_search_facet_handlers.free_obj = term_search_facet_free_object;
-    term_search_facet_handlers.offset = XtOffsetOf(pcbc_term_search_facet_t, std);
-
-     
+    zend_declare_property_null(pcbc_term_search_facet_ce, ZEND_STRL("field"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_term_search_facet_ce, ZEND_STRL("limit"), ZEND_ACC_PRIVATE TSRMLS_CC);
     return SUCCESS;
 }

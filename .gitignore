@@ -6,6 +6,8 @@
 *~
 .deps
 .libs/
+/.idea/
+/cmake-build-debug/
 /*.out
 /Debug/
 /config.nice.bat

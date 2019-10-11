@@ -18,6 +18,8 @@
 
 #define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/n1ix_list", __FILE__, __LINE__
 
+int pcbc_n1ix_init(zval *return_value, zval *json TSRMLS_DC);
+
 typedef struct {
     opcookie_res header;
     zval *specs;
@@ -86,7 +88,7 @@ static lcb_STATUS proc_n1ix_list_results(zval *return_value, opcookie *cookie TS
     return err;
 }
 
-int pcbc_n1ix_list(pcbc_bucket_manager_t *manager, zval *return_value TSRMLS_DC)
+int pcbc_n1ix_list(pcbc_query_index_manager_t *manager, zval *return_value TSRMLS_DC)
 {
     lcb_CMDN1XMGMT cmd = {0};
     opcookie *cookie;

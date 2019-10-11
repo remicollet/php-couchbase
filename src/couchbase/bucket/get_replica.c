@@ -26,13 +26,13 @@ struct get_replica_cookie {
     zval *return_value;
 };
 
-void getreplica_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPGETREPLICA *resp)
+void getreplica_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPGETREPLICA *resp)
 {
     TSRMLS_FETCH();
 
     struct get_replica_cookie *cookie = NULL;
     lcb_respgetreplica_cookie(resp, (void **)&cookie);
-    zval *return_value = NULL, *container, value;
+    zval *return_value = NULL, value;
     if (cookie->is_single) {
         return_value = cookie->return_value;
     } else {
@@ -48,7 +48,7 @@ void getreplica_callback(lcb_INSTANCE *  instance, int cbtype, const lcb_RESPGET
     set_property_str(lcb_respgetreplica_error_ref, pcbc_get_replica_result_impl_ce, "err_ref");
     set_property_str(lcb_respgetreplica_key, pcbc_get_replica_result_impl_ce, "key");
     /* TODO: shall libcouchbase query master for replica? */
-    zend_update_property_bool(pcbc_get_replica_result_impl_ce, return_value, ZEND_STRL("is_master"), 0 TSRMLS_CC);
+    zend_update_property_bool(pcbc_get_replica_result_impl_ce, return_value, ZEND_STRL("is_replica"), 1 TSRMLS_CC);
     if (cookie->rc == LCB_SUCCESS) {
         set_property_num(uint32_t, lcb_respgetreplica_flags, pcbc_get_replica_result_impl_ce, "flags");
         set_property_num(uint8_t, lcb_respgetreplica_datatype, pcbc_get_replica_result_impl_ce, "datatype");
@@ -80,10 +80,12 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_GetAnyReplicaOptions_timeout, 0, 1, \\
 ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
+// clang-format off
 static const zend_function_entry pcbc_get_any_replica_options_methods[] = {
     PHP_ME(GetAnyReplicaOptions, timeout, ai_GetAnyReplicaOptions_timeout, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
+// clang-format on
 
 PHP_METHOD(Collection, getAnyReplica)
 {
@@ -91,7 +93,8 @@ PHP_METHOD(Collection, getAnyReplica)
     zval *options = NULL;
     lcb_STATUS err;
 
-    int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "S|O", &id, &options, pcbc_get_any_replica_options_ce);
+    int rv =
+        zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "S|O", &id, &options, pcbc_get_any_replica_options_ce);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -118,11 +121,7 @@ PHP_METHOD(Collection, getAnyReplica)
         lcb_cmdgetreplica_parent_span(cmd, span);
     }
     object_init_ex(return_value, pcbc_get_replica_result_impl_ce);
-    struct get_replica_cookie cookie = {
-        1,
-        LCB_SUCCESS,
-        return_value
-    };
+    struct get_replica_cookie cookie = {1, LCB_SUCCESS, return_value};
     err = lcb_getreplica(bucket->conn->lcb, &cookie, cmd);
     lcb_cmdgetreplica_destroy(cmd);
     if (err == LCB_SUCCESS) {
@@ -154,11 +153,12 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_GetAllReplicasOptions_timeout, 0, 1, \
 ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
+// clang-format off
 static const zend_function_entry pcbc_get_all_replicas_options_methods[] = {
     PHP_ME(GetAllReplicasOptions, timeout, ai_GetAllReplicasOptions_timeout, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
-
+// clang-format on
 
 PHP_METHOD(Collection, getAllReplicas)
 {
@@ -166,7 +166,8 @@ PHP_METHOD(Collection, getAllReplicas)
     zval *options = NULL;
     lcb_STATUS err;
 
-    int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "S|O", &id, &options, pcbc_get_all_replicas_options_ce);
+    int rv =
+        zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "S|O", &id, &options, pcbc_get_all_replicas_options_ce);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -193,11 +194,7 @@ PHP_METHOD(Collection, getAllReplicas)
         lcb_cmdgetreplica_parent_span(cmd, span);
     }
     array_init(return_value);
-    struct get_replica_cookie cookie = {
-        0,
-        LCB_SUCCESS,
-        return_value
-    };
+    struct get_replica_cookie cookie = {0, LCB_SUCCESS, return_value};
     err = lcb_getreplica(bucket->conn->lcb, &cookie, cmd);
     lcb_cmdgetreplica_destroy(cmd);
     if (err == LCB_SUCCESS) {

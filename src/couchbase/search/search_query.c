@@ -16,16 +16,15 @@
 
 #include "couchbase.h"
 
-zend_class_entry *pcbc_search_query_part_ce;
+zend_class_entry *pcbc_search_query_ce;
 
-static const zend_function_entry search_query_part_interface[] = {PHP_FE_END};
+static const zend_function_entry search_query_interface[] = {PHP_FE_END};
 
-PHP_MINIT_FUNCTION(SearchQueryPart)
+PHP_MINIT_FUNCTION(SearchQuery)
 {
     zend_class_entry ce;
-    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "SearchQueryPart", search_query_part_interface);
-    pcbc_search_query_part_ce = zend_register_internal_interface(&ce TSRMLS_CC);
-
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "SearchQuery", search_query_interface);
+    pcbc_search_query_ce = zend_register_internal_interface(&ce TSRMLS_CC);
 
     return SUCCESS;
 }
