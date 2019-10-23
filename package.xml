@@ -36,8 +36,8 @@
         <dir name="/">
             <file role="doc" name="LICENSE" />
             <file role="doc" name="README.md" />
-            <file role="doc" name="contrib/php_array.h.LICENSE" />
             <file role="doc" name="api/couchbase.php" />
+            <file role="doc" name="contrib/php_array.h.LICENSE" />
             <file role="doc" name="examples/api/couchbase.AnalyticsQuery.php" />
             <file role="doc" name="examples/api/couchbase.Authenticator.php" />
             <file role="doc" name="examples/api/couchbase.LookupInBuilder.execute.php" />
@@ -72,11 +72,10 @@
             <file role="src" name="php_couchbase.h" />
             <file role="src" name="src/couchbase/authenticator.c" />
             <file role="src" name="src/couchbase/bucket.c" />
-            <file role="src" name="src/couchbase/bucket/cbft.c" />
-            <file role="src" name="src/couchbase/bucket/exists.c" />
-            <file role="src" name="src/couchbase/collection.c" />
             <file role="src" name="src/couchbase/bucket/cbas.c" />
+            <file role="src" name="src/couchbase/bucket/cbft.c" />
             <file role="src" name="src/couchbase/bucket/counter.c" />
+            <file role="src" name="src/couchbase/bucket/exists.c" />
             <file role="src" name="src/couchbase/bucket/get.c" />
             <file role="src" name="src/couchbase/bucket/get_replica.c" />
             <file role="src" name="src/couchbase/bucket/health.c" />
@@ -92,8 +91,10 @@
             <file role="src" name="src/couchbase/cert_authenticator.c" />
             <file role="src" name="src/couchbase/classic_authenticator.c" />
             <file role="src" name="src/couchbase/cluster.c" />
+            <file role="src" name="src/couchbase/cluster_options.c" />
             <file role="src" name="src/couchbase/cluster_manager.c" />
             <file role="src" name="src/couchbase/cluster_manager/user_settings.c" />
+            <file role="src" name="src/couchbase/collection.c" />
             <file role="src" name="src/couchbase/crypto.c" />
             <file role="src" name="src/couchbase/log_formatter.c" />
             <file role="src" name="src/couchbase/lookup_spec.c" />
@@ -125,9 +126,9 @@
             <file role="src" name="src/couchbase/search/numeric_range_query.c" />
             <file role="src" name="src/couchbase/search/phrase_query.c" />
             <file role="src" name="src/couchbase/search/prefix_query.c" />
-            <file role="src" name="src/couchbase/search/search_query.c" />
             <file role="src" name="src/couchbase/search/query_string_query.c" />
             <file role="src" name="src/couchbase/search/regexp_query.c" />
+            <file role="src" name="src/couchbase/search/search_query.c" />
             <file role="src" name="src/couchbase/search/sort.c" />
             <file role="src" name="src/couchbase/search/sort_field.c" />
             <file role="src" name="src/couchbase/search/sort_geo.c" />
@@ -138,8 +139,8 @@
             <file role="src" name="src/couchbase/search/term_range_query.c" />
             <file role="src" name="src/couchbase/search/wildcard_query.c" />
             <file role="src" name="src/couchbase/search_index_manager.c" />
-            <file role="src" name="src/couchbase/view_index_manager.c" />
             <file role="src" name="src/couchbase/search_options.c" />
+            <file role="src" name="src/couchbase/view_index_manager.c" />
             <file role="src" name="transcoding.c" />
         </dir>
     </contents>
