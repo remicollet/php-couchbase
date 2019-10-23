@@ -397,7 +397,7 @@ namespace Couchbase {
     }
 
     class QueryIndexManager
-     {
+    {
         public function getAllIndexes(): array
         {
         }
@@ -421,15 +421,14 @@ namespace Couchbase {
 
 
     class MutationState
-     {
-         public function __construct()
-         {
-         }
+    {
+        public function __construct()
+        {
+        }
 
-         public function add(MutationResult $source): MutationState
-         {
-         }
-      }
+        public function add(MutationResult $source): MutationState
+        {
+        }
     }
 
     class Collection
@@ -819,14 +818,13 @@ namespace Couchbase {
         public function highlight(string $style = null, array $fields = null): SearchOptions
         {
         }
-      }
     }
 
     interface SearchHighlightMode
     {
-	    public const HTML = "html";
-	    public const ANSI = "ansi";
-	    public const SIMPLE = "simple";
+        public const HTML = "html";
+        public const ANSI = "ansi";
+        public const SIMPLE = "simple";
     }
 
     /**
@@ -1096,7 +1094,7 @@ namespace Couchbase {
      */
     class GeoDistanceSearchQuery implements JsonSerializable, SearchQuery
     {
-        public function __construct(float $longitude, float $latitude, string $distance = NULL)
+        public function __construct(float $longitude, float $latitude, string $distance = null)
         {
         }
 
@@ -1532,7 +1530,7 @@ namespace Couchbase {
          * @param float $max
          * @return NumericSearchFacet
          */
-        public function addRange(string $name, float $min = NULL, float $max = NULL): NumericRangeSearchFacet
+        public function addRange(string $name, float $min = null, float $max = null): NumericRangeSearchFacet
         {
         }
     }
@@ -1552,7 +1550,7 @@ namespace Couchbase {
          * @param int|string $end
          * @return DateSearchFacet
          */
-        public function addRange(string $name, $start = NULL, $end = NULL): DateRangeSearchFacet
+        public function addRange(string $name, $start = null, $end = null): DateRangeSearchFacet
         {
         }
     }
