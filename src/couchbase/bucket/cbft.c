@@ -20,7 +20,6 @@
 
 extern zend_class_entry *pcbc_search_result_impl_ce;
 extern zend_class_entry *pcbc_search_meta_data_impl_ce;
-extern zend_class_entry *pcbc_search_options_ce;
 
 struct search_cookie {
     lcb_STATUS rc;
@@ -72,7 +71,6 @@ static void ftsrow_callback(lcb_INSTANCE *instance, int ignoreme, const lcb_RESP
             if (mval) {
                 zend_update_property(pcbc_search_meta_data_impl_ce, &meta, ZEND_STRL("metrics"), mval TSRMLS_CC);
             }
-            zend_update_property(pcbc_search_result_impl_ce, return_value, ZEND_STRL("meta"), &meta TSRMLS_CC);
 
             mstatus = zend_symtable_str_find(marr, ZEND_STRL("status"));
             if (mstatus) {
@@ -98,6 +96,8 @@ static void ftsrow_callback(lcb_INSTANCE *instance, int ignoreme, const lcb_RESP
                     break;
                 }
             }
+            zend_update_property(pcbc_search_result_impl_ce, return_value, ZEND_STRL("meta"), &meta TSRMLS_CC);
+            Z_DELREF(meta);
             mval = zend_symtable_str_find(marr, ZEND_STRL("facets"));
             if (mval) {
                 zend_update_property(pcbc_search_result_impl_ce, return_value, ZEND_STRL("facets"), mval TSRMLS_CC);
@@ -107,6 +107,7 @@ static void ftsrow_callback(lcb_INSTANCE *instance, int ignoreme, const lcb_RESP
             hits = zend_read_property(pcbc_search_result_impl_ce, return_value, ZEND_STRL("rows"), 0, &rv);
             add_next_index_zval(hits, &value);
         }
+        zval_dtor(&value);
     }
 }
 
@@ -148,6 +149,7 @@ PHP_METHOD(Cluster, search)
     smart_str buf = {0};
     int last_error;
     PCBC_JSON_ENCODE(&buf, &payload, 0, last_error);
+    zval_dtor(&payload);
     if (last_error != 0) {
         pcbc_log(LOGARGS(cluster->conn->lcb, WARN), "Failed to encode FTS query as JSON: json_last_error=%d",
                  last_error);
