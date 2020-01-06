@@ -17,7 +17,7 @@ $result = $bucket->mutateIn('bar')
 
 var_dump($result->error->getCode()); //=> int(73)   COUCHBASE_SUBDOC_MULTI_FAILURE
 var_dump(count($result->value));     //=> int(1)
-var_dump($result->value[2]['code']); //=> int(63)   COUCHBASE_SUBDOC_PATH_ENOENT
+var_dump($result->value[2]['code']); //=> int(63)   COUCHBASE_ERR_SUBDOC_PATH_NOT_FOUND
 
 // the document is not modified
 var_dump($bucket->get('bar')->value);

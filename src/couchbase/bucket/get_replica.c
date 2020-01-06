@@ -30,6 +30,7 @@ void getreplica_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPGETRE
 {
     TSRMLS_FETCH();
 
+    const lcb_KEY_VALUE_ERROR_CONTEXT *ectx = NULL;
     struct get_replica_cookie *cookie = NULL;
     lcb_respgetreplica_cookie(resp, (void **)&cookie);
     zval *return_value = NULL, value;
@@ -43,16 +44,17 @@ void getreplica_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPGETRE
 
     cookie->rc = lcb_respgetreplica_status(resp);
     zend_update_property_long(pcbc_get_replica_result_impl_ce, return_value, ZEND_STRL("status"), cookie->rc TSRMLS_CC);
+    lcb_respgetreplica_error_context(resp, &ectx);
 
-    set_property_str(lcb_respgetreplica_error_context, pcbc_get_replica_result_impl_ce, "err_ctx");
-    set_property_str(lcb_respgetreplica_error_ref, pcbc_get_replica_result_impl_ce, "err_ref");
-    set_property_str(lcb_respgetreplica_key, pcbc_get_replica_result_impl_ce, "key");
+    set_property_str(ectx, lcb_errctx_kv_context, pcbc_get_replica_result_impl_ce, "err_ctx");
+    set_property_str(ectx, lcb_errctx_kv_ref, pcbc_get_replica_result_impl_ce, "err_ref");
+    set_property_str(ectx, lcb_errctx_kv_key, pcbc_get_replica_result_impl_ce, "key");
     /* TODO: shall libcouchbase query master for replica? */
     zend_update_property_bool(pcbc_get_replica_result_impl_ce, return_value, ZEND_STRL("is_replica"), 1 TSRMLS_CC);
     if (cookie->rc == LCB_SUCCESS) {
         set_property_num(uint32_t, lcb_respgetreplica_flags, pcbc_get_replica_result_impl_ce, "flags");
         set_property_num(uint8_t, lcb_respgetreplica_datatype, pcbc_get_replica_result_impl_ce, "datatype");
-        set_property_str(lcb_respgetreplica_value, pcbc_get_replica_result_impl_ce, "data");
+        set_property_str(resp, lcb_respgetreplica_value, pcbc_get_replica_result_impl_ce, "data");
         {
             uint64_t data;
             lcb_respgetreplica_cas(resp, &data);

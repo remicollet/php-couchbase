@@ -364,22 +364,22 @@ PHP_MINIT_FUNCTION(couchbase)
         char buf[128];
 
 #define PCBC_CONST_LENGTH(buf) (strlen(buf))
-#define X(name, value, cls, s)                                                                                         \
+#define X(name, value, cls, f, s)                                                                                      \
     {                                                                                                                  \
         ap_php_snprintf(buf, sizeof(buf), "COUCHBASE_%s", #name + 4);                                                  \
         zend_register_long_constant(buf, PCBC_CONST_LENGTH(buf), value, CONST_CS | CONST_PERSISTENT,                   \
                                     module_number TSRMLS_CC);                                                          \
     }
 
-        LCB_XERR(X)
+        LCB_XERROR(X)
 #undef X
 #undef PCBC_CONST_LENGTH
     }
 
     // TODO: Maybe not have these?
-    PCBC_LONG_CONSTANT("TMPFAIL", LCB_ETMPFAIL);
-    PCBC_LONG_CONSTANT("KEYALREADYEXISTS", LCB_KEY_EEXISTS);
-    PCBC_LONG_CONSTANT("KEYNOTFOUND", LCB_KEY_ENOENT);
+    PCBC_LONG_CONSTANT("TMPFAIL", LCB_ERR_TEMPORARY_FAILURE);
+    PCBC_LONG_CONSTANT("KEYALREADYEXISTS", LCB_ERR_DOCUMENT_EXISTS);
+    PCBC_LONG_CONSTANT("KEYNOTFOUND", LCB_ERR_DOCUMENT_NOT_FOUND);
 
     PCBC_REGISTER_CONST_RAW(COUCHBASE_VAL_MASK);
     PCBC_REGISTER_CONST_RAW(COUCHBASE_VAL_IS_STRING);

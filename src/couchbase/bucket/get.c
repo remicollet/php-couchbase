@@ -30,18 +30,20 @@ void get_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPGET *resp)
     TSRMLS_FETCH();
 
     struct get_cookie *cookie = NULL;
+    const lcb_KEY_VALUE_ERROR_CONTEXT *ectx = NULL;
     lcb_respget_cookie(resp, (void **)&cookie);
     zval *return_value = cookie->return_value;
     cookie->rc = lcb_respget_status(resp);
     zend_update_property_long(pcbc_get_result_impl_ce, return_value, ZEND_STRL("status"), cookie->rc TSRMLS_CC);
+    lcb_respget_error_context(resp, &ectx);
 
-    set_property_str(lcb_respget_error_context, pcbc_get_result_impl_ce, "err_ctx");
-    set_property_str(lcb_respget_error_ref, pcbc_get_result_impl_ce, "err_ref");
-    set_property_str(lcb_respget_key, pcbc_get_result_impl_ce, "key");
+    set_property_str(ectx, lcb_errctx_kv_context, pcbc_get_result_impl_ce, "err_ctx");
+    set_property_str(ectx, lcb_errctx_kv_ref, pcbc_get_result_impl_ce, "err_ref");
+    set_property_str(ectx, lcb_errctx_kv_key, pcbc_get_result_impl_ce, "key");
     if (cookie->rc == LCB_SUCCESS) {
         set_property_num(uint32_t, lcb_respget_flags, pcbc_get_result_impl_ce, "flags");
         set_property_num(uint8_t, lcb_respget_datatype, pcbc_get_result_impl_ce, "datatype");
-        set_property_str(lcb_respget_value, pcbc_get_result_impl_ce, "data");
+        set_property_str(resp, lcb_respget_value, pcbc_get_result_impl_ce, "data");
         {
             uint64_t data;
             lcb_respget_cas(resp, &data);

@@ -28,7 +28,7 @@ zend_class_entry *pcbc_bucket_manager_ce;
 
 PHP_METHOD(BucketManager, __construct)
 {
-    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+    throw_pcbc_exception("Accessing private constructor.", LCB_ERR_INVALID_ARGUMENT);
 }
 
 PHP_METHOD(BucketManager, info)

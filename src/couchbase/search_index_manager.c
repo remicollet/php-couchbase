@@ -33,7 +33,7 @@ extern zend_class_entry *pcbc_password_authenticator_ce;
 
 PHP_METHOD(SearchIndexManager, __construct)
 {
-    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+    throw_pcbc_exception("Accessing private constructor.", LCB_ERR_INVALID_ARGUMENT);
 }
 
 PHP_METHOD(SearchIndexManager, listIndexes)

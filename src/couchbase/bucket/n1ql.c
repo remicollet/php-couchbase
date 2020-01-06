@@ -631,7 +631,7 @@ PHP_METHOD(Cluster, query)
                 }
             }
         }
-        throw_http_exception(code ? LCB_QUERY_ERROR : err, code, msg);
+        throw_http_exception(code ? LCB_ERR_QUERY : err, code, msg);
     }
 }
 

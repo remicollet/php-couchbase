@@ -33,15 +33,17 @@ void store_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPSTORE *res
 {
     TSRMLS_FETCH();
 
+    const lcb_KEY_VALUE_ERROR_CONTEXT *ectx = NULL;
     struct store_cookie *cookie = NULL;
     lcb_respstore_cookie(resp, (void **)&cookie);
     zval *return_value = cookie->return_value;
     cookie->rc = lcb_respstore_status(resp);
     zend_update_property_long(pcbc_store_result_impl_ce, return_value, ZEND_STRL("status"), cookie->rc TSRMLS_CC);
 
-    set_property_str(lcb_respstore_error_context, pcbc_store_result_impl_ce, "err_ctx");
-    set_property_str(lcb_respstore_error_ref, pcbc_store_result_impl_ce, "err_ref");
-    set_property_str(lcb_respstore_key, pcbc_store_result_impl_ce, "key");
+    lcb_respstore_error_context(resp, &ectx);
+    set_property_str(ectx, lcb_errctx_kv_context, pcbc_store_result_impl_ce, "err_ctx");
+    set_property_str(ectx, lcb_errctx_kv_ref, pcbc_store_result_impl_ce, "err_ref");
+    set_property_str(ectx, lcb_errctx_kv_key, pcbc_store_result_impl_ce, "key");
 
     if (cookie->rc == LCB_SUCCESS) {
         zend_string *b64;
@@ -148,7 +150,7 @@ PHP_METHOD(Collection, insert)
 {
     zend_string *id;
     zval *value, *options = NULL;
-    lcb_STATUS err = LCB_EINVAL;
+    lcb_STATUS err = LCB_ERR_INVALID_ARGUMENT;
 
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Sz|O", &id, &value, &options, pcbc_insert_options_ce);
     if (rv == FAILURE) {
@@ -311,7 +313,7 @@ PHP_METHOD(Collection, upsert)
 {
     zend_string *id;
     zval *value, *options = NULL;
-    lcb_STATUS err = LCB_EINVAL;
+    lcb_STATUS err = LCB_ERR_INVALID_ARGUMENT;
 
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Sz|O", &id, &value, &options, pcbc_upsert_options_ce);
     if (rv == FAILURE) {
@@ -484,7 +486,7 @@ PHP_METHOD(Collection, replace)
 {
     zend_string *id;
     zval *value, *options = NULL;
-    lcb_STATUS err = LCB_EINVAL;
+    lcb_STATUS err = LCB_ERR_INVALID_ARGUMENT;
 
     int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Sz|O", &id, &value, &options, pcbc_replace_options_ce);
     if (rv == FAILURE) {

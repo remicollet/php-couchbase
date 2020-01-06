@@ -28,7 +28,7 @@ PHP_METHOD(Bucket, viewQuery);
 
 PHP_METHOD(Bucket, __construct)
 {
-    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+    throw_pcbc_exception("Accessing private constructor.", LCB_ERR_INVALID_ARGUMENT);
 }
 
 PHP_METHOD(Bucket, setTranscoder)

@@ -435,11 +435,11 @@ opcookie_res *opcookie_next_res(opcookie *cookie, opcookie_res *cur);
 
 #define PCBC_DELREF_P(__pcbc_zval) Z_TRY_DELREF_P((__pcbc_zval))
 
-#define set_property_str(getter, class_entry, prop)                                                                    \
+#define set_property_str(target, getter, class_entry, prop)                                                            \
     do {                                                                                                               \
         const char *data = NULL;                                                                                       \
         size_t ndata = 0;                                                                                              \
-        getter(resp, &data, &ndata);                                                                                   \
+        getter(target, &data, &ndata);                                                                                 \
         if (ndata && data) {                                                                                           \
             zend_update_property_stringl(class_entry, return_value, ZEND_STRL(prop), data, ndata TSRMLS_CC);           \
         }                                                                                                              \

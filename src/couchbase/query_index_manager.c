@@ -34,7 +34,7 @@ zend_class_entry *pcbc_query_index_manager_ce;
 
 PHP_METHOD(QueryIndexManager, __construct)
 {
-    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+    throw_pcbc_exception("Accessing private constructor.", LCB_ERR_INVALID_ARGUMENT);
 }
 
 PHP_METHOD(QueryIndexManager, getAllIndexes)

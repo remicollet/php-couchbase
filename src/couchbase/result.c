@@ -640,7 +640,6 @@ PHP_MINIT_FUNCTION(Result)
     zend_declare_property_null(pcbc_exists_result_impl_ce, ZEND_STRL("err_ctx"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_exists_result_impl_ce, ZEND_STRL("err_ref"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_exists_result_impl_ce, ZEND_STRL("is_found"), ZEND_ACC_PRIVATE TSRMLS_CC);
-    zend_declare_property_null(pcbc_exists_result_impl_ce, ZEND_STRL("is_persisted"), ZEND_ACC_PRIVATE TSRMLS_CC);
 
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "MutationResult", pcbc_mutation_result_methods);
     pcbc_mutation_result_ce = zend_register_internal_interface(&ce TSRMLS_CC);

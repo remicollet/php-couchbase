@@ -29,15 +29,18 @@ void unlock_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPUNLOCK *r
 {
     TSRMLS_FETCH();
 
+    const lcb_KEY_VALUE_ERROR_CONTEXT *ectx = NULL;
     struct unlock_cookie *cookie = NULL;
     lcb_respunlock_cookie(resp, (void **)&cookie);
     zval *return_value = cookie->return_value;
     cookie->rc = lcb_respunlock_status(resp);
     zend_update_property_long(pcbc_result_impl_ce, return_value, ZEND_STRL("status"), cookie->rc TSRMLS_CC);
 
-    set_property_str(lcb_respunlock_error_context, pcbc_result_impl_ce, "err_ctx");
-    set_property_str(lcb_respunlock_error_ref, pcbc_result_impl_ce, "err_ref");
-    set_property_str(lcb_respunlock_key, pcbc_result_impl_ce, "key");
+    lcb_respunlock_error_context(resp, &ectx);
+
+    set_property_str(ectx, lcb_errctx_kv_context, pcbc_result_impl_ce, "err_ctx");
+    set_property_str(ectx, lcb_errctx_kv_ref, pcbc_result_impl_ce, "err_ref");
+    set_property_str(ectx, lcb_errctx_kv_key, pcbc_result_impl_ce, "key");
 
     if (cookie->rc == LCB_SUCCESS) {
         zend_string *b64;

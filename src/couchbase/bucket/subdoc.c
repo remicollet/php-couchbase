@@ -48,15 +48,17 @@ void subdoc_lookup_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPSU
 {
     TSRMLS_FETCH();
 
+    const lcb_KEY_VALUE_ERROR_CONTEXT *ectx = NULL;
     struct subdoc_cookie *cookie = NULL;
     lcb_respsubdoc_cookie(resp, (void **)&cookie);
     zval *return_value = cookie->return_value;
     cookie->rc = lcb_respsubdoc_status(resp);
     zend_update_property_long(pcbc_lookup_in_result_impl_ce, return_value, ZEND_STRL("status"), cookie->rc TSRMLS_CC);
 
-    set_property_str(lcb_respsubdoc_error_context, pcbc_lookup_in_result_impl_ce, "err_ctx");
-    set_property_str(lcb_respsubdoc_error_ref, pcbc_lookup_in_result_impl_ce, "err_ref");
-    set_property_str(lcb_respsubdoc_key, pcbc_lookup_in_result_impl_ce, "key");
+    lcb_respsubdoc_error_context(resp, &ectx);
+    set_property_str(ectx, lcb_errctx_kv_context, pcbc_lookup_in_result_impl_ce, "err_ctx");
+    set_property_str(ectx, lcb_errctx_kv_ref, pcbc_lookup_in_result_impl_ce, "err_ref");
+    set_property_str(ectx, lcb_errctx_kv_key, pcbc_lookup_in_result_impl_ce, "key");
     if (cookie->rc == LCB_SUCCESS) {
         uint64_t data;
         lcb_respsubdoc_cas(resp, &data);
@@ -101,15 +103,18 @@ void subdoc_mutate_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPSU
 {
     TSRMLS_FETCH();
 
+    const lcb_KEY_VALUE_ERROR_CONTEXT *ectx = NULL;
     struct subdoc_cookie *cookie = NULL;
     lcb_respsubdoc_cookie(resp, (void **)&cookie);
     zval *return_value = cookie->return_value;
     cookie->rc = lcb_respsubdoc_status(resp);
     zend_update_property_long(pcbc_mutate_in_result_impl_ce, return_value, ZEND_STRL("status"), cookie->rc TSRMLS_CC);
 
-    set_property_str(lcb_respsubdoc_error_context, pcbc_mutate_in_result_impl_ce, "err_ctx");
-    set_property_str(lcb_respsubdoc_error_ref, pcbc_mutate_in_result_impl_ce, "err_ref");
-    set_property_str(lcb_respsubdoc_key, pcbc_mutate_in_result_impl_ce, "key");
+    lcb_respsubdoc_error_context(resp, &ectx);
+
+    set_property_str(ectx, lcb_errctx_kv_context, pcbc_mutate_in_result_impl_ce, "err_ctx");
+    set_property_str(ectx, lcb_errctx_kv_ref, pcbc_mutate_in_result_impl_ce, "err_ref");
+    set_property_str(ectx, lcb_errctx_kv_key, pcbc_mutate_in_result_impl_ce, "key");
     if (cookie->rc == LCB_SUCCESS) {
         uint64_t data;
         lcb_respsubdoc_cas(resp, &data);
@@ -300,7 +305,7 @@ PHP_METHOD(Collection, lookupIn)
         lcbtrace_span_finish(span, LCBTRACE_NOW);
     }
 
-    if (err != LCB_SUCCESS && err != LCB_SUBDOC_MULTI_FAILURE) {
+    if (err != LCB_SUCCESS) {
         throw_lcb_exception(err, pcbc_lookup_in_result_impl_ce);
     }
 }
@@ -598,7 +603,7 @@ PHP_METHOD(Collection, mutateIn)
         lcbtrace_span_finish(span, LCBTRACE_NOW);
     }
 
-    if (err != LCB_SUCCESS && err != LCB_SUBDOC_MULTI_FAILURE) {
+    if (err != LCB_SUCCESS) {
         throw_lcb_exception(err, pcbc_mutate_in_result_impl_ce);
     }
 }

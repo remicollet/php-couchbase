@@ -29,19 +29,19 @@ void exists_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPEXISTS *r
 {
     TSRMLS_FETCH();
 
+    const lcb_KEY_VALUE_ERROR_CONTEXT *ectx = NULL;
     struct exists_cookie *cookie = NULL;
     lcb_respexists_cookie(resp, (void **)&cookie);
     zval *return_value = cookie->return_value;
     cookie->rc = lcb_respexists_status(resp);
     zend_update_property_long(pcbc_exists_result_impl_ce, return_value, ZEND_STRL("status"), cookie->rc TSRMLS_CC);
+    lcb_respexists_error_context(resp, &ectx);
 
-    set_property_str(lcb_respexists_error_context, pcbc_exists_result_impl_ce, "err_ctx");
-    set_property_str(lcb_respexists_error_ref, pcbc_exists_result_impl_ce, "err_ref");
-    set_property_str(lcb_respexists_key, pcbc_exists_result_impl_ce, "key");
+    set_property_str(ectx, lcb_errctx_kv_context, pcbc_exists_result_impl_ce, "err_ctx");
+    set_property_str(ectx, lcb_errctx_kv_ref, pcbc_exists_result_impl_ce, "err_ref");
+    set_property_str(ectx, lcb_errctx_kv_key, pcbc_exists_result_impl_ce, "key");
     zend_update_property_bool(pcbc_exists_result_impl_ce, return_value, ZEND_STRL("is_found"),
                               lcb_respexists_is_found(resp) TSRMLS_CC);
-    zend_update_property_bool(pcbc_exists_result_impl_ce, return_value, ZEND_STRL("is_persisted"),
-                              lcb_respexists_is_persisted(resp) TSRMLS_CC);
     if (cookie->rc == LCB_SUCCESS) {
         uint64_t data;
         lcb_respexists_cas(resp, &data);

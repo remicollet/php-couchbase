@@ -204,165 +204,151 @@ void pcbc_create_lcb_exception(zval *return_value, long code, zend_string *conte
     case LCB_SUCCESS:
         return;
 
-    case LCB_AUTH_CONTINUE:
-    case LCB_AUTH_ERROR:
-    case LCB_NOT_AUTHORIZED:
-    case LCB_SASLMECH_UNAVAILABLE:
-    case LCB_INVALID_USERNAME:
+    case LCB_ERR_AUTH_CONTINUE:
+    case LCB_ERR_AUTHENTICATION_FAILURE:
         exc_ce = pcbc_authentication_exception_ce;
         break;
 
-    case LCB_KEY_EEXISTS:
+    case LCB_ERR_DOCUMENT_EXISTS:
         exc_ce = pcbc_key_exists_exception_ce;
         break;
 
-    case LCB_KEY_ENOENT:
+    case LCB_ERR_DOCUMENT_NOT_FOUND:
         exc_ce = pcbc_key_not_found_exception_ce;
         break;
 
-    case LCB_E2BIG:
+    case LCB_ERR_VALUE_TOO_LARGE:
         exc_ce = pcbc_value_too_big_exception_ce;
         break;
 
-    case LCB_ETMPFAIL:
-    case LCB_EBUSY:
-    case LCB_GENERIC_TMPERR:
-    case LCB_BUSY:
-    case LCB_MAP_CHANGED:
+    case LCB_ERR_TEMPORARY_FAILURE:
+    case LCB_ERR_BUSY:
+    case LCB_ERR_MAP_CHANGED:
         exc_ce = pcbc_temp_fail_exception_ce;
         break;
 
-    case LCB_SUBDOC_PATH_ENOENT:
+    case LCB_ERR_SUBDOC_PATH_NOT_FOUND:
         exc_ce = pcbc_path_not_found_exception_ce;
         break;
 
-    case LCB_SUBDOC_PATH_EEXISTS:
+    case LCB_ERR_SUBDOC_PATH_EXISTS:
         exc_ce = pcbc_path_exists_exception_ce;
         break;
 
-    case LCB_SUBDOC_PATH_MISMATCH:
-    case LCB_SUBDOC_PATH_EINVAL:
-    case LCB_SUBDOC_PATH_E2BIG:
-    case LCB_SUBDOC_DOC_E2DEEP:
-    case LCB_SUBDOC_VALUE_CANTINSERT:
-    case LCB_SUBDOC_DOC_NOTJSON:
-    case LCB_SUBDOC_MULTI_FAILURE:
-    case LCB_SUBDOC_VALUE_E2DEEP:
-    case LCB_GENERIC_SUBDOCERR:
-    case LCB_SUBDOC_INVALID_COMBO:
-    case LCB_SUBDOC_MULTI_PATH_FAILURE:
-    case LCB_SUBDOC_SUCCESS_DELETED:
-    case LCB_SUBDOC_XATTR_INVALID_FLAG_COMBO:
-    case LCB_SUBDOC_XATTR_INVALID_KEY_COMBO:
-    case LCB_SUBDOC_XATTR_UNKNOWN_MACRO:
-    case LCB_SUBDOC_XATTR_UNKNOWN_VATTR:
-    case LCB_SUBDOC_XATTR_CANT_MODIFY_VATTR:
-    case LCB_SUBDOC_MULTI_PATH_FAILURE_DELETED:
-    case LCB_SUBDOC_INVALID_XATTR_ORDER:
+    case LCB_ERR_SUBDOC_PATH_MISMATCH:
+    case LCB_ERR_SUBDOC_PATH_TOO_BIG:
+    case LCB_ERR_SUBDOC_PATH_TOO_DEEP:
+    case LCB_ERR_SUBDOC_VALUE_INVALID:
+    case LCB_ERR_SUBDOC_DOCUMENT_NOT_JSON:
+    case LCB_ERR_SUBDOC_VALUE_TOO_DEEP:
+    case LCB_ERR_SUBDOC_XATTR_INVALID_FLAG_COMBO:
+    case LCB_ERR_SUBDOC_XATTR_INVALID_KEY_COMBO:
+    case LCB_ERR_SUBDOC_XATTR_UNKNOWN_MACRO:
+    case LCB_ERR_SUBDOC_XATTR_UNKNOWN_VIRTUAL_ATTRIBUTE:
+    case LCB_ERR_SUBDOC_XATTR_CANNOT_MODIFY_VIRTUAL_ATTRIBUTE:
+    case LCB_ERR_SUBDOC_XATTR_INVALID_ORDER:
         exc_ce = pcbc_subdocument_exception_ce;
         break;
 
-    case LCB_GENERIC_CONSTRAINT_ERR:
-    case LCB_INVALID_HOST_FORMAT:
-    case LCB_INVALID_CHAR:
-    case LCB_UNKNOWN_SDCMD:
-    case LCB_EINVAL:
-    case LCB_EMPTY_PATH:
-    case LCB_OPTIONS_CONFLICT:
-    case LCB_EMPTY_KEY:
+    case LCB_ERR_INVALID_CHAR:
+    case LCB_ERR_INVALID_ARGUMENT:
+    case LCB_ERR_UNKNOWN_SUBDOC_COMMAND:
+    case LCB_ERR_EMPTY_KEY:
+    case LCB_ERR_OPTIONS_CONFLICT:
+    case LCB_ERR_SUBDOC_PATH_INVALID:
         exc_ce = pcbc_bad_input_exception_ce;
         break;
 
-    case LCB_EINTERNAL:
-    case LCB_NOT_SUPPORTED:
-    case LCB_UNKNOWN_COMMAND:
-    case LCB_PROTOCOL_ERROR:
-    case LCB_ERROR:
-    case LCB_SERVER_BUG:
-    case LCB_EINVAL_MCD:
-    case LCB_ECTL_UNKNOWN:
-    case LCB_ECTL_UNSUPPMODE:
-    case LCB_ECTL_BADARG:
-    case LCB_NOT_STORED:
+    case LCB_ERR_UNSUPPORTED_OPERATION:
+    case LCB_ERR_PROTOCOL_ERROR:
+    case LCB_ERR_GENERIC:
+    case LCB_ERR_INTERNAL_SERVER_FAILURE:
+    case LCB_ERR_CONTROL_UNKNOWN_CODE:
+    case LCB_ERR_CONTROL_INVALID_ARGUMENT:
+    case LCB_ERR_CONTROL_UNSUPPORTED_MODE:
+    case LCB_ERR_NOT_STORED:
         exc_ce = pcbc_invalid_state_exception_ce;
         break;
 
-    case LCB_DLOPEN_FAILED:
-    case LCB_DLSYM_FAILED:
-    case LCB_CLIENT_ENOMEM:
-    case LCB_DUPLICATE_COMMANDS:
-    case LCB_PLUGIN_VERSION_MISMATCH:
-    case LCB_NOT_MY_VBUCKET:
-    case LCB_BAD_ENVIRONMENT:
-    case LCB_INCOMPLETE_PACKET:
-    case LCB_EBADHANDLE:
-    case LCB_ENOMEM:
-    case LCB_SCHEDFAIL_INTERNAL:
-    case LCB_UNKNOWN_MEMCACHED_ERROR:
-    case LCB_ENO_COMMANDS:
+    case LCB_ERR_DLOPEN_FAILED:
+    case LCB_ERR_DLSYM_FAILED:
+    case LCB_ERR_NO_MEMORY:
+    case LCB_ERR_DUPLICATE_COMMANDS:
+    case LCB_ERR_PLUGIN_VERSION_MISMATCH:
+    case LCB_ERR_NOT_MY_VBUCKET:
+    case LCB_ERR_BAD_ENVIRONMENT:
+    case LCB_ERR_INCOMPLETE_PACKET:
+    case LCB_ERR_SDK_INTERNAL:
+    case LCB_ERR_KVENGINE_UNKNOWN_ERROR:
+    case LCB_ERR_NO_COMMANDS:
         exc_ce = pcbc_bindings_exception_ce;
         break;
 
-    case LCB_BUCKET_ENOENT:
+    case LCB_ERR_BUCKET_NOT_FOUND:
         exc_ce = pcbc_bucket_missing_exception_ce;
         break;
 
-    case LCB_DELTA_BADVAL:
-    case LCB_ERANGE:
-    case LCB_SUBDOC_NUM_ERANGE:
-    case LCB_SUBDOC_BAD_DELTA:
+    case LCB_ERR_INVALID_DELTA:
+    case LCB_ERR_INVALID_RANGE:
+    case LCB_ERR_SUBDOC_DELTA_INVALID:
         exc_ce = pcbc_invalid_range_exception_ce;
         break;
 
-    case LCB_ECONNREFUSED:
-    case LCB_ESOCKSHUTDOWN:
-    case LCB_ECONNRESET:
-    case LCB_ECANTGETPORT:
-    case LCB_EFDLIMITREACHED:
-    case LCB_ENETUNREACH:
-    case LCB_NETWORK_ERROR:
-    case LCB_CONNECT_ERROR:
-    case LCB_UNKNOWN_HOST:
-    case LCB_SSL_ERROR:
-    case LCB_SSL_CANTVERIFY:
-    case LCB_NAMESERVER_ERROR:
-    case LCB_TOO_MANY_REDIRECTS:
+    case LCB_ERR_CONNECTION_REFUSED:
+    case LCB_ERR_SOCKET_SHUTDOWN:
+    case LCB_ERR_CONNECTION_RESET:
+    case LCB_ERR_CANNOT_GET_PORT:
+    case LCB_ERR_FD_LIMIT_REACHED:
+    case LCB_ERR_NODE_UNREACHABLE:
+    case LCB_ERR_NETWORK:
+    case LCB_ERR_CONNECT_ERROR:
+    case LCB_ERR_UNKNOWN_HOST:
+    case LCB_ERR_SSL_ERROR:
+    case LCB_ERR_SSL_CANTVERIFY:
+    case LCB_ERR_SSL_INVALID_CIPHERSUITES:
+    case LCB_ERR_SSL_NO_CIPHERS:
+    case LCB_ERR_NAMESERVER:
+    case LCB_ERR_TOO_MANY_REDIRECTS:
         exc_ce = pcbc_network_exception_ce;
         break;
 
-    case LCB_COLLECTION_UNKNOWN:
+    case LCB_ERR_COLLECTION_NOT_FOUND:
+    case LCB_ERR_SCOPE_NOT_FOUND:
         exc_ce = pcbc_collection_missing_exception_ce;
         break;
 
-    case LCB_CLIENT_ENOCONF:
-    case LCB_CONFIG_CACHE_INVALID:
-    case LCB_CLIENT_FEATURE_UNAVAILABLE:
-    case LCB_COLLECTION_NO_MANIFEST:
-    case LCB_COLLECTION_CANNOT_APPLY_MANIFEST:
-    case LCB_COLLECTION_MANIFEST_IS_AHEAD:
+    case LCB_ERR_NO_CONFIGURATION:
+    case LCB_ERR_CONFIG_CACHE_INVALID:
+    case LCB_ERR_SDK_FEATURE_UNAVAILABLE:
+    case LCB_ERR_COLLECTION_NO_MANIFEST:
+    case LCB_ERR_COLLECTION_CANNOT_APPLY_MANIFEST:
+    case LCB_ERR_COLLECTION_MANIFEST_IS_AHEAD:
         exc_ce = pcbc_invalid_configuration_exception_ce;
         break;
 
-    case LCB_DURABILITY_ETOOMANY:
-    case LCB_NO_MATCHING_SERVER:
-    case LCB_MUTATION_LOST:
-    case LCB_DURABILITY_NO_MUTATION_TOKENS:
-    case LCB_DURABILITY_INVALID_LEVEL:
-    case LCB_DURABILITY_IMPOSSIBLE:
-    case LCB_DURABILITY_SYNC_WRITE_IN_PROGRESS:
-    case LCB_DURABILITY_SYNC_WRITE_AMBIGUOUS:
+    case LCB_ERR_DURABILITY_TOO_MANY:
+    case LCB_ERR_NO_MATCHING_SERVER:
+    case LCB_ERR_MUTATION_LOST:
+    case LCB_ERR_DURABILITY_NO_MUTATION_TOKENS:
+    case LCB_ERR_DURABILITY_LEVEL_NOT_AVAILABLE:
+    case LCB_ERR_DURABILITY_IMPOSSIBLE:
+    case LCB_ERR_DURABLE_WRITE_IN_PROGRESS:
+    case LCB_ERR_DURABLE_WRITE_RE_COMMIT_IN_PROGRESS:
+    case LCB_ERR_DURABILITY_AMBIGUOUS:
         exc_ce = pcbc_durability_exception_ce;
         break;
 
-    case LCB_ETIMEDOUT:
+    case LCB_ERR_TIMEOUT:
+    case LCB_ERR_AMBIGUOUS_TIMEOUT:
+    case LCB_ERR_UNAMBIGUOUS_TIMEOUT:
         exc_ce = pcbc_timeout_exception_ce;
         break;
 
-    case LCB_HTTP_ERROR:
+    case LCB_ERR_HTTP:
         exc_ce = pcbc_http_exception_ce;
         break;
 
-    case LCB_QUERY_ERROR:
+    case LCB_ERR_QUERY:
         exc_ce = pcbc_query_exception_ce;
         break;
 
@@ -382,30 +368,6 @@ void pcbc_create_lcb_exception(zval *return_value, long code, zend_string *conte
     if (context) {
         zend_update_property_str(pcbc_base_exception_ce, return_value, ZEND_STRL("context"), context TSRMLS_CC);
     }
-
-    uint32_t errtype = lcb_get_errtype(code);
-    zend_update_property_bool(pcbc_base_exception_ce, return_value, ZEND_STRL("is_input"),
-                              (errtype & LCB_ERRTYPE_INPUT) TSRMLS_CC);
-    zend_update_property_bool(pcbc_base_exception_ce, return_value, ZEND_STRL("is_network"),
-                              (errtype & LCB_ERRTYPE_NETWORK) TSRMLS_CC);
-    zend_update_property_bool(pcbc_base_exception_ce, return_value, ZEND_STRL("is_fatal"),
-                              (errtype & LCB_ERRTYPE_FATAL) TSRMLS_CC);
-    zend_update_property_bool(pcbc_base_exception_ce, return_value, ZEND_STRL("is_transient"),
-                              (errtype & LCB_ERRTYPE_TRANSIENT) TSRMLS_CC);
-    zend_update_property_bool(pcbc_base_exception_ce, return_value, ZEND_STRL("is_data_operation"),
-                              (errtype & LCB_ERRTYPE_DATAOP) TSRMLS_CC);
-    zend_update_property_bool(pcbc_base_exception_ce, return_value, ZEND_STRL("is_internal"),
-                              (errtype & LCB_ERRTYPE_INTERNAL) TSRMLS_CC);
-    zend_update_property_bool(pcbc_base_exception_ce, return_value, ZEND_STRL("is_plugin"),
-                              (errtype & LCB_ERRTYPE_PLUGIN) TSRMLS_CC);
-    zend_update_property_bool(pcbc_base_exception_ce, return_value, ZEND_STRL("is_server_under_load"),
-                              (errtype & LCB_ERRTYPE_SRVLOAD) TSRMLS_CC);
-    zend_update_property_bool(pcbc_base_exception_ce, return_value, ZEND_STRL("is_server_generated"),
-                              (errtype & LCB_ERRTYPE_SRVGEN) TSRMLS_CC);
-    zend_update_property_bool(pcbc_base_exception_ce, return_value, ZEND_STRL("is_subdoc"),
-                              (errtype & LCB_ERRTYPE_SUBDOC) TSRMLS_CC);
-    zend_update_property_bool(pcbc_base_exception_ce, return_value, ZEND_STRL("is_durability"),
-                              (errtype & LCB_ERRTYPE_DURABILITY) TSRMLS_CC);
 }
 
 PHP_METHOD(BaseException, context)

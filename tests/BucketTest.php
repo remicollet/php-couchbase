@@ -12,7 +12,7 @@ class BucketTest extends CouchbaseTestCase {
         $options->credentials($this->testUser, 'bad_pass');
         $this->wrapException(function() use($options) {
             new \Couchbase\Cluster($this->testDsn, $options);
-        }, '\Couchbase\AuthenticationException', 2);
+        }, '\Couchbase\AuthenticationException', COUCHBASE_ERR_AUTHENTICATION_FAILURE);
     }
 
     /**
@@ -85,7 +85,7 @@ class BucketTest extends CouchbaseTestCase {
         $this->assertNotNull($res->cas());
         $this->wrapException(function() use($c, $key) {
             $c->get($key);
-        }, '\Couchbase\KeyNotFoundException', COUCHBASE_KEYNOTFOUND);
+        }, '\Couchbase\KeyNotFoundException', COUCHBASE_ERR_DOCUMENT_NOT_FOUND);
     }
 
     /**
@@ -122,11 +122,11 @@ class BucketTest extends CouchbaseTestCase {
 
         $this->wrapException(function() use($c, $key) {
             $c->increment($key);
-        }, '\Couchbase\KeyNotFoundException', COUCHBASE_KEYNOTFOUND);
+        }, '\Couchbase\KeyNotFoundException', COUCHBASE_ERR_DOCUMENT_NOT_FOUND);
 
         $this->wrapException(function() use($c, $key) {
             $c->decrement($key);
-        }, '\Couchbase\KeyNotFoundException', COUCHBASE_KEYNOTFOUND);
+        }, '\Couchbase\KeyNotFoundException', COUCHBASE_ERR_DOCUMENT_NOT_FOUND);
 
         $options = (new \Couchbase\DecrementOptions())->initial(42);
         $res = $c->decrement($key, $options);
@@ -149,7 +149,7 @@ class BucketTest extends CouchbaseTestCase {
 
         $this->wrapException(function() use($c, $key) {
             $c->get($key);
-        }, '\Couchbase\KeyNotFoundException', COUCHBASE_KEYNOTFOUND);
+        }, '\Couchbase\KeyNotFoundException', COUCHBASE_ERR_DOCUMENT_NOT_FOUND);
     }
 
     /**
@@ -231,7 +231,7 @@ class BucketTest extends CouchbaseTestCase {
     function testNoKeyUpsert($c) {
         $this->wrapException(function() use($c) {
             $c->upsert('', 'joe');
-        }, '\Couchbase\BadInputException', COUCHBASE_EMPTY_KEY);
+        }, '\Couchbase\BadInputException', COUCHBASE_ERR_EMPTY_KEY);
     }
 
     /**
@@ -305,17 +305,17 @@ class BucketTest extends CouchbaseTestCase {
         $result = $c->lookupIn($key, [
             new \Couchbase\LookupGetSpec('path2')
         ]);
-        $this->assertNull($result->cas());
+        $this->assertNotNull($result->cas());
         $this->assertNull($result->content(0));
-        $this->assertEquals(COUCHBASE_SUBDOC_PATH_ENOENT, $result->status(0));
+        $this->assertEquals(COUCHBASE_ERR_SUBDOC_PATH_NOT_FOUND, $result->status(0));
 
         # Try when there is a mismatch
         $result = $c->lookupIn($key, [
             new \Couchbase\LookupGetSpec('path1[0]')
         ]);
-        $this->assertNull($result->cas());
+        $this->assertNotNull($result->cas());
         $this->assertNull($result->content(0));
-        $this->assertEquals(COUCHBASE_SUBDOC_PATH_MISMATCH, $result->status(0));
+        $this->assertEquals(COUCHBASE_ERR_SUBDOC_PATH_MISMATCH, $result->status(0));
 
         # Try existence
         $result = $c->lookupIn($key, [
@@ -328,19 +328,18 @@ class BucketTest extends CouchbaseTestCase {
         $result = $c->lookupIn($key, [
             new \Couchbase\LookupExistsSpec('p')
         ]);
-        $this->assertNull($result->cas());
+        $this->assertNotNull($result->cas());
         $this->assertFalse($result->exists(0));
 
         # Insert a non-JSON document
         $key = $this->makeKey('lookup_in_nonjson');
         $c->upsert($key, 'value');
 
-        $result = $c->lookupIn($key, [
-            new \Couchbase\LookupExistsSpec('path')
-        ]);
-        $this->assertNull($result->cas());
-        $this->assertNull($result->content(0));
-        $this->assertEquals(COUCHBASE_SUBDOC_DOC_NOTJSON, $result->status(0));
+        $this->wrapException(function() use($c, $key) {
+            $result = $c->lookupIn($key, [
+                new \Couchbase\LookupExistsSpec('path')
+            ]);
+        }, '\Couchbase\SubdocumentException', COUCHBASE_ERR_SUBDOC_DOCUMENT_NOT_JSON);
 
         # Try on non-existing document. Should fail
         $key = $this->makeKey('lookup_in_with_missing_key');
@@ -398,7 +397,7 @@ class BucketTest extends CouchbaseTestCase {
 
         $this->wrapException(function() use($c, $key) {
             $c->get($key);
-        }, '\Couchbase\KeyNotFoundException', COUCHBASE_KEYNOTFOUND);
+        }, '\Couchbase\KeyNotFoundException', COUCHBASE_ERR_DOCUMENT_NOT_FOUND);
     }
 
     /**
@@ -461,8 +460,8 @@ class BucketTest extends CouchbaseTestCase {
         $result = $c->mutateIn($key, [
             new \Couchbase\MutateUpsertSpec('path.with.missing.parents', 'value'),
         ]);
-        $this->assertNull($result->cas());
-        $this->assertEquals(COUCHBASE_SUBDOC_PATH_ENOENT, $result->status(0));
+        $this->assertNotNull($result->cas());
+        $this->assertEquals(COUCHBASE_ERR_SUBDOC_PATH_NOT_FOUND, $result->status(0));
 
         # Creates deep path without create_parents
         $result = $c->mutateIn($key, [
@@ -497,8 +496,8 @@ class BucketTest extends CouchbaseTestCase {
         $result = $c->mutateIn($key, [
             new \Couchbase\MutateInsertSpec('newDict', ['foo' => 42]),
         ]);
-        $this->assertNull($result->cas());
-        $this->assertEquals(COUCHBASE_SUBDOC_PATH_EEXISTS, $result->status(0));
+        $this->assertNotNull($result->cas());
+        $this->assertEquals(COUCHBASE_ERR_SUBDOC_PATH_EXISTS, $result->status(0));
 
         # insert into new path should succeed
         $result = $c->mutateIn($key, [
@@ -522,8 +521,8 @@ class BucketTest extends CouchbaseTestCase {
         $result = $c->mutateIn($key, [
             new \Couchbase\MutateReplaceSpec('missingDict', [42 => 'foo']),
         ]);
-        $this->assertNull($result->cas());
-        $this->assertEquals(COUCHBASE_SUBDOC_PATH_ENOENT, $result->status(0));
+        $this->assertNotNull($result->cas());
+        $this->assertEquals(COUCHBASE_ERR_SUBDOC_PATH_NOT_FOUND, $result->status(0));
 
         $result = $c->mutateIn($key, [new \Couchbase\MutateUpsertSpec('empty', '')]);
         $result = $c->lookupIn($key, [new \Couchbase\LookupGetSpec('empty')]);
@@ -538,13 +537,13 @@ class BucketTest extends CouchbaseTestCase {
         $this->assertEquals([1, 2, 3], $result->content(0));
 
         $result = $c->mutateIn($key, [new \Couchbase\MutateUpsertSpec('array.newKey', 'newVal')]);
-        $this->assertEquals(COUCHBASE_SUBDOC_PATH_MISMATCH, $result->status(0));
+        $this->assertEquals(COUCHBASE_ERR_SUBDOC_PATH_MISMATCH, $result->status(0));
 
         $result = $c->mutateIn($key, [new \Couchbase\MutateUpsertSpec('array[0]', 'newVal')]);
-        $this->assertEquals(COUCHBASE_SUBDOC_PATH_EINVAL, $result->status(0));
+        $this->assertEquals(COUCHBASE_ERR_SUBDOC_PATH_INVALID, $result->status(0));
 
         $result = $c->mutateIn($key, [new \Couchbase\MutateUpsertSpec('array[1].bleh', 'newVal')]);
-        $this->assertEquals(COUCHBASE_SUBDOC_PATH_MISMATCH, $result->status(0));
+        $this->assertEquals(COUCHBASE_ERR_SUBDOC_PATH_MISMATCH, $result->status(0));
     }
 
     /**
@@ -573,10 +572,10 @@ class BucketTest extends CouchbaseTestCase {
         $this->assertNotEmpty($result->cas());
 
         $result = $c->mutateIn($key, [new \Couchbase\MutateCounterSpec('not_a_counter', 100)]);
-        $this->assertEquals(COUCHBASE_SUBDOC_PATH_MISMATCH, $result->status(0));
+        $this->assertEquals(COUCHBASE_ERR_SUBDOC_PATH_MISMATCH, $result->status(0));
 
         $result = $c->mutateIn($key, [new \Couchbase\MutateCounterSpec('path.to.new.counter', 100)]);
-        $this->assertEquals(COUCHBASE_SUBDOC_PATH_ENOENT, $result->status(0));
+        $this->assertEquals(COUCHBASE_ERR_SUBDOC_PATH_NOT_FOUND, $result->status(0));
 
         $result = $c->mutateIn($key, [new \Couchbase\MutateCounterSpec('path.to.new.counter', 100, false, true)]);
         $this->assertNotEmpty($result->cas());
@@ -587,7 +586,7 @@ class BucketTest extends CouchbaseTestCase {
         $this->assertEquals(75, $result->content(0));
 
         $result = $c->mutateIn($key, [new \Couchbase\MutateCounterSpec('counter', 0)]);
-        $this->assertEquals(COUCHBASE_SUBDOC_BAD_DELTA, $result->status(0));
+        $this->assertEquals(COUCHBASE_ERR_SUBDOC_DELTA_INVALID, $result->status(0));
     }
 
     /**
@@ -631,7 +630,7 @@ class BucketTest extends CouchbaseTestCase {
         ]);
         $this->assertEquals(COUCHBASE_SUCCESS, $result->status(0));
         $this->assertEquals(COUCHBASE_SUCCESS, $result->status(1));
-        $this->assertEquals(COUCHBASE_SUBDOC_PATH_ENOENT, $result->status(2));
+        $this->assertEquals(COUCHBASE_ERR_SUBDOC_PATH_NOT_FOUND, $result->status(2));
 
         $result = $c->lookupIn($key, [
             new \Couchbase\LookupGetSpec('field1'),

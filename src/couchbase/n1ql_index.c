@@ -20,7 +20,7 @@ zend_class_entry *n1ix_spec_ce;
 
 PHP_METHOD(N1qlIndex, __construct)
 {
-    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+    throw_pcbc_exception("Accessing private constructor.", LCB_ERR_INVALID_ARGUMENT);
 }
 
 ZEND_BEGIN_ARG_INFO_EX(ai_N1qlIndex_none, 0, 0, 0)

@@ -78,7 +78,7 @@ static lcb_STATUS pcbc_crypto_generate_iv(struct lcbcrypto_PROVIDER *provider, u
 
     rv = call_user_function_ex(EG(function_table), zprovider, &fname, &retval, 0, NULL, 1, NULL TSRMLS_CC);
     if (rv == FAILURE || EG(exception) || Z_ISUNDEF(retval)) {
-        return LCB_EINVAL;
+        return LCB_ERR_INVALID_ARGUMENT;
     }
     if (Z_TYPE_P(&retval) == IS_STRING && PCBC_STRLEN_P(retval)) {
         *iv_len = PCBC_STRLEN_P(retval);
@@ -86,7 +86,7 @@ static lcb_STATUS pcbc_crypto_generate_iv(struct lcbcrypto_PROVIDER *provider, u
         return LCB_SUCCESS;
     }
 
-    return LCB_EINVAL;
+    return LCB_ERR_INVALID_ARGUMENT;
 }
 
 static lcb_STATUS pcbc_crypto_sign(struct lcbcrypto_PROVIDER *provider, const lcbcrypto_SIGV *inputs, size_t inputs_num,
@@ -113,7 +113,7 @@ static lcb_STATUS pcbc_crypto_sign(struct lcbcrypto_PROVIDER *provider, const lc
 
     zval_ptr_dtor(&param);
     if (rv == FAILURE || EG(exception) || Z_ISUNDEF(retval)) {
-        return LCB_EINVAL;
+        return LCB_ERR_INVALID_ARGUMENT;
     }
 
     if (Z_TYPE_P(&retval) == IS_STRING && PCBC_STRLEN_P(retval)) {
@@ -122,7 +122,7 @@ static lcb_STATUS pcbc_crypto_sign(struct lcbcrypto_PROVIDER *provider, const lc
         return LCB_SUCCESS;
     }
 
-    return LCB_EINVAL;
+    return LCB_ERR_INVALID_ARGUMENT;
 }
 
 static lcb_STATUS pcbc_crypto_verify_signature(struct lcbcrypto_PROVIDER *provider, const lcbcrypto_SIGV *inputs,
@@ -152,16 +152,16 @@ static lcb_STATUS pcbc_crypto_verify_signature(struct lcbcrypto_PROVIDER *provid
     zval_ptr_dtor(&params[0]);
     zval_ptr_dtor(&params[1]);
     if (rv == FAILURE || EG(exception) || Z_ISUNDEF(retval)) {
-        return LCB_EINVAL;
+        return LCB_ERR_INVALID_ARGUMENT;
     }
 
     switch (Z_TYPE_P(&retval)) {
     case IS_TRUE:
         return LCB_SUCCESS;
     case IS_FALSE:
-        return LCB_EINVAL;
+        return LCB_ERR_INVALID_ARGUMENT;
     }
-    return LCB_EINVAL;
+    return LCB_ERR_INVALID_ARGUMENT;
 }
 
 static lcb_STATUS pcbc_crypto_encrypt(struct lcbcrypto_PROVIDER *provider, const uint8_t *input, size_t input_len,
@@ -191,7 +191,7 @@ static lcb_STATUS pcbc_crypto_encrypt(struct lcbcrypto_PROVIDER *provider, const
     zval_ptr_dtor(&params[0]);
     zval_ptr_dtor(&params[1]);
     if (rv == FAILURE || EG(exception) || Z_ISUNDEF(retval)) {
-        return LCB_EINVAL;
+        return LCB_ERR_INVALID_ARGUMENT;
     }
 
     if (Z_TYPE_P(&retval) == IS_STRING && PCBC_STRLEN_P(retval)) {
@@ -200,7 +200,7 @@ static lcb_STATUS pcbc_crypto_encrypt(struct lcbcrypto_PROVIDER *provider, const
         return LCB_SUCCESS;
     }
 
-    return LCB_EINVAL;
+    return LCB_ERR_INVALID_ARGUMENT;
 }
 
 static lcb_STATUS pcbc_crypto_decrypt(struct lcbcrypto_PROVIDER *provider, const uint8_t *input, size_t input_len,
@@ -230,7 +230,7 @@ static lcb_STATUS pcbc_crypto_decrypt(struct lcbcrypto_PROVIDER *provider, const
     zval_ptr_dtor(&params[0]);
     zval_ptr_dtor(&params[1]);
     if (rv == FAILURE || EG(exception) || Z_ISUNDEF(retval)) {
-        return LCB_EINVAL;
+        return LCB_ERR_INVALID_ARGUMENT;
     }
 
     if (Z_TYPE_P(&retval) == IS_STRING && PCBC_STRLEN_P(retval)) {
@@ -239,7 +239,7 @@ static lcb_STATUS pcbc_crypto_decrypt(struct lcbcrypto_PROVIDER *provider, const
         return LCB_SUCCESS;
     }
 
-    return LCB_EINVAL;
+    return LCB_ERR_INVALID_ARGUMENT;
 }
 
 void pcbc_crypto_register(pcbc_bucket_t *obj, const char *name, int name_len, zval *zprovider TSRMLS_DC)

@@ -30,15 +30,17 @@ void counter_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPCOUNTER 
 {
     TSRMLS_FETCH();
 
+    const lcb_KEY_VALUE_ERROR_CONTEXT *ectx = NULL;
     struct counter_cookie *cookie = NULL;
     lcb_respcounter_cookie(resp, (void **)&cookie);
     zval *return_value = cookie->return_value;
     cookie->rc = lcb_respcounter_status(resp);
     zend_update_property_long(pcbc_counter_result_impl_ce, return_value, ZEND_STRL("status"), cookie->rc TSRMLS_CC);
+    lcb_respcounter_error_context(resp, &ectx);
 
-    set_property_str(lcb_respcounter_error_context, pcbc_counter_result_impl_ce, "err_ctx");
-    set_property_str(lcb_respcounter_error_ref, pcbc_counter_result_impl_ce, "err_ref");
-    set_property_str(lcb_respcounter_key, pcbc_counter_result_impl_ce, "key");
+    set_property_str(ectx, lcb_errctx_kv_context, pcbc_counter_result_impl_ce, "err_ctx");
+    set_property_str(ectx, lcb_errctx_kv_ref, pcbc_counter_result_impl_ce, "err_ref");
+    set_property_str(ectx, lcb_errctx_kv_key, pcbc_counter_result_impl_ce, "key");
 
     if (cookie->rc == LCB_SUCCESS) {
         uint64_t value = 0;

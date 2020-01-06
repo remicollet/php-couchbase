@@ -14,5 +14,5 @@ var_dump(count($result->value));      //=> int(2)
 var_dump($result->value[0]['code']);  //=> int(0)    COUCHBASE_SUCCESS
 var_dump($result->value[0]['value']); //=> string(6) "value1"
 
-var_dump($result->value[1]['code']);  //=> int(63)  COUCHBASE_SUBDOC_PATH_ENOENT
+var_dump($result->value[1]['code']);  //=> int(63)  COUCHBASE_ERR_SUBDOC_PATH_NOT_FOUND
 var_dump($result->value[1]['value']); //=> NULL

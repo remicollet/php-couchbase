@@ -27,7 +27,7 @@ PHP_METHOD(UserSettings, __construct)
 
     rv = zend_parse_parameters_none();
     if (rv == FAILURE) {
-        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+        throw_pcbc_exception("Invalid arguments.", LCB_ERR_INVALID_ARGUMENT);
         RETURN_NULL();
     }
     obj = Z_USER_SETTINGS_OBJ_P(getThis());

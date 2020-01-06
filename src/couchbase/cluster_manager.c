@@ -28,7 +28,7 @@ zend_class_entry *pcbc_cluster_manager_ce;
 
 PHP_METHOD(ClusterManager, __construct)
 {
-    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+    throw_pcbc_exception("Accessing private constructor.", LCB_ERR_INVALID_ARGUMENT);
 }
 
 PHP_METHOD(ClusterManager, listBuckets)
@@ -168,7 +168,7 @@ PHP_METHOD(ClusterManager, listUsers)
         path = "/settings/rbac/users/external";
         break;
     default:
-        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+        throw_pcbc_exception("Invalid arguments.", LCB_ERR_INVALID_ARGUMENT);
         RETURN_NULL();
     }
     lcb_CMDHTTP *cmd;
@@ -202,7 +202,7 @@ PHP_METHOD(ClusterManager, getUser)
         path_len = spprintf(&path, 0, "/settings/rbac/users/external/%*s", (int)name_len, name);
         break;
     default:
-        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+        throw_pcbc_exception("Invalid arguments.", LCB_ERR_INVALID_ARGUMENT);
         RETURN_NULL();
     }
 
@@ -237,7 +237,7 @@ PHP_METHOD(ClusterManager, removeUser)
         path_len = spprintf(&path, 0, "/settings/rbac/users/external/%*s", (int)name_len, name);
         break;
     default:
-        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+        throw_pcbc_exception("Invalid arguments.", LCB_ERR_INVALID_ARGUMENT);
         RETURN_NULL();
     }
 
@@ -251,7 +251,7 @@ PHP_METHOD(ClusterManager, removeUser)
     if (Z_STRLEN_P(return_value) == 0 || (Z_STRVAL_P(return_value)[0] == '"' && Z_STRVAL_P(return_value)[1] == '"')) {
         RETURN_TRUE;
     } else {
-        throw_pcbc_exception(Z_STRVAL_P(return_value), LCB_EINVAL);
+        throw_pcbc_exception(Z_STRVAL_P(return_value), LCB_ERR_INVALID_ARGUMENT);
         RETURN_NULL();
     }
 }
@@ -286,7 +286,7 @@ PHP_METHOD(ClusterManager, upsertUser)
         path_len = spprintf(&path, 0, "/settings/rbac/users/external/%*s", (int)name_len, name);
         break;
     default:
-        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+        throw_pcbc_exception("Invalid arguments.", LCB_ERR_INVALID_ARGUMENT);
         RETURN_NULL();
     }
 
@@ -323,7 +323,7 @@ PHP_METHOD(ClusterManager, upsertUser)
             (Z_STRVAL_P(return_value)[0] == '"' && Z_STRVAL_P(return_value)[1] == '"')) {
             RETURN_TRUE;
         } else {
-            throw_pcbc_exception(Z_STRVAL_P(return_value), LCB_EINVAL);
+            throw_pcbc_exception(Z_STRVAL_P(return_value), LCB_ERR_INVALID_ARGUMENT);
             RETURN_NULL();
         }
     }

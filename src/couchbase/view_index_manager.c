@@ -33,7 +33,7 @@ zend_class_entry *pcbc_view_index_manager_ce;
 
 PHP_METHOD(ViewIndexManager, __construct)
 {
-    throw_pcbc_exception("Accessing private constructor.", LCB_EINVAL);
+    throw_pcbc_exception("Accessing private constructor.", LCB_ERR_INVALID_ARGUMENT);
 }
 
 PHP_METHOD(ViewIndexManager, getAllDesignDocuments)
@@ -103,7 +103,7 @@ PHP_METHOD(ViewIndexManager, upsertDesignDocument)
 
         error = php_array_fetch_string(return_value, "error", &error_len, &owned);
         if (error) {
-            throw_pcbc_exception(error, LCB_ERROR);
+            throw_pcbc_exception(error, LCB_ERR_GENERIC);
             if (owned) {
                 efree(error);
             }

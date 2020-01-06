@@ -113,14 +113,14 @@ class DatastructuresTest extends CouchbaseTestCase {
 
         $this->wrapException(function() use($key) {
             $res = $this->bucket->queueSize($key);
-        }, '\Couchbase\Exception', COUCHBASE_KEYNOTFOUND);
+        }, '\Couchbase\Exception', COUCHBASE_ERR_DOCUMENT_NOT_FOUND);
 
         $this->wrapException(function() use($key) {
             $res = $this->bucket->setExists($key, 42);
-        }, '\Couchbase\Exception', COUCHBASE_KEYNOTFOUND);
+        }, '\Couchbase\Exception', COUCHBASE_ERR_DOCUMENT_NOT_FOUND);
 
         $this->wrapException(function() use($key) {
             $res = $this->bucket->setRemove($key, 42);
-        }, '\Couchbase\Exception', COUCHBASE_KEYNOTFOUND);
+        }, '\Couchbase\Exception', COUCHBASE_ERR_DOCUMENT_NOT_FOUND);
     }
 }

@@ -584,7 +584,7 @@ PHP_METHOD(Bucket, viewQuery)
     }
     pcbc_bucket_t *obj = Z_BUCKET_OBJ_P(getThis());
     if (obj->type == LCB_BTYPE_EPHEMERAL) {
-        throw_pcbc_exception("Ephemeral bucket do not support Couchbase Views", LCB_EINVAL);
+        throw_pcbc_exception("Ephemeral bucket do not support Couchbase Views", LCB_ERR_INVALID_ARGUMENT);
         RETURN_NULL();
     }
 

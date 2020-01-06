@@ -118,12 +118,12 @@ static lcb_STATUS pcbc_normalize_connstr(lcb_INSTANCE_TYPE type, char *connstr, 
     zend_bool need_free = 0;
 
     if (type != LCB_TYPE_BUCKET && type != LCB_TYPE_CLUSTER) {
-        return LCB_EINVAL;
+        return LCB_ERR_INVALID_ARGUMENT;
     }
 
     url = php_url_parse(connstr);
     if (!url) {
-        return LCB_EINVAL;
+        return LCB_ERR_INVALID_ARGUMENT;
     }
     if (url->scheme == NULL && url->host == NULL) {
         // hosts has gone into path section,
@@ -142,7 +142,7 @@ static lcb_STATUS pcbc_normalize_connstr(lcb_INSTANCE_TYPE type, char *connstr, 
         url = php_url_parse(connstr);
         if (!url) {
             efree(with_schema);
-            return LCB_EINVAL;
+            return LCB_ERR_INVALID_ARGUMENT;
         }
     }
     switch (type) {
@@ -283,7 +283,7 @@ static lcb_STATUS pcbc_connection_cache(smart_str *plist_key, pcbc_connection_t 
     if (zend_hash_str_update_mem(&EG(persistent_list), PCBC_SMARTSTR_VAL(*plist_key), PCBC_SMARTSTR_LEN(*plist_key),
                                  &res, sizeof(res)) == NULL) {
         pcbc_log(LOGARGS(NULL, ERROR), "failed to register persistent connection");
-        return LCB_EINVAL;
+        return LCB_ERR_INVALID_ARGUMENT;
     }
     pcbc_log(LOGARGS(conn->lcb, DEBUG),
              "cachenew: ptr=%p, type=%d, connstr=%s, bucketname=%s, username=%s, lcb=%p, refs=%d", conn, conn->type,

@@ -74,7 +74,7 @@ static lcb_STATUS proc_http_results(zval *return_value, opcookie *cookie TSRMLS_
                 ZVAL_ZVAL(return_value, &res->bytes, 1, 0);
                 has_value = 1;
             } else {
-                err = LCB_ERROR;
+                err = LCB_ERR_GENERIC;
                 break;
             }
         }

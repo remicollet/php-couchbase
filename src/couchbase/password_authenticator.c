@@ -30,7 +30,7 @@ PHP_METHOD(PasswordAuthenticator, __construct)
 
     rv = zend_parse_parameters_none();
     if (rv == FAILURE) {
-        throw_pcbc_exception("Invalid arguments.", LCB_EINVAL);
+        throw_pcbc_exception("Invalid arguments.", LCB_ERR_INVALID_ARGUMENT);
         RETURN_NULL();
     }
     obj = Z_PASSWORD_AUTHENTICATOR_OBJ_P(getThis());
