@@ -489,7 +489,7 @@ namespace Couchbase {
         {
         }
 
-        public function touch(string $id, int $expiry, TcouchOptions $options = null): Result
+        public function touch(string $id, int $expiry, TouchOptions $options = null): Result
         {
         }
 
