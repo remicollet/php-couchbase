@@ -190,6 +190,19 @@ PHP_METHOD(Bucket, defaultCollection)
     zend_update_property(pcbc_collection_ce, return_value, ZEND_STRL("bucket"), getThis() TSRMLS_CC);
 }
 
+PHP_METHOD(Bucket, defaultScope)
+{
+    int rv;
+
+    rv = zend_parse_parameters_none_throw();
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+
+    object_init_ex(return_value, pcbc_scope_ce);
+    zend_update_property(pcbc_scope_ce, return_value, ZEND_STRL("bucket"), getThis() TSRMLS_CC);
+}
+
 PHP_METHOD(Bucket, scope)
 {
     int rv;
@@ -244,6 +257,10 @@ PHP_METHOD(Bucket, defaultCollection);
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Bucket_defaultCollection, 0, 0, \\Couchbase\\Collection, 0)
 ZEND_END_ARG_INFO()
 
+PHP_METHOD(Bucket, defaultScope);
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Bucket_defaultScope, 0, 0, \\Couchbase\\Scope, 0)
+ZEND_END_ARG_INFO()
+
 PHP_METHOD(Bucket, scope);
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Bucket_scope, 0, 1, \\Couchbase\\Scope, 0)
 ZEND_ARG_TYPE_INFO(0, name, IS_STRING, 0)
@@ -260,6 +277,7 @@ zend_function_entry bucket_methods[] = {
     PHP_ME(Bucket, ping, ai_Bucket_ping, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, diagnostics, ai_Bucket_diag, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, defaultCollection, ai_Bucket_defaultCollection, ZEND_ACC_PUBLIC)
+    PHP_ME(Bucket, defaultScope, ai_Bucket_defaultScope, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, scope, ai_Bucket_scope, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, viewIndexes, ai_Bucket_none, ZEND_ACC_PUBLIC)
     PHP_FE_END
