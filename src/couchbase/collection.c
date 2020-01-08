@@ -109,6 +109,20 @@ PHP_METHOD(Collection, __construct)
     }
 }
 
+PHP_METHOD(Collection, name)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        RETURN_NULL();
+    }
+
+    zval *prop, rv;
+    prop = zend_read_property(pcbc_collection_ce, getThis(), ZEND_STRL("name"), 0, &rv);
+    ZVAL_COPY(return_value, prop);
+}
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_Collection_name, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(ai_Collection___construct, 0, 0, 1)
 ZEND_ARG_OBJ_INFO(0, bucket, \\Couchbase\\Bucket, 0)
 ZEND_ARG_TYPE_INFO(0, scope, IS_STRING, 0)
@@ -237,6 +251,7 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry collection_methods[] = {
     PHP_ME(Collection, __construct, ai_Collection___construct, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    PHP_ME(Collection, name, ai_Collection_name, ZEND_ACC_PUBLIC)
     PHP_ME(Collection, get, ai_Collection_get, ZEND_ACC_PUBLIC)
     PHP_ME(Collection, exists, ai_Collection_exists, ZEND_ACC_PUBLIC)
     PHP_ME(Collection, getAndLock, ai_Collection_getAndLock, ZEND_ACC_PUBLIC)
