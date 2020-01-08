@@ -209,7 +209,7 @@ ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\RemoveOptions, 0)
 ZEND_END_ARG_INFO()
 
 PHP_METHOD(Collection, unlock);
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_unlock, 0, 2, \\Couchbase\\Result, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_unlock, 0, 2, \\Couchbase\\MutationResult, 0)
 ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
 ZEND_ARG_TYPE_INFO(0, cas, IS_STRING, 0)
 ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\UnlockOptions, 0)

@@ -18,7 +18,7 @@
 
 #define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/touch", __FILE__, __LINE__
 
-extern zend_class_entry *pcbc_result_impl_ce;
+extern zend_class_entry *pcbc_mutation_result_impl_ce;
 
 struct touch_cookie {
     lcb_STATUS rc;
@@ -34,12 +34,12 @@ void touch_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPTOUCH *res
     lcb_resptouch_cookie(resp, (void **)&cookie);
     zval *return_value = cookie->return_value;
     cookie->rc = lcb_resptouch_status(resp);
-    zend_update_property_long(pcbc_result_impl_ce, return_value, ZEND_STRL("status"), cookie->rc TSRMLS_CC);
+    zend_update_property_long(pcbc_mutation_result_impl_ce, return_value, ZEND_STRL("status"), cookie->rc TSRMLS_CC);
 
     lcb_resptouch_error_context(resp, &ectx);
-    set_property_str(ectx, lcb_errctx_kv_context, pcbc_result_impl_ce, "err_ctx");
-    set_property_str(ectx, lcb_errctx_kv_ref, pcbc_result_impl_ce, "err_ref");
-    set_property_str(ectx, lcb_errctx_kv_key, pcbc_result_impl_ce, "key");
+    set_property_str(ectx, lcb_errctx_kv_context, pcbc_mutation_result_impl_ce, "err_ctx");
+    set_property_str(ectx, lcb_errctx_kv_ref, pcbc_mutation_result_impl_ce, "err_ref");
+    set_property_str(ectx, lcb_errctx_kv_key, pcbc_mutation_result_impl_ce, "key");
 
     if (cookie->rc == LCB_SUCCESS) {
         zend_string *b64;
@@ -47,7 +47,7 @@ void touch_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPTOUCH *res
             uint64_t data;
             lcb_resptouch_cas(resp, &data);
             b64 = php_base64_encode((unsigned char *)&data, sizeof(data));
-            zend_update_property_str(pcbc_result_impl_ce, return_value, ZEND_STRL("cas"), b64 TSRMLS_CC);
+            zend_update_property_str(pcbc_mutation_result_impl_ce, return_value, ZEND_STRL("cas"), b64 TSRMLS_CC);
         }
     }
 }
@@ -113,7 +113,7 @@ PHP_METHOD(Collection, touch)
         lcb_cmdtouch_parent_span(cmd, span);
     }
 
-    object_init_ex(return_value, pcbc_result_impl_ce);
+    object_init_ex(return_value, pcbc_mutation_result_impl_ce);
     struct touch_cookie cookie = {LCB_SUCCESS, return_value};
     err = lcb_touch(bucket->conn->lcb, &cookie, cmd);
     if (err == LCB_SUCCESS) {
@@ -126,7 +126,7 @@ PHP_METHOD(Collection, touch)
     }
 
     if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err, pcbc_result_impl_ce);
+        throw_lcb_exception(err, pcbc_mutation_result_impl_ce);
     }
 }
 
