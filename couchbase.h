@@ -252,24 +252,6 @@ void pcbc_exception_init(zval *return_value, long code, const char *message TSRM
 #define PCBC_SMARTSTR_LEN(__pcbc_smart_str) ((__pcbc_smart_str).s ? (int)(ZSTR_LEN((__pcbc_smart_str).s)) : 0)
 #define PCBC_SMARTSTR_EMPTY(__pcbc_smart_str) ((__pcbc_smart_str).s == NULL || PCBC_SMARTSTR_LEN(__pcbc_smart_str) == 0)
 
-struct pcbc_credential {
-    char *username;
-    int username_len;
-    char *password;
-    int password_len;
-
-    struct pcbc_credential *next;
-};
-typedef struct pcbc_credential pcbc_credential_t;
-
-typedef struct {
-    pcbc_credential_t cluster;
-    pcbc_credential_t *buckets;
-    pcbc_credential_t *tail;
-    int nbuckets;
-    zend_object std;
-} pcbc_classic_authenticator_t;
-
 typedef struct {
     char *username;
     int username_len;
@@ -359,13 +341,6 @@ void pcbc_mutation_state_export_for_search(zval *mutation_state, zval *scan_vect
 
 void pcbc_search_index_manager_init(zval *return_value, pcbc_bucket_manager_t *bucket_manager TSRMLS_DC);
 
-void pcbc_generate_classic_lcb_auth(pcbc_classic_authenticator_t *auth, lcb_AUTHENTICATOR **result,
-                                    lcb_INSTANCE_TYPE type, char **hash TSRMLS_DC);
-void pcbc_generate_password_lcb_auth(pcbc_password_authenticator_t *auth, lcb_AUTHENTICATOR **result,
-                                     lcb_INSTANCE_TYPE type, char **hash TSRMLS_DC);
-void pcbc_password_authenticator_init(zval *return_value, char *username, int username_len, char *password,
-                                      int password_len TSRMLS_DC);
-
 void pcbc_crypto_register(pcbc_bucket_t *obj, const char *name, int name_len, zval *provider TSRMLS_DC);
 void pcbc_crypto_unregister(pcbc_bucket_t *obj, const char *name, int name_len TSRMLS_DC);
 void pcbc_crypto_encrypt_fields(pcbc_bucket_t *obj, zval *document, zval *options, const char *prefix,
@@ -385,10 +360,6 @@ static inline pcbc_bucket_t *pcbc_bucket_fetch_object(zend_object *obj)
 {
     return (pcbc_bucket_t *)((char *)obj - XtOffsetOf(pcbc_bucket_t, std));
 }
-static inline pcbc_classic_authenticator_t *pcbc_classic_authenticator_fetch_object(zend_object *obj)
-{
-    return (pcbc_classic_authenticator_t *)((char *)obj - XtOffsetOf(pcbc_classic_authenticator_t, std));
-}
 static inline pcbc_password_authenticator_t *pcbc_password_authenticator_fetch_object(zend_object *obj)
 {
     return (pcbc_password_authenticator_t *)((char *)obj - XtOffsetOf(pcbc_password_authenticator_t, std));
@@ -403,8 +374,6 @@ static inline pcbc_user_settings_t *pcbc_user_settings_fetch_object(zend_object 
 #define Z_CLUSTER_MANAGER_OBJ_P(zv) (pcbc_cluster_manager_fetch_object(Z_OBJ_P(zv)))
 #define Z_BUCKET_OBJ(zo) (pcbc_bucket_fetch_object(zo))
 #define Z_BUCKET_OBJ_P(zv) (pcbc_bucket_fetch_object(Z_OBJ_P(zv)))
-#define Z_CLASSIC_AUTHENTICATOR_OBJ(zo) (pcbc_classic_authenticator_fetch_object(zo))
-#define Z_CLASSIC_AUTHENTICATOR_OBJ_P(zv) (pcbc_classic_authenticator_fetch_object(Z_OBJ_P(zv)))
 #define Z_PASSWORD_AUTHENTICATOR_OBJ(zo) (pcbc_password_authenticator_fetch_object(zo))
 #define Z_PASSWORD_AUTHENTICATOR_OBJ_P(zv) (pcbc_password_authenticator_fetch_object(Z_OBJ_P(zv)))
 #define Z_USER_SETTINGS_OBJ(zo) (pcbc_user_settings_fetch_object(zo))

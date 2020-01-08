@@ -201,7 +201,6 @@ PHP_MINIT_FUNCTION(BucketManager);
 PHP_MINIT_FUNCTION(QueryIndexManager);
 PHP_MINIT_FUNCTION(Authenticator);
 PHP_MINIT_FUNCTION(CertAuthenticator);
-PHP_MINIT_FUNCTION(ClassicAuthenticator);
 PHP_MINIT_FUNCTION(PasswordAuthenticator);
 PHP_MINIT_FUNCTION(MutationState);
 PHP_MINIT_FUNCTION(AnalyticsQuery);
@@ -282,7 +281,6 @@ PHP_MINIT_FUNCTION(couchbase)
     PHP_MINIT(QueryIndexManager)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(Authenticator)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(CertAuthenticator)(INIT_FUNC_ARGS_PASSTHRU);
-    PHP_MINIT(ClassicAuthenticator)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(PasswordAuthenticator)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(MutationState)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(AnalyticsQuery)(INIT_FUNC_ARGS_PASSTHRU);

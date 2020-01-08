@@ -1,10 +1,7 @@
 <?php
-$authenticator = new \Couchbase\ClassicAuthenticator();
-$authenticator->cluster('Administrator', 'password');
-$authenticator->bucket('protected', 'secret');
-
-$cluster = new \Couchbase\Cluster("couchbase://localhost");
-$cluster->authenticate($authenticator);
+$options = new \Couchbase\ClusterOptions();
+$options->credentials('Administrator', 'password');
+$cluster = new \Couchbase\Cluster("couchbase://localhost", $options);
 
 $cluster->bucket('protected'); // successfully opens connection
 $cluster->manager()->createBucket('hello'); // automatically use admin credentials

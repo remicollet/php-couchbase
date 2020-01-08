@@ -72,7 +72,6 @@ COUCHBASE_FILES=" \
     src/couchbase/bucket/view.c \
     src/couchbase/bucket_manager.c \
     src/couchbase/cert_authenticator.c \
-    src/couchbase/classic_authenticator.c \
     src/couchbase/cluster.c \
     src/couchbase/cluster_manager.c \
     src/couchbase/cluster_manager/user_settings.c \

@@ -25,7 +25,6 @@ if (PHP_COUCHBASE != "no") {
         src_couchbase_sources  =
             "authenticator.c " +
             "cert_authenticator.c " +
-            "classic_authenticator.c " +
             "password_authenticator.c " +
             "cluster_options.c " +
             "bucket.c " +
