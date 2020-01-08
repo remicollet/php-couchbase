@@ -385,7 +385,6 @@ typedef struct {
     lcb_STATUS first_error;
     int json_response;
     int json_options;
-    int is_cbas; // FIXME: convert to bit-flags
     zval exc;
     lcbtrace_SPAN *span;
 } opcookie;

@@ -224,8 +224,7 @@ PHP_METHOD(Collection, increment)
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdcounter_initial(cmd, Z_LVAL_P(prop));
         }
-        /* FIXME
-        prop = zend_read_property(pcbc_decrement_options_ce, options, ZEND_STRL("cas"), 0, &ret);
+        prop = zend_read_property(pcbc_increment_options_ce, options, ZEND_STRL("cas"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_STRING) {
             zend_string *decoded = php_base64_decode_str(Z_STR_P(prop));
             if (decoded) {
@@ -235,7 +234,6 @@ PHP_METHOD(Collection, increment)
                 zend_string_free(decoded);
             }
         }
-         */
     }
 
     lcbtrace_SPAN *span = NULL;
@@ -408,7 +406,6 @@ PHP_METHOD(Collection, decrement)
         if (Z_TYPE_P(prop) == IS_LONG) {
             lcb_cmdcounter_initial(cmd, Z_LVAL_P(prop));
         }
-        /* FIXME
         prop = zend_read_property(pcbc_decrement_options_ce, options, ZEND_STRL("cas"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_STRING) {
             zend_string *decoded = php_base64_decode_str(Z_STR_P(prop));
@@ -419,7 +416,6 @@ PHP_METHOD(Collection, decrement)
                 zend_string_free(decoded);
             }
         }
-         */
     }
 
     lcbtrace_SPAN *span = NULL;

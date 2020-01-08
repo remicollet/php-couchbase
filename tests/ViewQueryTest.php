@@ -89,8 +89,6 @@ class ViewQueryTest extends CouchbaseTestCase {
         $this->assertEquals(["USA", "New York"], $res->rows()[2]->key());
         $this->assertEquals(2, $res->rows()[2]->value());
 
-/* FIXME: uncomment when lcb fix will be released: http://review.couchbase.org/c/116788/
-
         $options = new \Couchbase\ViewOptions();
         $options->scanConsistency(\Couchbase\ViewScanConsistency::REQUEST_PLUS);
         $options->group(true)->reduce(true)->keys(array_values([['USA', 'New York']]));
@@ -99,7 +97,6 @@ class ViewQueryTest extends CouchbaseTestCase {
         $this->assertEquals(["USA", "New York"], $res->rows()[0]->key());
         $this->assertEquals(2, $res->rows()[0]->value());
 
- */
         $this->manager->dropDesignDocument($ddocName);
     }
 }

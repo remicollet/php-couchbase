@@ -506,7 +506,6 @@ PHP_METHOD(Cluster, query)
             lcb_cmdn1ql_readonly(cmd, 0);
             break;
         }
-        /* FIXME
         prop = zend_read_property(pcbc_query_options_ce, options, ZEND_STRL("metrics"), 0, &ret);
         switch (Z_TYPE_P(prop)) {
         case IS_TRUE:
@@ -516,7 +515,6 @@ PHP_METHOD(Cluster, query)
             lcb_cmdn1ql_metrics(cmd, 0);
             break;
         }
-         */
         prop = zend_read_property(pcbc_query_options_ce, options, ZEND_STRL("adhoc"), 0, &ret);
         switch (Z_TYPE_P(prop)) {
         case IS_TRUE:
