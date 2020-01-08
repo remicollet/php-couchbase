@@ -38,6 +38,17 @@ PHP_METHOD(Scope, __construct)
     }
 }
 
+PHP_METHOD(Scope, name)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        RETURN_NULL();
+    }
+
+    zval *prop, rv;
+    prop = zend_read_property(pcbc_scope_ce, getThis(), ZEND_STRL("name"), 0, &rv);
+    ZVAL_COPY(return_value, prop);
+}
+
 PHP_METHOD(Scope, collection)
 {
     int rv;
@@ -63,6 +74,9 @@ ZEND_ARG_OBJ_INFO(0, bucket, \\Couchbase\\Bucket, 0)
 ZEND_ARG_TYPE_INFO(0, name, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_Scope_name, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Scope_collection, 0, 1, \\Couchbase\\Collection, 0)
 ZEND_ARG_TYPE_INFO(0, name, IS_STRING, 0)
 ZEND_END_ARG_INFO()
@@ -70,6 +84,7 @@ ZEND_END_ARG_INFO()
 // clang-format off
 zend_function_entry scope_methods[] = {
     PHP_ME(Scope, __construct, ai_Scope___construct, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    PHP_ME(Scope, name, ai_Scope_name, ZEND_ACC_PUBLIC)
     PHP_ME(Scope, collection, ai_Scope_collection, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
