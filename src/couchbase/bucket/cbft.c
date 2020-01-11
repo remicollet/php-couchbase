@@ -26,20 +26,20 @@ struct search_cookie {
     zval *return_value;
 };
 
-static void ftsrow_callback(lcb_INSTANCE *instance, int ignoreme, const lcb_RESPFTS *resp)
+static void ftsrow_callback(lcb_INSTANCE *instance, int ignoreme, const lcb_RESPSEARCH *resp)
 {
     TSRMLS_FETCH();
 
     struct search_cookie *cookie;
-    lcb_respfts_cookie(resp, (void **)&cookie);
-    cookie->rc = lcb_respfts_status(resp);
+    lcb_respsearch_cookie(resp, (void **)&cookie);
+    cookie->rc = lcb_respsearch_status(resp);
     zval *return_value = cookie->return_value;
 
     zend_update_property_long(pcbc_search_result_impl_ce, return_value, ZEND_STRL("status"), cookie->rc TSRMLS_CC);
 
     const char *row = NULL;
     size_t nrow = 0;
-    lcb_respfts_row(resp, &row, &nrow);
+    lcb_respsearch_row(resp, &row, &nrow);
 
     if (nrow > 0) {
         zval value;
@@ -50,7 +50,7 @@ static void ftsrow_callback(lcb_INSTANCE *instance, int ignoreme, const lcb_RESP
         if (last_error != 0) {
             pcbc_log(LOGARGS(instance, WARN), "Failed to decode FTS response as JSON: json_last_error=%d", last_error);
         }
-        if (lcb_respfts_is_final(resp)) {
+        if (lcb_respsearch_is_final(resp)) {
             zval meta, *mval, *mstatus;
             object_init_ex(&meta, pcbc_search_meta_data_impl_ce);
             HashTable *marr = Z_ARRVAL(value);
@@ -142,9 +142,9 @@ PHP_METHOD(Cluster, search)
 
     pcbc_cluster_t *cluster = Z_CLUSTER_OBJ_P(getThis());
 
-    lcb_CMDFTS *cmd;
-    lcb_cmdfts_create(&cmd);
-    lcb_cmdfts_callback(cmd, ftsrow_callback);
+    lcb_CMDSEARCH *cmd;
+    lcb_cmdsearch_create(&cmd);
+    lcb_cmdsearch_callback(cmd, ftsrow_callback);
 
     smart_str buf = {0};
     int last_error;
@@ -157,7 +157,7 @@ PHP_METHOD(Cluster, search)
         RETURN_NULL();
     }
     smart_str_0(&buf);
-    lcb_cmdfts_payload(cmd, ZSTR_VAL(buf.s), ZSTR_LEN(buf.s));
+    lcb_cmdsearch_payload(cmd, ZSTR_VAL(buf.s), ZSTR_LEN(buf.s));
 
     object_init_ex(return_value, pcbc_search_result_impl_ce);
     zval hits;
@@ -166,18 +166,18 @@ PHP_METHOD(Cluster, search)
     Z_DELREF(hits);
     struct search_cookie cookie = {LCB_SUCCESS, return_value};
 
-    lcb_FTS_HANDLE *handle = NULL;
-    lcb_cmdfts_handle(cmd, &handle);
+    lcb_SEARCH_HANDLE *handle = NULL;
+    lcb_cmdsearch_handle(cmd, &handle);
     lcbtrace_SPAN *span = NULL;
     lcbtrace_TRACER *tracer = lcb_get_tracer(cluster->conn->lcb);
     if (tracer) {
         span = lcbtrace_span_start(tracer, "php/search", 0, NULL);
         lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
         lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_SEARCH);
-        lcb_cmdfts_parent_span(cmd, span);
+        lcb_cmdsearch_parent_span(cmd, span);
     }
-    err = lcb_fts(cluster->conn->lcb, &cookie, cmd);
-    lcb_cmdfts_destroy(cmd);
+    err = lcb_search(cluster->conn->lcb, &cookie, cmd);
+    lcb_cmdsearch_destroy(cmd);
     smart_str_free(&buf);
     if (err == LCB_SUCCESS) {
         lcb_wait(cluster->conn->lcb);

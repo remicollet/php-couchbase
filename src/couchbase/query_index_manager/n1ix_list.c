@@ -34,9 +34,9 @@ static void n1ix_list_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RES
 
     result->header.err = resp->rc;
     if (result->header.err != LCB_SUCCESS) {
-        const lcb_RESPN1QL *n1ql = resp->inner;
+        const lcb_RESPQUERY *n1ql = resp->inner;
         const lcb_RESPHTTP *http;
-        lcb_respn1ql_http_response(n1ql, &http);
+        lcb_respquery_http_response(n1ql, &http);
         const char *body;
         size_t nbody;
         lcb_resphttp_body(http, &body, &nbody);

@@ -78,7 +78,7 @@ PHP_METHOD(Bucket, __set)
     } else if (strncmp(name, "viewTimeout", name_len) == 0) {
         cmd = LCB_CNTL_VIEW_TIMEOUT;
     } else if (strncmp(name, "n1qlTimeout", name_len) == 0) {
-        cmd = LCB_CNTL_N1QL_TIMEOUT;
+        cmd = LCB_CNTL_QUERY_TIMEOUT;
     } else if (strncmp(name, "durabilityInterval", name_len) == 0) {
         cmd = LCB_CNTL_DURABILITY_INTERVAL;
     } else if (strncmp(name, "durabilityTimeout", name_len) == 0) {

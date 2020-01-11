@@ -18,13 +18,13 @@
 
 #define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/n1ql", __FILE__, __LINE__
 
-#define PCBC_N1QL_CONSISTENCY_NOT_BOUNDED 1
-#define PCBC_N1QL_CONSISTENCY_REQUEST_PLUS 2
-#define PCBC_N1QL_CONSISTENCY_STATEMENT_PLUS 3
+#define PCBC_QUERY_CONSISTENCY_NOT_BOUNDED 1
+#define PCBC_QUERY_CONSISTENCY_REQUEST_PLUS 2
+#define PCBC_QUERY_CONSISTENCY_STATEMENT_PLUS 3
 
-#define PCBC_N1QL_PROFILE_OFF 1
-#define PCBC_N1QL_PROFILE_PHASES 2
-#define PCBC_N1QL_PROFILE_TIMINGS 3
+#define PCBC_QUERY_PROFILE_OFF 1
+#define PCBC_QUERY_PROFILE_PHASES 2
+#define PCBC_QUERY_PROFILE_TIMINGS 3
 
 extern zend_class_entry *pcbc_query_result_impl_ce;
 extern zend_class_entry *pcbc_query_meta_data_impl_ce;
@@ -35,20 +35,20 @@ struct query_cookie {
     zval *return_value;
 };
 
-static void n1qlrow_callback(lcb_INSTANCE *instance, int ignoreme, const lcb_RESPN1QL *resp)
+static void n1qlrow_callback(lcb_INSTANCE *instance, int ignoreme, const lcb_RESPQUERY *resp)
 {
     TSRMLS_FETCH();
 
     struct query_cookie *cookie;
-    lcb_respn1ql_cookie(resp, (void **)&cookie);
-    cookie->rc = lcb_respn1ql_status(resp);
+    lcb_respquery_cookie(resp, (void **)&cookie);
+    cookie->rc = lcb_respquery_status(resp);
     zval *return_value = cookie->return_value;
 
     zend_update_property_long(pcbc_query_result_impl_ce, return_value, ZEND_STRL("status"), cookie->rc TSRMLS_CC);
 
     const char *row = NULL;
     size_t nrow = 0;
-    lcb_respn1ql_row(resp, &row, &nrow);
+    lcb_respquery_row(resp, &row, &nrow);
 
     if (nrow > 0) {
         zval value;
@@ -59,7 +59,7 @@ static void n1qlrow_callback(lcb_INSTANCE *instance, int ignoreme, const lcb_RES
         if (last_error != 0) {
             pcbc_log(LOGARGS(instance, WARN), "Failed to decode N1QL response as JSON: json_last_error=%d", last_error);
         }
-        if (lcb_respn1ql_is_final(resp)) {
+        if (lcb_respquery_is_final(resp)) {
             zval meta, *mval;
             object_init_ex(&meta, pcbc_query_meta_data_impl_ce);
             HashTable *marr = Z_ARRVAL(value);
@@ -226,13 +226,13 @@ PHP_METHOD(QueryOptions, profile)
         RETURN_NULL();
     }
     switch (arg) {
-    case PCBC_N1QL_PROFILE_OFF:
+    case PCBC_QUERY_PROFILE_OFF:
         zend_update_property_string(pcbc_query_options_ce, getThis(), ZEND_STRL("profile"), "\"off\"" TSRMLS_CC);
         break;
-    case PCBC_N1QL_PROFILE_PHASES:
+    case PCBC_QUERY_PROFILE_PHASES:
         zend_update_property_string(pcbc_query_options_ce, getThis(), ZEND_STRL("profile"), "\"phases\"" TSRMLS_CC);
         break;
-    case PCBC_N1QL_PROFILE_TIMINGS:
+    case PCBC_QUERY_PROFILE_TIMINGS:
         zend_update_property_string(pcbc_query_options_ce, getThis(), ZEND_STRL("profile"), "\"timings\"" TSRMLS_CC);
         break;
     }
@@ -463,78 +463,78 @@ PHP_METHOD(Cluster, query)
 
     pcbc_cluster_t *cluster = Z_CLUSTER_OBJ_P(getThis());
 
-    lcb_CMDN1QL *cmd;
-    lcb_cmdn1ql_create(&cmd);
-    lcb_cmdn1ql_callback(cmd, n1qlrow_callback);
-    lcb_cmdn1ql_statement(cmd, ZSTR_VAL(statement), ZSTR_LEN(statement));
+    lcb_CMDQUERY *cmd;
+    lcb_cmdquery_create(&cmd);
+    lcb_cmdquery_callback(cmd, n1qlrow_callback);
+    lcb_cmdquery_statement(cmd, ZSTR_VAL(statement), ZSTR_LEN(statement));
     if (options) {
         zval *prop, ret;
         prop = zend_read_property(pcbc_query_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
-            lcb_cmdn1ql_timeout(cmd, Z_LVAL_P(prop));
+            lcb_cmdquery_timeout(cmd, Z_LVAL_P(prop));
         }
         prop = zend_read_property(pcbc_query_options_ce, options, ZEND_STRL("scan_consistency"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             zend_long val = Z_LVAL_P(prop);
             switch (val) {
-            case PCBC_N1QL_CONSISTENCY_NOT_BOUNDED:
-                lcb_cmdn1ql_consistency(cmd, LCB_N1QL_CONSISTENCY_NONE);
+            case PCBC_QUERY_CONSISTENCY_NOT_BOUNDED:
+                lcb_cmdquery_consistency(cmd, LCB_QUERY_CONSISTENCY_NONE);
                 break;
-            case PCBC_N1QL_CONSISTENCY_REQUEST_PLUS:
-                lcb_cmdn1ql_consistency(cmd, LCB_N1QL_CONSISTENCY_REQUEST);
+            case PCBC_QUERY_CONSISTENCY_REQUEST_PLUS:
+                lcb_cmdquery_consistency(cmd, LCB_QUERY_CONSISTENCY_REQUEST);
                 break;
-            case PCBC_N1QL_CONSISTENCY_STATEMENT_PLUS:
-                lcb_cmdn1ql_consistency(cmd, LCB_N1QL_CONSISTENCY_STATEMENT);
+            case PCBC_QUERY_CONSISTENCY_STATEMENT_PLUS:
+                lcb_cmdquery_consistency(cmd, LCB_QUERY_CONSISTENCY_STATEMENT);
                 break;
             }
         }
         prop = zend_read_property(pcbc_query_options_ce, options, ZEND_STRL("consistent_with"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_STRING) {
-            lcb_cmdn1ql_option(cmd, ZEND_STRL("scan_consistency"), ZEND_STRL("\"at_plus\""));
-            lcb_cmdn1ql_option(cmd, ZEND_STRL("scan_vectors"), Z_STRVAL_P(prop), Z_STRLEN_P(prop));
+            lcb_cmdquery_option(cmd, ZEND_STRL("scan_consistency"), ZEND_STRL("\"at_plus\""));
+            lcb_cmdquery_option(cmd, ZEND_STRL("scan_vectors"), Z_STRVAL_P(prop), Z_STRLEN_P(prop));
         }
         prop = zend_read_property(pcbc_query_options_ce, options, ZEND_STRL("client_context_id"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_STRING) {
-            lcb_cmdn1ql_client_context_id(cmd, Z_STRVAL_P(prop), Z_STRLEN_P(prop));
+            lcb_cmdquery_client_context_id(cmd, Z_STRVAL_P(prop), Z_STRLEN_P(prop));
         }
         prop = zend_read_property(pcbc_query_options_ce, options, ZEND_STRL("readonly"), 0, &ret);
         switch (Z_TYPE_P(prop)) {
         case IS_TRUE:
-            lcb_cmdn1ql_readonly(cmd, 1);
+            lcb_cmdquery_readonly(cmd, 1);
             break;
         case IS_FALSE:
-            lcb_cmdn1ql_readonly(cmd, 0);
+            lcb_cmdquery_readonly(cmd, 0);
             break;
         }
         prop = zend_read_property(pcbc_query_options_ce, options, ZEND_STRL("metrics"), 0, &ret);
         switch (Z_TYPE_P(prop)) {
         case IS_TRUE:
-            lcb_cmdn1ql_metrics(cmd, 1);
+            lcb_cmdquery_metrics(cmd, 1);
             break;
         case IS_FALSE:
-            lcb_cmdn1ql_metrics(cmd, 0);
+            lcb_cmdquery_metrics(cmd, 0);
             break;
         }
         prop = zend_read_property(pcbc_query_options_ce, options, ZEND_STRL("adhoc"), 0, &ret);
         switch (Z_TYPE_P(prop)) {
         case IS_TRUE:
-            lcb_cmdn1ql_adhoc(cmd, 1);
+            lcb_cmdquery_adhoc(cmd, 1);
             break;
         case IS_FALSE:
-            lcb_cmdn1ql_adhoc(cmd, 0);
+            lcb_cmdquery_adhoc(cmd, 0);
             break;
         }
         prop = zend_read_property(pcbc_query_options_ce, options, ZEND_STRL("scan_cap"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
-            lcb_cmdn1ql_scan_cap(cmd, Z_LVAL_P(prop));
+            lcb_cmdquery_scan_cap(cmd, Z_LVAL_P(prop));
         }
         prop = zend_read_property(pcbc_query_options_ce, options, ZEND_STRL("pipeline_cap"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
-            lcb_cmdn1ql_pipeline_cap(cmd, Z_LVAL_P(prop));
+            lcb_cmdquery_pipeline_cap(cmd, Z_LVAL_P(prop));
         }
         prop = zend_read_property(pcbc_query_options_ce, options, ZEND_STRL("pipeline_batch"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
-            lcb_cmdn1ql_pipeline_batch(cmd, Z_LVAL_P(prop));
+            lcb_cmdquery_pipeline_batch(cmd, Z_LVAL_P(prop));
         }
         prop = zend_read_property(pcbc_query_options_ce, options, ZEND_STRL("named_params"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_ARRAY) {
@@ -544,8 +544,8 @@ PHP_METHOD(Cluster, query)
             ZEND_HASH_FOREACH_STR_KEY_VAL(ht, string_key, entry)
             {
                 if (string_key && Z_TYPE_P(entry) == IS_STRING) {
-                    lcb_cmdn1ql_named_param(cmd, ZSTR_VAL(string_key), ZSTR_LEN(string_key), Z_STRVAL_P(entry),
-                                            Z_STRLEN_P(entry));
+                    lcb_cmdquery_named_param(cmd, ZSTR_VAL(string_key), ZSTR_LEN(string_key), Z_STRVAL_P(entry),
+                                             Z_STRLEN_P(entry));
                 }
             }
             ZEND_HASH_FOREACH_END();
@@ -557,7 +557,7 @@ PHP_METHOD(Cluster, query)
             ZEND_HASH_FOREACH_VAL(ht, entry)
             {
                 if (Z_TYPE_P(entry) == IS_STRING) {
-                    lcb_cmdn1ql_positional_param(cmd, Z_STRVAL_P(entry), Z_STRLEN_P(entry));
+                    lcb_cmdquery_positional_param(cmd, Z_STRVAL_P(entry), Z_STRLEN_P(entry));
                 }
             }
             ZEND_HASH_FOREACH_END();
@@ -570,16 +570,16 @@ PHP_METHOD(Cluster, query)
             ZEND_HASH_FOREACH_STR_KEY_VAL(ht, string_key, entry)
             {
                 if (string_key && Z_TYPE_P(entry) == IS_STRING) {
-                    lcb_cmdn1ql_option(cmd, ZSTR_VAL(string_key), ZSTR_LEN(string_key), Z_STRVAL_P(entry),
-                                       Z_STRLEN_P(entry));
+                    lcb_cmdquery_option(cmd, ZSTR_VAL(string_key), ZSTR_LEN(string_key), Z_STRVAL_P(entry),
+                                        Z_STRLEN_P(entry));
                 }
             }
             ZEND_HASH_FOREACH_END();
         }
     }
 
-    lcb_N1QL_HANDLE *handle = NULL;
-    lcb_cmdn1ql_handle(cmd, &handle);
+    lcb_QUERY_HANDLE *handle = NULL;
+    lcb_cmdquery_handle(cmd, &handle);
 
     lcbtrace_SPAN *span = NULL;
     lcbtrace_TRACER *tracer = lcb_get_tracer(cluster->conn->lcb);
@@ -587,7 +587,7 @@ PHP_METHOD(Cluster, query)
         span = lcbtrace_span_start(tracer, "php/n1ql", 0, NULL);
         lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
         lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_N1QL);
-        lcb_cmdn1ql_parent_span(cmd, span);
+        lcb_cmdquery_parent_span(cmd, span);
     }
     rv = object_init_ex(return_value, pcbc_query_result_impl_ce);
     if (rv != SUCCESS) {
@@ -598,8 +598,8 @@ PHP_METHOD(Cluster, query)
     zend_update_property(pcbc_query_result_impl_ce, return_value, ZEND_STRL("rows"), &rows TSRMLS_CC);
     Z_DELREF(rows);
     struct query_cookie cookie = {LCB_SUCCESS, return_value};
-    err = lcb_n1ql(cluster->conn->lcb, &cookie, cmd);
-    lcb_cmdn1ql_destroy(cmd);
+    err = lcb_query(cluster->conn->lcb, &cookie, cmd);
+    lcb_cmdquery_destroy(cmd);
     if (err == LCB_SUCCESS) {
         lcb_wait(cluster->conn->lcb);
         err = cookie.rc;
@@ -659,17 +659,17 @@ PHP_MINIT_FUNCTION(N1qlQuery)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "QueryScanConsistency", pcbc_query_consistency_methods);
     pcbc_query_consistency_ce = zend_register_internal_interface(&ce TSRMLS_CC);
     zend_declare_class_constant_long(pcbc_query_consistency_ce, ZEND_STRL("NOT_BOUNDED"),
-                                     PCBC_N1QL_CONSISTENCY_NOT_BOUNDED TSRMLS_CC);
+                                     PCBC_QUERY_CONSISTENCY_NOT_BOUNDED TSRMLS_CC);
     zend_declare_class_constant_long(pcbc_query_consistency_ce, ZEND_STRL("REQUEST_PLUS"),
-                                     PCBC_N1QL_CONSISTENCY_REQUEST_PLUS TSRMLS_CC);
+                                     PCBC_QUERY_CONSISTENCY_REQUEST_PLUS TSRMLS_CC);
     zend_declare_class_constant_long(pcbc_query_consistency_ce, ZEND_STRL("STATEMENT_PLUS"),
-                                     PCBC_N1QL_CONSISTENCY_STATEMENT_PLUS TSRMLS_CC);
+                                     PCBC_QUERY_CONSISTENCY_STATEMENT_PLUS TSRMLS_CC);
 
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "QueryProfile", pcbc_query_profile_methods);
     pcbc_query_profile_ce = zend_register_internal_interface(&ce TSRMLS_CC);
-    zend_declare_class_constant_long(pcbc_query_profile_ce, ZEND_STRL("OFF"), PCBC_N1QL_PROFILE_OFF TSRMLS_CC);
-    zend_declare_class_constant_long(pcbc_query_profile_ce, ZEND_STRL("PHASES"), PCBC_N1QL_PROFILE_PHASES TSRMLS_CC);
-    zend_declare_class_constant_long(pcbc_query_profile_ce, ZEND_STRL("TIMINGS"), PCBC_N1QL_PROFILE_TIMINGS TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_query_profile_ce, ZEND_STRL("OFF"), PCBC_QUERY_PROFILE_OFF TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_query_profile_ce, ZEND_STRL("PHASES"), PCBC_QUERY_PROFILE_PHASES TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_query_profile_ce, ZEND_STRL("TIMINGS"), PCBC_QUERY_PROFILE_TIMINGS TSRMLS_CC);
 
     return SUCCESS;
 }

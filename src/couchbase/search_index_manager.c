@@ -50,7 +50,7 @@ PHP_METHOD(SearchIndexManager, listIndexes)
     }
 
     lcb_CMDHTTP *cmd;
-    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_FTS);
+    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_SEARCH);
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     lcb_cmdhttp_path(cmd, path, strlen(path));
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
@@ -73,7 +73,7 @@ PHP_METHOD(SearchIndexManager, getIndex)
     obj = Z_SEARCH_INDEX_MANAGER_OBJ_P(getThis());
 
     lcb_CMDHTTP *cmd;
-    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_FTS);
+    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_SEARCH);
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
@@ -97,7 +97,7 @@ PHP_METHOD(SearchIndexManager, deleteIndex)
     obj = Z_SEARCH_INDEX_MANAGER_OBJ_P(getThis());
 
     lcb_CMDHTTP *cmd;
-    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_FTS);
+    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_SEARCH);
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_DELETE);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
@@ -122,7 +122,7 @@ PHP_METHOD(SearchIndexManager, createIndex)
     path_len = spprintf(&path, 0, "/api/index/%.*s", (int)name_len, name);
 
     lcb_CMDHTTP *cmd;
-    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_FTS);
+    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_SEARCH);
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_PUT);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_body(cmd, def, def_len);
@@ -147,7 +147,7 @@ PHP_METHOD(SearchIndexManager, getIndexedDocumentsCount)
     obj = Z_SEARCH_INDEX_MANAGER_OBJ_P(getThis());
 
     lcb_CMDHTTP *cmd;
-    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_FTS);
+    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_SEARCH);
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
