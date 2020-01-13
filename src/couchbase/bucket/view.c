@@ -173,25 +173,18 @@ PHP_METHOD(ViewOptions, timeout)
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
-PHP_METHOD(ViewOptions, includeDocs)
+PHP_METHOD(ViewOptions, includeDocuments)
 {
     zend_bool arg;
-    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "b", &arg);
+    zend_long mcd = 0;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "b|l", &arg, &mcd);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
     zend_update_property_bool(pcbc_view_options_ce, getThis(), ZEND_STRL("include_docs"), arg TSRMLS_CC);
-    RETURN_ZVAL(getThis(), 1, 0);
-}
-
-PHP_METHOD(ViewOptions, maxConcurrentDocs)
-{
-    zend_long arg;
-    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &arg);
-    if (rv == FAILURE) {
-        RETURN_NULL();
+    if (mcd) {
+        zend_update_property_long(pcbc_view_options_ce, getThis(), ZEND_STRL("max_concurrent_docs"), mcd TSRMLS_CC);
     }
-    zend_update_property_long(pcbc_view_options_ce, getThis(), ZEND_STRL("max_concurrent_docs"), arg TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
@@ -488,12 +481,9 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_timeout, 0, 1, \\Couchbase
 ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_includeDocs, 0, 1, \\Couchbase\\ViewOptions, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_includeDocuments, 0, 1, \\Couchbase\\ViewOptions, 0)
 ZEND_ARG_TYPE_INFO(0, arg, _IS_BOOL, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_maxConcurrentDocs, 0, 1, \\Couchbase\\ViewOptions, 0)
-ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_ARG_TYPE_INFO(0, maxConcurrentDocuments, IS_LONG, 1)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ViewOptions_key, 0, 1, \\Couchbase\\ViewOptions, 0)
@@ -552,8 +542,7 @@ ZEND_END_ARG_INFO()
 // clang-format off
 static const zend_function_entry pcbc_view_options_methods[] = {
     PHP_ME(ViewOptions, timeout, ai_ViewOptions_timeout, ZEND_ACC_PUBLIC)
-    PHP_ME(ViewOptions, includeDocs, ai_ViewOptions_includeDocs, ZEND_ACC_PUBLIC)
-    PHP_ME(ViewOptions, maxConcurrentDocs, ai_ViewOptions_maxConcurrentDocs, ZEND_ACC_PUBLIC)
+    PHP_ME(ViewOptions, includeDocuments, ai_ViewOptions_includeDocuments, ZEND_ACC_PUBLIC)
     PHP_ME(ViewOptions, key, ai_ViewOptions_key, ZEND_ACC_PUBLIC)
     PHP_ME(ViewOptions, keys, ai_ViewOptions_keys, ZEND_ACC_PUBLIC)
     PHP_ME(ViewOptions, limit, ai_ViewOptions_limit, ZEND_ACC_PUBLIC)

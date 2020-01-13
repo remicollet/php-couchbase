@@ -25,7 +25,7 @@ extern zend_class_entry *pcbc_cluster_options_ce;
 
 PHP_METHOD(Cluster, query);
 PHP_METHOD(Cluster, analyticsQuery);
-PHP_METHOD(Cluster, search);
+PHP_METHOD(Cluster, searchQuery);
 
 static void pcbc_bucket_init(zval *return_value, pcbc_cluster_t *cluster, const char *bucketname TSRMLS_DC)
 {
@@ -176,7 +176,7 @@ ZEND_ARG_TYPE_INFO(0, statement, IS_STRING, 0)
 ZEND_ARG_OBJ_INFO(0, queryOptions, \\Couchbase\\AnalyticsOptions, 1)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Cluster_search, 0, 2, \\Couchbase\\SearchResult, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Cluster_searchQuery, 0, 2, \\Couchbase\\SearchResult, 0)
 ZEND_ARG_TYPE_INFO(0, indexName, IS_STRING, 0)
 ZEND_ARG_OBJ_INFO(0, query, \\Couchbase\\SearchQuery, 0)
 ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\SearchOptions, 0)
@@ -190,7 +190,7 @@ zend_function_entry cluster_methods[] = {
     PHP_ME(Cluster, queryIndexes, ai_Cluster_queryIndexes, ZEND_ACC_PUBLIC)
     PHP_ME(Cluster, query, ai_Cluster_query, ZEND_ACC_PUBLIC)
     PHP_ME(Cluster, analyticsQuery, ai_Cluster_analyticsQuery, ZEND_ACC_PUBLIC)
-    PHP_ME(Cluster, search, ai_Cluster_search, ZEND_ACC_PUBLIC)
+    PHP_ME(Cluster, searchQuery, ai_Cluster_searchQuery, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on

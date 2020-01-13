@@ -145,7 +145,6 @@ namespace Couchbase {
 
     interface GetReplicaResult extends Result
     {
-
         public function content(): ?array;
 
         public function isReplica(): bool;
@@ -200,7 +199,7 @@ namespace Couchbase {
 
         public function facets(): ?array;
 
-        public function hits(): ?array;
+        public function rows(): ?array;
     }
 
     interface ViewResult
@@ -216,15 +215,15 @@ namespace Couchbase {
         {
         }
 
-        public function key(): ?array
+        public function key()
         {
         }
 
-        public function value(): ?array
+        public function value()
         {
         }
 
-        public function document(): ?array
+        public function document()
         {
         }
     }
@@ -375,7 +374,7 @@ namespace Couchbase {
         {
         }
 
-        public function bucket(string $connstr): Bucket
+        public function bucket(string $name): Bucket
         {
         }
 
@@ -387,7 +386,7 @@ namespace Couchbase {
         {
         }
 
-        public function searchQuery(string $indexName, SearchQuery $query, SearchQueryOptions $options = null)
+        public function searchQuery(string $indexName, SearchQuery $query, SearchOptions $options = null)
         {
         }
 
@@ -419,21 +418,13 @@ namespace Couchbase {
         }
     }
 
-
-    class MutationState
-    {
-        public function __construct()
-        {
-        }
-
-        public function add(MutationResult $source): MutationState
-        {
-        }
-    }
-
     class Collection
     {
         public function __construct(Bucket $bucket, string $scope, string $name)
+        {
+        }
+
+        public function name(): string
         {
         }
 
@@ -489,15 +480,15 @@ namespace Couchbase {
         {
         }
 
-        public function touch(string $id, int $expiry, TouchOptions $options = null): Result
+        public function touch(string $id, int $expiry, TouchOptions $options = null): MutationResult
         {
         }
 
-        public function increment(string $id, CounterOptions $options = null): CounterResult
+        public function increment(string $id, IncrementOptions $options = null): CounterResult
         {
         }
 
-        public function decrement(string $id, CounterOptions $options = null): CounterResult
+        public function decrement(string $id, DecrementOptions $options = null): CounterResult
         {
         }
 
@@ -516,6 +507,10 @@ namespace Couchbase {
         {
         }
 
+        public function name(): string
+        {
+        }
+
         public function collection(string $name): Collection
         {
         }
@@ -524,6 +519,10 @@ namespace Couchbase {
     class Bucket
     {
         final private function __construct()
+        {
+        }
+
+        public function defaultScope(): Collection
         {
         }
 
@@ -556,6 +555,17 @@ namespace Couchbase {
         }
 
         public function diagnostics($reportId)
+        {
+        }
+    }
+
+    class MutationState
+    {
+        public function __construct()
+        {
+        }
+
+        public function add(MutationResult $source): MutationState
         {
         }
     }
@@ -1861,7 +1871,7 @@ namespace Couchbase {
     {
         public const NONE = 0;
         public const MAJORITY = 1;
-        public const MAJORITY_AND_PERSIST_ON_MASTER = 2;
+        public const MAJORITY_AND_PERSIST_TO_ACTIVE = 2;
         public const PERSIST_TO_MAJORITY = 3;
     }
 
@@ -1872,25 +1882,48 @@ namespace Couchbase {
         }
     }
 
-    class CounterOptions
+    class IncrementOptions
     {
-        public function timeout(int $arg): CounterOptions
+        public function timeout(int $arg): IncrementOptions
         {
         }
 
-        public function expiry(int $arg): CounterOptions
+        public function expiry(int $arg): IncrementOptions
         {
         }
 
-        public function durabilitLevel(int $arg): CounterOptions
+        public function durabilitLevel(int $arg): IncrementOptions
         {
         }
 
-        public function delta(int $arg): CounterOptions
+        public function delta(int $arg): IncrementOptions
         {
         }
 
-        public function initial(int $arg): CounterOptions
+        public function initial(int $arg): IncrementOptions
+        {
+        }
+    }
+
+    class DecrementOptions
+    {
+        public function timeout(int $arg): DecrementOptions
+        {
+        }
+
+        public function expiry(int $arg): DecrementOptions
+        {
+        }
+
+        public function durabilitLevel(int $arg): DecrementOptions
+        {
+        }
+
+        public function delta(int $arg): DecrementOptions
+        {
+        }
+
+        public function initial(int $arg): DecrementOptions
         {
         }
     }
@@ -1938,6 +1971,17 @@ namespace Couchbase {
         public function durabilityLevel(int $arg): MutateInOptions
         {
         }
+
+        public function storeSemantics(int $arg): MutateInOptions
+        {
+        }
+    }
+
+    interface StoreSemantics
+    {
+        public const REPLACE = 0;
+        public const UPSERT = 1;
+        public const INSERT = 2;
     }
 
     class ViewOptions
@@ -1946,11 +1990,7 @@ namespace Couchbase {
         {
         }
 
-        public function includeDocs(bool $arg): ViewOptions
-        {
-        }
-
-        public function maxConcurrentDocs(int $arg): ViewOptions
+        public function includeDocuments(bool $arg, int $maxConcurrentDocuments = 10): ViewOptions
         {
         }
 
@@ -1970,7 +2010,7 @@ namespace Couchbase {
         {
         }
 
-        public function consistency(int $arg): ViewOptions
+        public function scanConsistency(int $arg): ViewOptions
         {
         }
 
@@ -2005,8 +2045,8 @@ namespace Couchbase {
 
     interface ViewConsistency
     {
-        public const NONE = 0;
-        public const UPDATE_BEFORE = 1;
+        public const NOT_BOUNDED = 0;
+        public const REQUEST_PLUS = 1;
         public const UPDATE_AFTER = 2;
     }
 
@@ -2022,7 +2062,11 @@ namespace Couchbase {
         {
         }
 
-        public function consistency(int $arg): QueryOptions
+        public function consistentWith(MutationState $arg): QueryOptions
+        {
+        }
+
+        public function scanConsistency(int $arg): QueryOptions
         {
         }
 
@@ -2065,6 +2109,14 @@ namespace Couchbase {
         public function raw(string $key, $value): QueryOptions
         {
         }
+
+        public function clientContextId(string $arg): QueryOptions
+        {
+        }
+
+        public function metrics(bool $arg): QueryOptions
+        {
+        }
     }
 
     interface QueryScanConsistency
@@ -2076,7 +2128,7 @@ namespace Couchbase {
 
     interface QueryProfile
     {
-        public const NONE = 1;
+        public const OFF = 1;
         public const PHASES = 2;
         public const TIMINGS = 3;
     }
@@ -2138,6 +2190,12 @@ namespace Couchbase {
          * @param string $name index name
          */
         public function deleteIndex($name)
+        {
+        }
+    }
+
+    class ClusterOptions {
+        public function credentials(string $username, string $password): ClusterOptions
         {
         }
     }

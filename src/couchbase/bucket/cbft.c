@@ -111,7 +111,7 @@ static void ftsrow_callback(lcb_INSTANCE *instance, int ignoreme, const lcb_RESP
     }
 }
 
-PHP_METHOD(Cluster, search)
+PHP_METHOD(Cluster, searchQuery)
 {
     lcb_STATUS err;
     zend_string *index;

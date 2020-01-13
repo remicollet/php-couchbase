@@ -872,8 +872,8 @@ PHP_MINIT_FUNCTION(CollectionStore)
     zend_declare_class_constant_long(pcbc_durability_level_ce, ZEND_STRL("NONE"), LCB_DURABILITYLEVEL_NONE TSRMLS_CC);
     zend_declare_class_constant_long(pcbc_durability_level_ce, ZEND_STRL("MAJORITY"),
                                      LCB_DURABILITYLEVEL_MAJORITY TSRMLS_CC);
-    zend_declare_class_constant_long(pcbc_durability_level_ce, ZEND_STRL("MAJORITY_AND_PERSIST_ON_MASTER"),
-                                     LCB_DURABILITYLEVEL_MAJORITY_AND_PERSIST_ON_MASTER TSRMLS_CC);
+    zend_declare_class_constant_long(pcbc_durability_level_ce, ZEND_STRL("MAJORITY_AND_PERSIST_TO_ACTIVE"),
+                                     LCB_DURABILITYLEVEL_MAJORITY_AND_PERSIST_TO_ACTIVE TSRMLS_CC);
     zend_declare_class_constant_long(pcbc_durability_level_ce, ZEND_STRL("PERSIST_TO_MAJORITY"),
                                      LCB_DURABILITYLEVEL_PERSIST_TO_MAJORITY TSRMLS_CC);
 
