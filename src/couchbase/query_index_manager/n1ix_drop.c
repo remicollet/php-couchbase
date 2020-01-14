@@ -53,7 +53,7 @@ void pcbc_n1ix_drop(pcbc_bucket_manager_t *manager, lcb_CMDN1XMGMT *cmd, zend_bo
     cookie = opcookie_init();
     err = lcb_n1x_drop(manager->conn->lcb, cookie, cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(manager->conn->lcb);
+        lcb_wait(manager->conn->lcb, LCB_WAIT_DEFAULT);
         err = opcookie_get_first_error(cookie);
         if (err == LCB_ERR_INDEX_NOT_FOUND && ignore_if_not_exist) {
             err = LCB_SUCCESS;

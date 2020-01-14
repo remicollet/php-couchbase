@@ -117,7 +117,7 @@ PHP_METHOD(Collection, touch)
     struct touch_cookie cookie = {LCB_SUCCESS, return_value};
     err = lcb_touch(bucket->conn->lcb, &cookie, cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
         err = cookie.rc;
     }
 

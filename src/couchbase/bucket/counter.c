@@ -250,7 +250,7 @@ PHP_METHOD(BinaryCollection, increment)
     err = lcb_counter(bucket->conn->lcb, &cookie, cmd);
     lcb_cmdcounter_destroy(cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
         err = cookie.rc;
     }
 
@@ -432,7 +432,7 @@ PHP_METHOD(BinaryCollection, decrement)
     err = lcb_counter(bucket->conn->lcb, &cookie, cmd);
     lcb_cmdcounter_destroy(cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
         err = cookie.rc;
     }
 

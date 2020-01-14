@@ -149,7 +149,7 @@ PHP_METHOD(Collection, get)
     lcb_cmdget_destroy(cmd);
 
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
         err = cookie.rc;
     }
     if (span) {
@@ -223,7 +223,7 @@ PHP_METHOD(Collection, getAndLock)
     err = lcb_get(bucket->conn->lcb, &cookie, cmd);
     lcb_cmdget_destroy(cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
         err = cookie.rc;
     }
     if (span) {
@@ -299,7 +299,7 @@ PHP_METHOD(Collection, getAndTouch)
     err = lcb_get(bucket->conn->lcb, &cookie, cmd);
     lcb_cmdget_destroy(cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
         err = cookie.rc;
     }
     if (span) {

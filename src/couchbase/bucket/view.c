@@ -656,7 +656,7 @@ PHP_METHOD(Bucket, viewQuery)
     smart_str_free(&body_str);
     lcb_cmdview_destroy(cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(obj->conn->lcb);
+        lcb_wait(obj->conn->lcb, LCB_WAIT_DEFAULT);
         err = cookie.rc;
     }
     if (span) {

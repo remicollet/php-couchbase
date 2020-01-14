@@ -220,7 +220,7 @@ PHP_METHOD(Collection, insert)
     efree(bytes);
     lcb_cmdstore_destroy(cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
         err = cookie.rc;
     }
     if (parent_span) {
@@ -393,7 +393,7 @@ PHP_METHOD(Collection, upsert)
     efree(bytes);
     lcb_cmdstore_destroy(cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
         err = cookie.rc;
     }
     if (parent_span) {
@@ -566,7 +566,7 @@ PHP_METHOD(Collection, replace)
     efree(bytes);
     lcb_cmdstore_destroy(cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
         err = cookie.rc;
     }
     if (parent_span) {
@@ -693,7 +693,7 @@ PHP_METHOD(BinaryCollection, append)
     err = lcb_store(bucket->conn->lcb, &cookie, cmd);
     lcb_cmdstore_destroy(cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
         err = cookie.rc;
     }
     if (span) {
@@ -820,7 +820,7 @@ PHP_METHOD(BinaryCollection, prepend)
     err = lcb_store(bucket->conn->lcb, &cookie, cmd);
     lcb_cmdstore_destroy(cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
         err = cookie.rc;
     }
     if (span) {

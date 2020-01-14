@@ -52,7 +52,7 @@ void pcbc_n1ix_create(pcbc_bucket_manager_t *manager, lcb_CMDN1XMGMT *cmd, zend_
     cookie = opcookie_init();
     err = lcb_n1x_create(manager->conn->lcb, cookie, cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(manager->conn->lcb);
+        lcb_wait(manager->conn->lcb, LCB_WAIT_DEFAULT);
         err = opcookie_get_first_error(cookie);
         if (err == LCB_ERR_INDEX_EXISTS && ignore_if_exist) {
             err = LCB_SUCCESS;

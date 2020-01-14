@@ -297,7 +297,7 @@ PHP_METHOD(Collection, lookupIn)
     lcb_cmdsubdoc_destroy(cmd);
     lcb_subdocspecs_destroy(operations);
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
         err = cookie.rc;
     }
 
@@ -595,7 +595,7 @@ PHP_METHOD(Collection, mutateIn)
     lcb_cmdsubdoc_destroy(cmd);
     lcb_subdocspecs_destroy(operations);
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
         err = cookie.rc;
     }
 

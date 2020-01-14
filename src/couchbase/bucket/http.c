@@ -98,7 +98,7 @@ void pcbc_http_request(zval *return_value, lcb_INSTANCE *conn, lcb_CMDHTTP *cmd,
     err = lcb_http(conn, cookie, cmd);
     lcb_cmdhttp_destroy(cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(conn);
+        lcb_wait(conn, LCB_WAIT_DEFAULT);
         err = proc_http_results(return_value, cookie TSRMLS_CC);
     }
     opcookie_destroy(cookie);

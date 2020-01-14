@@ -380,7 +380,7 @@ PHP_METHOD(Cluster, analyticsQuery)
     err = lcb_analytics(cluster->conn->lcb, &cookie, cmd);
     lcb_cmdanalytics_destroy(cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(cluster->conn->lcb);
+        lcb_wait(cluster->conn->lcb, LCB_WAIT_DEFAULT);
         err = cookie.rc;
     }
     if (span) {

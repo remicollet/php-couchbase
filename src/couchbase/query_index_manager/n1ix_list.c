@@ -102,7 +102,7 @@ int pcbc_n1ix_list(pcbc_query_index_manager_t *manager, zval *return_value TSRML
     err = lcb_n1x_list(manager->conn->lcb, cookie, &cmd);
 
     if (err == LCB_SUCCESS) {
-        lcb_wait(manager->conn->lcb);
+        lcb_wait(manager->conn->lcb, LCB_WAIT_DEFAULT);
         err = proc_n1ix_list_results(return_value, cookie TSRMLS_CC);
     }
 

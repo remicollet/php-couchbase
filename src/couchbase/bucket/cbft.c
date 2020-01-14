@@ -180,7 +180,7 @@ PHP_METHOD(Cluster, searchQuery)
     lcb_cmdsearch_destroy(cmd);
     smart_str_free(&buf);
     if (err == LCB_SUCCESS) {
-        lcb_wait(cluster->conn->lcb);
+        lcb_wait(cluster->conn->lcb, LCB_WAIT_DEFAULT);
         err = cookie.rc;
     }
     if (span) {

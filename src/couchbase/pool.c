@@ -98,7 +98,7 @@ static lcb_STATUS pcbc_establish_connection(lcb_INSTANCE_TYPE type, lcb_INSTANCE
         return err;
     }
     // We use lcb_wait here as no callbacks are invoked by connect.
-    lcb_wait(conn);
+    lcb_wait(conn, LCB_WAIT_DEFAULT);
     err = lcb_get_bootstrap_status(conn);
     if (err != LCB_SUCCESS) {
         pcbc_log(LOGARGS(conn, ERROR), "Failed to bootstrap LCB connection: %s", lcb_strerror_short(err));

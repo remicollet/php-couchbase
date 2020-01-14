@@ -114,7 +114,7 @@ PHP_METHOD(Collection, exists)
     lcb_cmdexists_destroy(cmd);
 
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
         if (span) {
             lcbtrace_span_finish(span, LCBTRACE_NOW);
         }

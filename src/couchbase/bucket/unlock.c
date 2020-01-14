@@ -122,7 +122,7 @@ PHP_METHOD(Collection, unlock)
     struct unlock_cookie cookie = {LCB_SUCCESS, return_value};
     err = lcb_unlock(bucket->conn->lcb, &cookie, cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
         err = cookie.rc;
     }
 

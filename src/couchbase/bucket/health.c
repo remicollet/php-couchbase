@@ -91,7 +91,7 @@ PHP_METHOD(Bucket, ping)
     if (err != LCB_SUCCESS) {
         throw_lcb_exception(err, NULL);
     }
-    lcb_wait(obj->conn->lcb);
+    lcb_wait(obj->conn->lcb, LCB_WAIT_DEFAULT);
     err = proc_health_results(return_value, cookie TSRMLS_CC);
     opcookie_destroy(cookie);
     if (err != LCB_SUCCESS) {
@@ -145,7 +145,7 @@ PHP_METHOD(Bucket, diagnostics)
     if (err != LCB_SUCCESS) {
         throw_lcb_exception(err, NULL);
     }
-    lcb_wait(obj->conn->lcb);
+    lcb_wait(obj->conn->lcb, LCB_WAIT_DEFAULT);
     err = proc_health_results(return_value, cookie TSRMLS_CC);
     opcookie_destroy(cookie);
     if (err != LCB_SUCCESS) {

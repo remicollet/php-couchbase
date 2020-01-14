@@ -127,7 +127,7 @@ PHP_METHOD(Collection, getAnyReplica)
     err = lcb_getreplica(bucket->conn->lcb, &cookie, cmd);
     lcb_cmdgetreplica_destroy(cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
         err = cookie.rc;
     }
     if (span) {
@@ -200,7 +200,7 @@ PHP_METHOD(Collection, getAllReplicas)
     err = lcb_getreplica(bucket->conn->lcb, &cookie, cmd);
     lcb_cmdgetreplica_destroy(cmd);
     if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb);
+        lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
         err = cookie.rc;
     }
     if (span) {
