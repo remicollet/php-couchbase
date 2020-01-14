@@ -98,15 +98,15 @@ class BucketTest extends CouchbaseTestCase {
 
         $options = new \Couchbase\IncrementOptions();
         $options->initial(1);
-        $res = $c->increment($key, $options);
+        $res = $c->binary()->increment($key, $options);
         $this->assertNotNull($res->cas());
         $this->assertEquals(1, $res->content());
 
-        $res = $c->increment($key);
+        $res = $c->binary()->increment($key);
         $this->assertNotNull($res->cas());
         $this->assertEquals(2, $res->content());
 
-        $res = $c->decrement($key);
+        $res = $c->binary()->decrement($key);
         $this->assertNotNull($res->cas());
         $this->assertEquals(1, $res->content());
     }
@@ -121,15 +121,15 @@ class BucketTest extends CouchbaseTestCase {
         $key = $this->makeKey('counterBadKey');
 
         $this->wrapException(function() use($c, $key) {
-            $c->increment($key);
+            $c->binary()->increment($key);
         }, '\Couchbase\KeyNotFoundException', COUCHBASE_ERR_DOCUMENT_NOT_FOUND);
 
         $this->wrapException(function() use($c, $key) {
-            $c->decrement($key);
+            $c->binary()->decrement($key);
         }, '\Couchbase\KeyNotFoundException', COUCHBASE_ERR_DOCUMENT_NOT_FOUND);
 
         $options = (new \Couchbase\DecrementOptions())->initial(42);
-        $res = $c->decrement($key, $options);
+        $res = $c->binary()->decrement($key, $options);
         $this->assertNotNull($res->cas());
         $this->assertEquals(42, $res->content());
     }

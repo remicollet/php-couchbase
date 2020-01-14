@@ -18,9 +18,9 @@
 
 #define LOGARGS(obj, lvl) LCB_LOG_##lvl, obj->conn->lcb, "pcbc/collection", __FILE__, __LINE__
 
+zend_class_entry *pcbc_binary_collection_ce;
 zend_class_entry *pcbc_collection_ce;
 zend_class_entry *pcbc_scope_ce;
-extern zend_class_entry *pcbc_bucket_ce;
 
 PHP_METHOD(Scope, __construct)
 {
@@ -109,6 +109,21 @@ PHP_METHOD(Collection, __construct)
     }
 }
 
+PHP_METHOD(Collection, binary)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        RETURN_NULL();
+    }
+    object_init_ex(return_value, pcbc_binary_collection_ce);
+    zval *bucket, *scope, *collection, rv1, rv2, rv3;
+    bucket = zend_read_property(pcbc_collection_ce, getThis(), ZEND_STRL("bucket"), 0, &rv2);
+    zend_update_property(pcbc_binary_collection_ce, return_value, ZEND_STRL("bucket"), bucket TSRMLS_CC);
+    collection = zend_read_property(pcbc_collection_ce, getThis(), ZEND_STRL("name"), 0, &rv3);
+    zend_update_property(pcbc_binary_collection_ce, return_value, ZEND_STRL("name"), collection TSRMLS_CC);
+    scope = zend_read_property(pcbc_collection_ce, getThis(), ZEND_STRL("scope"), 0, &rv1);
+    zend_update_property(pcbc_binary_collection_ce, return_value, ZEND_STRL("scope"), scope TSRMLS_CC);
+}
+
 PHP_METHOD(Collection, name)
 {
     if (zend_parse_parameters_none_throw() == FAILURE) {
@@ -117,6 +132,17 @@ PHP_METHOD(Collection, name)
 
     zval *prop, rv;
     prop = zend_read_property(pcbc_collection_ce, getThis(), ZEND_STRL("name"), 0, &rv);
+    ZVAL_COPY(return_value, prop);
+}
+
+PHP_METHOD(BinaryCollection, name)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        RETURN_NULL();
+    }
+
+    zval *prop, rv;
+    prop = zend_read_property(pcbc_binary_collection_ce, getThis(), ZEND_STRL("name"), 0, &rv);
     ZVAL_COPY(return_value, prop);
 }
 
@@ -188,20 +214,6 @@ ZEND_ARG_INFO(0, value)
 ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\ReplaceOptions, 0)
 ZEND_END_ARG_INFO()
 
-PHP_METHOD(Collection, append);
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_append, 0, 2, \\Couchbase\\MutationResult, 0)
-ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
-ZEND_ARG_TYPE_INFO(0, value, IS_STRING, 0)
-ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\AppendOptions, 0)
-ZEND_END_ARG_INFO()
-
-PHP_METHOD(Collection, prepend);
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_prepend, 0, 2, \\Couchbase\\MutationResult, 0)
-ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
-ZEND_ARG_TYPE_INFO(0, value, IS_STRING, 0)
-ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\PrependOptions, 0)
-ZEND_END_ARG_INFO()
-
 PHP_METHOD(Collection, remove);
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_remove, 0, 1, \\Couchbase\\MutationResult, 0)
 ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
@@ -209,7 +221,7 @@ ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\RemoveOptions, 0)
 ZEND_END_ARG_INFO()
 
 PHP_METHOD(Collection, unlock);
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_unlock, 0, 2, \\Couchbase\\MutationResult, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_unlock, 0, 2, \\Couchbase\\Result, 0)
 ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
 ZEND_ARG_TYPE_INFO(0, cas, IS_STRING, 0)
 ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\UnlockOptions, 0)
@@ -220,18 +232,6 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_touch, 0, 2, \\Couchbase\\R
 ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
 ZEND_ARG_TYPE_INFO(0, expiry, IS_LONG, 0)
 ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\TouchOptions, 0)
-ZEND_END_ARG_INFO()
-
-PHP_METHOD(Collection, increment);
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_increment, 0, 1, \\Couchbase\\CounterResult, 0)
-ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
-ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\IncrementOptions, 0)
-ZEND_END_ARG_INFO()
-
-PHP_METHOD(Collection, decrement);
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_decrement, 0, 1, \\Couchbase\\CounterResult, 0)
-ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
-ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\DecrementOptions, 0)
 ZEND_END_ARG_INFO()
 
 PHP_METHOD(Collection, lookupIn);
@@ -248,8 +248,50 @@ ZEND_ARG_TYPE_INFO(0, specs, IS_ARRAY, 0)
 ZEND_ARG_TYPE_INFO(0, options, IS_OBJECT, 0)
 ZEND_END_ARG_INFO()
 
+PHP_METHOD(Collection, binary);
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Collection_binary, 0, 0, \\Couchbase\\BinaryCollection, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_BinaryCollection_name, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+PHP_METHOD(BinaryCollection, append);
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_BinaryCollection_append, 0, 2, \\Couchbase\\MutationResult, 0)
+ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
+ZEND_ARG_TYPE_INFO(0, value, IS_STRING, 0)
+ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\AppendOptions, 0)
+ZEND_END_ARG_INFO()
+
+PHP_METHOD(BinaryCollection, prepend);
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_BinaryCollection_prepend, 0, 2, \\Couchbase\\MutationResult, 0)
+ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
+ZEND_ARG_TYPE_INFO(0, value, IS_STRING, 0)
+ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\PrependOptions, 0)
+ZEND_END_ARG_INFO()
+
+PHP_METHOD(BinaryCollection, increment);
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_BinaryCollection_increment, 0, 1, \\Couchbase\\CounterResult, 0)
+ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
+ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\IncrementOptions, 0)
+ZEND_END_ARG_INFO()
+
+PHP_METHOD(BinaryCollection, decrement);
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_BinaryCollection_decrement, 0, 1, \\Couchbase\\CounterResult, 0)
+ZEND_ARG_TYPE_INFO(0, id, IS_STRING, 0)
+ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\DecrementOptions, 0)
+ZEND_END_ARG_INFO()
+
 // clang-format off
-zend_function_entry collection_methods[] = {
+static zend_function_entry binary_collection_methods[] = {
+    PHP_ME(BinaryCollection, name, ai_BinaryCollection_name, ZEND_ACC_PUBLIC)
+    PHP_ME(BinaryCollection, append, ai_BinaryCollection_append, ZEND_ACC_PUBLIC)
+    PHP_ME(BinaryCollection, prepend, ai_BinaryCollection_prepend, ZEND_ACC_PUBLIC)
+    PHP_ME(BinaryCollection, increment, ai_BinaryCollection_increment, ZEND_ACC_PUBLIC)
+    PHP_ME(BinaryCollection, decrement, ai_BinaryCollection_decrement, ZEND_ACC_PUBLIC)
+    PHP_FE_END
+};
+
+static zend_function_entry collection_methods[] = {
     PHP_ME(Collection, __construct, ai_Collection___construct, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     PHP_ME(Collection, name, ai_Collection_name, ZEND_ACC_PUBLIC)
     PHP_ME(Collection, get, ai_Collection_get, ZEND_ACC_PUBLIC)
@@ -261,15 +303,12 @@ zend_function_entry collection_methods[] = {
     PHP_ME(Collection, upsert, ai_Collection_upsert, ZEND_ACC_PUBLIC)
     PHP_ME(Collection, insert, ai_Collection_insert, ZEND_ACC_PUBLIC)
     PHP_ME(Collection, replace, ai_Collection_replace, ZEND_ACC_PUBLIC)
-    PHP_ME(Collection, append, ai_Collection_append, ZEND_ACC_PUBLIC)
-    PHP_ME(Collection, prepend, ai_Collection_prepend, ZEND_ACC_PUBLIC)
     PHP_ME(Collection, remove, ai_Collection_remove, ZEND_ACC_PUBLIC)
     PHP_ME(Collection, unlock, ai_Collection_unlock, ZEND_ACC_PUBLIC)
     PHP_ME(Collection, touch, ai_Collection_touch, ZEND_ACC_PUBLIC)
-    PHP_ME(Collection, increment, ai_Collection_increment, ZEND_ACC_PUBLIC)
-    PHP_ME(Collection, decrement, ai_Collection_decrement, ZEND_ACC_PUBLIC)
     PHP_ME(Collection, lookupIn, ai_Collection_lookupIn, ZEND_ACC_PUBLIC)
     PHP_ME(Collection, mutateIn, ai_Collection_mutateIn, ZEND_ACC_PUBLIC)
+    PHP_ME(Collection, binary, ai_Collection_binary, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on
@@ -285,11 +324,18 @@ PHP_MINIT_FUNCTION(Collection)
     zend_declare_property_null(pcbc_collection_ce, ZEND_STRL("scope"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_collection_ce, ZEND_STRL("name"), ZEND_ACC_PRIVATE TSRMLS_CC);
 
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "BinaryCollection", binary_collection_methods);
+    pcbc_binary_collection_ce = zend_register_internal_class(&ce TSRMLS_CC);
+
+    zend_declare_property_null(pcbc_binary_collection_ce, ZEND_STRL("bucket"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_binary_collection_ce, ZEND_STRL("scope"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_binary_collection_ce, ZEND_STRL("name"), ZEND_ACC_PRIVATE TSRMLS_CC);
+
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "Scope", scope_methods);
     pcbc_scope_ce = zend_register_internal_class(&ce TSRMLS_CC);
 
-    zend_declare_property_null(pcbc_collection_ce, ZEND_STRL("bucket"), ZEND_ACC_PRIVATE TSRMLS_CC);
-    zend_declare_property_null(pcbc_collection_ce, ZEND_STRL("name"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_scope_ce, ZEND_STRL("bucket"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_scope_ce, ZEND_STRL("name"), ZEND_ACC_PRIVATE TSRMLS_CC);
 
     return SUCCESS;
 }

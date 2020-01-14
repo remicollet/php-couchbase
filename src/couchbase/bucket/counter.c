@@ -185,7 +185,7 @@ static const zend_function_entry pcbc_increment_options_methods[] = {
 };
 // clang-format on
 
-PHP_METHOD(Collection, increment)
+PHP_METHOD(BinaryCollection, increment)
 {
     lcb_STATUS err = LCB_SUCCESS;
     zend_string *id;
@@ -195,7 +195,7 @@ PHP_METHOD(Collection, increment)
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    PCBC_RESOLVE_COLLECTION;
+    PCBC_RESOLVE_BINARY_COLLECTION;
 
     lcb_CMDCOUNTER *cmd;
     lcb_cmdcounter_create(&cmd);
@@ -367,7 +367,7 @@ static const zend_function_entry pcbc_decrement_options_methods[] = {
 };
 
 // clang-format on
-PHP_METHOD(Collection, decrement)
+PHP_METHOD(BinaryCollection, decrement)
 {
     lcb_STATUS err = LCB_SUCCESS;
     zend_string *id;
@@ -377,7 +377,7 @@ PHP_METHOD(Collection, decrement)
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    PCBC_RESOLVE_COLLECTION;
+    PCBC_RESOLVE_BINARY_COLLECTION;
 
     lcb_CMDCOUNTER *cmd;
     lcb_cmdcounter_create(&cmd);

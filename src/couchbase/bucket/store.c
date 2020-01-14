@@ -639,7 +639,7 @@ static const zend_function_entry pcbc_append_options_methods[] = {
 };
 // clang-format on
 
-PHP_METHOD(Collection, append)
+PHP_METHOD(BinaryCollection, append)
 {
     zend_string *id, *value;
     zval *options = NULL;
@@ -649,7 +649,7 @@ PHP_METHOD(Collection, append)
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    PCBC_RESOLVE_COLLECTION;
+    PCBC_RESOLVE_BINARY_COLLECTION;
 
     lcb_CMDSTORE *cmd;
     lcb_cmdstore_create(&cmd, LCB_STORE_APPEND);
@@ -766,7 +766,7 @@ static const zend_function_entry pcbc_prepend_options_methods[] = {
 };
 // clang-format on
 
-PHP_METHOD(Collection, prepend)
+PHP_METHOD(BinaryCollection, prepend)
 {
     zend_string *id, *value;
     zval *options = NULL;
@@ -776,7 +776,7 @@ PHP_METHOD(Collection, prepend)
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    PCBC_RESOLVE_COLLECTION;
+    PCBC_RESOLVE_BINARY_COLLECTION;
 
     lcb_CMDSTORE *cmd;
     lcb_cmdstore_create(&cmd, LCB_STORE_PREPEND);

@@ -123,27 +123,31 @@ extern zend_class_entry *pcbc_user_settings_ce;
 extern zend_class_entry *pcbc_crypto_provider_ce;
 
 extern zend_class_entry *pcbc_collection_ce;
+extern zend_class_entry *pcbc_binary_collection_ce;
 
-#define PCBC_RESOLVE_COLLECTION                                                                                        \
+#define PCBC_RESOLVE_COLLECTION_EX(class_entry)                                                                        \
     const char *collection_str = NULL, *scope_str = NULL;                                                              \
     size_t collection_len = 0, scope_len = 0;                                                                          \
     pcbc_bucket_t *bucket = NULL;                                                                                      \
     {                                                                                                                  \
         zval *prop, rv__;                                                                                              \
         zval *self = getThis();                                                                                        \
-        prop = zend_read_property(pcbc_collection_ce, self, ZEND_STRL("bucket"), 0, &rv__);                            \
+        prop = zend_read_property((class_entry), self, ZEND_STRL("bucket"), 0, &rv__);                                 \
         bucket = Z_BUCKET_OBJ_P(prop);                                                                                 \
-        prop = zend_read_property(pcbc_collection_ce, self, ZEND_STRL("scope"), 0, &rv__);                             \
+        prop = zend_read_property((class_entry), self, ZEND_STRL("scope"), 0, &rv__);                                  \
         if (Z_TYPE_P(prop) == IS_STRING) {                                                                             \
             scope_str = Z_STRVAL_P(prop);                                                                              \
             scope_len = Z_STRLEN_P(prop);                                                                              \
         }                                                                                                              \
-        prop = zend_read_property(pcbc_collection_ce, self, ZEND_STRL("name"), 0, &rv__);                              \
+        prop = zend_read_property((class_entry), self, ZEND_STRL("name"), 0, &rv__);                                   \
         if (Z_TYPE_P(prop) == IS_STRING) {                                                                             \
             collection_str = Z_STRVAL_P(prop);                                                                         \
             collection_len = Z_STRLEN_P(prop);                                                                         \
         }                                                                                                              \
     }
+
+#define PCBC_RESOLVE_COLLECTION PCBC_RESOLVE_COLLECTION_EX(pcbc_collection_ce)
+#define PCBC_RESOLVE_BINARY_COLLECTION PCBC_RESOLVE_COLLECTION_EX(pcbc_binary_collection_ce)
 
 void pcbc_create_lcb_exception(zval *return_value, long code, zend_string *context, zend_string *ref, int http_code,
                                const char *http_msg TSRMLS_DC);

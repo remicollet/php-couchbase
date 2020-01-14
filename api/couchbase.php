@@ -418,12 +418,31 @@ namespace Couchbase {
         }
     }
 
-    class Collection
+    class BinaryCollection
     {
-        public function __construct(Bucket $bucket, string $scope, string $name)
+        public function name(): string
         {
         }
 
+        public function append(string $id, string $value, AppendOptions $options = null): StoreResult
+        {
+        }
+
+        public function prepend(string $id, string $value, PrependOptions $options = null): StoreResult
+        {
+        }
+
+        public function increment(string $id, IncrementOptions $options = null): CounterResult
+        {
+        }
+
+        public function decrement(string $id, DecrementOptions $options = null): CounterResult
+        {
+        }
+    }
+
+    class Collection
+    {
         public function name(): string
         {
         }
@@ -464,14 +483,6 @@ namespace Couchbase {
         {
         }
 
-        public function append(string $id, string $value, AppendOptions $options = null): StoreResult
-        {
-        }
-
-        public function prepend(string $id, string $value, PrependOptions $options = null): StoreResult
-        {
-        }
-
         public function remove(string $id, RemoveOptions $options = null): MutationResult
         {
         }
@@ -484,19 +495,15 @@ namespace Couchbase {
         {
         }
 
-        public function increment(string $id, IncrementOptions $options = null): CounterResult
-        {
-        }
-
-        public function decrement(string $id, DecrementOptions $options = null): CounterResult
-        {
-        }
-
         public function lookupIn(string $id, array $specs, LookupInOptions $options = null): LookupInResult
         {
         }
 
         public function mutateIn(string $id, array $specs, MutateInOptions $options = null): MutateInResult
+        {
+        }
+
+        public function binary(): BinaryCollection
         {
         }
     }
