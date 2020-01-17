@@ -15,9 +15,6 @@
  *      necessary, use `new stdClass()` to persist empty JSON object. Note, that only JSON format considered supported by
  *      all Couchbase SDKs, everything else is private implementation (i.e. `"php"` format won't be readable by .NET SDK).
  *   * `"php"` - uses PHP serialize() method to encode the document.
- *   * `"igbinary"` - uses pecl/igbinary to encode the document in even more efficient than `"php"` format. Might not be
- *      available, if the Couchbase PHP SDK didn't find it during build phase, in this case constant
- *      \Couchbase\HAVE_IGBINARY will be false.
  *
  * * `couchbase.encoder.compression` (string), default: `"none"`
  *

@@ -118,15 +118,6 @@ class TranscoderTest extends CouchbaseTestCase {
         $this->assertEquals(COUCHBASE_VAL_IS_DOUBLE, $res[1] & COUCHBASE_VAL_MASK);
         $this->assertEquals(["1.0", 0x02000002, 0], $res);
 
-        if (\Couchbase\HAVE_IGBINARY) {
-            $options['sertype'] = COUCHBASE_SERTYPE_IGBINARY;
-            $res = \Couchbase\basicEncoderV1(["foo" => 0xabcdef0123456789], $options);
-            $this->assertEquals(COUCHBASE_COMPRESSION_NONE, $res[1] & COUCHBASE_COMPRESSION_MASK);
-            $this->assertEquals(COUCHBASE_CFFMT_PRIVATE, $res[1] & COUCHBASE_CFFMT_MASK);
-            $this->assertEquals(COUCHBASE_VAL_IS_IGBINARY, $res[1] & COUCHBASE_VAL_MASK);
-            $this->assertEquals([hex2bin("0000000214011103666f6f0c43e579bde02468ad"), 0x01000005, 0], $res);
-        }
-
         $options['sertype'] = COUCHBASE_SERTYPE_JSON;
         if (\Couchbase\HAVE_ZLIB) {
             $options['cmprtype'] = COUCHBASE_CMPRTYPE_ZLIB;
@@ -279,22 +270,14 @@ class TranscoderTest extends CouchbaseTestCase {
         $this->assertEquals(["foo" => 0xabcdef0123456789], $res);
 
         $res = \Couchbase\basicDecoderV1(hex2bin("0000000214011103666f6f0c43e579bde02468ad"), 0x01000005, 0, $options);
-        if (\Couchbase\HAVE_IGBINARY) {
-            $this->assertEquals(["foo" => 0xabcdef0123456789], $res);
-        } else {
-            $this->assertEquals(NULL, $res);
-        }
+        $this->assertEquals(NULL, $res);
 
         $options['jsonassoc'] = false;  // jsonassoc does not affect "binary" encoders
         $res = \Couchbase\basicDecoderV1('a:1:{s:3:"foo";d:1.2379813738877118E+19;}', 0x01000004, 0, $options);
         $this->assertEquals(["foo" => 0xabcdef0123456789], $res);
 
         $res = \Couchbase\basicDecoderV1(hex2bin("0000000214011103666f6f0c43e579bde02468ad"), 0x01000005, 0, $options);
-        if (\Couchbase\HAVE_IGBINARY) {
-            $this->assertEquals(["foo" => 0xabcdef0123456789], $res);
-        } else {
-            $this->assertEquals(NULL, $res);
-        }
+        $this->assertEquals(NULL, $res);
 
         $res = \Couchbase\basicDecoderV1("1.0", 0x02000002, 0, $options);
         $this->assertEquals(1.0, $res);
@@ -329,17 +312,6 @@ class TranscoderTest extends CouchbaseTestCase {
     function testInvalidInputForPhpSerialize() {
         $res = \Couchbase\basicDecoderV1('foobar', 0x01000004, 0, []);
         $this->assertNull($res);
-    }
-
-    /**
-     * @expectedException PHPUnit_Framework_Error
-     * @expectedExceptionMessageRegExp /igbinary_unserialize_header/
-     */
-    function testInvalidInputForIgbinary() {
-        if (!\Couchbase\HAVE_IGBINARY) {
-            $this->markTestSkipped('Extension does not support IGBINARY serializer');
-        }
-        \Couchbase\basicDecoderV1(hex2bin("00000214011103666f6f0c43e579bde02468ad"), 0x01000005, 0, []);
     }
 
     function testCouchbaseDefaultEncoder() {

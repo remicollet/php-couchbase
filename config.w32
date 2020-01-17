@@ -10,9 +10,6 @@ if (PHP_COUCHBASE != "no") {
             CHECK_HEADER_ADD_INCLUDE("zlib.h", "CFLAGS", "..\\zlib;" + php_usual_include_suspects)) {
             AC_DEFINE("HAVE_COUCHBASE_ZLIB", 1, "Whether zlib compressor is enabled");
         }
-        if (ADD_EXTENSION_DEP('couchbase', 'igbinary')) {
-            AC_DEFINE("HAVE_COUCHBASE_IGBINARY", 1, "Whether igbinary serializer is enabled");
-        }
 
         root_sources =
             "couchbase.c " +

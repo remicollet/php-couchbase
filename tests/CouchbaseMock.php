@@ -2,7 +2,7 @@
 // vim: et ts=4 sw=4 sts=4
 
 class CouchbaseMock {
-    const VERSION = '1.5.23';
+    const VERSION = '1.5.25';
 
     private $jarPath;
     private $ctlServer;

@@ -27,10 +27,6 @@
 #include <zlib.h>
 #endif
 
-#if HAVE_COUCHBASE_IGBINARY
-#include <ext/igbinary/igbinary.h>
-#endif
-
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/ext", __FILE__, __LINE__
 
 typedef unsigned char uint8_t;
@@ -117,10 +113,6 @@ static PHP_INI_MH(OnUpdateFormat)
         PCBCG(enc_format_i) = COUCHBASE_SERTYPE_JSON;
     } else if (!strcmp(str_val, "php") || !strcmp(str_val, "PHP")) {
         PCBCG(enc_format_i) = COUCHBASE_SERTYPE_PHP;
-#ifdef HAVE_COUCHBASE_IGBINARY
-    } else if (!strcmp(str_val, "igbinary") || !strcmp(str_val, "IGBINARY")) {
-        PCBCG(enc_format_i) = COUCHBASE_SERTYPE_IGBINARY;
-#endif
     } else {
         return FAILURE;
     }
@@ -385,7 +377,6 @@ PHP_MINIT_FUNCTION(couchbase)
     PCBC_REGISTER_CONST_RAW(COUCHBASE_VAL_IS_DOUBLE);
     PCBC_REGISTER_CONST_RAW(COUCHBASE_VAL_IS_BOOL);
     PCBC_REGISTER_CONST_RAW(COUCHBASE_VAL_IS_SERIALIZED);
-    PCBC_REGISTER_CONST_RAW(COUCHBASE_VAL_IS_IGBINARY);
     PCBC_REGISTER_CONST_RAW(COUCHBASE_VAL_IS_JSON);
     PCBC_REGISTER_CONST_RAW(COUCHBASE_COMPRESSION_MASK);
     PCBC_REGISTER_CONST_RAW(COUCHBASE_COMPRESSION_NONE);
@@ -394,7 +385,6 @@ PHP_MINIT_FUNCTION(couchbase)
     PCBC_REGISTER_CONST_RAW(COUCHBASE_COMPRESSION_MCISCOMPRESSED);
 
     PCBC_REGISTER_CONST_RAW(COUCHBASE_SERTYPE_JSON);
-    PCBC_REGISTER_CONST_RAW(COUCHBASE_SERTYPE_IGBINARY);
     PCBC_REGISTER_CONST_RAW(COUCHBASE_SERTYPE_PHP);
     PCBC_REGISTER_CONST_RAW(COUCHBASE_CMPRTYPE_NONE);
     PCBC_REGISTER_CONST_RAW(COUCHBASE_CMPRTYPE_ZLIB);
@@ -407,8 +397,6 @@ PHP_MINIT_FUNCTION(couchbase)
     PCBC_REGISTER_CONST_RAW(COUCHBASE_CFFMT_STRING);
 
     REGISTER_NS_LONG_CONSTANT("Couchbase", "ENCODER_FORMAT_JSON", COUCHBASE_SERTYPE_JSON, CONST_CS | CONST_PERSISTENT);
-    REGISTER_NS_LONG_CONSTANT("Couchbase", "ENCODER_FORMAT_IGBINARY", COUCHBASE_SERTYPE_IGBINARY,
-                              CONST_CS | CONST_PERSISTENT);
     REGISTER_NS_LONG_CONSTANT("Couchbase", "ENCODER_FORMAT_PHP", COUCHBASE_SERTYPE_PHP, CONST_CS | CONST_PERSISTENT);
 
     REGISTER_NS_LONG_CONSTANT("Couchbase", "ENCODER_COMPRESSION_NONE", COUCHBASE_CMPRTYPE_NONE,
@@ -418,11 +406,7 @@ PHP_MINIT_FUNCTION(couchbase)
     REGISTER_NS_LONG_CONSTANT("Couchbase", "ENCODER_COMPRESSION_FASTLZ", COUCHBASE_CMPRTYPE_FASTLZ,
                               CONST_CS | CONST_PERSISTENT);
 
-#ifdef HAVE_COUCHBASE_IGBINARY
-    REGISTER_NS_LONG_CONSTANT("Couchbase", "HAVE_IGBINARY", 1, CONST_CS | CONST_PERSISTENT);
-#else
     REGISTER_NS_LONG_CONSTANT("Couchbase", "HAVE_IGBINARY", 0, CONST_CS | CONST_PERSISTENT);
-#endif
 
 #ifdef HAVE_COUCHBASE_ZLIB
     REGISTER_NS_LONG_CONSTANT("Couchbase", "HAVE_ZLIB", 1, CONST_CS | CONST_PERSISTENT);
@@ -458,12 +442,6 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
     zval dtype;
     unsigned int flags = 0;
 
-#ifndef HAVE_COUCHBASE_IGBINARY
-    if (sertype == COUCHBASE_SERTYPE_IGBINARY) {
-        pcbc_log(LOGARGS(WARN), "igbinary extension is not found, fallback to JSON serializer");
-        sertype = COUCHBASE_SERTYPE_JSON;
-    }
-#endif
     ZVAL_UNDEF(&res);
 
     switch (Z_TYPE_P(value)) {
@@ -544,23 +522,6 @@ static void basic_encoder_v1(zval *value, int sertype, int cmprtype, long cmprth
                 smart_str_free(&buf);
             }
             break;
-#ifdef HAVE_COUCHBASE_IGBINARY
-        case COUCHBASE_SERTYPE_IGBINARY:
-            flags = COUCHBASE_VAL_IS_IGBINARY | COUCHBASE_CFFMT_PRIVATE;
-            {
-                uint8_t *buf;
-                size_t len;
-
-                len = 0;
-                if (igbinary_serialize(&buf, &len, value TSRMLS_CC)) {
-                    pcbc_log(LOGARGS(WARN), "Failed to serialize value with igbinary");
-                } else {
-                    PCBC_STRINGL(res, (char *)buf, len);
-                    efree(buf);
-                }
-            }
-            break;
-#endif
         }
     }
 
@@ -777,16 +738,8 @@ static void basic_decoder_v1(char *bytes, size_t bytes_len, unsigned long flags,
             PHP_VAR_UNSERIALIZE_DESTROY(var_hash);
         } break;
         case COUCHBASE_VAL_IS_IGBINARY:
-#if HAVE_COUCHBASE_IGBINARY
-            if (igbinary_unserialize((uint8_t *)bytes, bytes_len, &res TSRMLS_CC)) {
-                pcbc_log(LOGARGS(WARN), "Failed to deserialize value with igbinary");
-                ZVAL_NULL(&res);
-            }
-            break;
-#else
-            pcbc_log(LOGARGS(WARN), "The igbinary extension was not available when the couchbase extension was built.");
+            pcbc_log(LOGARGS(WARN), "The igbinary serialization is not supported.");
             RETURN_NULL();
-#endif
         default:
             pcbc_log(LOGARGS(WARN), "Unknown serialization type: %d", cffmt);
             ZVAL_NULL(&res);
@@ -1062,11 +1015,6 @@ static PHP_MINFO_FUNCTION(couchbase)
     php_info_print_table_row(2, "extension version", PHP_COUCHBASE_VERSION);
     php_info_print_table_row(2, "libcouchbase runtime version", buf);
     php_info_print_table_row(2, "libcouchbase headers version", LCB_VERSION_STRING " (git: " LCB_VERSION_CHANGESET ")");
-#ifdef HAVE_COUCHBASE_IGBINARY
-    php_info_print_table_row(2, "igbinary transcoder", "enabled");
-#else
-    php_info_print_table_row(2, "igbinary transcoder", "disabled (install pecl/igbinary and rebuild pecl/couchbase)");
-#endif
 #ifdef HAVE_COUCHBASE_ZLIB
     php_info_print_table_row(2, "zlib compressor", "enabled");
 #else
@@ -1136,9 +1084,6 @@ static zend_function_entry couchbase_functions[] = {
 #if ZEND_MODULE_API_NO >= 20050617
 static zend_module_dep php_couchbase_deps[] = {
     ZEND_MOD_REQUIRED("json")
-#ifdef HAVE_COUCHBASE_IGBINARY
-    ZEND_MOD_REQUIRED("igbinary")
-#endif
     ZEND_MOD_END
 };
 #endif

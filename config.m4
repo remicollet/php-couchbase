@@ -147,28 +147,4 @@ COUCHBASE_FILES=" \
   PHP_ADD_BUILD_DIR($ext_builddir/src/couchbase/bucket_manager, 1)
   PHP_ADD_BUILD_DIR($ext_builddir/src/couchbase/cluster_manager, 1)
   PHP_ADD_EXTENSION_DEP(couchbase, json)
-
-
-  AC_MSG_CHECKING([for igbinary support])
-  igbinary_inc_path=""
-  if test -f "$abs_srcdir/include/php/ext/igbinary/igbinary.h"; then
-    igbinary_inc_path="$abs_srcdir/include/php"
-  elif test -f "$abs_srcdir/ext/igbinary/igbinary.h"; then
-    igbinary_inc_path="$abs_srcdir"
-  elif test -f "$phpincludedir/ext/session/igbinary.h"; then
-    igbinary_inc_path="$phpincludedir"
-  elif test -f "$phpincludedir/ext/igbinary/igbinary.h"; then
-    igbinary_inc_path="$phpincludedir"
-  fi
-  if test "$igbinary_inc_path" = ""; then
-    AC_MSG_WARN([Cannot find igbinary.h])
-  else
-    AC_DEFINE(HAVE_COUCHBASE_IGBINARY,1,[Whether igbinary serializer is enabled])
-    IGBINARY_INCLUDES="-I$igbinary_inc_path"
-    ifdef([PHP_ADD_EXTENSION_DEP],
-      [
-        PHP_ADD_EXTENSION_DEP(couchbase, igbinary)
-      ])
-    AC_MSG_RESULT([$igbinary_inc_path])
-  fi
 fi
