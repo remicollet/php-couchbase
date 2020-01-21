@@ -18,19 +18,19 @@
         <active>yes</active>
     </lead>
 
-    <date>2019-10-23</date>
+    <date>2020-01-21</date>
     <version>
-        <release>3.0.0beta1</release>
+        <release>3.0.0</release>
         <api>3.0.0</api>
     </version>
     <stability>
-        <release>beta</release>
-        <api>beta</api>
+        <release>stable</release>
+        <api>stable</api>
     </stability>
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2
     </license>
     <notes>
-        * First beta release
+        * First GA release of SDK 3.0
     </notes>
     <contents>
         <dir name="/">
@@ -155,6 +155,17 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2019-10-23</date>
+            <version>
+                <release>3.0.0beta1</release>
+                <api>3.0.0</api>
+            </version>
+            <stability>
+                <release>beta</release>
+                <api>beta</api>
+            </stability>
+        </release>
         <release>
             <date>2018-10-05</date>
             <version>
