@@ -49,7 +49,7 @@ PHP_METHOD(ClusterManager, listBuckets)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     lcb_cmdhttp_path(cmd, path, strlen(path));
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1, NULL TSRMLS_CC);
 }
 
 PHP_METHOD(ClusterManager, createBucket)
@@ -96,7 +96,7 @@ PHP_METHOD(ClusterManager, createBucket)
         lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_POST);
         lcb_cmdhttp_path(cmd, path, strlen(path));
         lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-        pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
+        pcbc_http_request(return_value, obj->conn->lcb, cmd, 1, NULL TSRMLS_CC);
         smart_str_free(&buf);
     }
 }
@@ -121,7 +121,7 @@ PHP_METHOD(ClusterManager, removeBucket)
     path_len = spprintf(&path, 0, "/pools/default/buckets/%*s", (int)name_len, name);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1, NULL TSRMLS_CC);
     efree(path);
 }
 
@@ -143,7 +143,7 @@ PHP_METHOD(ClusterManager, info)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     lcb_cmdhttp_path(cmd, path, strlen(path));
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1, NULL TSRMLS_CC);
 }
 
 PHP_METHOD(ClusterManager, listUsers)
@@ -176,7 +176,7 @@ PHP_METHOD(ClusterManager, listUsers)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     lcb_cmdhttp_path(cmd, path, strlen(path));
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1, NULL TSRMLS_CC);
 }
 
 PHP_METHOD(ClusterManager, getUser)
@@ -210,7 +210,7 @@ PHP_METHOD(ClusterManager, getUser)
     lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_MANAGEMENT);
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     lcb_cmdhttp_path(cmd, path, path_len);
-    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1, NULL TSRMLS_CC);
     efree(path);
 }
 
@@ -246,7 +246,7 @@ PHP_METHOD(ClusterManager, removeUser)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_DELETE);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, obj->conn->lcb, cmd, 0 TSRMLS_CC);
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 0, NULL TSRMLS_CC);
     efree(path);
     if (Z_STRLEN_P(return_value) == 0 || (Z_STRVAL_P(return_value)[0] == '"' && Z_STRVAL_P(return_value)[1] == '"')) {
         RETURN_TRUE;
@@ -316,7 +316,7 @@ PHP_METHOD(ClusterManager, upsertUser)
         lcb_cmdhttp_path(cmd, path, path_len);
         lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
         lcb_cmdhttp_body(cmd, ZSTR_VAL(buf.s), ZSTR_LEN(buf.s));
-        pcbc_http_request(return_value, obj->conn->lcb, cmd, 0 TSRMLS_CC);
+        pcbc_http_request(return_value, obj->conn->lcb, cmd, 0, NULL TSRMLS_CC);
         smart_str_free(&buf);
         efree(path);
         if (Z_STRLEN_P(return_value) == 0 ||

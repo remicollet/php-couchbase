@@ -86,7 +86,6 @@
             <file role="src" name="src/couchbase/bucket/touch.c" />
             <file role="src" name="src/couchbase/bucket/unlock.c" />
             <file role="src" name="src/couchbase/bucket/view.c" />
-            <file role="src" name="src/couchbase/bucket_manager.c" />
             <file role="src" name="src/couchbase/cert_authenticator.c" />
             <file role="src" name="src/couchbase/cluster.c" />
             <file role="src" name="src/couchbase/cluster_options.c" />
@@ -96,6 +95,8 @@
             <file role="src" name="src/couchbase/crypto.c" />
             <file role="src" name="src/couchbase/log_formatter.c" />
             <file role="src" name="src/couchbase/lookup_spec.c" />
+            <file role="src" name="src/couchbase/managers/bucket_manager.c" />
+            <file role="src" name="src/couchbase/managers/view_index_manager.c" />
             <file role="src" name="src/couchbase/mutate_spec.c" />
             <file role="src" name="src/couchbase/mutation_state.c" />
             <file role="src" name="src/couchbase/n1ql_index.c" />
@@ -138,7 +139,6 @@
             <file role="src" name="src/couchbase/search/wildcard_query.c" />
             <file role="src" name="src/couchbase/search_index_manager.c" />
             <file role="src" name="src/couchbase/search_options.c" />
-            <file role="src" name="src/couchbase/view_index_manager.c" />
             <file role="src" name="transcoding.c" />
         </dir>
     </contents>

@@ -20,6 +20,7 @@
 
 zend_class_entry *pcbc_bucket_ce;
 extern zend_class_entry *pcbc_scope_ce;
+extern zend_class_entry *pcbc_view_index_manager_ce;
 
 PHP_METHOD(Bucket, ping);
 PHP_METHOD(Bucket, diagnostics);
@@ -163,18 +164,14 @@ PHP_METHOD(Bucket, name)
     RETURN_NULL();
 }
 
-void pcbc_view_index_manager_init(zval *return_value, zval *bucket TSRMLS_DC);
-
 PHP_METHOD(Bucket, viewIndexes)
 {
-    int rv;
-
-    rv = zend_parse_parameters_none();
-    if (rv == FAILURE) {
+    if (zend_parse_parameters_none_throw() == FAILURE) {
         RETURN_NULL();
     }
 
-    pcbc_view_index_manager_init(return_value, getThis() TSRMLS_CC);
+    object_init_ex(return_value, pcbc_view_index_manager_ce);
+    zend_update_property(pcbc_view_index_manager_ce, return_value, ZEND_STRL("bucket"), getThis() TSRMLS_CC);
 }
 
 PHP_METHOD(Bucket, defaultCollection)
@@ -266,6 +263,9 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Bucket_scope, 0, 1, \\Couchbase\\Scope
 ZEND_ARG_TYPE_INFO(0, name, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Bucket_viewIndexes, 0, 1, \\Couchbase\\ViewIndexManager, 0)
+ZEND_END_ARG_INFO()
+
 // clang-format off
 zend_function_entry bucket_methods[] = {
     PHP_ME(Bucket, __construct, ai_Bucket_none, ZEND_ACC_PRIVATE | ZEND_ACC_FINAL | ZEND_ACC_CTOR)
@@ -279,7 +279,7 @@ zend_function_entry bucket_methods[] = {
     PHP_ME(Bucket, defaultCollection, ai_Bucket_defaultCollection, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, defaultScope, ai_Bucket_defaultScope, ZEND_ACC_PUBLIC)
     PHP_ME(Bucket, scope, ai_Bucket_scope, ZEND_ACC_PUBLIC)
-    PHP_ME(Bucket, viewIndexes, ai_Bucket_none, ZEND_ACC_PUBLIC)
+    PHP_ME(Bucket, viewIndexes, ai_Bucket_viewIndexes, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 // clang-format on

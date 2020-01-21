@@ -25,7 +25,6 @@ if (PHP_COUCHBASE != "no") {
             "password_authenticator.c " +
             "cluster_options.c " +
             "bucket.c " +
-            "bucket_manager.c " +
             "cluster.c " +
             "cluster_manager.c " +
             "collection.c " +
@@ -37,7 +36,6 @@ if (PHP_COUCHBASE != "no") {
             "pool.c " +
             "query_index_manager.c " +
             "result.c " +
-            "view_index_manager.c " +
             "search_index_manager.c " +
             "search_options.c ";
         src_couchbase_bucket_sources =
@@ -56,6 +54,9 @@ if (PHP_COUCHBASE != "no") {
             "touch.c " +
             "unlock.c " +
             "view.c ";
+        src_couchbase_managers_sources =
+            "bucket_manager.c " +
+            "view_index_manager.c ";
         src_couchbase_query_index_manager_sources =
             "n1ix_create.c " +
             "n1ix_drop.c " +
@@ -99,6 +100,7 @@ if (PHP_COUCHBASE != "no") {
         ADD_SOURCES(configure_module_dirname + "\\src\\couchbase", src_couchbase_sources, "couchbase");
         ADD_SOURCES(configure_module_dirname + "\\src\\couchbase\\search", src_couchbase_search_sources, "couchbase");
         ADD_SOURCES(configure_module_dirname + "\\src\\couchbase\\bucket", src_couchbase_bucket_sources, "couchbase");
+        ADD_SOURCES(configure_module_dirname + "\\src\\couchbase\\managers", src_couchbase_managers_sources, "couchbase");
         ADD_SOURCES(configure_module_dirname + "\\src\\couchbase\\query_index_manager", src_couchbase_query_index_manager_sources, "couchbase");
         ADD_SOURCES(configure_module_dirname + "\\src\\couchbase\\cluster_manager", src_couchbase_cluster_manager_sources, "couchbase");
         AC_DEFINE('HAVE_COUCHBASELIB', 1, 'Have Couchbase library');

@@ -43,7 +43,7 @@ static void n1ix_drop_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RES
     opcookie_push((opcookie *)resp->cookie, &result->header);
 }
 
-void pcbc_n1ix_drop(pcbc_bucket_manager_t *manager, lcb_CMDN1XMGMT *cmd, zend_bool ignore_if_not_exist,
+void pcbc_n1ix_drop(pcbc_query_index_manager_t *manager, lcb_CMDN1XMGMT *cmd, zend_bool ignore_if_not_exist,
                     zval *return_value TSRMLS_DC)
 {
     opcookie *cookie;

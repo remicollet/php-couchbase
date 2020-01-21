@@ -306,11 +306,6 @@ typedef struct {
 typedef struct {
     pcbc_connection_t *conn;
     zend_object std;
-} pcbc_bucket_manager_t;
-
-typedef struct {
-    pcbc_connection_t *conn;
-    zend_object std;
 } pcbc_query_index_manager_t;
 
 typedef struct {
@@ -336,14 +331,15 @@ int pcbc_decode_value(zval *return_value, pcbc_bucket_t *bucket, const char *byt
 int pcbc_encode_value(pcbc_bucket_t *bucket, zval *value, void **bytes, lcb_size_t *nbytes, lcb_uint32_t *flags,
                       uint8_t *datatype TSRMLS_DC);
 
-void pcbc_http_request(zval *return_value, lcb_INSTANCE *conn, lcb_CMDHTTP *cmd, int json_response TSRMLS_DC);
+void pcbc_http_request(zval *return_value, lcb_INSTANCE *conn, lcb_CMDHTTP *cmd, int json_response,
+                       void(httpcb)(zval *, zval *) TSRMLS_DC);
 
 void pcbc_query_index_manager_init(zval *return_value, zval *cluster TSRMLS_DC);
 
 void pcbc_mutation_state_export_for_n1ql(zval *obj, zval *scan_vectors TSRMLS_DC);
 void pcbc_mutation_state_export_for_search(zval *mutation_state, zval *scan_vectors TSRMLS_DC);
 
-void pcbc_search_index_manager_init(zval *return_value, pcbc_bucket_manager_t *bucket_manager TSRMLS_DC);
+void pcbc_search_index_manager_init(zval *return_value, zval *cluster TSRMLS_DC);
 
 void pcbc_crypto_register(pcbc_bucket_t *obj, const char *name, int name_len, zval *provider TSRMLS_DC);
 void pcbc_crypto_unregister(pcbc_bucket_t *obj, const char *name, int name_len TSRMLS_DC);

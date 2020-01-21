@@ -17,11 +17,11 @@
 #include "couchbase.h"
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/cluster", __FILE__, __LINE__
-#define DEFAULT_BUCKET_NAME "default"
 
 zend_class_entry *pcbc_cluster_ce;
 extern zend_class_entry *pcbc_cluster_manager_ce;
 extern zend_class_entry *pcbc_cluster_options_ce;
+extern zend_class_entry *pcbc_bucket_manager_ce;
 
 PHP_METHOD(Cluster, query);
 PHP_METHOD(Cluster, analyticsQuery);
@@ -128,16 +128,34 @@ PHP_METHOD(Cluster, bucket)
     pcbc_bucket_init(return_value, obj, ZSTR_VAL(bucketname) TSRMLS_CC);
 }
 
-PHP_METHOD(Cluster, queryIndexes)
+PHP_METHOD(Cluster, buckets)
 {
     int rv;
 
-    rv = zend_parse_parameters_none();
+    rv = zend_parse_parameters_none_throw();
     if (rv == FAILURE) {
         RETURN_NULL();
     }
 
+    object_init_ex(return_value, pcbc_bucket_manager_ce);
+    zend_update_property(pcbc_bucket_manager_ce, return_value, ZEND_STRL("cluster"), getThis() TSRMLS_CC);
+}
+
+PHP_METHOD(Cluster, queryIndexes)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        RETURN_NULL();
+    }
+
     pcbc_query_index_manager_init(return_value, getThis() TSRMLS_CC);
+}
+
+PHP_METHOD(Cluster, searchIndexes)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        RETURN_NULL();
+    }
+    pcbc_search_index_manager_init(return_value, getThis() TSRMLS_CC);
 }
 
 PHP_METHOD(Cluster, manager)
@@ -160,10 +178,13 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Cluster_bucket, 0, 1, \\Couchbase\\Buc
 ZEND_ARG_TYPE_INFO(0, name, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Cluster_manager, 0, 0, \\Couchbase\\ClusterManager, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Cluster_buckets, 0, 0, \\Couchbase\\BucketManager, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Cluster_queryIndexes, 0, 0, \\Couchbase\\QueryIndexManager, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Cluster_searchIndexes, 0, 0, \\Couchbase\\SearchIndexManager, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Cluster_query, 0, 1, \\Couchbase\\QueryResult, 0)
@@ -186,8 +207,9 @@ ZEND_END_ARG_INFO()
 zend_function_entry cluster_methods[] = {
     PHP_ME(Cluster, __construct, ai_Cluster_constructor, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     PHP_ME(Cluster, bucket, ai_Cluster_bucket, ZEND_ACC_PUBLIC)
-    PHP_ME(Cluster, manager, ai_Cluster_manager, ZEND_ACC_PUBLIC)
+    PHP_ME(Cluster, buckets, ai_Cluster_buckets, ZEND_ACC_PUBLIC)
     PHP_ME(Cluster, queryIndexes, ai_Cluster_queryIndexes, ZEND_ACC_PUBLIC)
+    PHP_ME(Cluster, searchIndexes, ai_Cluster_searchIndexes, ZEND_ACC_PUBLIC)
     PHP_ME(Cluster, query, ai_Cluster_query, ZEND_ACC_PUBLIC)
     PHP_ME(Cluster, analyticsQuery, ai_Cluster_analyticsQuery, ZEND_ACC_PUBLIC)
     PHP_ME(Cluster, searchQuery, ai_Cluster_searchQuery, ZEND_ACC_PUBLIC)

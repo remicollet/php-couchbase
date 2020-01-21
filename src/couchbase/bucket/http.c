@@ -18,6 +18,9 @@
 
 #define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/http", __FILE__, __LINE__
 
+extern zend_class_entry *pcbc_default_exception_ce;
+extern zend_class_entry *pcbc_http_exception_ce;
+
 typedef struct {
     opcookie_res header;
     zval bytes;
@@ -58,7 +61,7 @@ void http_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPHTTP *resp)
     opcookie_push(cookie, &result->header);
 }
 
-static lcb_STATUS proc_http_results(zval *return_value, opcookie *cookie TSRMLS_DC)
+static lcb_STATUS proc_http_results(zval *return_value, opcookie *cookie, void(httpcb)(zval *, zval *) TSRMLS_DC)
 {
     opcookie_http_res *res;
     lcb_STATUS err = LCB_SUCCESS;
@@ -71,7 +74,42 @@ static lcb_STATUS proc_http_results(zval *return_value, opcookie *cookie TSRMLS_
         FOREACH_OPCOOKIE_RES(opcookie_http_res, res, cookie)
         {
             if (has_value == 0) {
-                ZVAL_ZVAL(return_value, &res->bytes, 1, 0);
+                if (Z_TYPE(res->bytes) == IS_ARRAY) {
+                    HashTable *marr = Z_ARRVAL(res->bytes);
+                    zval *mval;
+                    mval = zend_symtable_str_find(marr, ZEND_STRL("errors"));
+                    if (mval && Z_TYPE_P(mval) == IS_ARRAY) {
+                        smart_str buf = {0};
+                        zend_string *string_key = NULL;
+                        zval *entry;
+                        ZEND_HASH_FOREACH_STR_KEY_VAL(HASH_OF(mval), string_key, entry)
+                        {
+                            smart_str_append_ex(&buf, string_key, 0);
+                            if (Z_TYPE_P(entry) == IS_STRING) {
+                                smart_str_appends(&buf, ": ");
+                                smart_str_append_ex(&buf, Z_STR_P(entry), 0);
+                            }
+                            smart_str_appends(&buf, ", ");
+                        }
+                        ZEND_HASH_FOREACH_END();
+                        if (buf.s && ZSTR_LEN(buf.s) > 2) {
+                            ZSTR_LEN(buf.s) -= 2;
+                            ZSTR_VAL(buf.s)[ZSTR_LEN(buf.s)] = '\0';
+                        }
+                        object_init_ex(return_value, pcbc_http_exception_ce);
+                        zend_update_property_str(pcbc_default_exception_ce, return_value, ZEND_STRL("message"),
+                                                 buf.s TSRMLS_CC);
+                        smart_str_free(&buf);
+                        err = LCB_ERR_HTTP;
+                    }
+                }
+                if (err == LCB_SUCCESS) {
+                    if (httpcb) {
+                        httpcb(return_value, &res->bytes);
+                    } else {
+                        ZVAL_ZVAL(return_value, &res->bytes, 1, 0);
+                    }
+                }
                 has_value = 1;
             } else {
                 err = LCB_ERR_GENERIC;
@@ -88,7 +126,8 @@ static lcb_STATUS proc_http_results(zval *return_value, opcookie *cookie TSRMLS_
     return err;
 }
 
-void pcbc_http_request(zval *return_value, lcb_INSTANCE *conn, lcb_CMDHTTP *cmd, int json_response TSRMLS_DC)
+void pcbc_http_request(zval *return_value, lcb_INSTANCE *conn, lcb_CMDHTTP *cmd, int json_response,
+                       void(httpcb)(zval *, zval *) TSRMLS_DC)
 {
     lcb_STATUS err;
     opcookie *cookie;
@@ -99,10 +138,15 @@ void pcbc_http_request(zval *return_value, lcb_INSTANCE *conn, lcb_CMDHTTP *cmd,
     lcb_cmdhttp_destroy(cmd);
     if (err == LCB_SUCCESS) {
         lcb_wait(conn, LCB_WAIT_DEFAULT);
-        err = proc_http_results(return_value, cookie TSRMLS_CC);
+        err = proc_http_results(return_value, cookie, httpcb TSRMLS_CC);
     }
     opcookie_destroy(cookie);
-    if (err != LCB_SUCCESS) {
+
+    if (Z_TYPE_P(return_value) == IS_OBJECT &&
+        instanceof_function(Z_OBJCE_P(return_value), pcbc_default_exception_ce TSRMLS_CC)) {
+        zend_throw_exception_object(return_value TSRMLS_CC);
+        RETURN_NULL();
+    } else if (err != LCB_SUCCESS) {
         throw_lcb_exception(err, NULL);
     }
 }

@@ -18,14 +18,14 @@ class ViewQueryTest extends CouchbaseTestCase {
             $this->markTestSkipped('View consistency is not supported by the CouchbaseMock');
         }
         $ddocName = $this->makeKey('testConsistency');
-        $ddoc = [
-            'views' => [
-                'test' => [
-                    'map' => "function(doc, meta) { if (meta.id.startsWith(\"{$ddocName}\")) emit(meta.id); }"
-                ],
-            ]
-        ];
-        $this->manager->upsertDesignDocument($ddocName, $ddoc);
+        $view = new \Couchbase\View();
+        $view->setName('test');
+        $view->setMap("function(doc, meta) { if (meta.id.startsWith(\"{$ddocName}\")) emit(meta.id); }");
+        $view->setReduce('_count');
+        $ddoc = new \Couchbase\DesignDocument();
+        $ddoc->setName("_design/" . $ddocName);
+        $ddoc->setViews([$view->name() => $view]);
+        $this->manager->upsertDesignDocument($ddoc);
         sleep(1); // give design document a second to settle
 
         $key = $this->makeKey($ddocName);
@@ -45,15 +45,14 @@ class ViewQueryTest extends CouchbaseTestCase {
 
     function testGrouping() {
         $ddocName = $this->makeKey('ViewQueryTest');
-        $ddoc = [
-            'views' => [
-                'test' => [
-                    'map' => "function(doc, meta) { if (doc.ddoc == \"{$ddocName}\") emit([doc.country, doc.city]); }",
-                    'reduce' => '_count'
-                ]
-            ]
-        ];
-        $this->manager->upsertDesignDocument($ddocName, $ddoc);
+        $view = new \Couchbase\View();
+        $view->setName('test');
+        $view->setMap("function(doc, meta) { if (doc.ddoc == \"{$ddocName}\") emit([doc.country, doc.city]); }");
+        $view->setReduce('_count');
+        $ddoc = new \Couchbase\DesignDocument();
+        $ddoc->setName("_design/" . $ddocName);
+        $ddoc->setViews([$view->name() => $view]);
+        $this->manager->upsertDesignDocument($ddoc);
         sleep(1); // give design document a second to settle
 
         $this->collection->upsert($this->makeKey($ddocName), ['ddoc' => $ddocName, 'country' => 'USA', 'city' => 'New York', 'name' => 'John Doe']);

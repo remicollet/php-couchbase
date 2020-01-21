@@ -42,7 +42,7 @@ static void n1ix_create_callback(lcb_INSTANCE *instance, int cbtype, const lcb_R
     opcookie_push((opcookie *)resp->cookie, &result->header);
 }
 
-void pcbc_n1ix_create(pcbc_bucket_manager_t *manager, lcb_CMDN1XMGMT *cmd, zend_bool ignore_if_exist,
+void pcbc_n1ix_create(pcbc_query_index_manager_t *manager, lcb_CMDN1XMGMT *cmd, zend_bool ignore_if_exist,
                       zval *return_value TSRMLS_DC)
 {
     opcookie *cookie;

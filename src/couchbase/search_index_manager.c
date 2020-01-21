@@ -54,7 +54,7 @@ PHP_METHOD(SearchIndexManager, listIndexes)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     lcb_cmdhttp_path(cmd, path, strlen(path));
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1, NULL TSRMLS_CC);
 }
 
 PHP_METHOD(SearchIndexManager, getIndex)
@@ -77,7 +77,7 @@ PHP_METHOD(SearchIndexManager, getIndex)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1, NULL TSRMLS_CC);
     efree(path);
 }
 
@@ -101,7 +101,7 @@ PHP_METHOD(SearchIndexManager, deleteIndex)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_DELETE);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1, NULL TSRMLS_CC);
     efree(path);
 }
 
@@ -127,7 +127,7 @@ PHP_METHOD(SearchIndexManager, createIndex)
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_body(cmd, def, def_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_JSON, strlen(PCBC_CONTENT_TYPE_JSON));
-    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1, NULL TSRMLS_CC);
     efree(path);
 }
 
@@ -151,7 +151,7 @@ PHP_METHOD(SearchIndexManager, getIndexedDocumentsCount)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1 TSRMLS_CC);
+    pcbc_http_request(return_value, obj->conn->lcb, cmd, 1, NULL TSRMLS_CC);
     efree(path);
 }
 
@@ -217,13 +217,13 @@ static zend_object *pcbc_search_index_manager_create_object(zend_class_entry *cl
     return &obj->std;
 }
 
-void pcbc_search_index_manager_init(zval *return_value, pcbc_bucket_manager_t *bucket_manager TSRMLS_DC)
+void pcbc_search_index_manager_init(zval *return_value, zval *cluster TSRMLS_DC)
 {
     pcbc_search_index_manager_t *manager;
 
     object_init_ex(return_value, pcbc_search_index_manager_ce);
     manager = Z_SEARCH_INDEX_MANAGER_OBJ_P(return_value);
-    manager->conn = bucket_manager->conn;
+    manager->conn = Z_CLUSTER_OBJ_P(cluster)->conn;
     pcbc_connection_addref(manager->conn TSRMLS_CC);
 }
 

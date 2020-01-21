@@ -70,7 +70,6 @@ COUCHBASE_FILES=" \
     src/couchbase/bucket/touch.c \
     src/couchbase/bucket/unlock.c \
     src/couchbase/bucket/view.c \
-    src/couchbase/bucket_manager.c \
     src/couchbase/cert_authenticator.c \
     src/couchbase/cluster.c \
     src/couchbase/cluster_manager.c \
@@ -79,6 +78,8 @@ COUCHBASE_FILES=" \
     src/couchbase/collection.c \
     src/couchbase/log_formatter.c \
     src/couchbase/lookup_spec.c \
+    src/couchbase/managers/bucket_manager.c \
+    src/couchbase/managers/view_index_manager.c \
     src/couchbase/mutate_spec.c \
     src/couchbase/mutation_state.c \
     src/couchbase/n1ql_index.c \
@@ -121,7 +122,6 @@ COUCHBASE_FILES=" \
     src/couchbase/search/wildcard_query.c \
     src/couchbase/search_index_manager.c \
     src/couchbase/search_options.c \
-    src/couchbase/view_index_manager.c \
     transcoding.c \
 "
 
