@@ -36,7 +36,6 @@ if (PHP_COUCHBASE != "no") {
             "pool.c " +
             "query_index_manager.c " +
             "result.c " +
-            "search_index_manager.c " +
             "search_options.c ";
         src_couchbase_bucket_sources =
             "cbas.c " +
@@ -56,6 +55,7 @@ if (PHP_COUCHBASE != "no") {
             "view.c ";
         src_couchbase_managers_sources =
             "bucket_manager.c " +
+            "search_index_manager.c " +
             "view_index_manager.c ";
         src_couchbase_query_index_manager_sources =
             "n1ix_create.c " +

@@ -97,6 +97,7 @@
             <file role="src" name="src/couchbase/lookup_spec.c" />
             <file role="src" name="src/couchbase/managers/bucket_manager.c" />
             <file role="src" name="src/couchbase/managers/view_index_manager.c" />
+            <file role="src" name="src/couchbase/managers/search_index_manager.c" />
             <file role="src" name="src/couchbase/mutate_spec.c" />
             <file role="src" name="src/couchbase/mutation_state.c" />
             <file role="src" name="src/couchbase/n1ql_index.c" />
@@ -137,7 +138,6 @@
             <file role="src" name="src/couchbase/search/term_query.c" />
             <file role="src" name="src/couchbase/search/term_range_query.c" />
             <file role="src" name="src/couchbase/search/wildcard_query.c" />
-            <file role="src" name="src/couchbase/search_index_manager.c" />
             <file role="src" name="src/couchbase/search_options.c" />
             <file role="src" name="transcoding.c" />
         </dir>

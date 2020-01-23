@@ -339,8 +339,6 @@ void pcbc_query_index_manager_init(zval *return_value, zval *cluster TSRMLS_DC);
 void pcbc_mutation_state_export_for_n1ql(zval *obj, zval *scan_vectors TSRMLS_DC);
 void pcbc_mutation_state_export_for_search(zval *mutation_state, zval *scan_vectors TSRMLS_DC);
 
-void pcbc_search_index_manager_init(zval *return_value, zval *cluster TSRMLS_DC);
-
 void pcbc_crypto_register(pcbc_bucket_t *obj, const char *name, int name_len, zval *provider TSRMLS_DC);
 void pcbc_crypto_unregister(pcbc_bucket_t *obj, const char *name, int name_len TSRMLS_DC);
 void pcbc_crypto_encrypt_fields(pcbc_bucket_t *obj, zval *document, zval *options, const char *prefix,

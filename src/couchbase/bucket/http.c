@@ -101,6 +101,19 @@ static lcb_STATUS proc_http_results(zval *return_value, opcookie *cookie, void(h
                                                  buf.s TSRMLS_CC);
                         smart_str_free(&buf);
                         err = LCB_ERR_HTTP;
+                    } else {
+                        mval = zend_symtable_str_find(marr, ZEND_STRL("status"));
+                        if (mval && Z_TYPE_P(mval) == IS_STRING) {
+                            if (zend_binary_strcmp("fail", 4, Z_STRVAL_P(mval), Z_STRLEN_P(mval)) == 0) {
+                                object_init_ex(return_value, pcbc_http_exception_ce);
+                                mval = zend_symtable_str_find(marr, ZEND_STRL("error"));
+                                if (mval && Z_TYPE_P(mval) == IS_STRING) {
+                                    zend_update_property(pcbc_default_exception_ce, return_value, ZEND_STRL("message"),
+                                                         mval TSRMLS_CC);
+                                }
+                                err = LCB_ERR_HTTP;
+                            }
+                        }
                     }
                 }
                 if (err == LCB_SUCCESS) {
