@@ -89,8 +89,6 @@
             <file role="src" name="src/couchbase/cert_authenticator.c" />
             <file role="src" name="src/couchbase/cluster.c" />
             <file role="src" name="src/couchbase/cluster_options.c" />
-            <file role="src" name="src/couchbase/cluster_manager.c" />
-            <file role="src" name="src/couchbase/cluster_manager/user_settings.c" />
             <file role="src" name="src/couchbase/collection.c" />
             <file role="src" name="src/couchbase/crypto.c" />
             <file role="src" name="src/couchbase/log_formatter.c" />
@@ -98,6 +96,7 @@
             <file role="src" name="src/couchbase/managers/bucket_manager.c" />
             <file role="src" name="src/couchbase/managers/view_index_manager.c" />
             <file role="src" name="src/couchbase/managers/search_index_manager.c" />
+            <file role="src" name="src/couchbase/managers/user_manager.c" />
             <file role="src" name="src/couchbase/mutate_spec.c" />
             <file role="src" name="src/couchbase/mutation_state.c" />
             <file role="src" name="src/couchbase/n1ql_index.c" />

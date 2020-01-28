@@ -119,7 +119,6 @@ extern zend_class_entry *pcbc_search_query_ce;
 extern zend_class_entry *pcbc_search_sort_ce;
 extern zend_class_entry *pcbc_search_facet_ce;
 extern zend_class_entry *pcbc_json_serializable_ce;
-extern zend_class_entry *pcbc_user_settings_ce;
 extern zend_class_entry *pcbc_crypto_provider_ce;
 
 extern zend_class_entry *pcbc_collection_ce;
@@ -276,16 +275,6 @@ typedef struct {
     zend_object std;
 } pcbc_cluster_t;
 
-typedef struct {
-    pcbc_connection_t *conn;
-    zend_object std;
-} pcbc_cluster_manager_t;
-
-typedef struct {
-    pcbc_connection_t *conn;
-    zend_object std;
-} pcbc_search_index_manager_t;
-
 struct pcbc_crypto_id {
     char *name;
     int name_len;
@@ -307,15 +296,6 @@ typedef struct {
     pcbc_connection_t *conn;
     zend_object std;
 } pcbc_query_index_manager_t;
-
-typedef struct {
-    char *full_name;
-    char *password;
-    int full_name_len;
-    int password_len;
-    smart_str roles;
-    zend_object std;
-} pcbc_user_settings_t;
 
 typedef struct {
     void *next;
@@ -350,10 +330,6 @@ static inline pcbc_cluster_t *pcbc_cluster_fetch_object(zend_object *obj)
 {
     return (pcbc_cluster_t *)((char *)obj - XtOffsetOf(pcbc_cluster_t, std));
 }
-static inline pcbc_cluster_manager_t *pcbc_cluster_manager_fetch_object(zend_object *obj)
-{
-    return (pcbc_cluster_manager_t *)((char *)obj - XtOffsetOf(pcbc_cluster_manager_t, std));
-}
 static inline pcbc_bucket_t *pcbc_bucket_fetch_object(zend_object *obj)
 {
     return (pcbc_bucket_t *)((char *)obj - XtOffsetOf(pcbc_bucket_t, std));
@@ -362,20 +338,12 @@ static inline pcbc_password_authenticator_t *pcbc_password_authenticator_fetch_o
 {
     return (pcbc_password_authenticator_t *)((char *)obj - XtOffsetOf(pcbc_password_authenticator_t, std));
 }
-static inline pcbc_user_settings_t *pcbc_user_settings_fetch_object(zend_object *obj)
-{
-    return (pcbc_user_settings_t *)((char *)obj - XtOffsetOf(pcbc_user_settings_t, std));
-}
 #define Z_CLUSTER_OBJ(zo) (pcbc_cluster_fetch_object(zo))
 #define Z_CLUSTER_OBJ_P(zv) (pcbc_cluster_fetch_object(Z_OBJ_P(zv)))
-#define Z_CLUSTER_MANAGER_OBJ(zo) (pcbc_cluster_manager_fetch_object(zo))
-#define Z_CLUSTER_MANAGER_OBJ_P(zv) (pcbc_cluster_manager_fetch_object(Z_OBJ_P(zv)))
 #define Z_BUCKET_OBJ(zo) (pcbc_bucket_fetch_object(zo))
 #define Z_BUCKET_OBJ_P(zv) (pcbc_bucket_fetch_object(Z_OBJ_P(zv)))
 #define Z_PASSWORD_AUTHENTICATOR_OBJ(zo) (pcbc_password_authenticator_fetch_object(zo))
 #define Z_PASSWORD_AUTHENTICATOR_OBJ_P(zv) (pcbc_password_authenticator_fetch_object(Z_OBJ_P(zv)))
-#define Z_USER_SETTINGS_OBJ(zo) (pcbc_user_settings_fetch_object(zo))
-#define Z_USER_SETTINGS_OBJ_P(zv) (pcbc_user_settings_fetch_object(Z_OBJ_P(zv)))
 
 typedef struct {
     opcookie_res *res_head;

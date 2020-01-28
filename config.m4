@@ -72,8 +72,6 @@ COUCHBASE_FILES=" \
     src/couchbase/bucket/view.c \
     src/couchbase/cert_authenticator.c \
     src/couchbase/cluster.c \
-    src/couchbase/cluster_manager.c \
-    src/couchbase/cluster_manager/user_settings.c \
     src/couchbase/cluster_options.c \
     src/couchbase/collection.c \
     src/couchbase/log_formatter.c \
@@ -81,6 +79,7 @@ COUCHBASE_FILES=" \
     src/couchbase/managers/bucket_manager.c \
     src/couchbase/managers/search_index_manager.c \
     src/couchbase/managers/view_index_manager.c \
+    src/couchbase/managers/user_manager.c \
     src/couchbase/mutate_spec.c \
     src/couchbase/mutation_state.c \
     src/couchbase/n1ql_index.c \

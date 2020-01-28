@@ -19,7 +19,7 @@
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/cluster", __FILE__, __LINE__
 
 zend_class_entry *pcbc_cluster_ce;
-extern zend_class_entry *pcbc_cluster_manager_ce;
+extern zend_class_entry *pcbc_user_manager_ce;
 extern zend_class_entry *pcbc_cluster_options_ce;
 extern zend_class_entry *pcbc_bucket_manager_ce;
 extern zend_class_entry *pcbc_search_index_manager_ce;
@@ -62,23 +62,6 @@ static void pcbc_cluster_connection_init(zval *return_value, pcbc_cluster_t *clu
         return;
     }
     cluster->conn = conn;
-}
-
-static void pcbc_cluster_manager_init(zval *return_value, pcbc_cluster_t *cluster TSRMLS_DC)
-{
-    lcb_STATUS err;
-    pcbc_connection_t *conn = NULL;
-    err = pcbc_connection_get(&conn, LCB_TYPE_CLUSTER, cluster->connstr, NULL, cluster->username,
-                              cluster->password TSRMLS_CC);
-    if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err, NULL);
-        return;
-    }
-
-    pcbc_cluster_manager_t *manager;
-    object_init_ex(return_value, pcbc_cluster_manager_ce);
-    manager = Z_CLUSTER_MANAGER_OBJ_P(return_value);
-    manager->conn = conn;
 }
 
 PHP_METHOD(Cluster, __construct)
@@ -160,15 +143,13 @@ PHP_METHOD(Cluster, searchIndexes)
     zend_update_property(pcbc_search_index_manager_ce, return_value, ZEND_STRL("cluster"), getThis() TSRMLS_CC);
 }
 
-PHP_METHOD(Cluster, manager)
+PHP_METHOD(Cluster, users)
 {
-    pcbc_cluster_t *obj;
-
     if (zend_parse_parameters_none_throw() == FAILURE) {
-        return;
+        RETURN_NULL();
     }
-    obj = Z_CLUSTER_OBJ_P(getThis());
-    pcbc_cluster_manager_init(return_value, obj TSRMLS_CC);
+    object_init_ex(return_value, pcbc_user_manager_ce);
+    zend_update_property(pcbc_user_manager_ce, return_value, ZEND_STRL("cluster"), getThis() TSRMLS_CC);
 }
 
 ZEND_BEGIN_ARG_INFO_EX(ai_Cluster_constructor, 0, 0, 2)
@@ -181,6 +162,9 @@ ZEND_ARG_TYPE_INFO(0, name, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Cluster_buckets, 0, 0, \\Couchbase\\BucketManager, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Cluster_users, 0, 0, \\Couchbase\\UserManager, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_Cluster_queryIndexes, 0, 0, \\Couchbase\\QueryIndexManager, 0)
@@ -210,6 +194,7 @@ zend_function_entry cluster_methods[] = {
     PHP_ME(Cluster, __construct, ai_Cluster_constructor, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     PHP_ME(Cluster, bucket, ai_Cluster_bucket, ZEND_ACC_PUBLIC)
     PHP_ME(Cluster, buckets, ai_Cluster_buckets, ZEND_ACC_PUBLIC)
+    PHP_ME(Cluster, users, ai_Cluster_users, ZEND_ACC_PUBLIC)
     PHP_ME(Cluster, queryIndexes, ai_Cluster_queryIndexes, ZEND_ACC_PUBLIC)
     PHP_ME(Cluster, searchIndexes, ai_Cluster_searchIndexes, ZEND_ACC_PUBLIC)
     PHP_ME(Cluster, query, ai_Cluster_query, ZEND_ACC_PUBLIC)
