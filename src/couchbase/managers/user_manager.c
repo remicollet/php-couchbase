@@ -642,7 +642,7 @@ ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\GetUserOptions, 1)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(ai_UserManager_getAllUsers, 0, 0, IS_ARRAY, 0)
-ZEND_ARG_OBJ_INFO(0, user, \\Couchbase\\GetAllUsersOptions, 1)
+ZEND_ARG_OBJ_INFO(0, options, \\Couchbase\\GetAllUsersOptions, 1)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(ai_UserManager_upsertUser, 0, 0, 1)
@@ -665,7 +665,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(ai_UserManager_getAllGroups, 0, 0, IS_AR
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(ai_UserManager_upsertGroup, 0, 0, 1)
-ZEND_ARG_OBJ_INFO(0, user, \\Couchbase\\Group, 0)
+ZEND_ARG_OBJ_INFO(0, group, \\Couchbase\\Group, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(ai_UserManager_dropGroup, 0, 0, 1)

@@ -307,11 +307,11 @@ ZEND_ARG_TYPE_INFO(0, name, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(ai_CollectionManager_createCollection, 0, 0, 1)
-ZEND_ARG_OBJ_INFO(0, user, \\Couchbase\\CollectionSpec, 0)
+ZEND_ARG_OBJ_INFO(0, collection, \\Couchbase\\CollectionSpec, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(ai_CollectionManager_dropCollection, 0, 0, 1)
-ZEND_ARG_OBJ_INFO(0, user, \\Couchbase\\CollectionSpec, 0)
+ZEND_ARG_OBJ_INFO(0, collection, \\Couchbase\\CollectionSpec, 0)
 ZEND_END_ARG_INFO()
 
 // clang-format off

@@ -748,7 +748,7 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_CreateQueryIndexOptions_deferred, 0, 1, \\Couchbase\\CreateQueryIndexOptions,
                                        0)
-ZEND_ARG_TYPE_INFO(0, number, _IS_BOOL, 0)
+ZEND_ARG_TYPE_INFO(0, isDeferred, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 // clang-format off
@@ -826,7 +826,7 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_CreateQueryPrimaryIndexOptions_deferred, 0,
                                        1, \\Couchbase\\CreateQueryPrimaryIndexOptions, 0)
-ZEND_ARG_TYPE_INFO(0, number, _IS_BOOL, 0)
+ZEND_ARG_TYPE_INFO(0, isDeferred, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 // clang-format off
