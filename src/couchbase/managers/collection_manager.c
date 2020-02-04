@@ -260,7 +260,36 @@ PHP_METHOD(CollectionManager, createCollection)
     efree(path);
 }
 
-PHP_METHOD(CollectionManager, dropCollection) {}
+PHP_METHOD(CollectionManager, dropCollection)
+{
+
+    pcbc_bucket_t *bucket = NULL;
+    zval *prop, val, *collection, *name, *scope_name, val1, val2;
+    char *path;
+    size_t path_len;
+
+    int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "O", &collection, pcbc_collection_spec_ce);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    prop = zend_read_property(pcbc_collection_manager_ce, getThis(), ZEND_STRL("bucket"), 0, &val);
+    bucket = Z_BUCKET_OBJ_P(prop);
+
+    name = zend_read_property(pcbc_collection_spec_ce, collection, ZEND_STRL("name"), 0, &val1);
+    scope_name = zend_read_property(pcbc_collection_spec_ce, collection, ZEND_STRL("scope_name"), 0, &val2);
+    if (name == NULL || Z_TYPE_P(name) != IS_STRING || scope_name == NULL || Z_TYPE_P(scope_name) != IS_STRING) {
+        RETURN_NULL();
+    }
+
+    lcb_CMDHTTP *cmd;
+    lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_MANAGEMENT);
+    lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_DELETE);
+    path_len = spprintf(&path, 0, "/pools/default/buckets/%s/collections/%.*s/%.*s", bucket->conn->bucketname,
+                        (int)Z_STRLEN_P(scope_name), Z_STRVAL_P(scope_name), (int)Z_STRLEN_P(name), Z_STRVAL_P(name));
+    lcb_cmdhttp_path(cmd, path, path_len);
+    pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
+    efree(path);
+}
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_CollectionManager_getScope, 0, 1, \\Couchbase\\ScopeSpec, 0)
 ZEND_ARG_TYPE_INFO(0, name, IS_STRING, 0)

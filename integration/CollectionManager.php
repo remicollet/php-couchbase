@@ -31,12 +31,24 @@ printf("Scope \"%s\" has been created in %fus\n", $scope_name, microtime(true)-$
 $scope = $bucket->collections()->getScope($scope_name);
 printf("Scope \"%s\" has %d collections\n", $scope_name, count($scope->collections()));
 
-$start = microtime(true);
 $collection = new \Couchbase\CollectionSpec();
 $collection->setScopeName($scope_name);
 $collection->setName('users');
+
+$start = microtime(true);
 $bucket->collections()->createCollection($collection);
 printf("Collection \"%s\" on scope \"%s\" has been created in %fus\n",
+    $collection->name(), $collection->scopeName(), microtime(true)-$start);
+
+$scope = $bucket->collections()->getScope($scope_name);
+printf("Scope \"%s\" has %d collections\n", $scope_name, count($scope->collections()));
+foreach ($scope->collections() as $collection) {
+    printf("    * \"%s\"\n", $collection->name());
+}
+
+$start = microtime(true);
+$bucket->collections()->dropCollection($collection);
+printf("Collection \"%s\" on scope \"%s\" has been dropped in %fus\n",
     $collection->name(), $collection->scopeName(), microtime(true)-$start);
 
 $scope = $bucket->collections()->getScope($scope_name);
