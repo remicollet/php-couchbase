@@ -311,8 +311,8 @@ int pcbc_decode_value(zval *return_value, pcbc_bucket_t *bucket, const char *byt
 int pcbc_encode_value(pcbc_bucket_t *bucket, zval *value, void **bytes, lcb_size_t *nbytes, lcb_uint32_t *flags,
                       uint8_t *datatype TSRMLS_DC);
 
-void pcbc_http_request(zval *return_value, lcb_INSTANCE *conn, lcb_CMDHTTP *cmd, int json_response,
-                       void(httpcb)(zval *, zval *) TSRMLS_DC);
+void pcbc_http_request(zval *return_value, lcb_INSTANCE *conn, lcb_CMDHTTP *cmd, int json_response, void *cbctx,
+                       void(httpcb)(void *, zval *, zval *), int(errorcb)(void *, zval *) TSRMLS_DC);
 
 void pcbc_query_index_manager_init(zval *return_value, zval *cluster TSRMLS_DC);
 

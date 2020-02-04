@@ -81,15 +81,12 @@ COUCHBASE_FILES=" \
     src/couchbase/managers/search_index_manager.c \
     src/couchbase/managers/view_index_manager.c \
     src/couchbase/managers/user_manager.c \
+    src/couchbase/managers/query_index_manager.c \
     src/couchbase/mutate_spec.c \
     src/couchbase/mutation_state.c \
     src/couchbase/n1ql_index.c \
     src/couchbase/password_authenticator.c \
     src/couchbase/pool.c \
-    src/couchbase/query_index_manager.c \
-    src/couchbase/query_index_manager/n1ix_create.c \
-    src/couchbase/query_index_manager/n1ix_drop.c \
-    src/couchbase/query_index_manager/n1ix_list.c \
     src/couchbase/result.c \
     src/couchbase/search/boolean_field_query.c \
     src/couchbase/search/boolean_query.c \

@@ -22,7 +22,7 @@ zend_class_entry *pcbc_view_index_manager_ce;
 zend_class_entry *pcbc_design_document_ce;
 zend_class_entry *pcbc_view_ce;
 
-static void httpcb_getDesignDocument(zval *return_value, zval *response)
+static void httpcb_getDesignDocument(void *ctx, zval *return_value, zval *response)
 {
     zval view_prop;
     object_init_ex(return_value, pcbc_design_document_ce);
@@ -75,7 +75,7 @@ PHP_METHOD(ViewIndexManager, getDesignDocument)
     path_len = spprintf(&path, 0, "/%.*s", (int)ZSTR_LEN(name), ZSTR_VAL(name));
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, httpcb_getDesignDocument TSRMLS_CC);
+    pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, NULL, httpcb_getDesignDocument, NULL TSRMLS_CC);
     efree(path);
     zend_update_property_str(pcbc_design_document_ce, return_value, ZEND_STRL("name"), name TSRMLS_CC);
 }
@@ -128,7 +128,7 @@ static void parse_ddoc_entry(zval *return_value, zval *response)
     }
 }
 
-static void httpcb_getAllDesignDocuments(zval *return_value, zval *response)
+static void httpcb_getAllDesignDocuments(void *ctx, zval *return_value, zval *response)
 {
     array_init(return_value);
 
@@ -165,7 +165,7 @@ PHP_METHOD(ViewIndexManager, getAllDesignDocuments)
     path_len = spprintf(&path, 0, "/pools/default/buckets/%s/ddocs", bucket->conn->bucketname);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, httpcb_getAllDesignDocuments TSRMLS_CC);
+    pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, NULL, httpcb_getAllDesignDocuments, NULL TSRMLS_CC);
     efree(path);
 }
 
@@ -204,7 +204,7 @@ PHP_METHOD(ViewIndexManager, upsertDesignDocument)
         smart_str_0(&buf);
         lcb_cmdhttp_body(cmd, ZSTR_VAL(buf.s), ZSTR_LEN(buf.s));
     }
-    pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     efree(path);
     smart_str_free(&buf);
 }
@@ -231,7 +231,7 @@ PHP_METHOD(ViewIndexManager, dropDesignDocument)
     path_len = spprintf(&path, 0, "/%*s", (int)ZSTR_LEN(name), ZSTR_VAL(name));
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     efree(path);
 }
 

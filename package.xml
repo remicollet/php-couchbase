@@ -97,15 +97,12 @@
             <file role="src" name="src/couchbase/managers/view_index_manager.c" />
             <file role="src" name="src/couchbase/managers/search_index_manager.c" />
             <file role="src" name="src/couchbase/managers/user_manager.c" />
+            <file role="src" name="src/couchbase/managers/query_index_manager.c" />
             <file role="src" name="src/couchbase/mutate_spec.c" />
             <file role="src" name="src/couchbase/mutation_state.c" />
             <file role="src" name="src/couchbase/n1ql_index.c" />
             <file role="src" name="src/couchbase/password_authenticator.c" />
             <file role="src" name="src/couchbase/pool.c" />
-            <file role="src" name="src/couchbase/query_index_manager.c" />
-            <file role="src" name="src/couchbase/query_index_manager/n1ix_create.c" />
-            <file role="src" name="src/couchbase/query_index_manager/n1ix_drop.c" />
-            <file role="src" name="src/couchbase/query_index_manager/n1ix_list.c" />
             <file role="src" name="src/couchbase/result.c" />
             <file role="src" name="src/couchbase/search/boolean_field_query.c" />
             <file role="src" name="src/couchbase/search/boolean_query.c" />

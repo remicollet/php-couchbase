@@ -23,6 +23,7 @@ extern zend_class_entry *pcbc_user_manager_ce;
 extern zend_class_entry *pcbc_cluster_options_ce;
 extern zend_class_entry *pcbc_bucket_manager_ce;
 extern zend_class_entry *pcbc_search_index_manager_ce;
+extern zend_class_entry *pcbc_query_index_manager_ce;
 
 PHP_METHOD(Cluster, query);
 PHP_METHOD(Cluster, analyticsQuery);
@@ -131,7 +132,8 @@ PHP_METHOD(Cluster, queryIndexes)
         RETURN_NULL();
     }
 
-    pcbc_query_index_manager_init(return_value, getThis() TSRMLS_CC);
+    object_init_ex(return_value, pcbc_query_index_manager_ce);
+    zend_update_property(pcbc_query_index_manager_ce, return_value, ZEND_STRL("cluster"), getThis() TSRMLS_CC);
 }
 
 PHP_METHOD(Cluster, searchIndexes)

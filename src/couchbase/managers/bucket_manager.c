@@ -25,7 +25,7 @@ extern zend_class_entry *pcbc_cluster_ce;
 zend_class_entry *pcbc_bucket_settings_ce;
 zend_class_entry *pcbc_bucket_manager_ce;
 
-static void httpcb_getBucket(zval *return_value, zval *response)
+static void httpcb_getBucket(void *ctx, zval *return_value, zval *response)
 {
     HashTable *marr = Z_ARRVAL_P(response);
     object_init_ex(return_value, pcbc_bucket_settings_ce);
@@ -101,11 +101,11 @@ PHP_METHOD(BucketManager, getBucket)
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
     path_len = spprintf(&path, 0, "/pools/default/buckets/%*s", (int)ZSTR_LEN(name), ZSTR_VAL(name));
     lcb_cmdhttp_path(cmd, path, path_len);
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, httpcb_getBucket TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, httpcb_getBucket, NULL TSRMLS_CC);
     efree(path);
 }
 
-static void httpcb_getAllBuckets(zval *return_value, zval *response)
+static void httpcb_getAllBuckets(void *ctx, zval *return_value, zval *response)
 {
     array_init(return_value);
 
@@ -113,7 +113,7 @@ static void httpcb_getAllBuckets(zval *return_value, zval *response)
     ZEND_HASH_FOREACH_VAL(HASH_OF(response), entry)
     {
         zval bs;
-        httpcb_getBucket(&bs, entry);
+        httpcb_getBucket(ctx, &bs, entry);
         add_next_index_zval(return_value, &bs);
     }
     ZEND_HASH_FOREACH_END();
@@ -139,7 +139,7 @@ PHP_METHOD(BucketManager, getAllBuckets)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     lcb_cmdhttp_path(cmd, path, strlen(path));
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, httpcb_getAllBuckets TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, httpcb_getAllBuckets, NULL TSRMLS_CC);
 }
 
 PHP_METHOD(BucketManager, createBucket)
@@ -217,7 +217,7 @@ PHP_METHOD(BucketManager, createBucket)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_POST);
     lcb_cmdhttp_path(cmd, path, strlen(path));
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     smart_str_free(&buf);
 }
 
@@ -243,7 +243,7 @@ PHP_METHOD(BucketManager, removeBucket)
     path_len = spprintf(&path, 0, "/pools/default/buckets/%*s", (int)ZSTR_LEN(name), ZSTR_VAL(name));
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     efree(path);
 }
 
@@ -269,7 +269,7 @@ PHP_METHOD(BucketManager, flush)
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
     path_len = spprintf(&path, 0, "/pools/default/buckets/%*s/controller/doFlush", (int)ZSTR_LEN(name), ZSTR_VAL(name));
     lcb_cmdhttp_path(cmd, path, path_len);
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     efree(path);
 }
 

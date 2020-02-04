@@ -33,7 +33,7 @@ zend_class_entry *pcbc_get_user_options_ce;
 zend_class_entry *pcbc_drop_user_options_ce;
 zend_class_entry *pcbc_upsert_user_options_ce;
 
-static void httpcb_getUser(zval *return_value, zval *response)
+static void httpcb_getUser(void *ctx, zval *return_value, zval *response)
 {
     zval *val;
     object_init_ex(return_value, pcbc_user_and_metadata_ce);
@@ -184,11 +184,11 @@ PHP_METHOD(UserManager, getUser)
     lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_MANAGEMENT);
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     lcb_cmdhttp_path(cmd, ZSTR_VAL(path.s), ZSTR_LEN(path.s));
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, httpcb_getUser TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, httpcb_getUser, NULL TSRMLS_CC);
     smart_str_free(&path);
 }
 
-static void httpcb_getAllUsers(zval *return_value, zval *response)
+static void httpcb_getAllUsers(void *ctx, zval *return_value, zval *response)
 {
     array_init(return_value);
 
@@ -199,7 +199,7 @@ static void httpcb_getAllUsers(zval *return_value, zval *response)
     ZEND_HASH_FOREACH_VAL(HASH_OF(response), entry)
     {
         zval user_and_meta;
-        httpcb_getUser(&user_and_meta, entry);
+        httpcb_getUser(ctx, &user_and_meta, entry);
         add_next_index_zval(return_value, &user_and_meta);
     }
     ZEND_HASH_FOREACH_END();
@@ -233,7 +233,7 @@ PHP_METHOD(UserManager, getAllUsers)
     lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_MANAGEMENT);
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     lcb_cmdhttp_path(cmd, path, path_len);
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, httpcb_getAllUsers TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, httpcb_getAllUsers, NULL TSRMLS_CC);
     if (need_to_free_path) {
         efree(path);
     }
@@ -337,7 +337,7 @@ PHP_METHOD(UserManager, upsertUser)
     }
     smart_str_0(&buf);
     lcb_cmdhttp_body(cmd, ZSTR_VAL(buf.s), ZSTR_LEN(buf.s));
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     smart_str_free(&path);
     smart_str_free(&buf);
 }
@@ -375,11 +375,11 @@ PHP_METHOD(UserManager, dropUser)
     lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_MANAGEMENT);
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_DELETE);
     lcb_cmdhttp_path(cmd, ZSTR_VAL(path.s), ZSTR_LEN(path.s));
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     smart_str_free(&path);
 }
 
-static void httpcb_getRoles(zval *return_value, zval *response)
+static void httpcb_getRoles(void *ctx, zval *return_value, zval *response)
 {
     array_init(return_value);
 
@@ -436,10 +436,10 @@ PHP_METHOD(UserManager, getRoles)
     lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_MANAGEMENT);
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     lcb_cmdhttp_path(cmd, path, strlen(path));
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, httpcb_getRoles TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, httpcb_getRoles, NULL TSRMLS_CC);
 }
 
-static void httpcb_getGroup(zval *return_value, zval *response)
+static void httpcb_getGroup(void *ctx, zval *return_value, zval *response)
 {
     if (!response || Z_TYPE_P(response) != IS_ARRAY) {
         return;
@@ -506,11 +506,11 @@ PHP_METHOD(UserManager, getGroup)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     path_len = spprintf(&path, 0, "/settings/rbac/groups/%.*s", (int)ZSTR_LEN(name), ZSTR_VAL(name));
     lcb_cmdhttp_path(cmd, path, path_len);
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, httpcb_getGroup TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, httpcb_getGroup, NULL TSRMLS_CC);
     efree(path);
 }
 
-static void httpcb_getAllGroups(zval *return_value, zval *response)
+static void httpcb_getAllGroups(void *ctx, zval *return_value, zval *response)
 {
     array_init(return_value);
 
@@ -521,7 +521,7 @@ static void httpcb_getAllGroups(zval *return_value, zval *response)
     ZEND_HASH_FOREACH_VAL(HASH_OF(response), entry)
     {
         zval group;
-        httpcb_getGroup(&group, entry);
+        httpcb_getGroup(ctx, &group, entry);
         add_next_index_zval(return_value, &group);
     }
     ZEND_HASH_FOREACH_END();
@@ -543,7 +543,7 @@ PHP_METHOD(UserManager, getAllGroups)
     lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_MANAGEMENT);
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     lcb_cmdhttp_path(cmd, path, strlen(path));
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, httpcb_getAllGroups TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, httpcb_getAllGroups, NULL TSRMLS_CC);
 }
 
 PHP_METHOD(UserManager, upsertGroup)
@@ -605,7 +605,7 @@ PHP_METHOD(UserManager, upsertGroup)
     smart_str_0(&buf);
     lcb_cmdhttp_body(cmd, ZSTR_VAL(buf.s), ZSTR_LEN(buf.s));
 
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     efree(path);
     smart_str_free(&buf);
 }
@@ -632,7 +632,7 @@ PHP_METHOD(UserManager, dropGroup)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_DELETE);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     efree(path);
 }
 

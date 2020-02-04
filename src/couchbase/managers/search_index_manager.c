@@ -62,7 +62,7 @@ static void parse_index_entry(zval *return_value, zval *response)
     }
 }
 
-static void httpcb_getAllIndexes(zval *return_value, zval *response)
+static void httpcb_getAllIndexes(void *ctx, zval *return_value, zval *response)
 {
     array_init(return_value);
 
@@ -101,10 +101,10 @@ PHP_METHOD(SearchIndexManager, getAllIndexes)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     lcb_cmdhttp_path(cmd, path, strlen(path));
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, httpcb_getAllIndexes TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, httpcb_getAllIndexes, NULL TSRMLS_CC);
 }
 
-static void httpcb_getIndex(zval *return_value, zval *response)
+static void httpcb_getIndex(void *ctx, zval *return_value, zval *response)
 {
     zval *def = zend_symtable_str_find(Z_ARRVAL_P(response), ZEND_STRL("indexDef"));
     if (def && Z_TYPE_P(def) == IS_ARRAY) {
@@ -134,7 +134,7 @@ PHP_METHOD(SearchIndexManager, getIndex)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, httpcb_getIndex TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, httpcb_getIndex, NULL TSRMLS_CC);
     efree(path);
 }
 
@@ -160,7 +160,7 @@ PHP_METHOD(SearchIndexManager, dropIndex)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_DELETE);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     efree(path);
 }
 
@@ -201,12 +201,12 @@ PHP_METHOD(SearchIndexManager, upsertIndex)
         smart_str_0(&buf);
         lcb_cmdhttp_body(cmd, ZSTR_VAL(buf.s), ZSTR_LEN(buf.s));
     }
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     efree(path);
     smart_str_free(&buf);
 }
 
-static void httpcb_getIndexedDocumentsCount(zval *return_value, zval *response)
+static void httpcb_getIndexedDocumentsCount(void *ctx, zval *return_value, zval *response)
 {
     zval *val = zend_symtable_str_find(Z_ARRVAL_P(response), ZEND_STRL("count"));
     if (val && Z_TYPE_P(val) == IS_LONG) {
@@ -238,7 +238,7 @@ PHP_METHOD(SearchIndexManager, getIndexedDocumentsCount)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, httpcb_getIndexedDocumentsCount TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, httpcb_getIndexedDocumentsCount, NULL TSRMLS_CC);
     efree(path);
 }
 
@@ -264,7 +264,7 @@ PHP_METHOD(SearchIndexManager, pauseIngest)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_POST);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     efree(path);
 }
 
@@ -290,7 +290,7 @@ PHP_METHOD(SearchIndexManager, resumeIngest)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_POST);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     efree(path);
 }
 
@@ -316,7 +316,7 @@ PHP_METHOD(SearchIndexManager, allowQuerying)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_POST);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     efree(path);
 }
 
@@ -342,7 +342,7 @@ PHP_METHOD(SearchIndexManager, disallowQuerying)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_POST);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     efree(path);
 }
 
@@ -368,7 +368,7 @@ PHP_METHOD(SearchIndexManager, freezePlan)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_POST);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     efree(path);
 }
 
@@ -394,11 +394,11 @@ PHP_METHOD(SearchIndexManager, unfreezePlan)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_POST);
     lcb_cmdhttp_path(cmd, path, path_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     efree(path);
 }
 
-static void httpcb_analyzeDocument(zval *return_value, zval *response)
+static void httpcb_analyzeDocument(void *ctx, zval *return_value, zval *response)
 {
     zval *val = zend_symtable_str_find(Z_ARRVAL_P(response), ZEND_STRL("analyzed"));
     ZVAL_ZVAL(return_value, val, 1, 0);
@@ -438,7 +438,7 @@ PHP_METHOD(SearchIndexManager, analyzeDocument)
         smart_str_0(&buf);
         lcb_cmdhttp_body(cmd, ZSTR_VAL(buf.s), ZSTR_LEN(buf.s));
     }
-    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, httpcb_analyzeDocument TSRMLS_CC);
+    pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, NULL, httpcb_analyzeDocument, NULL TSRMLS_CC);
     efree(path);
     smart_str_free(&buf);
 }

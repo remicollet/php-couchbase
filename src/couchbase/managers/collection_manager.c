@@ -24,7 +24,7 @@ zend_class_entry *pcbc_collection_manager_ce;
 zend_class_entry *pcbc_scope_spec_ce;
 zend_class_entry *pcbc_collection_spec_ce;
 
-static void httpcb_getScope(zval *return_value, zval *response)
+static void httpcb_getScope(void *ctx, zval *return_value, zval *response)
 {
     if (!response || ZVAL_IS_NULL(response)) {
         ZVAL_NULL(return_value);
@@ -70,7 +70,7 @@ static void httpcb_getScope(zval *return_value, zval *response)
     zval_delref_p(&collections);
 }
 
-static void httpcb_getAllScopes(zval *return_value, zval *response)
+static void httpcb_getAllScopes(void *ctx, zval *return_value, zval *response)
 {
     array_init(return_value);
 
@@ -83,7 +83,7 @@ static void httpcb_getAllScopes(zval *return_value, zval *response)
         ZEND_HASH_FOREACH_VAL(HASH_OF(rows), entry)
         {
             zval scope;
-            httpcb_getScope(&scope, entry);
+            httpcb_getScope(ctx, &scope, entry);
             add_next_index_zval(return_value, &scope);
         }
         ZEND_HASH_FOREACH_END();
@@ -108,11 +108,11 @@ PHP_METHOD(CollectionManager, getAllScopes)
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_GET);
     path_len = spprintf(&path, 0, "/pools/default/buckets/%s/collections", bucket->conn->bucketname);
     lcb_cmdhttp_path(cmd, path, path_len);
-    pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, httpcb_getAllScopes TSRMLS_CC);
+    pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, NULL, httpcb_getAllScopes, NULL TSRMLS_CC);
     efree(path);
 }
 
-static void httpcb_getSingleScope(zval *return_value, zval *response)
+static void httpcb_getSingleScope(void *ctx, zval *return_value, zval *response)
 {
 
     const char *scope_name = Z_STRVAL_P(return_value);
@@ -131,7 +131,7 @@ static void httpcb_getSingleScope(zval *return_value, zval *response)
                 continue;
             }
             if (zend_binary_strcmp(Z_STRVAL_P(name), Z_STRLEN_P(name), scope_name, scope_len) == 0) {
-                httpcb_getScope(return_value, entry);
+                httpcb_getScope(ctx, return_value, entry);
                 return;
             }
         }
@@ -160,7 +160,7 @@ PHP_METHOD(CollectionManager, getScope)
     path_len = spprintf(&path, 0, "/pools/default/buckets/%s/collections", bucket->conn->bucketname);
     lcb_cmdhttp_path(cmd, path, path_len);
     ZVAL_ZVAL(return_value, scope, 0, NULL);
-    pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, httpcb_getSingleScope TSRMLS_CC);
+    pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, NULL, httpcb_getSingleScope, NULL TSRMLS_CC);
     efree(path);
 }
 
@@ -191,7 +191,7 @@ PHP_METHOD(CollectionManager, createScope)
     zend_string_free(str);
     lcb_cmdhttp_body(cmd, payload, payload_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     efree(payload);
     efree(path);
 }
@@ -217,7 +217,7 @@ PHP_METHOD(CollectionManager, dropScope)
     path_len = spprintf(&path, 0, "/pools/default/buckets/%s/collections/%.*s", bucket->conn->bucketname,
                         (int)ZSTR_LEN(scope), ZSTR_VAL(scope));
     lcb_cmdhttp_path(cmd, path, path_len);
-    pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     efree(path);
 }
 
@@ -255,7 +255,7 @@ PHP_METHOD(CollectionManager, createCollection)
     zend_string_free(str);
     lcb_cmdhttp_body(cmd, payload, payload_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
-    pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, NULL TSRMLS_CC);
+    pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
     efree(payload);
     efree(path);
 }
