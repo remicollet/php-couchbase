@@ -91,23 +91,6 @@ ZEND_EXTERN_MODULE_GLOBALS(couchbase)
 #define PCBCG(v) (couchbase_globals.v)
 #endif
 
-#if PHP_VERSION_ID < 70200
-
-#define php_base64_decode_str(arg) php_base64_decode((const unsigned char *)ZSTR_VAL(arg), ZSTR_LEN(arg))
-
-#undef ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO
-#define ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(name, type, allow_null)                                                   \
-    ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(name, 0, -1, type, NULL, allow_null)
-
-#define zend_parse_parameters_none_throw zend_parse_parameters_none
-
-#define ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO(name, class_name, allow_null)                                              \
-    ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(name, 0, -1, IS_OBJECT, NULL, allow_null)
-
-#define ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(name, return_reference, required_num_args, class_name, allow_null)      \
-    ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(name, return_reference, required_num_args, IS_OBJECT, NULL, allow_null)
-#endif
-
 #define PCBC_DATE_FORMAT_RFC3339 "Y-m-d\\TH:i:sP"
 
 extern char *pcbc_client_string;
@@ -190,10 +173,6 @@ void pcbc_exception_init(zval *return_value, long code, const char *message TSRM
 
 #define PCBC_CONTENT_TYPE_FORM "application/x-www-form-urlencoded"
 #define PCBC_CONTENT_TYPE_JSON "application/json"
-
-#define PCBC_ARRAY_MERGE(__pcbc_dest, __pcbc_src) php_array_merge((__pcbc_dest), (__pcbc_src)TSRMLS_CC)
-
-#define ADD_NEXT_INDEX_STRING(zv, value) add_next_index_string(zv, value);
 
 #define PCBC_ALLOC_OBJECT_T(obj_t, class_type)                                                                         \
     (obj_t *)ecalloc(1, sizeof(obj_t) + zend_object_properties_size(class_type))
@@ -293,11 +272,6 @@ typedef struct {
 } pcbc_bucket_t;
 
 typedef struct {
-    pcbc_connection_t *conn;
-    zend_object std;
-} pcbc_query_index_manager_t;
-
-typedef struct {
     void *next;
     lcb_STATUS err;
     char *err_ctx;
@@ -313,8 +287,6 @@ int pcbc_encode_value(pcbc_bucket_t *bucket, zval *value, void **bytes, lcb_size
 
 void pcbc_http_request(zval *return_value, lcb_INSTANCE *conn, lcb_CMDHTTP *cmd, int json_response, void *cbctx,
                        void(httpcb)(void *, zval *, zval *), int(errorcb)(void *, zval *) TSRMLS_DC);
-
-void pcbc_query_index_manager_init(zval *return_value, zval *cluster TSRMLS_DC);
 
 void pcbc_mutation_state_export_for_n1ql(zval *obj, zval *scan_vectors TSRMLS_DC);
 void pcbc_mutation_state_export_for_search(zval *mutation_state, zval *scan_vectors TSRMLS_DC);

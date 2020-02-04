@@ -84,7 +84,6 @@ COUCHBASE_FILES=" \
     src/couchbase/managers/query_index_manager.c \
     src/couchbase/mutate_spec.c \
     src/couchbase/mutation_state.c \
-    src/couchbase/n1ql_index.c \
     src/couchbase/password_authenticator.c \
     src/couchbase/pool.c \
     src/couchbase/result.c \

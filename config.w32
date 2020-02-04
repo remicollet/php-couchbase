@@ -31,7 +31,6 @@ if (PHP_COUCHBASE != "no") {
             "lookup_spec.c " +
             "mutate_spec.c " +
             "mutation_state.c " +
-            "n1ql_index.c " +
             "pool.c " +
             "result.c " +
             "search_options.c ";
