@@ -789,23 +789,27 @@ PHP_FUNCTION(basicEncoderV1)
     cmprthresh = PCBCG(enc_cmpr_threshold);
     cmprfactor = PCBCG(enc_cmpr_factor);
     if (options != NULL) {
-        if (php_array_existsc(options, "sertype")) {
-            long tmp = php_array_fetchc_long(options, "sertype");
-            if (tmp <= COUCHBASE_SERTYPE_PHP && tmp >= COUCHBASE_SERTYPE_JSON) {
-                sertype = tmp;
+        HashTable *marr = Z_ARRVAL_P(options);
+        zval *tmp;
+        tmp = zend_symtable_str_find(marr, ZEND_STRL("sertype"));
+        if (tmp && Z_TYPE_P(tmp) == IS_LONG) {
+            if (Z_LVAL_P(tmp) <= COUCHBASE_SERTYPE_PHP && Z_LVAL_P(tmp) >= COUCHBASE_SERTYPE_JSON) {
+                sertype = Z_LVAL_P(tmp);
             }
         }
-        if (php_array_existsc(options, "cmprtype")) {
-            long tmp = php_array_fetchc_long(options, "cmprtype");
-            if (tmp >= COUCHBASE_CMPRTYPE_NONE && tmp <= COUCHBASE_CMPRTYPE_FASTLZ) {
-                cmprtype = tmp;
+        tmp = zend_symtable_str_find(marr, ZEND_STRL("cmprtype"));
+        if (tmp && Z_TYPE_P(tmp) == IS_LONG) {
+            if (Z_LVAL_P(tmp) <= COUCHBASE_CMPRTYPE_NONE && Z_LVAL_P(tmp) >= COUCHBASE_CMPRTYPE_FASTLZ) {
+                cmprtype = Z_LVAL_P(tmp);
             }
         }
-        if (php_array_existsc(options, "cmprthresh")) {
-            cmprthresh = php_array_fetchc_long(options, "cmprthresh");
+        tmp = zend_symtable_str_find(marr, ZEND_STRL("cmprthresh"));
+        if (tmp && Z_TYPE_P(tmp) == IS_LONG) {
+            cmprthresh = Z_LVAL_P(tmp);
         }
-        if (php_array_existsc(options, "cmprfactor")) {
-            cmprfactor = php_array_fetchc_double(options, "cmprfactor");
+        tmp = zend_symtable_str_find(marr, ZEND_STRL("cmprthresh"));
+        if (tmp && Z_TYPE_P(tmp) == IS_DOUBLE) {
+            cmprfactor = Z_DVAL_P(tmp);
         }
     }
 
@@ -822,7 +826,7 @@ PHP_FUNCTION(basicDecoderV1)
     size_t bytes_len = -1;
     unsigned long flags = 0, datatype = 0;
     zval *options = NULL;
-    zend_bool json_array;
+    zend_bool json_array = 0;
     int rv;
 
     rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sll|a", &bytes, &bytes_len, &flags, &datatype, &options);
@@ -831,8 +835,11 @@ PHP_FUNCTION(basicDecoderV1)
     }
 
     json_array = PCBCG(dec_json_array);
-    if (options && php_array_existsc(options, "jsonassoc")) {
-        json_array = php_array_fetchc_bool(options, "jsonassoc");
+    if (options) {
+        HashTable *marr = Z_ARRVAL_P(options);
+        zval *tmp;
+        tmp = zend_symtable_str_find(marr, ZEND_STRL("jsonassoc"));
+        json_array = tmp && Z_TYPE_P(tmp) == IS_TRUE;
     }
 
     basic_decoder_v1(bytes, (int)bytes_len, flags, datatype, json_array, return_value TSRMLS_CC);

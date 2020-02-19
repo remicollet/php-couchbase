@@ -50,7 +50,7 @@ int pcbc_encode_value(pcbc_bucket_t *bucket, zval *value, void **bytes, lcb_size
     ZVAL_NULL(&retval);
 
     rv = call_user_function(CG(function_table), NULL, &bucket->encoder, &retval, 1, value TSRMLS_CC);
-    if (rv != SUCCESS || Z_TYPE_P(&retval) != IS_ARRAY || php_array_count(&retval) != 3) {
+    if (rv != SUCCESS || Z_TYPE_P(&retval) != IS_ARRAY || zend_hash_num_elements(Z_ARRVAL(retval)) != 3) {
         zval_ptr_dtor(&retval);
         return FAILURE;
     }
@@ -58,9 +58,9 @@ int pcbc_encode_value(pcbc_bucket_t *bucket, zval *value, void **bytes, lcb_size
     {
         zval *zbytes, *zflags, *zdatatype;
 
-        zbytes = php_array_fetchn(&retval, 0);
-        zflags = php_array_fetchn(&retval, 1);
-        zdatatype = php_array_fetchn(&retval, 2);
+        zbytes = zend_hash_index_find(Z_ARRVAL(retval), 0);
+        zflags = zend_hash_index_find(Z_ARRVAL(retval), 1);
+        zdatatype = zend_hash_index_find(Z_ARRVAL(retval), 2);
 
         if (!zbytes || Z_TYPE_P(zbytes) != IS_STRING) {
             zval_ptr_dtor(&retval);

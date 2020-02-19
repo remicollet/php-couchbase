@@ -43,7 +43,6 @@
             <file role="doc" name="LICENSE" />
             <file role="doc" name="README.md" />
             <file role="doc" name="api/couchbase.php" />
-            <file role="doc" name="contrib/php_array.h.LICENSE" />
             <file role="doc" name="examples/api/couchbase.AnalyticsQuery.php" />
             <file role="doc" name="examples/api/couchbase.Authenticator.php" />
             <file role="doc" name="examples/api/couchbase.LookupInBuilder.execute.php" />
@@ -64,7 +63,6 @@
             <file role="doc" name="fastlz/LICENSE.txt" />
             <file role="src" name="config.m4" />
             <file role="src" name="config.w32" />
-            <file role="src" name="contrib/php_array.h" />
             <file role="src" name="couchbase.c" />
             <file role="src" name="couchbase.h" />
             <file role="src" name="datainfo.h" />

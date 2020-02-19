@@ -15,7 +15,6 @@
  */
 
 #include "couchbase.h"
-#include <ext/standard/php_array.h>
 #include <ext/standard/php_http.h>
 #include <ext/standard/url.h>
 
