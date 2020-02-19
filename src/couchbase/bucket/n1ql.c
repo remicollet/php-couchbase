@@ -99,6 +99,8 @@ static void n1qlrow_callback(lcb_INSTANCE *instance, int ignoreme, const lcb_RES
             }
 
             zend_update_property(pcbc_query_result_impl_ce, return_value, ZEND_STRL("meta"), &meta TSRMLS_CC);
+            zval_ptr_dtor(&meta);
+            zval_dtor(&value);
         } else {
             zval *rows, rv;
             rows = zend_read_property(pcbc_query_result_impl_ce, return_value, ZEND_STRL("rows"), 0, &rv);

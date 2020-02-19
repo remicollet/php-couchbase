@@ -69,10 +69,11 @@ static void viewrow_callback(lcb_INSTANCE *instance, int ignoreme, const lcb_RES
                         zend_update_property(pcbc_view_meta_data_impl_ce, &meta, ZEND_STRL("total_rows"),
                                              mval TSRMLS_CC);
                     }
-
-                    zend_update_property(pcbc_view_result_impl_ce, return_value, ZEND_STRL("meta"), &meta TSRMLS_CC);
+                    zval_dtor(&value);
                 }
             }
+            zend_update_property(pcbc_view_result_impl_ce, return_value, ZEND_STRL("meta"), &meta TSRMLS_CC);
+            zval_ptr_dtor(&meta);
         } else {
             zval entry;
             object_init_ex(&entry, pcbc_view_result_entry_ce);

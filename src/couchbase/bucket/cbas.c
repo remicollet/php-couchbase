@@ -87,6 +87,8 @@ static void analytics_callback(lcb_INSTANCE *instance, int ignoreme, const lcb_R
                 zend_update_property(pcbc_query_meta_data_impl_ce, &meta, ZEND_STRL("metrics"), mval TSRMLS_CC);
             }
             zend_update_property(pcbc_analytics_result_impl_ce, return_value, ZEND_STRL("meta"), &meta TSRMLS_CC);
+            zval_ptr_dtor(&meta);
+            zval_dtor(&value);
         } else {
             zval *rows, rv;
             rows = zend_read_property(pcbc_analytics_result_impl_ce, return_value, ZEND_STRL("rows"), 0, &rv);
