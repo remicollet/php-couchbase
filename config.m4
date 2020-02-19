@@ -78,10 +78,10 @@ COUCHBASE_FILES=" \
     src/couchbase/lookup_spec.c \
     src/couchbase/managers/bucket_manager.c \
     src/couchbase/managers/collection_manager.c \
-    src/couchbase/managers/search_index_manager.c \
-    src/couchbase/managers/view_index_manager.c \
-    src/couchbase/managers/user_manager.c \
     src/couchbase/managers/query_index_manager.c \
+    src/couchbase/managers/search_index_manager.c \
+    src/couchbase/managers/user_manager.c \
+    src/couchbase/managers/view_index_manager.c \
     src/couchbase/mutate_spec.c \
     src/couchbase/mutation_state.c \
     src/couchbase/password_authenticator.c \

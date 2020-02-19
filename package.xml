@@ -100,10 +100,11 @@
             <file role="src" name="src/couchbase/log_formatter.c" />
             <file role="src" name="src/couchbase/lookup_spec.c" />
             <file role="src" name="src/couchbase/managers/bucket_manager.c" />
-            <file role="src" name="src/couchbase/managers/view_index_manager.c" />
+            <file role="src" name="src/couchbase/managers/collection_manager.c" />
+            <file role="src" name="src/couchbase/managers/query_index_manager.c" />
             <file role="src" name="src/couchbase/managers/search_index_manager.c" />
             <file role="src" name="src/couchbase/managers/user_manager.c" />
-            <file role="src" name="src/couchbase/managers/query_index_manager.c" />
+            <file role="src" name="src/couchbase/managers/view_index_manager.c" />
             <file role="src" name="src/couchbase/mutate_spec.c" />
             <file role="src" name="src/couchbase/mutation_state.c" />
             <file role="src" name="src/couchbase/password_authenticator.c" />
