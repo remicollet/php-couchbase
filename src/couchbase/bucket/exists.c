@@ -48,6 +48,7 @@ void exists_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPEXISTS *r
         zend_string *b64;
         b64 = php_base64_encode((unsigned char *)&data, sizeof(data));
         zend_update_property_str(pcbc_exists_result_impl_ce, return_value, ZEND_STRL("cas"), b64 TSRMLS_CC);
+        zend_string_release(b64);
     }
 }
 

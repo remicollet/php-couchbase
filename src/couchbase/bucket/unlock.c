@@ -49,6 +49,7 @@ void unlock_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPUNLOCK *r
             lcb_respunlock_cas(resp, &data);
             b64 = php_base64_encode((unsigned char *)&data, sizeof(data));
             zend_update_property_str(pcbc_result_impl_ce, return_value, ZEND_STRL("cas"), b64 TSRMLS_CC);
+            zend_string_release(b64);
         }
     }
 }

@@ -49,6 +49,7 @@ void remove_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPREMOVE *r
             lcb_respremove_cas(resp, &data);
             b64 = php_base64_encode((unsigned char *)&data, sizeof(data));
             zend_update_property_str(pcbc_mutation_result_impl_ce, return_value, ZEND_STRL("cas"), b64 TSRMLS_CC);
+            zend_string_release(b64);
         }
         {
             lcb_MUTATION_TOKEN token = {0};
@@ -61,9 +62,11 @@ void remove_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPREMOVE *r
                                           token.vbid_ TSRMLS_CC);
                 b64 = php_base64_encode((unsigned char *)&token.uuid_, sizeof(token.uuid_));
                 zend_update_property_str(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("partition_uuid"), b64 TSRMLS_CC);
+                zend_string_release(b64);
                 b64 = php_base64_encode((unsigned char *)&token.seqno_, sizeof(token.seqno_));
                 zend_update_property_str(pcbc_mutation_token_impl_ce, &val, ZEND_STRL("sequence_number"),
                                          b64 TSRMLS_CC);
+                zend_string_release(b64);
 
                 const char *bucket;
                 lcb_cntl(instance, LCB_CNTL_GET, LCB_CNTL_BUCKETNAME, &bucket);
