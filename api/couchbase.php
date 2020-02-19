@@ -638,6 +638,104 @@ namespace Couchbase {
         }
     }
 
+    class BucketSettings
+    {
+        public function name(): string
+        {
+        }
+
+        public function flushEnabled(): bool
+        {
+        }
+
+        public function ramQuotaMb(): int
+        {
+        }
+
+        public function numReplicas(): int
+        {
+        }
+
+        public function replicaIndexes(): bool
+        {
+        }
+
+        public function bucketType(): string
+        {
+        }
+
+        public function ejectionMethod(): string
+        {
+        }
+
+        public function maxTtl(): int
+        {
+        }
+
+        public function compressionMode(): string
+        {
+        }
+
+        public function setName(string $name): BucketSettings
+        {
+        }
+
+        public function enableFlush(bool $enable): BucketSettings
+        {
+        }
+
+        public function setRamQuotaMb(int $sizeInMb): BucketSettings
+        {
+        }
+
+        public function setNumReplicas(int $numReplicas): BucketSettings
+        {
+        }
+
+        public function enableReplicaIndexes(bool $enable): BucketSettings
+        {
+        }
+
+        public function setBucketType(string $type): BucketSettings
+        {
+        }
+
+        public function setEjectionMethod(string $method): BucketSettings
+        {
+        }
+
+        public function setMaxTtl(int $ttlSeconds): BucketSettings
+        {
+        }
+
+        public function setCompressionMode(string $mode): BucketSettings
+        {
+        }
+    }
+
+    class BucketManager
+    {
+        public function createBucket(BucketSettings $settings)
+        {
+        }
+
+        public function removeBucket(string $name)
+        {
+        }
+
+        public function getBucket(string $name): BucketSettings
+        {
+        }
+
+        public function getAllBuckets(): array
+        {
+        }
+
+        public function flush(string $name)
+        {
+        }
+    }
+
     class Role
     {
         public function name(): string
@@ -1078,6 +1176,71 @@ namespace Couchbase {
         }
 
         public function diagnostics($reportId)
+        {
+        }
+    }
+
+    class View
+    {
+        public function name(): string
+        {
+        }
+
+        public function map(): string
+        {
+        }
+
+        public function reduce(): string
+        {
+        }
+
+        public function setName(string $name): View
+        {
+        }
+
+        public function setMap(string $mapJsCode): View
+        {
+        }
+
+        public function setReduce(string $reduceJsCode): View
+        {
+        }
+    }
+
+    class DesignDocument
+    {
+        public function name(): string
+        {
+        }
+
+        public function views(): array
+        {
+        }
+
+        public function setName(string $name): DesignDocument
+        {
+        }
+
+        public function setViews(array $views): DesignDocument
+        {
+        }
+    }
+
+    class ViewIndexManager
+    {
+        public function getAllDesignDocuments(): array
+        {
+        }
+
+        public function getDesignDocument(string $name): DesignDocument
+        {
+        }
+
+        public function dropDesignDocument(string $name)
+        {
+        }
+
+        public function upsertDesignDocument(DesignDocument $document)
         {
         }
     }
@@ -2654,67 +2817,6 @@ namespace Couchbase {
         public const OFF = 1;
         public const PHASES = 2;
         public const TIMINGS = 3;
-    }
-
-    /**
-     * Interface for working with Full Text Search indexes.
-     */
-    class SearchIndexManager
-    {
-        /** @ignore */
-        final private function __construct()
-        {
-        }
-
-        /**
-         * Returns list of currently defined search indexes.
-         *
-         * @return array of index definitions
-         */
-        public function listIndexDefinitions()
-        {
-        }
-
-        /**
-         * Retrieves search index definition by its name.
-         *
-         * @param string $name index name
-         *
-         * @return array representing index
-         */
-        public function getIndexDefinition($name)
-        {
-        }
-
-        /**
-         * Retrieves number of the documents currently covered by the index
-         *
-         * @param string $name index name
-         *
-         * @return int
-         */
-        public function getIndexDocumentsCount($name)
-        {
-        }
-
-        /**
-         * Creates search index with specified name and definition
-         *
-         * @param string $name index name
-         * @param string $definition JSON-encoded index definition
-         */
-        public function createIndex($name, $definition)
-        {
-        }
-
-        /**
-         * Deletes search index by its name.
-         *
-         * @param string $name index name
-         */
-        public function deleteIndex($name)
-        {
-        }
     }
 
     class ClusterOptions {
