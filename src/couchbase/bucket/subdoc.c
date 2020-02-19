@@ -143,6 +143,7 @@ void subdoc_mutate_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPSU
 
                 zend_update_property(pcbc_mutate_in_result_impl_ce, return_value, ZEND_STRL("mutation_token"),
                                      &val TSRMLS_CC);
+                zval_ptr_dtor(&val);
             }
         }
     }

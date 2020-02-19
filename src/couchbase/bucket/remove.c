@@ -72,6 +72,7 @@ void remove_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPREMOVE *r
 
                 zend_update_property(pcbc_mutation_result_impl_ce, return_value, ZEND_STRL("mutation_token"),
                                      &val TSRMLS_CC);
+                zval_ptr_dtor(&val);
             }
         }
     }
