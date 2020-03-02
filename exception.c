@@ -138,8 +138,9 @@ PHP_MINIT_FUNCTION(CouchbaseException)
 
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "KeyValueException", NULL);
     pcbc_key_value_exception_ce = zend_register_internal_class_ex(&ce, pcbc_base_exception_ce TSRMLS_CC);
-    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "KeyNotFoundException", NULL);
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "DocumentNotFoundException", NULL);
     pcbc_key_not_found_exception_ce = zend_register_internal_class_ex(&ce, pcbc_key_value_exception_ce TSRMLS_CC);
+    zend_register_class_alias("Couchbase\\KeyNotFoundException", pcbc_key_not_found_exception_ce);
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "KeyExistsException", NULL);
     pcbc_key_exists_exception_ce = zend_register_internal_class_ex(&ce, pcbc_key_value_exception_ce TSRMLS_CC);
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "ValueTooBigException", NULL);
@@ -196,7 +197,7 @@ PHP_MINIT_FUNCTION(CouchbaseException)
 }
 
 void pcbc_create_lcb_exception(zval *return_value, long code, zend_string *context, zend_string *ref, int http_code,
-                               const char *http_msg TSRMLS_DC)
+                               const char *http_msg, int opcode TSRMLS_DC)
 {
     zend_class_entry *exc_ce = NULL;
 
@@ -210,7 +211,22 @@ void pcbc_create_lcb_exception(zval *return_value, long code, zend_string *conte
         break;
 
     case LCB_ERR_DOCUMENT_EXISTS:
-        exc_ce = pcbc_key_exists_exception_ce;
+        switch (opcode) {
+        case PCBC_OPCODE_DELETE:
+        case PCBC_OPCODE_REPLACE:
+            exc_ce = pcbc_cas_mismatch_exception_ce;
+            break;
+        default:
+            exc_ce = pcbc_key_exists_exception_ce;
+        }
+        break;
+
+    case LCB_ERR_DOCUMENT_LOCKED:
+        if (opcode == PCBC_OPCODE_UNLOCK) {
+            exc_ce = pcbc_cas_mismatch_exception_ce;
+        } else {
+            exc_ce = pcbc_key_exists_exception_ce;
+        }
         break;
 
     case LCB_ERR_DOCUMENT_NOT_FOUND:

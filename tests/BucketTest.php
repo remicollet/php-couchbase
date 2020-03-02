@@ -171,7 +171,7 @@ class BucketTest extends CouchbaseTestCase {
         $this->wrapException(function() use($c, $key, $old_cas) {
             $options = (new \Couchbase\ReplaceOptions())->cas($old_cas);
             $c->replace($key, 'ferret', $options);
-        }, '\Couchbase\KeyExistsException', COUCHBASE_KEYALREADYEXISTS);
+        }, '\Couchbase\CasMismatchException', COUCHBASE_KEYALREADYEXISTS);
     }
 
     /**

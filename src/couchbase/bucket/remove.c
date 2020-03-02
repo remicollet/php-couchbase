@@ -159,6 +159,7 @@ PHP_METHOD(Collection, remove)
     lcb_cmdremove_create(&cmd);
     lcb_cmdremove_collection(cmd, scope_str, scope_len, collection_str, collection_len);
     lcb_cmdremove_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
+    uint64_t cas = 0;
     if (options) {
         zval *prop, ret;
         prop = zend_read_property(pcbc_remove_options_ce, options, ZEND_STRL("timeout"), 0, &ret);
@@ -173,7 +174,6 @@ PHP_METHOD(Collection, remove)
         if (Z_TYPE_P(prop) == IS_STRING) {
             zend_string *decoded = php_base64_decode_str(Z_STR_P(prop));
             if (decoded) {
-                uint64_t cas = 0;
                 memcpy(&cas, ZSTR_VAL(decoded), ZSTR_LEN(decoded));
                 lcb_cmdremove_cas(cmd, cas);
                 zend_string_free(decoded);
@@ -202,7 +202,7 @@ PHP_METHOD(Collection, remove)
     }
 
     if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err, pcbc_mutation_result_impl_ce);
+        throw_lcb_exception_ex(err, cas == 0 ? PCBC_OPCODE_UNSPEC : PCBC_OPCODE_DELETE, pcbc_mutation_result_impl_ce);
     }
 }
 

@@ -578,7 +578,7 @@ PHP_METHOD(Collection, replace)
         lcbtrace_span_finish(parent_span, LCBTRACE_NOW);
     }
     if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err, pcbc_store_result_impl_ce);
+        throw_lcb_exception_ex(err, PCBC_OPCODE_REPLACE, pcbc_store_result_impl_ce);
     }
 }
 

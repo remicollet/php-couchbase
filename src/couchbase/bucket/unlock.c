@@ -132,7 +132,7 @@ PHP_METHOD(Collection, unlock)
     }
 
     if (err != LCB_SUCCESS) {
-        throw_lcb_exception(err, pcbc_result_impl_ce);
+        throw_lcb_exception_ex(err, PCBC_OPCODE_UNLOCK, pcbc_result_impl_ce);
     }
 }
 

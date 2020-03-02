@@ -130,8 +130,13 @@ extern zend_class_entry *pcbc_binary_collection_ce;
 #define PCBC_RESOLVE_COLLECTION PCBC_RESOLVE_COLLECTION_EX(pcbc_collection_ce)
 #define PCBC_RESOLVE_BINARY_COLLECTION PCBC_RESOLVE_COLLECTION_EX(pcbc_binary_collection_ce)
 
+#define PCBC_OPCODE_UNSPEC (-1)
+#define PCBC_OPCODE_REPLACE (1)
+#define PCBC_OPCODE_DELETE (2)
+#define PCBC_OPCODE_UNLOCK (3)
+
 void pcbc_create_lcb_exception(zval *return_value, long code, zend_string *context, zend_string *ref, int http_code,
-                               const char *http_msg TSRMLS_DC);
+                               const char *http_msg, int opcode TSRMLS_DC);
 
 void pcbc_exception_init(zval *return_value, long code, const char *message TSRMLS_DC);
 #define throw_pcbc_exception(__pcbc_message, __pcbc_code)                                                              \
@@ -142,7 +147,7 @@ void pcbc_exception_init(zval *return_value, long code, const char *message TSRM
         zend_throw_exception_object(&__pcbc_error TSRMLS_CC);                                                          \
     } while (0)
 
-#define throw_lcb_exception(code, result_ce)                                                                           \
+#define throw_lcb_exception_ex(code, opcode, result_ce)                                                                \
     do {                                                                                                               \
         zend_string *ctx = NULL, *ref = NULL;                                                                          \
         zval *zref, __rv1, *zctx, __rv2;                                                                               \
@@ -158,15 +163,18 @@ void pcbc_exception_init(zval *return_value, long code, const char *message TSRM
         }                                                                                                              \
         zval __pcbc_error;                                                                                             \
         ZVAL_UNDEF(&__pcbc_error);                                                                                     \
-        pcbc_create_lcb_exception(&__pcbc_error, code, ctx, ref, 0, NULL TSRMLS_CC);                                   \
+        pcbc_create_lcb_exception(&__pcbc_error, code, ctx, ref, 0, NULL, opcode TSRMLS_CC);                           \
         zend_throw_exception_object(&__pcbc_error TSRMLS_CC);                                                          \
     } while (0)
+
+#define throw_lcb_exception(code, result_ce) throw_lcb_exception_ex((code), PCBC_OPCODE_UNSPEC, (result_ce))
 
 #define throw_http_exception(code, query_code, query_msg)                                                              \
     do {                                                                                                               \
         zval __pcbc_error;                                                                                             \
         ZVAL_UNDEF(&__pcbc_error);                                                                                     \
-        pcbc_create_lcb_exception(&__pcbc_error, code, NULL, NULL, query_code, query_msg TSRMLS_CC);                   \
+        pcbc_create_lcb_exception(&__pcbc_error, code, NULL, NULL, query_code, query_msg,                              \
+                                  PCBC_OPCODE_UNSPEC TSRMLS_CC);                                                       \
         zend_throw_exception_object(&__pcbc_error TSRMLS_CC);                                                          \
     } while (0)
 
