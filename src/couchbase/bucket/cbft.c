@@ -97,7 +97,6 @@ static void ftsrow_callback(lcb_INSTANCE *instance, int ignoreme, const lcb_RESP
                 }
             }
             zend_update_property(pcbc_search_result_impl_ce, return_value, ZEND_STRL("meta"), &meta TSRMLS_CC);
-            Z_DELREF(meta);
             mval = zend_symtable_str_find(marr, ZEND_STRL("facets"));
             if (mval) {
                 zend_update_property(pcbc_search_result_impl_ce, return_value, ZEND_STRL("facets"), mval TSRMLS_CC);
@@ -109,7 +108,6 @@ static void ftsrow_callback(lcb_INSTANCE *instance, int ignoreme, const lcb_RESP
             hits = zend_read_property(pcbc_search_result_impl_ce, return_value, ZEND_STRL("rows"), 0, &rv);
             add_next_index_zval(hits, &value);
         }
-        zval_dtor(&value);
     }
 }
 
@@ -131,6 +129,7 @@ PHP_METHOD(Cluster, searchQuery)
     array_init(&payload);
     add_assoc_str(&payload, "indexName", index);
     add_assoc_zval(&payload, "query", query);
+    Z_ADDREF_P(query);
     if (options && Z_TYPE_P(options) != IS_NULL) {
         zval fname;
         zval values;
