@@ -196,7 +196,6 @@ PHP_METHOD(QueryIndexManager, createIndex)
     lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_QUERY);
     lcb_cmdhttp_method(cmd, LCB_HTTP_METHOD_POST);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_JSON, strlen(PCBC_CONTENT_TYPE_JSON));
-    fprintf(stderr, "----> %.*s\n", (int)ZSTR_LEN(payload.s), ZSTR_VAL(payload.s));
     lcb_cmdhttp_body(cmd, ZSTR_VAL(payload.s), ZSTR_LEN(payload.s));
     pcbc_http_request(return_value, cluster->conn->lcb, cmd, 1, &ignore_exists_error, NULL,
                       errcb_createIndex TSRMLS_CC);
