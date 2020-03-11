@@ -614,7 +614,7 @@ PHP_METHOD(Cluster, query)
         char msg[200] = {0};
         zval *meta = NULL, mret;
         meta = zend_read_property(pcbc_query_result_impl_ce, return_value, ZEND_STRL("meta"), 0, &mret);
-        if (meta) {
+        if (meta && Z_TYPE_P(meta) == IS_ARRAY) {
             zval *prop, ret;
             prop = zend_read_property(pcbc_query_meta_data_impl_ce, meta, ZEND_STRL("errors"), 0, &ret);
             if (Z_TYPE_P(prop) == IS_ARRAY) {
