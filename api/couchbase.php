@@ -603,40 +603,95 @@ namespace Couchbase {
         }
     }
 
+    /**
+     * Cluster is an object containing functionality for performing cluster level operations
+     * against a cluster and for access to buckets.
+     */
     class Cluster
     {
         public function __construct(string $connstr, ClusterOptions $options)
         {
         }
 
+        /**
+         * Returns a new bucket object.
+         *
+         * @param string $name the name of the bucket
+         * @return Bucket
+         */
         public function bucket(string $name): Bucket
         {
         }
 
-        public function query(string $statement, QueryOptions $options = null)
+        /**
+         * Executes a N1QL query against the cluster.
+         * Note: On Couchbase Server versions < 6.5 a bucket must be opened before using query.
+         *
+         * @param string $statement the N1QL query statement to execute
+         * @param QueryOptions $options the options to use when executing the query
+         * @return QueryResult
+         */
+        public function query(string $statement, QueryOptions $options = null): QueryResult
         {
         }
 
-        public function analyticsQuery(string $statement, AnalyticsOptions $options = null)
+        /**
+         * Executes an analytics query against the cluster.
+         * Note: On Couchbase Server versions < 6.5 a bucket must be opened before using analyticsQuery.
+         *
+         * @param string $statement the analytics query statement to execute
+         * @param AnalyticsOptions $options the options to use when executing the query
+         * @return AnalyticsResult
+         */
+        public function analyticsQuery(string $statement, AnalyticsOptions $options = null): AnalyticsResult
         {
         }
 
-        public function searchQuery(string $indexName, SearchQuery $query, SearchOptions $options = null)
+        /**
+         * Executes a full text search query against the cluster.
+         * Note: On Couchbase Server versions < 6.5 a bucket must be opened before using searchQuery.
+         *
+         * @param string $indexName the fts index to use for the query
+         * @param SearchQuery $query the search query to execute
+         * @param SearchOptions $options the options to use when executing the query
+         * @return SearchResult
+         */
+        public function searchQuery(string $indexName, SearchQuery $query, SearchOptions $options = null): SearchResult
         {
         }
 
+        /**
+         * Creates a new bucket manager object for managing buckets.
+         *
+         * @return BucketManager
+         */
         public function buckets(): BucketManager
         {
         }
 
+        /**
+         * Creates a new user manager object for managing users and groups.
+         *
+         * @return UserManager
+         */
         public function users(): UserManager
         {
         }
 
+        /**
+         * Creates a new query index manager object for managing N1QL query indexes.
+         *
+         * @return QueryIndexManager
+         */
         public function queryIndexes(): QueryIndexManager
         {
         }
 
+        /**
+         * Creates a new search index manager object for managing search query indexes.
+         *
+         * @return SearchIndexManager
+         */
         public function searchIndexes(): SearchIndexManager
         {
         }
@@ -1046,16 +1101,30 @@ namespace Couchbase {
         }
     }
 
+    /**
+     * Scope is an object for providing access to collections.
+     */
     class Scope
     {
         public function __construct(Bucket $bucket, string $name)
         {
         }
 
+        /**
+         * Returns the name of the scope.
+         *
+         * @return string
+         */
         public function name(): string
         {
         }
 
+        /**
+         * Returns a new Collection object representing the collection specified.
+         *
+         * @param string $name the name of the collection
+         * @return Collection
+         */
         public function collection(string $name): Collection
         {
         }
@@ -1118,44 +1187,106 @@ namespace Couchbase {
         }
     }
 
+    /**
+     * Bucket is an object containing functionality for performing bucket level operations
+     * against a cluster and for access to scopes and collections.
+     */
     class Bucket
     {
-        public function defaultScope(): Collection
+        /**
+         * Returns a new Scope object representing the default scope.
+         *
+         * @return Scope
+         */
+        public function defaultScope(): Scope
         {
         }
 
+        /**
+         * Returns a new Collection object representing the default collectiom.
+         *
+         * @return Collection
+         */
         public function defaultCollection(): Collection
         {
         }
 
+        /**
+         * Returns a new Scope object representing the given scope.
+         *
+         * @param string $name the name of the scope
+         * @return Scope
+         */
         public function scope(string $name): Scope
         {
         }
 
+        /**
+         * Sets the default transcoder to be used when fetching or sending data.
+         *
+         * @param callable $encode the encoder to use to encode data when sending data to the server
+         * @param callable $decoder the decoder to use to decode data when retrieving data from the server
+         */
         public function setTranscoder(callable $encoder, callable $decoder)
         {
         }
 
+        /**
+         * Returns the name of the Bucket.
+         *
+         * @return string
+         */
         public function name(): string
         {
         }
 
+        /**
+         * Executes a view query against the cluster.
+         *
+         * @param string $designDoc the design document to use for the query
+         * @param string $viewName the view to use for the query
+         * @param ViewOptions $options the options to use when executing the query
+         * @return ViewResult
+         */
         public function viewQuery(string $designDoc, string $viewName, ViewOptions $options = null): ViewResult
         {
         }
 
+        /**
+         * Creates a new CollectionManager object for managing collections and scopes.
+         *
+         * @return CollectionManager
+         */
         public function collections(): CollectionManager
         {
         }
 
+        /**
+         * Creates a new ViewIndexManager object for managing views and design documents.
+         *
+         * @return ViewIndexManager
+         */
         public function viewIndexes(): ViewIndexManager
         {
         }
 
+        /**
+         * Executes a ping for each service against each node in the cluster. This can be used for determining
+         * the current health of the cluster.
+         *
+         * @param $services the services to ping against
+         * @param $reportId a name which will be included within the ping result
+         */
         public function ping($services, $reportId)
         {
         }
 
+        /**
+         * Returns diagnostics information about connections that the SDK has to the cluster. This does not perform
+         * any operations.
+         *
+         * @param $reportId a name which will be included within the ping result
+         */
         public function diagnostics($reportId)
         {
         }
