@@ -1011,91 +1011,257 @@ namespace Couchbase {
         }
     }
 
+    /**
+     * BinaryCollection is an object containing functionality for performing KeyValue operations against the server with binary documents.
+     */
     class BinaryCollection
     {
+        /**
+         * Get the name of the binary collection.
+         *
+         * @return string
+         */
         public function name(): string
         {
         }
 
+        /**
+         * Appends a value to a document.
+         *
+         * @param string $id the key of the document
+         * @param string $value the value to append
+         * @param AppendOptions $options the options to use for the operation
+         * @return StoreResult
+         */
         public function append(string $id, string $value, AppendOptions $options = null): StoreResult
         {
         }
 
+        /**
+         * Prepends a value to a document.
+         *
+         * @param string $id the key of the document
+         * @param string $value the value to prepend
+         * @param PrependOptions $options the options to use for the operation
+         * @return StoreResult
+         */
         public function prepend(string $id, string $value, PrependOptions $options = null): StoreResult
         {
         }
 
+        /**
+         * Increments a counter document by a value.
+         *
+         * @param string $id the key of the document
+         * @param IncrementOptions $options the options to use for the operation
+         * @return CounterResult
+         */
         public function increment(string $id, IncrementOptions $options = null): CounterResult
         {
         }
 
+        /**
+         * Decrements a counter document by a value.
+         *
+         * @param string $id the key of the document
+         * @param DecrementOptions $options the options to use for the operation
+         * @return CounterResult
+         */
         public function decrement(string $id, DecrementOptions $options = null): CounterResult
         {
         }
     }
 
+    /**
+     * Collection is an object containing functionality for performing KeyValue operations against the server.
+     */
     class Collection
     {
+        /**
+         * Get the name of the collection.
+         *
+         * @return string
+         */
         public function name(): string
         {
         }
 
+        /**
+         * Gets a document from the server.
+         *
+         * This can take 3 paths, a standard full document fetch, a subdocument full document fetch also
+         * fetching document expiry (when withExpiry is set), or a subdocument fetch (when projections are
+         * used).
+         *
+         * @param string $id the key of the document to fetch
+         * @param GetOptions $options the options to use for the operation
+         * @return GetResult
+         */
         public function get(string $id, GetOptions $options = null): GetResult
         {
         }
 
+        /**
+         * Checks if a document exists on the server.
+         *
+         * @param string $id the key of the document to check if exists
+         * @param ExistsOptions $options the options to use for the operation
+         * @return ExistsResult
+         */
         public function exists(string $id, ExistsOptions $options = null): ExistsResult
         {
         }
 
+        /**
+         * Gets a document from the server, locking the document so that no other processes can
+         * perform mutations against it.
+         *
+         * @param string $id the key of the document to get
+         * @param int $lockTime the length of time to lock the document in ms
+         * @param GetAndLockOptions $options the options to use for the operation
+         * @return GetResult
+         */
         public function getAndLock(string $id, int $lockTime, GetAndLockOptions $options = null): GetResult
         {
         }
 
+        /**
+         * Gets a document from the server and simultaneously updates its expiry time.
+         *
+         * @param string $id the key of the document
+         * @param int $expiry the length of time to update the expiry to in ms
+         * @param GetAndTouchOptions $options the options to use for the operation
+         * @return GetResult
+         */
         public function getAndTouch(string $id, int $expiry, GetAndTouchOptions $options = null): GetResult
         {
         }
 
+        /**
+         * Gets a document from any replica server in the cluster.
+         *
+         * @param string $id the key of the document
+         * @param GetAnyReplicaOptions $options the options to use for the operation
+         * @return GetReplicaResult
+         */
         public function getAnyReplica(string $id, GetAnyReplicaOptions $options = null): GetReplicaResult
         {
         }
 
+        /**
+         * Gets a document from the active server and all replica servers in the cluster.
+         * Returns an array of documents, one per server.
+         *
+         * @param string $id the key of the document
+         * @param GetAllReplicaOptions $options the options to use for the operation
+         * @return array
+         */
         public function getAllReplicas(string $id, GetAllReplicaOptions $options = null): array
         {
         }
 
+        /**
+         * Creates a document if it doesn't exist, otherwise updates it.
+         *
+         * @param string $id the key of the document
+         * @param $value the value to use for the document
+         * @param UpsertOptions $options the options to use for the operation
+         * @return StoreResult
+         */
         public function upsert(string $id, $value, UpsertOptions $options = null): StoreResult
         {
         }
 
+        /**
+         * Inserts a document if it doesn't exist, errors if it does exist.
+         *
+         * @param string $id the key of the document
+         * @param $value the value to use for the document
+         * @param InsertOptions $options the options to use for the operation
+         * @return StoreResult
+         */
         public function insert(string $id, $value, InsertOptions $options = null): StoreResult
         {
         }
 
+        /**
+         * Replaces a document if it exists, errors if it doesn't exist.
+         *
+         * @param string $id the key of the document
+         * @param $value the value to use for the document
+         * @param ReplaceOptions $options the options to use for the operation
+         * @return StoreResult
+         */
         public function replace(string $id, $value, ReplaceOptions $options = null): StoreResult
         {
         }
 
+        /**
+         * Removes a document.
+         *
+         * @param string $id the key of the document
+         * @param $value the value to use for the document
+         * @param RemoveOptions $options the options to use for the operation
+         * @return StoreResult
+         */
         public function remove(string $id, RemoveOptions $options = null): MutationResult
         {
         }
 
+        /**
+         * Unlocks a document which was locked using getAndLock. This frees the document to be
+         * modified by other processes.
+         *
+         * @param string $id the key of the document
+         * @param string $cas the current cas value of the document
+         * @param UnlockOptions $options the options to use for the operation
+         * @return Result
+         */
         public function unlock(string $id, string $cas, UnlockOptions $options = null): Result
         {
         }
 
+        /**
+         * Touches a document, setting a new expiry time.
+         *
+         * @param string $id the key of the document
+         * @param int $expiry the expiry time for the document in ms
+         * @param TouchOptions $options the options to use for the operation
+         * @return MutationResult
+         */
         public function touch(string $id, int $expiry, TouchOptions $options = null): MutationResult
         {
         }
 
+        /**
+         * Performs a set of subdocument lookup operations against the document.
+         *
+         * @param string $id the key of the document
+         * @param array $specs the LookupInSpecs to perform against the document
+         * @param LookupInOptions $options the options to use for the operation
+         * @return LookupInResult
+         */
         public function lookupIn(string $id, array $specs, LookupInOptions $options = null): LookupInResult
         {
         }
 
+        /**
+         * Performs a set of subdocument lookup operations against the document.
+         *
+         * @param string $id the key of the document
+         * @param array $specs the MutateInSpecs to perform against the document
+         * @param MutateInOptions $options the options to use for the operation
+         * @return MutateInResult
+         */
         public function mutateIn(string $id, array $specs, MutateInOptions $options = null): MutateInResult
         {
         }
 
+        /**
+         * Creates and returns a BinaryCollection object for use with binary type documents.
+         *
+         * @return BinaryCollection
+         */
         public function binary(): BinaryCollection
         {
         }
@@ -1357,12 +1523,21 @@ namespace Couchbase {
         }
     }
 
+    /**
+     * MutationState is an object which holds and aggregates mutation tokens across operations.
+     */
     class MutationState
     {
         public function __construct()
         {
         }
 
+        /**
+         * Adds the result of a mutation operation to this mutation state.
+         *
+         * @param MutationResult $source the result object to add to this state
+         * @return MutationState
+         */
         public function add(MutationResult $source): MutationState
         {
         }
@@ -1403,10 +1578,16 @@ namespace Couchbase {
         }
     }
 
+    /**
+     * LookupInSpec is an interface for providing subdocument lookup operations.
+     */
     interface LookupInSpec
     {
     }
 
+    /**
+     * Indicates a path for a value to be retrieved from a document.
+     */
     class LookupGetSpec implements LookupInSpec
     {
         public function __construct(string $path, bool $isXattr = false)
@@ -1414,6 +1595,9 @@ namespace Couchbase {
         }
     }
 
+    /**
+     * Indicates to retrieve the count of array items or dictionary keys within a path in a document.
+     */
     class LookupCountSpec implements LookupInSpec
     {
         public function __construct(string $path, bool $isXattr = false)
@@ -1421,6 +1605,9 @@ namespace Couchbase {
         }
     }
 
+    /**
+     * Indicates to check if a path exists in a document.
+     */
     class LookupExistsSpec implements LookupInSpec
     {
         public function __construct(string $path, bool $isXattr = false)
@@ -1428,6 +1615,9 @@ namespace Couchbase {
         }
     }
 
+    /**
+     * Indicates to retreive a whole document.
+     */
     class LookupGetFullSpec implements LookupInSpec
     {
         public function __construct()
@@ -1435,10 +1625,16 @@ namespace Couchbase {
         }
     }
 
+    /**
+     * MutateInSpec is an interface for providing subdocument mutation operations.
+     */
     interface MutateInSpec
     {
     }
 
+    /**
+     * Indicates to insert a value at a path in a document.
+     */
     class MutateInsertSpec implements MutateInSpec
     {
         public function __construct(string $path, $value, bool $isXattr, bool $createPath, bool $expandMacros)
@@ -1446,6 +1642,9 @@ namespace Couchbase {
         }
     }
 
+    /**
+     * Indicates to replace a value at a path if it doesn't exist, otherwise create the path, in a document.
+     */
     class MutateUpsertSpec implements MutateInSpec
     {
         public function __construct(string $path, $value, bool $isXattr, bool $createPath, bool $expandMacros)
@@ -1453,6 +1652,9 @@ namespace Couchbase {
         }
     }
 
+    /**
+     * Indicates to replace a value at a path if it doesn't exist in a document.
+     */
     class MutateReplaceSpec implements MutateInSpec
     {
         public function __construct(string $path, $value, bool $isXattr)
@@ -1460,6 +1662,9 @@ namespace Couchbase {
         }
     }
 
+    /**
+     * Indicates to remove a value at a path in a document.
+     */
     class MutateRemoveSpec implements MutateInSpec
     {
         public function __construct(string $path, bool $isXattr)
@@ -1467,6 +1672,9 @@ namespace Couchbase {
         }
     }
 
+    /**
+     * Indicates to append a value to an array at a path in a document.
+     */
     class MutateArrayAppendSpec implements MutateInSpec
     {
         public function __construct(string $path, array $values, bool $isXattr, bool $createPath, bool $expandMacros)
@@ -1474,6 +1682,9 @@ namespace Couchbase {
         }
     }
 
+    /**
+     * Indicates to prepend a value to an array at a path in a document.
+     */
     class MutateArrayPrependSpec implements MutateInSpec
     {
         public function __construct(string $path, array $values, bool $isXattr, bool $createPath, bool $expandMacros)
@@ -1481,6 +1692,9 @@ namespace Couchbase {
         }
     }
 
+    /**
+     * Indicates to insert a value into an array at a path in a document.
+     */
     class MutateArrayInsertSpec implements MutateInSpec
     {
         public function __construct(string $path, array $values, bool $isXattr, bool $createPath, bool $expandMacros)
@@ -1488,6 +1702,10 @@ namespace Couchbase {
         }
     }
 
+    /**
+     * Indicates to add a value into an array at a path in a document so long as that value does not already exist 
+     * in the array.
+     */
     class MutateArrayAddUniqueSpec implements MutateInSpec
     {
         public function __construct(string $path, $value, bool $isXattr, bool $createPath, bool $expandMacros)
@@ -1495,6 +1713,9 @@ namespace Couchbase {
         }
     }
 
+    /**
+     * Indicates to increment or decrement a counter value at a path in a document.
+     */
     class MutateCounterSpec implements MutateInSpec
     {
         public function __construct(string $path, int $delta, bool $isXattr, bool $createPath)
@@ -2583,14 +2804,41 @@ namespace Couchbase {
 
     class GetOptions
     {
+        /**
+         * Sets the operation timeout in milliseconds.
+         *
+         * @param int $arg the operation timeout to apply
+         * @return GetOptions
+         */
         public function timeout(int $arg): GetOptions
         {
         }
 
+        /**
+         * Sets whether to include document expiry with the document content.
+         *
+         * When used this option will transparently transform the Get
+         * operation into a subdocument operation performing a full document
+         * fetch as well as the expiry.
+         *
+         * @param bool $arg whether or not to include document expiry
+         * @return GetOptions
+         */
         public function withExpiry(bool $arg): GetOptions
         {
         }
 
+        /**
+         * Sets whether to cause the Get operation to only fetch the fields
+         * from the document indicated by the paths provided.
+         * 
+         * When used this option will transparently transform the Get
+         * operation into a subdocument operation fetching only the required
+         * fields.
+         *
+         * @param bool $arg the array of field names
+         * @return GetOptions
+         */
         public function project(array $arg): GetOptions
         {
         }
@@ -2598,6 +2846,12 @@ namespace Couchbase {
 
     class GetAndTouchOptions
     {
+        /**
+         * Sets the operation timeout in milliseconds.
+         *
+         * @param int $arg the operation timeout to apply
+         * @return GetAndTouchOptions
+         */
         public function timeout(int $arg): GetAndTouchOptions
         {
         }
@@ -2605,6 +2859,12 @@ namespace Couchbase {
 
     class GetAndLockOptions
     {
+        /**
+         * Sets the operation timeout in milliseconds.
+         *
+         * @param int $arg the operation timeout to apply
+         * @return GetAndLockOptions
+         */
         public function timeout(int $arg): GetAndLockOptions
         {
         }
@@ -2612,6 +2872,12 @@ namespace Couchbase {
 
     class GetAllReplicasOptions
     {
+        /**
+         * Sets the operation timeout in milliseconds.
+         *
+         * @param int $arg the operation timeout to apply
+         * @return GetAllReplicasOptions
+         */
         public function timeout(int $arg): GetAllReplicasOptions
         {
         }
@@ -2619,6 +2885,12 @@ namespace Couchbase {
 
     class GetAnyReplicaOptions
     {
+        /**
+         * Sets the operation timeout in milliseconds.
+         *
+         * @param int $arg the operation timeout to apply
+         * @return GetAnyReplicasOptions
+         */
         public function timeout(int $arg): GetAnyReplicasOptions
         {
         }
@@ -2626,6 +2898,12 @@ namespace Couchbase {
 
     class ExistsOptions
     {
+        /**
+         * Sets the operation timeout in milliseconds.
+         *
+         * @param int $arg the operation timeout to apply
+         * @return ExistsOptions
+         */
         public function timeout(int $arg): ExistsOptions
         {
         }
@@ -2633,6 +2911,12 @@ namespace Couchbase {
 
     class UnlockOptions
     {
+        /**
+         * Sets the operation timeout in milliseconds.
+         *
+         * @param int $arg the operation timeout to apply
+         * @return UnlockOptions
+         */
         public function timeout(int $arg): UnlockOptions
         {
         }
@@ -2640,14 +2924,32 @@ namespace Couchbase {
 
     class InsertOptions
     {
+        /**
+         * Sets the operation timeout in milliseconds.
+         *
+         * @param int $arg the operation timeout to apply
+         * @return InsertOptions
+         */
         public function timeout(int $arg): InsertOptions
         {
         }
 
+        /**
+         * Sets the expiry time for the document.
+         *
+         * @param int $arg the expiry time in ms
+         * @return InsertOptions
+         */
         public function expiry(int $arg): InsertOptions
         {
         }
 
+        /**
+         * Sets the durability level to enforce when writing the document.
+         *
+         * @param int $arg the durability level to enforce
+         * @return InsertOptions
+         */
         public function durabilityLevel(int $arg): InsertOptions
         {
         }
@@ -2655,18 +2957,42 @@ namespace Couchbase {
 
     class UpsertOptions
     {
+        /**
+         * Sets the operation timeout in milliseconds.
+         *
+         * @param int $arg the operation timeout to apply
+         * @return UpsertOptions
+         */
         public function timeout(int $arg): UpsertOptions
         {
         }
 
+        /**
+         * Sets the expiry time for the document.
+         *
+         * @param int $arg the expiry time in ms
+         * @return UpsertOptions
+         */
         public function expiry(int $arg): UpsertOptions
         {
         }
 
+        /**
+         * Sets the cas value for the operation.
+         *
+         * @param string $arg the cas value
+         * @return UpsertOptions
+         */
         public function cas(string $arg): UpsertOptions
         {
         }
 
+        /**
+         * Sets the durability level to enforce when writing the document.
+         *
+         * @param int $arg the durability level to enforce
+         * @return UpsertOptions
+         */
         public function durabilityLevel(int $arg): UpsertOptions
         {
         }
@@ -2674,18 +3000,42 @@ namespace Couchbase {
 
     class ReplaceOptions
     {
+        /**
+         * Sets the operation timeout in milliseconds.
+         *
+         * @param int $arg the operation timeout to apply
+         * @return ReplaceOptions
+         */
         public function timeout(int $arg): ReplaceOptions
         {
         }
 
+        /**
+         * Sets the expiry time for the document.
+         *
+         * @param int $arg the expiry time in ms
+         * @return ReplaceOptions
+         */
         public function expiry(int $arg): ReplaceOptions
         {
         }
 
+        /**
+         * Sets the cas value for the operation.
+         *
+         * @param string $arg the cas value
+         * @return ReplaceOptions
+         */
         public function cas(string $arg): ReplaceOptions
         {
         }
 
+        /**
+         * Sets the durability level to enforce when writing the document.
+         *
+         * @param int $arg the durability level to enforce
+         * @return ReplaceOptions
+         */
         public function durabilityLevel(int $arg): ReplaceOptions
         {
         }
@@ -2693,14 +3043,32 @@ namespace Couchbase {
 
     class AppendOptions
     {
+        /**
+         * Sets the operation timeout in milliseconds.
+         *
+         * @param int $arg the operation timeout to apply
+         * @return AppendOptions
+         */
         public function timeout(int $arg): AppendOptions
         {
         }
 
+        /**
+         * Sets the expiry time for the document.
+         *
+         * @param int $arg the expiry time in ms
+         * @return AppendOptions
+         */
         public function expiry(int $arg): AppendOptions
         {
         }
 
+        /**
+         * Sets the durability level to enforce when writing the document.
+         *
+         * @param int $arg the durability level to enforce
+         * @return AppendOptions
+         */
         public function durabilityLevel(int $arg): AppendOptions
         {
         }
@@ -2708,29 +3076,76 @@ namespace Couchbase {
 
     class PrependOptions
     {
+        /**
+         * Sets the operation timeout in milliseconds.
+         *
+         * @param int $arg the operation timeout to apply
+         * @return PrependOptions
+         */
         public function timeout(int $arg): PrependOptions
         {
         }
 
+        /**
+         * Sets the expiry time for the document.
+         *
+         * @param int $arg the expiry time in ms
+         * @return PrependOptions
+         */
         public function expiry(int $arg): PrependOptions
         {
         }
 
+        /**
+         * Sets the durability level to enforce when writing the document.
+         *
+         * @param int $arg the durability level to enforce
+         * @return PrependOptions
+         */
         public function durabilityLevel(int $arg): PrependOptions
         {
         }
     }
 
+    /**
+     * An object which contains levels of durability that can be enforced when
+     * using mutation operations.
+     */
     interface DurabilityLevel
     {
+        /**
+         * Apply no durability level.
+         */
         public const NONE = 0;
+
+        /**
+         * Apply a durability level where the document must be written to memory
+         * on a majority of nodes in the cluster.
+         */
         public const MAJORITY = 1;
+
+        /**
+         * Apply a durability level where the document must be written to memory
+         * on a majority of nodes in the cluster and written to disk on the
+         * active node.
+         */
         public const MAJORITY_AND_PERSIST_TO_ACTIVE = 2;
+
+        /**
+         * Apply a durability level where the document must be written to disk
+         * on a majority of nodes in the cluster.
+         */
         public const PERSIST_TO_MAJORITY = 3;
     }
 
     class TouchOptions
     {
+        /**
+         * Sets the operation timeout in milliseconds.
+         *
+         * @param int $arg the operation timeout to apply
+         * @return TouchOptions
+         */
         public function timeout(int $arg): TouchOptions
         {
         }
@@ -2738,22 +3153,53 @@ namespace Couchbase {
 
     class IncrementOptions
     {
+        /**
+         * Sets the operation timeout in milliseconds.
+         *
+         * @param int $arg the operation timeout to apply
+         * @return IncrementOptions
+         */
         public function timeout(int $arg): IncrementOptions
         {
         }
 
+        /**
+         * Sets the expiry time for the document.
+         *
+         * @param int $arg the expiry time in ms
+         * @return IncrementOptions
+         */
         public function expiry(int $arg): IncrementOptions
         {
         }
 
-        public function durabilitLevel(int $arg): IncrementOptions
+        /**
+         * Sets the durability level to enforce when writing the document.
+         *
+         * @param int $arg the durability level to enforce
+         * @return IncrementOptions
+         */
+        public function durabilityLevel(int $arg): IncrementOptions
         {
         }
 
+        /**
+         * Sets the value to increment the counter by.
+         *
+         * @param int $arg the value to increment by
+         * @return IncrementOptions
+         */
         public function delta(int $arg): IncrementOptions
         {
         }
 
+        /**
+         * Sets the value to initialize the counter to if the document does
+         * not exist.
+         *
+         * @param int $arg the initial value to use if counter does not exist
+         * @return IncrementOptions
+         */
         public function initial(int $arg): IncrementOptions
         {
         }
@@ -2761,22 +3207,53 @@ namespace Couchbase {
 
     class DecrementOptions
     {
+        /**
+         * Sets the operation timeout in milliseconds.
+         *
+         * @param int $arg the operation timeout to apply
+         * @return DecrementOptions
+         */
         public function timeout(int $arg): DecrementOptions
         {
         }
 
+        /**
+         * Sets the expiry time for the document.
+         *
+         * @param int $arg the expiry time in ms
+         * @return DecrementOptions
+         */
         public function expiry(int $arg): DecrementOptions
         {
         }
 
-        public function durabilitLevel(int $arg): DecrementOptions
+        /**
+         * Sets the durability level to enforce when writing the document.
+         *
+         * @param int $arg the durability level to enforce
+         * @return DecrementOptions
+         */
+        public function durabilityLevel(int $arg): DecrementOptions
         {
         }
 
+        /**
+         * Sets the value to decrement the counter by.
+         *
+         * @param int $arg the value to decrement by
+         * @return DecrementOptions
+         */
         public function delta(int $arg): DecrementOptions
         {
         }
 
+        /**
+         * Sets the value to initialize the counter to if the document does
+         * not exist.
+         *
+         * @param int $arg the initial value to use if counter does not exist
+         * @return DecrementOptions
+         */
         public function initial(int $arg): DecrementOptions
         {
         }
@@ -2784,14 +3261,32 @@ namespace Couchbase {
 
     class RemoveOptions
     {
+        /**
+         * Sets the operation timeout in milliseconds.
+         *
+         * @param int $arg the operation timeout to apply
+         * @return RemoveOptions
+         */
         public function timeout(int $arg): RemoveOptions
         {
         }
 
-        public function durabilitLevel(int $arg): RemoveOptions
+        /**
+         * Sets the durability level to enforce when writing the document.
+         *
+         * @param int $arg the durability level to enforce
+         * @return RemoveOptions
+         */
+        public function durabilityLevel(int $arg): RemoveOptions
         {
         }
 
+        /**
+         * Sets the cas value to use when performing this operation.
+         *
+         * @param int $arg the cas value to use
+         * @return RemoveOptions
+         */
         public function cas(string $arg): RemoveOptions
         {
         }
@@ -2799,10 +3294,27 @@ namespace Couchbase {
 
     class LookupInOptions
     {
+        /**
+         * Sets the operation timeout in milliseconds.
+         *
+         * @param int $arg the operation timeout to apply
+         * @return PrependOptions
+         */
         public function timeout(int $arg): LookupInOptions
         {
         }
 
+        /**
+         * Sets whether to include document expiry with the document content.
+         *
+         * When used this option will add one extra subdocument path into
+         * the LookupIn operation. This can cause the set of subdocument paths
+         * to exceed the maximum number (16) of paths allowed in a subdocument
+         * operation.
+         *
+         * @param bool $arg whether or not to include document expiry
+         * @return LookupInOptions
+         */
         public function withExpiry(bool $arg): LookupInOptions
         {
         }
@@ -2810,31 +3322,76 @@ namespace Couchbase {
 
     class MutateInOptions
     {
+        /**
+         * Sets the operation timeout in milliseconds.
+         *
+         * @param int $arg the operation timeout to apply
+         * @return MutateInOptions
+         */
         public function timeout(int $arg): MutateInOptions
         {
         }
 
+        /**
+         * Sets the cas value to use when performing this operation.
+         *
+         * @param int $arg the cas value to use
+         * @return MutateInOptions
+         */
         public function cas(string $arg): MutateInOptions
         {
         }
 
+        /**
+         * Sets the expiry time for the document.
+         *
+         * @param int $arg the expiry time in ms
+         * @return MutateInOptions
+         */
         public function expiry(int $arg): MutateInOptions
         {
         }
 
+        /**
+         * Sets the durability level to enforce when writing the document.
+         *
+         * @param int $arg the durability level to enforce
+         * @return MutateInOptions
+         */
         public function durabilityLevel(int $arg): MutateInOptions
         {
         }
 
+        /**
+         * Sets the document level action to use when performing the operation.
+         *
+         * @param int $arg the store semantic to use
+         * @return MutateInOptions
+         */
         public function storeSemantics(int $arg): MutateInOptions
         {
         }
     }
 
+    /**
+     * An object which contains how to define the document level action to take 
+     * during a MutateIn operation.
+     */
     interface StoreSemantics
     {
+        /**
+         * Replace the document, and fail if it does not exist.
+         */
         public const REPLACE = 0;
+
+        /**
+         * Replace the document or create it if it does not exist.
+         */
         public const UPSERT = 1;
+
+        /**
+         * Create the document or fail if it already exists.
+         */
         public const INSERT = 2;
     }
 
