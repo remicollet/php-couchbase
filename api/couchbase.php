@@ -52,7 +52,9 @@
 
 namespace Couchbase {
 
-    use JsonSerializable;
+    use \JsonSerializable;
+    use \Exception;
+    use \Throwable;
 
     /**
      * An object which contains meta information of the document needed to enforce query consistency.
@@ -171,7 +173,7 @@ namespace Couchbase {
         public function status(int $index): int;
     }
 
-    interface MutateInResult extends MutationResult, Result
+    interface MutateInResult extends MutationResult
     {
         public function content(int $index): ?array;
     }
@@ -491,6 +493,8 @@ namespace Couchbase {
 
     class SearchIndex implements JsonSerializable
     {
+        public function jsonSerialize() {}
+
         public function type(): string
         {
         }
@@ -952,29 +956,6 @@ namespace Couchbase {
         }
     }
 
-    class QueryIndexManager
-    {
-        public function getAllIndexes(): array
-        {
-        }
-
-        public function createPrimaryIndex(string $bucketName, $ignoreIfExist = false, $defer = false)
-        {
-        }
-
-        public function createIndex(string $bucketName, string $indexName, $fields = null, $whereClause = null, $ignoreIfExist = false, $defer = false)
-        {
-        }
-
-        public function dropPrimaryIndex(string $bucketName, $ignoreIfNotExist = false, $defer = false)
-        {
-        }
-
-        public function dropIndex(string $bucketName, string $indexName, $ignoreIfNotExist = false, $defer = false)
-        {
-        }
-    }
-
     class BinaryCollection
     {
         public function name(): string
@@ -1393,6 +1374,8 @@ namespace Couchbase {
 
     class SearchOptions implements JsonSerializable
     {
+        public function jsonSerialize() {}
+
         /**
          * Sets the server side timeout in milliseconds
          *
@@ -1540,6 +1523,8 @@ namespace Couchbase {
      */
     class BooleanFieldSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         public function __construct(bool $arg)
         {
         }
@@ -1566,6 +1551,8 @@ namespace Couchbase {
      */
     class BooleanSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         public function __construct()
         {
         }
@@ -1608,6 +1595,8 @@ namespace Couchbase {
      */
     class ConjunctionSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         public function __construct(array $queries)
         {
         }
@@ -1635,6 +1624,8 @@ namespace Couchbase {
      */
     class DateRangeSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         public function __construct()
         {
         }
@@ -1692,6 +1683,8 @@ namespace Couchbase {
      */
     class DisjunctionSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         public function __construct(array $queries)
         {
         }
@@ -1727,6 +1720,8 @@ namespace Couchbase {
      */
     class DocIdSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         /** @ignore */
         public function __construct()
         {
@@ -1762,6 +1757,8 @@ namespace Couchbase {
      */
     class GeoBoundingBoxSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         public function __construct(float $top_left_longitude, float $top_left_latitude, float $buttom_right_longitude, float $buttom_right_latitude)
         {
         }
@@ -1790,6 +1787,8 @@ namespace Couchbase {
      */
     class GeoDistanceSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         public function __construct(float $longitude, float $latitude, string $distance = null)
         {
         }
@@ -1816,6 +1815,8 @@ namespace Couchbase {
      */
     class MatchAllSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         public function __construct()
         {
         }
@@ -1834,6 +1835,8 @@ namespace Couchbase {
      */
     class MatchNoneSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         public function __construct()
         {
         }
@@ -1853,6 +1856,8 @@ namespace Couchbase {
      */
     class MatchPhraseSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         public function __construct(string $value)
         {
         }
@@ -1888,6 +1893,8 @@ namespace Couchbase {
      */
     class MatchSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         public function __construct(string $value)
         {
         }
@@ -1939,6 +1946,8 @@ namespace Couchbase {
      */
     class NumericRangeSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         public function __construct()
         {
         }
@@ -1985,6 +1994,8 @@ namespace Couchbase {
      */
     class PhraseSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         public function __construct(string ...$terms)
         {
         }
@@ -2011,6 +2022,8 @@ namespace Couchbase {
      */
     class PrefixSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         public function __construct(string $prefix)
         {
         }
@@ -2037,6 +2050,8 @@ namespace Couchbase {
      */
     class QueryStringSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         public function __construct(string $query_string)
         {
         }
@@ -2055,6 +2070,8 @@ namespace Couchbase {
      */
     class RegexpSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         public function __construct(string $regexp)
         {
         }
@@ -2081,6 +2098,8 @@ namespace Couchbase {
      */
     class TermSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         public function __construct(string $term)
         {
         }
@@ -2124,6 +2143,8 @@ namespace Couchbase {
      */
     class TermRangeSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         public function __construct()
         {
         }
@@ -2168,6 +2189,8 @@ namespace Couchbase {
      */
     class WildcardSearchQuery implements JsonSerializable, SearchQuery
     {
+        public function jsonSerialize() {}
+
         public function __construct(string $wildcard)
         {
         }
@@ -2206,6 +2229,8 @@ namespace Couchbase {
      */
     class TermSearchFacet implements JsonSerializable, SearchFacet
     {
+        public function jsonSerialize() {}
+
         public function __construct(string $field, int $limit)
         {
         }
@@ -2216,6 +2241,8 @@ namespace Couchbase {
      */
     class NumericRangeSearchFacet implements JsonSerializable, SearchFacet
     {
+        public function jsonSerialize() {}
+
         public function __construct(string $field, int $limit)
         {
         }
@@ -2236,6 +2263,8 @@ namespace Couchbase {
      */
     class DateRangeSearchFacet implements JsonSerializable, SearchFacet
     {
+        public function jsonSerialize() {}
+
         public function __construct(string $field, int $limit)
         {
         }
@@ -2263,6 +2292,8 @@ namespace Couchbase {
      */
     class SearchSortField implements JsonSerializable, SearchSort
     {
+        public function jsonSerialize() {}
+
         public function __construct(string $field)
         {
         }
@@ -2344,6 +2375,8 @@ namespace Couchbase {
      */
     class SearchSortGeoDistance implements JsonSerializable, SearchSort
     {
+        public function jsonSerialize() {}
+
         public function __construct(string $field, float $logitude, float $latitude)
         {
         }
@@ -2376,6 +2409,8 @@ namespace Couchbase {
      */
     class SearchSortId implements JsonSerializable, SearchSort
     {
+        public function jsonSerialize() {}
+
         public function __construct()
         {
         }
@@ -2397,6 +2432,8 @@ namespace Couchbase {
      */
     class SearchSortScore implements JsonSerializable, SearchSort
     {
+        public function jsonSerialize() {}
+
         public function __construct()
         {
         }
