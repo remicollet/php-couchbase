@@ -90,23 +90,65 @@ namespace Couchbase {
         public function sequenceNumber();
     }
 
-
+    /**
+    * Interface for retrieving metadata such as errors and metrics generated during N1QL queries.
+    */
     interface QueryMetaData
     {
+        /**
+         * Returns the query execution status
+         *
+         * @return ?string
+         */
         public function status(): ?string;
 
+        /**
+         * Returns the identifier associated with the query
+         *
+         * @return ?string
+         */
         public function requestId(): ?string;
 
+        /**
+         * Returns the client context id associated with the query
+         *
+         * @return ?string
+         */
         public function clientContextId(): ?string;
 
+        /**
+         * Returns the signature of the query
+         *
+         * @return ?array
+         */
         public function signature(): ?array;
 
+        /**
+         * Returns any warnings generated during query execution
+         *
+         * @return ?array
+         */
         public function warnings(): ?array;
 
+        /**
+         * Returns any errors generated during query execution
+         *
+         * @return ?array
+         */
         public function errors(): ?array;
 
+        /**
+         * Returns metrics generated during query execution such as timings and counts
+         *
+         * @return ?array
+         */
         public function metrics(): ?array;
 
+        /**
+         * Returns the profile of the query if enabled
+         *
+         * @return ?array
+         */
         public function profile(): ?array;
     }
 
@@ -178,10 +220,23 @@ namespace Couchbase {
         public function content(int $index): ?array;
     }
 
+    /**
+    * Interface for retrieving results from N1QL queries.
+    */
     interface QueryResult
     {
+        /**
+         * Returns metadata generated during query execution such as errors and metrics
+         *
+         * @return ?QueryMetaData
+         */
         public function metaData(): ?QueryMetaData;
 
+        /**
+         * Returns the rows returns during query execution
+         *
+         * @return ?array
+         */
         public function rows(): ?array;
     }
 
@@ -3469,78 +3524,197 @@ namespace Couchbase {
 
     class QueryOptions
     {
+        /**
+         * Sets the operation timeout in milliseconds.
+         *
+         * @param int $arg the operation timeout to apply
+         * @return QueryOptions
+         */
         public function timeout(int $arg): QueryOptions
         {
         }
 
+        /**
+         * Sets the mutation state to achieve consistency with for read your own writes (RYOW).
+         *
+         * @param MutationState $arg the mutation state to achieve consistency with
+         * @return QueryOptions
+         */
         public function consistentWith(MutationState $arg): QueryOptions
         {
         }
 
+        /**
+         * Sets the scan consistency.
+         *
+         * @param int $arg the scan consistency level
+         * @return QueryOptions
+         */
         public function scanConsistency(int $arg): QueryOptions
         {
         }
 
+        /**
+         * Sets the maximum buffered channel size between the indexer client and the query service for index scans.
+         *
+         * @param int $arg the maximum buffered channel size
+         * @return QueryOptions
+         */
         public function scanCap(int $arg): QueryOptions
         {
         }
 
+        /**
+         * Sets the maximum number of items each execution operator can buffer between various operators.
+         *
+         * @param int $arg the maximum number of items each execution operation can buffer
+         * @return QueryOptions
+         */
         public function pipelineCap(int $arg): QueryOptions
         {
         }
 
+        /**
+         * Sets the number of items execution operators can batch for fetch from the KV service.
+         *
+         * @param int $arg the pipeline batch size
+         * @return QueryOptions
+         */
         public function pipelineBatch(int $arg): QueryOptions
         {
         }
 
+        /**
+         * Sets the maximum number of index partitions, for computing aggregation in parallel.
+         *
+         * @param int $arg the number of index partitions
+         * @return QueryOptions
+         */
         public function maxParallelism(int $arg): QueryOptions
         {
         }
 
+        /**
+         * Sets the query profile mode to use.
+         *
+         * @param int $arg the query profile mode
+         * @return QueryOptions
+         */
         public function profile(int $arg): QueryOptions
         {
         }
 
+        /**
+         * Sets whether or not this query is readonly.
+         *
+         * @param bool $arg whether the query is readonly
+         * @return QueryOptions
+         */
         public function readonly(bool $arg): QueryOptions
         {
         }
 
+        /**
+         * Sets whether or not this query is adhoc.
+         *
+         * @param bool $arg whether the query is adhoc
+         * @return QueryOptions
+         */
         public function adhoc(bool $arg): QueryOptions
         {
         }
 
+        /**
+         * Sets the named parameters for this query.
+         *
+         * @param array $pairs the associative array of parameters
+         * @return QueryOptions
+         */
         public function namedParameters(array $pairs): QueryOptions
         {
         }
 
+        /**
+         * Sets the positional parameters for this query.
+         *
+         * @param array $pairs the array of parameters
+         * @return QueryOptions
+         */
         public function positionalParameters(array $args): QueryOptions
         {
         }
 
+        /**
+         * Sets any extra query parameters that the SDK does not provide an option for.
+         *
+         * @param string $key the name of the parameter
+         * @param string $value the value of the parameter
+         * @return QueryOptions
+         */
         public function raw(string $key, $value): QueryOptions
         {
         }
 
+        /**
+         * Sets the client context id for this query.
+         *
+         * @param string $arg the client context id
+         * @return QueryOptions
+         */
         public function clientContextId(string $arg): QueryOptions
         {
         }
 
+        /**
+         * Sets whether or not to return metrics with the query.
+         *
+         * @param bool $arg whether to return metrics
+         * @return QueryOptions
+         */
         public function metrics(bool $arg): QueryOptions
         {
         }
     }
 
+    /**
+     * Set of values for the scan consistency level of a query.
+     */
     interface QueryScanConsistency
     {
+        /**
+         * Set scan consistency to not bounded
+         */
         public const NOT_BOUNDED = 1;
+
+        /**
+         * Set scan consistency to not request plus
+         */
         public const REQUEST_PLUS = 2;
+
+        /**
+         * Set scan consistency to statement plus
+         */
         public const STATEMENT_PLUS = 3;
     }
 
+    /**
+     * Set of values for setting the profile mode of a query.
+     */
     interface QueryProfile
     {
+        /**
+         * Set profiling to off
+         */
         public const OFF = 1;
+
+        /**
+         * Set profiling to include phase timings
+         */
         public const PHASES = 2;
+
+        /**
+         * Set profiling to include execution timings
+         */
         public const TIMINGS = 3;
     }
 
