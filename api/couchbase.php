@@ -475,25 +475,47 @@ namespace Couchbase {
         }
     }
 
+    /**
+    *  Base exception for exceptions that are thrown originating from Couchbase operations.
+    */
     class BaseException extends Exception implements Throwable
     {
+        /**
+        * Returns the underling reference string, if any
+        *
+        * @return ?string
+        */
         public function ref(): ?string
         {
         }
 
+        /**
+        * Returns the underling error context, if any
+        *
+        * @return ?object
+        */
         public function context(): ?object
         {
         }
     }
 
+    /**
+    *  Thrown for exceptions that originate from underlying Http operations.
+    */
     class HttpException extends BaseException implements Throwable
     {
     }
 
+    /**
+    *  Thrown for exceptions that originate from query operations.
+    */
     class QueryException extends HttpException implements Throwable
     {
     }
 
+    /**
+    *  Thrown for exceptions that originate from query operations.
+    */
     class QueryErrorException extends QueryException implements Throwable
     {
     }
@@ -502,14 +524,23 @@ namespace Couchbase {
     {
     }
 
+    /**
+    *  Thrown for exceptions that originate from search operations.
+    */
     class SearchException extends HttpException implements Throwable
     {
     }
 
+    /**
+    *  Thrown for exceptions that originate from analytics operations.
+    */
     class AnalyticsException extends HttpException implements Throwable
     {
     }
 
+    /**
+    *  Thrown for exceptions that originate from view operations.
+    */
     class ViewException extends HttpException implements Throwable
     {
     }
@@ -526,90 +557,156 @@ namespace Couchbase {
     {
     }
 
+    /**
+    *  Base for exceptions that originate from key value operations
+    */
     class KeyValueException extends BaseException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when the requested document could not be found.
+    */
     class KeyNotFoundException extends KeyValueException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when an attempt is made to insert a document but a document with that key already exists.
+    */
     class KeyExistsException extends KeyValueException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when a document has gone over the maximum size allowed by the server.
+    */
     class ValueTooBigException extends KeyValueException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when a mutation operation is attempted against a document that is locked.
+    */
     class KeyLockedException extends KeyValueException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when an operation has failed for a reason that is temporary.
+    */
     class TempFailException extends KeyValueException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when a sub-document operation targets a path which does not exist in the specified document.
+    */
     class PathNotFoundException extends KeyValueException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when a sub-document operation expects a path not to exists, but the path was found in the document.
+    */
     class PathExistsException extends KeyValueException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when a sub-document counter operation is performed and the specified delta is not valid.
+    */
     class InvalidRangeException extends KeyValueException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when a multi-operation sub-document operation is performed on a soft-deleted document.
+    */
     class KeyDeletedException extends KeyValueException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when an operation has been performed with a cas value that does not the value on the server.
+    */
     class CasMismatchException extends KeyValueException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when an invalid configuration has been specified for an operation.
+    */
     class InvalidConfigurationException extends BaseException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when the requested service is not available.
+    */
     class ServiceMissingException extends BaseException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when various generic network errors occur.
+    */
     class NetworkException extends BaseException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when an operation does not receive a response in a timely manner.
+    */
     class TimeoutException extends BaseException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when the specified bucket does not exist.
+    */
     class BucketMissingException extends BaseException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when the specified scope does not exist.
+    */
     class ScopeMissingException extends BaseException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when the specified collection does not exist.
+    */
     class CollectionMissingException extends BaseException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when authentication has failed.
+    */
     class AuthenticationException extends BaseException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when an operation is attempted with bad input.
+    */
     class BadInputException extends BaseException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when the specified durability could not be met for a mutation operation.
+    */
     class DurabilityException extends BaseException implements Throwable
     {
     }
 
+    /**
+    *  Occurs when a subdocument operation could not be completed.
+    */
     class SubdocumentException extends BaseException implements Throwable
     {
     }
