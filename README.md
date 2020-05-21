@@ -94,18 +94,19 @@ An extensive documentation is available on the Couchbase website.  Visit our
 the [Couchbase](http://developer.couchbase.com/documentation/server/current/sdk/php/start-using-sdk.html) website for the documentation as well as
 numerous examples and samples.
 
-To build PHP API reference, phpDocumentor have to be installed
 
-    pear channel-discover pear.phpdoc.org
-    pear install phpdoc/phpDocumentor
+To build PHP API reference, phpDocumentor 3.0.0+ have to be installed
 
-That will bring phpdoc command into PATH. The following steps assume that current directory is the root of this repository:
+    curl -L -o/tmp/phpdoc.phar curl https://github.com/phpDocumentor/phpDocumentor/releases/download/v3.0.0-rc/phpDocumentor.phar
+    php /tmp/phpdoc.phar -t /tmp/output -d api/
+
+The following steps assume that current directory is the root of this repository:
 
     ver=$(git describe | sed 's/^v//')
     rm -rf couchbase-php-client-$ver
-    phpdoc --target couchbase-php-client-$ver --directory api
+    php /tmp/phpdoc.phar -t couchbase-php-client-$ver -d api/
 
-After that all reference documentation will be stored in couchbase-php-client-2.3.0, if current tag is 2.3.0.
+After that all reference documentation will be stored in couchbase-php-client-3.0.0, if current tag is 3.0.0.
 
 ## Source Control
 
@@ -141,6 +142,7 @@ CB_MOCK=1 phpunit tests/
 
 Server version guard might be specified by `CB_VERSION` (default is `4.6`). The tests which depend on functionality,
 which is not supported by `CB_VERSION`, will be skipped automatically.
+
 
 ## License
 Copyright 2016-2019 Couchbase Inc.
