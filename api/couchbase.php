@@ -1668,6 +1668,10 @@ namespace Couchbase {
         public function setScopeName(string $name): CollectionSpec
         {
         }
+
+        public function setMaxExpiry(long $ms): CollectionSpec
+        {
+        }
     }
 
     class CollectionManager

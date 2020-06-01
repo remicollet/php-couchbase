@@ -224,8 +224,8 @@ PHP_METHOD(CollectionManager, dropScope)
 PHP_METHOD(CollectionManager, createCollection)
 {
     pcbc_bucket_t *bucket = NULL;
-    zval *prop, val, val1, val2;
-    zval *collection, *name, *scope_name;
+    zval *prop, val, val1, val2, val3;
+    zval *collection, *name, *scope_name, *max_expiry;
 
     int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "O", &collection, pcbc_collection_spec_ce);
     if (rv == FAILURE) {
@@ -239,6 +239,7 @@ PHP_METHOD(CollectionManager, createCollection)
     if (name == NULL || Z_TYPE_P(name) != IS_STRING || scope_name == NULL || Z_TYPE_P(scope_name) != IS_STRING) {
         RETURN_NULL();
     }
+    max_expiry = zend_read_property(pcbc_collection_spec_ce, collection, ZEND_STRL("max_expiry"), 0, &val3);
 
     lcb_CMDHTTP *cmd;
     lcb_cmdhttp_create(&cmd, LCB_HTTP_TYPE_MANAGEMENT);
@@ -253,6 +254,9 @@ PHP_METHOD(CollectionManager, createCollection)
     zend_string *str = php_url_encode(Z_STRVAL_P(name), Z_STRLEN_P(name));
     payload_len = spprintf(&payload, 0, "name=%.*s", (int)ZSTR_LEN(str), ZSTR_VAL(str));
     zend_string_free(str);
+    if (Z_TYPE(max_expiry) == IS_LONG) {
+        payload_len = spprintf(&payload, 0, "&maxTTL=%d", (int)Z_LVAL_P(max_expiry));
+    }
     lcb_cmdhttp_body(cmd, payload, payload_len);
     lcb_cmdhttp_content_type(cmd, PCBC_CONTENT_TYPE_FORM, strlen(PCBC_CONTENT_TYPE_FORM));
     pcbc_http_request(return_value, bucket->conn->lcb, cmd, 1, NULL, NULL, NULL TSRMLS_CC);
@@ -406,6 +410,17 @@ PHP_METHOD(CollectionSpec, setScopeName)
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
+PHP_METHOD(CollectionSpec, setMaxExpiry)
+{
+    zend_long val;
+    if (zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "l", &val) == FAILURE) {
+        RETURN_NULL();
+    }
+
+    zend_update_property_long(pcbc_collection_spec_ce, getThis(), ZEND_STRL("max_expiry"), val TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(ai_CollectionSpec_name, 0, 0, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
@@ -448,6 +463,7 @@ PHP_MINIT_FUNCTION(CollectionManager)
     pcbc_collection_spec_ce = zend_register_internal_class(&ce TSRMLS_CC);
     zend_declare_property_null(pcbc_collection_spec_ce, ZEND_STRL("name"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_collection_spec_ce, ZEND_STRL("scope_name"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_collection_spec_ce, ZEND_STRL("max_expiry"), ZEND_ACC_PRIVATE TSRMLS_CC);
 
     return SUCCESS;
 }
