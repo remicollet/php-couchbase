@@ -396,7 +396,7 @@ PHP_METHOD(ViewOptions, range)
             RETURN_NULL();
         }
         smart_str_0(&buf);
-        add_assoc_str_ex(data, ZEND_STRL("starkey"), buf.s TSRMLS_CC);
+        add_assoc_str_ex(data, ZEND_STRL("startkey"), buf.s TSRMLS_CC);
     }
     if (end != NULL) {
         smart_str buf = {0};
@@ -431,9 +431,9 @@ PHP_METHOD(ViewOptions, idRange)
         Z_DELREF_P(data);
     }
     add_assoc_string_ex(data, ZEND_STRL("inclusive_end"), inclusive_end ? "true" : "false");
-    add_assoc_str_ex(data, ZEND_STRL("starkey_docid"), start TSRMLS_CC);
+    add_assoc_str_ex(data, ZEND_STRL("startkey_docid"), zend_string_copy(start) TSRMLS_CC);
     if (end != NULL) {
-        add_assoc_str_ex(data, ZEND_STRL("endkey_docid"), end TSRMLS_CC);
+        add_assoc_str_ex(data, ZEND_STRL("endkey_docid"), zend_string_copy(end) TSRMLS_CC);
     }
 
     RETURN_ZVAL(getThis(), 1, 0);
@@ -454,7 +454,7 @@ PHP_METHOD(ViewOptions, raw)
         zend_update_property(pcbc_view_options_ce, getThis(), ZEND_STRL("query"), data TSRMLS_CC);
         Z_DELREF_P(data);
     }
-    add_assoc_str_ex(data, ZSTR_VAL(key), ZSTR_LEN(key), value TSRMLS_CC);
+    add_assoc_str_ex(data, ZSTR_VAL(key), ZSTR_LEN(key), zend_string_copy(value) TSRMLS_CC);
 
     RETURN_ZVAL(getThis(), 1, 0);
 }
