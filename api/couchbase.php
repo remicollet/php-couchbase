@@ -98,56 +98,56 @@ namespace Couchbase {
         /**
          * Returns the query execution status
          *
-         * @return ?string
+         * @return string|null
          */
         public function status(): ?string;
 
         /**
          * Returns the identifier associated with the query
          *
-         * @return ?string
+         * @return string|null
          */
         public function requestId(): ?string;
 
         /**
          * Returns the client context id associated with the query
          *
-         * @return ?string
+         * @return string|null
          */
         public function clientContextId(): ?string;
 
         /**
          * Returns the signature of the query
          *
-         * @return ?array
+         * @return array|null
          */
         public function signature(): ?array;
 
         /**
          * Returns any warnings generated during query execution
          *
-         * @return ?array
+         * @return array|null
          */
         public function warnings(): ?array;
 
         /**
          * Returns any errors generated during query execution
          *
-         * @return ?array
+         * @return array|null
          */
         public function errors(): ?array;
 
         /**
          * Returns metrics generated during query execution such as timings and counts
          *
-         * @return ?array
+         * @return array|null
          */
         public function metrics(): ?array;
 
         /**
          * Returns the profile of the query if enabled
          *
-         * @return ?array
+         * @return array|null
          */
         public function profile(): ?array;
     }
@@ -160,42 +160,42 @@ namespace Couchbase {
         /**
         * Returns the number of pindexes successfully queried
         *
-        * @return ?int
+        * @return int|null
         */
         public function successCount(): ?int;
 
         /**
         * Returns the number of errors messages reported by individual pindexes
         *
-        * @return ?int
+        * @return int|null
         */
         public function errorCount(): ?int;
 
         /**
         * Returns the time taken to complete the query
         *
-        * @return ?int
+        * @return int|null
         */
         public function took(): ?int;
 
         /**
         * Returns the total number of matches for this result
         *
-        * @return ?int
+        * @return int|null
         */
         public function totalHits(): ?int;
 
         /**
         * Returns the highest score of all documents for this search query.
         *
-        * @return ?float
+        * @return float|null
         */
         public function maxScore(): ?float;
 
         /**
         * Returns the metrics generated during execution of this search query.
         *
-        * @return ?array
+        * @return array|null
         */
         public function metrics(): ?array;
     }
@@ -208,14 +208,14 @@ namespace Couchbase {
         /**
         * Returns the total number of rows returned by this view query
         *
-        * @return ?int
+        * @return int|null
         */
         public function totalRows(): ?int;
 
         /**
         * Returns debug information for this view query if enabled
         *
-        * @return ?array
+        * @return array|null
         */
         public function debug(): ?array;
     }
@@ -228,7 +228,7 @@ namespace Couchbase {
         /**
         * Returns the CAS value for the document
         *
-        * @return ?string
+        * @return string|null
         */
         public function cas(): ?string;
     }
@@ -241,7 +241,7 @@ namespace Couchbase {
         /**
         * Returns the content of the document fetched
         *
-        * @return ?array
+        * @return array|null
         */
         public function content(): ?array;
     }
@@ -254,7 +254,7 @@ namespace Couchbase {
         /**
         * Returns the content of the document fetched
         *
-        * @return ?array
+        * @return array|null
         */
         public function content(): ?array;
 
@@ -287,7 +287,7 @@ namespace Couchbase {
         /**
         * Returns the mutation token generated during the mutation
         *
-        * @return ?MutationToken
+        * @return MutationToken|null
         */
         public function mutationToken(): ?MutationToken;
     }
@@ -314,7 +314,7 @@ namespace Couchbase {
         * Returns the value located at the index specified
         *
         * @param int $index the index to retrieve content from
-        * @return ?object
+        * @return object|null
         */
         public function content(int $index): ?object;
 
@@ -344,7 +344,7 @@ namespace Couchbase {
         * Returns any value located at the index specified
         *
         * @param int $index the index to retrieve content from
-        * @return ?array
+        * @return array|null
         */
         public function content(int $index): ?array;
     }
@@ -357,14 +357,14 @@ namespace Couchbase {
         /**
          * Returns metadata generated during query execution such as errors and metrics
          *
-         * @return ?QueryMetaData
+         * @return QueryMetaData|null
          */
         public function metaData(): ?QueryMetaData;
 
         /**
          * Returns the rows returns during query execution
          *
-         * @return ?array
+         * @return array|null
          */
         public function rows(): ?array;
     }
@@ -377,14 +377,14 @@ namespace Couchbase {
         /**
         * Returns metadata generated during query execution
         *
-        * @return ?QueryMetaData
+        * @return QueryMetaData|null
         */
         public function metaData(): ?QueryMetaData;
 
         /**
         * Returns the rows returned during query execution
         *
-        * @return ?array
+        * @return array|null
         */
         public function rows(): ?array;
     }
@@ -397,21 +397,21 @@ namespace Couchbase {
         /**
         * Returns metadata generated during query execution
         *
-        * @return ?SearchMetaData
+        * @return SearchMetaData|null
         */
         public function metaData(): ?SearchMetaData;
 
         /**
         * Returns any facets returned by the query
         *
-        * @return ?array
+        * @return array|null
         */
         public function facets(): ?array;
 
         /**
         * Returns any rows returned by the query
         *
-        * @return ?array
+        * @return array|null
         */
         public function rows(): ?array;
     }
@@ -424,14 +424,14 @@ namespace Couchbase {
         /**
         * Returns metadata generated during query execution
         *
-        * @return ?ViewMetaData
+        * @return ViewMetaData|null
         */
         public function metaData(): ?ViewMetaData;
 
         /**
         * Returns any rows returned by the query
         *
-        * @return ?array
+        * @return array|null
         */
         public function rows(): ?array;
     }
@@ -444,7 +444,7 @@ namespace Couchbase {
         /**
         * Returns the id of the row
         *
-        * @return ?string
+        * @return string|null
         */
         public function id(): ?string
         {
@@ -483,7 +483,7 @@ namespace Couchbase {
         /**
         * Returns the underling reference string, if any
         *
-        * @return ?string
+        * @return string|null
         */
         public function ref(): ?string
         {
@@ -492,7 +492,7 @@ namespace Couchbase {
         /**
         * Returns the underling error context, if any
         *
-        * @return ?object
+        * @return object|null
         */
         public function context(): ?object
         {
