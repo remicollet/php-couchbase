@@ -1376,9 +1376,9 @@ namespace Couchbase {
          * @param string $id the key of the document
          * @param string $value the value to append
          * @param AppendOptions $options the options to use for the operation
-         * @return StoreResult
+         * @return MutationResult
          */
-        public function append(string $id, string $value, AppendOptions $options = null): StoreResult
+        public function append(string $id, string $value, AppendOptions $options = null): MutationResult
         {
         }
 
@@ -1388,9 +1388,9 @@ namespace Couchbase {
          * @param string $id the key of the document
          * @param string $value the value to prepend
          * @param PrependOptions $options the options to use for the operation
-         * @return StoreResult
+         * @return MutationResult
          */
-        public function prepend(string $id, string $value, PrependOptions $options = null): StoreResult
+        public function prepend(string $id, string $value, PrependOptions $options = null): MutationResult
         {
         }
 
@@ -1511,9 +1511,9 @@ namespace Couchbase {
          * @param string $id the key of the document
          * @param $value the value to use for the document
          * @param UpsertOptions $options the options to use for the operation
-         * @return StoreResult
+         * @return MutationResult
          */
-        public function upsert(string $id, $value, UpsertOptions $options = null): StoreResult
+        public function upsert(string $id, $value, UpsertOptions $options = null): MutationResult
         {
         }
 
@@ -1523,9 +1523,9 @@ namespace Couchbase {
          * @param string $id the key of the document
          * @param $value the value to use for the document
          * @param InsertOptions $options the options to use for the operation
-         * @return StoreResult
+         * @return MutationResult
          */
-        public function insert(string $id, $value, InsertOptions $options = null): StoreResult
+        public function insert(string $id, $value, InsertOptions $options = null): MutationResult
         {
         }
 
@@ -1535,9 +1535,9 @@ namespace Couchbase {
          * @param string $id the key of the document
          * @param $value the value to use for the document
          * @param ReplaceOptions $options the options to use for the operation
-         * @return StoreResult
+         * @return MutationResult
          */
-        public function replace(string $id, $value, ReplaceOptions $options = null): StoreResult
+        public function replace(string $id, $value, ReplaceOptions $options = null): MutationResult
         {
         }
 
@@ -1545,9 +1545,8 @@ namespace Couchbase {
          * Removes a document.
          *
          * @param string $id the key of the document
-         * @param $value the value to use for the document
          * @param RemoveOptions $options the options to use for the operation
-         * @return StoreResult
+         * @return MutationResult
          */
         public function remove(string $id, RemoveOptions $options = null): MutationResult
         {
