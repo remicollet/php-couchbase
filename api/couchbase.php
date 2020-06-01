@@ -1498,10 +1498,10 @@ namespace Couchbase {
          * Returns an array of documents, one per server.
          *
          * @param string $id the key of the document
-         * @param GetAllReplicaOptions $options the options to use for the operation
+         * @param GetAllReplicasOptions $options the options to use for the operation
          * @return array
          */
-        public function getAllReplicas(string $id, GetAllReplicaOptions $options = null): array
+        public function getAllReplicas(string $id, GetAllReplicasOptions $options = null): array
         {
         }
 
