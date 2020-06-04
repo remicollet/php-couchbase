@@ -254,7 +254,7 @@ PHP_METHOD(CollectionManager, createCollection)
     zend_string *str = php_url_encode(Z_STRVAL_P(name), Z_STRLEN_P(name));
     payload_len = spprintf(&payload, 0, "name=%.*s", (int)ZSTR_LEN(str), ZSTR_VAL(str));
     zend_string_free(str);
-    if (Z_TYPE(max_expiry) == IS_LONG) {
+    if (Z_TYPE_P(max_expiry) == IS_LONG) {
         payload_len = spprintf(&payload, 0, "&maxTTL=%d", (int)Z_LVAL_P(max_expiry));
     }
     lcb_cmdhttp_body(cmd, payload, payload_len);
