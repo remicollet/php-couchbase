@@ -62,7 +62,7 @@ PHP_METHOD(QueryStringSearchQuery, jsonSerialize)
     zval *prop, ret;
     prop = zend_read_property(pcbc_query_string_search_query_ce, getThis(), ZEND_STRL("value"), 0, &ret);
     if (Z_TYPE_P(prop) != IS_NULL) {
-        add_assoc_zval(return_value, "query_string", prop);
+        add_assoc_zval(return_value, "query", prop);
         Z_TRY_ADDREF_P(prop);
     }
 
