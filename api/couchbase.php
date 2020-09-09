@@ -47,6 +47,11 @@
  *   operations. All connections which idle more than this interval will be closed automatically. Cleanup function
  *   executed after each request using RSHUTDOWN hook.
  *
+ * * `couchbase.allow_fallback_to_bucket_connection` (boolean), default: `false`
+ *
+ *   allows the library to switch to bucket connection when the connection string includes bucket name. It is useful
+ *   when the application connects to older Couchbase Server, that does not have G3CP feature.
+ *
  * @package Couchbase
  */
 
@@ -2051,7 +2056,7 @@ namespace Couchbase {
     }
 
     /**
-     * Indicates to add a value into an array at a path in a document so long as that value does not already exist 
+     * Indicates to add a value into an array at a path in a document so long as that value does not already exist
      * in the array.
      */
     class MutateArrayAddUniqueSpec implements MutateInSpec
@@ -3180,7 +3185,7 @@ namespace Couchbase {
         /**
          * Sets whether to cause the Get operation to only fetch the fields
          * from the document indicated by the paths provided.
-         * 
+         *
          * When used this option will transparently transform the Get
          * operation into a subdocument operation fetching only the required
          * fields.
@@ -3723,7 +3728,7 @@ namespace Couchbase {
     }
 
     /**
-     * An object which contains how to define the document level action to take 
+     * An object which contains how to define the document level action to take
      * during a MutateIn operation.
      */
     interface StoreSemantics

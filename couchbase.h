@@ -81,6 +81,7 @@ long enc_cmpr_threshold;
 long pool_max_idle_time;
 double enc_cmpr_factor;
 zend_bool dec_json_array;
+int allow_fallback_to_bucket;
 ZEND_END_MODULE_GLOBALS(couchbase)
 ZEND_EXTERN_MODULE_GLOBALS(couchbase)
 

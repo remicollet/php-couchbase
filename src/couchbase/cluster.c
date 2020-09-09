@@ -15,6 +15,7 @@
  */
 
 #include "couchbase.h"
+#include <ext/standard/url.h>
 
 #define LOGARGS(lvl) LCB_LOG_##lvl, NULL, "pcbc/cluster", __FILE__, __LINE__
 
@@ -55,9 +56,36 @@ static void pcbc_cluster_connection_init(zval *return_value, pcbc_cluster_t *clu
 {
     pcbc_connection_t *conn;
     lcb_STATUS err;
+    const char *bucket = NULL;
+    lcb_INSTANCE_TYPE type = LCB_TYPE_CLUSTER;
+    php_url *url = NULL;
 
-    err = pcbc_connection_get(&conn, LCB_TYPE_CLUSTER, cluster->connstr, NULL, cluster->username,
-                              cluster->password TSRMLS_CC);
+    if (PCBCG(allow_fallback_to_bucket)) {
+        url = php_url_parse(cluster->connstr);
+        if (url && url->path) {
+#if PHP_VERSION_ID < 70300
+            bucket = url->path;
+#else
+            bucket = ZSTR_VAL(url->path);
+#endif
+            while (*bucket == '/') {
+                bucket++;
+            }
+            if (strlen(bucket) > 0) {
+                type = LCB_TYPE_BUCKET;
+                pcbc_log(
+                    LOGARGS(INFO),
+                    "Use \"%s\" as bucket name for cluster object to allow cluster-level queries for older servers "
+                    "(enabled via INI \"couchbase.allow_fallback_to_bucket_connection\")",
+                    bucket);
+            }
+        }
+    }
+
+    err = pcbc_connection_get(&conn, type, cluster->connstr, bucket, cluster->username, cluster->password TSRMLS_CC);
+    if (url) {
+        php_url_free(url);
+    }
     if (err) {
         throw_lcb_exception(err, NULL);
         return;
