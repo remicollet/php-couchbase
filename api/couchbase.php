@@ -1202,11 +1202,27 @@ namespace Couchbase {
         {
         }
 
+        public function scope(): ?string
+        {
+        }
+
+        public function collection(): ?string
+        {
+        }
+
         public function setName(string $name): Role
         {
         }
 
         public function setBucket(string $bucket): Role
+        {
+        }
+
+        public function setScope(string $bucket): Role
+        {
+        }
+
+        public function setCollection(string $bucket): Role
         {
         }
     }
