@@ -253,6 +253,17 @@ PHP_METHOD(QueryOptions, readonly)
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
+PHP_METHOD(QueryOptions, flexIndex)
+{
+    zend_bool arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "b", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    zend_update_property_bool(pcbc_query_options_ce, getThis(), ZEND_STRL("flex_index"), arg TSRMLS_CC);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
 PHP_METHOD(QueryOptions, adhoc)
 {
     zend_bool arg;
@@ -406,6 +417,10 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_QueryOptions_readonly, 0, 1, Couchbase
 ZEND_ARG_TYPE_INFO(0, arg, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_QueryOptions_flexIndex, 0, 1, Couchbase\\QueryOptions, 0)
+ZEND_ARG_TYPE_INFO(0, arg, _IS_BOOL, 0)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_QueryOptions_adhoc, 0, 1, Couchbase\\QueryOptions, 0)
 ZEND_ARG_TYPE_INFO(0, arg, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
@@ -440,6 +455,7 @@ static const zend_function_entry pcbc_query_options_methods[] = {
     PHP_ME(QueryOptions, pipelineCap, ai_QueryOptions_pipelineCap, ZEND_ACC_PUBLIC)
     PHP_ME(QueryOptions, pipelineBatch, ai_QueryOptions_pipelineBatch, ZEND_ACC_PUBLIC)
     PHP_ME(QueryOptions, readonly, ai_QueryOptions_readonly, ZEND_ACC_PUBLIC)
+    PHP_ME(QueryOptions, flexIndex, ai_QueryOptions_flexIndex, ZEND_ACC_PUBLIC)
     PHP_ME(QueryOptions, adhoc, ai_QueryOptions_adhoc, ZEND_ACC_PUBLIC)
     PHP_ME(QueryOptions, metrics, ai_QueryOptions_metrics, ZEND_ACC_PUBLIC)
     PHP_ME(QueryOptions, namedParameters, ai_QueryOptions_namedParameters, ZEND_ACC_PUBLIC)
@@ -506,6 +522,15 @@ PHP_METHOD(Cluster, query)
             break;
         case IS_FALSE:
             lcb_cmdquery_readonly(cmd, 0);
+            break;
+        }
+        prop = zend_read_property(pcbc_query_options_ce, options, ZEND_STRL("flex_index"), 0, &ret);
+        switch (Z_TYPE_P(prop)) {
+        case IS_TRUE:
+            lcb_cmdquery_flex_index(cmd, 1);
+            break;
+        case IS_FALSE:
+            lcb_cmdquery_flex_index(cmd, 0);
             break;
         }
         prop = zend_read_property(pcbc_query_options_ce, options, ZEND_STRL("metrics"), 0, &ret);
@@ -646,6 +671,7 @@ PHP_MINIT_FUNCTION(N1qlQuery)
     zend_declare_property_null(pcbc_query_options_ce, ZEND_STRL("adhoc"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_query_options_ce, ZEND_STRL("metrics"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_query_options_ce, ZEND_STRL("readonly"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_query_options_ce, ZEND_STRL("flex_index"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_query_options_ce, ZEND_STRL("scan_cap"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_query_options_ce, ZEND_STRL("pipeline_batch"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_query_options_ce, ZEND_STRL("pipeline_cap"), ZEND_ACC_PRIVATE TSRMLS_CC);

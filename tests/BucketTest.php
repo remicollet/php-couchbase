@@ -12,7 +12,7 @@ class BucketTest extends CouchbaseTestCase {
         $options->credentials($this->testUser, 'bad_pass');
         $this->wrapException(function() use($options) {
             new \Couchbase\Cluster($this->testDsn, $options);
-        }, '\Couchbase\AuthenticationException', COUCHBASE_ERR_AUTHENTICATION_FAILURE);
+        }, '\Couchbase\NetworkException', COUCHBASE_ERR_CONNECT_ERROR);
     }
 
     /**

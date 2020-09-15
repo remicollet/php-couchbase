@@ -4023,6 +4023,16 @@ namespace Couchbase {
         }
 
         /**
+         * Sets whether or not this query allowed to use FlexIndex (full text search integration).
+         *
+         * @param bool $arg whether the FlexIndex allowed
+         * @return QueryOptions
+         */
+        public function flexIndex(bool $arg): QueryOptions
+        {
+        }
+
+        /**
          * Sets whether or not this query is adhoc.
          *
          * @param bool $arg whether the query is adhoc
