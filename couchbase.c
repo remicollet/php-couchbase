@@ -212,6 +212,7 @@ PHP_MINIT_FUNCTION(DisjunctionSearchQuery);
 PHP_MINIT_FUNCTION(DocIdSearchQuery);
 PHP_MINIT_FUNCTION(GeoBoundingBoxSearchQuery);
 PHP_MINIT_FUNCTION(GeoDistanceSearchQuery);
+PHP_MINIT_FUNCTION(GeoPolygonSearchQuery);
 PHP_MINIT_FUNCTION(MatchAllSearchQuery);
 PHP_MINIT_FUNCTION(MatchNoneSearchQuery);
 PHP_MINIT_FUNCTION(MatchPhraseSearchQuery);
@@ -291,6 +292,7 @@ PHP_MINIT_FUNCTION(couchbase)
     PHP_MINIT(DocIdSearchQuery)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(GeoBoundingBoxSearchQuery)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(GeoDistanceSearchQuery)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(GeoPolygonSearchQuery)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(MatchAllSearchQuery)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(MatchNoneSearchQuery)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(MatchPhraseSearchQuery)(INIT_FUNC_ARGS_PASSTHRU);

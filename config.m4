@@ -97,6 +97,7 @@ COUCHBASE_FILES=" \
     src/couchbase/search/facet.c \
     src/couchbase/search/geo_bounding_box_query.c \
     src/couchbase/search/geo_distance_query.c \
+    src/couchbase/search/geo_polygon_query.c \
     src/couchbase/search/match_all_query.c \
     src/couchbase/search/match_none_query.c \
     src/couchbase/search/match_phrase_query.c \

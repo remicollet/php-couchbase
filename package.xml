@@ -128,6 +128,7 @@
             <file role="src" name="src/couchbase/search/facet.c" />
             <file role="src" name="src/couchbase/search/geo_bounding_box_query.c" />
             <file role="src" name="src/couchbase/search/geo_distance_query.c" />
+            <file role="src" name="src/couchbase/search/geo_polygon_query.c" />
             <file role="src" name="src/couchbase/search/match_all_query.c" />
             <file role="src" name="src/couchbase/search/match_none_query.c" />
             <file role="src" name="src/couchbase/search/match_phrase_query.c" />

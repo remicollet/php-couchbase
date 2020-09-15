@@ -72,6 +72,7 @@ if (PHP_COUCHBASE != "no") {
             "doc_id_query.c " +
             "geo_bounding_box_query.c " +
             "geo_distance_query.c " +
+            "geo_polygon_query.c " +
             "facet.c " +
             "match_all_query.c " +
             "match_none_query.c " +

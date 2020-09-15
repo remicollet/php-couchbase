@@ -2563,6 +2563,52 @@ namespace Couchbase {
         }
     }
 
+    class Coordinate implements JsonSerializable
+    {
+        /**
+         * @param double $longitude
+         * @param double $latitude
+         *
+         * @see GeoPolygonQuery
+         */
+        public function __construct(double $longitude, double $latitude)
+        {
+        }
+    }
+
+    /**
+     * A FTS query that finds all matches within the given polygon area.
+     */
+    class GeoPolygonQuery implements JsonSerializable, SearchQuery
+    {
+        public function jsonSerialize() {}
+
+        /**
+         * @param array $coordinates list of objects of type Coordinate
+         *
+         * @see Coordinate
+         */
+        public function __construct(array $coordinates)
+        {
+        }
+
+        /**
+         * @param float $boost
+         * @return GeoPolygonQuery
+         */
+        public function boost(float $boost): GeoPolygonQuery
+        {
+        }
+
+        /**
+         * @param string $field
+         * @return GeoPolygonQuery
+         */
+        public function field(string $field): GeoPolygonQuery
+        {
+        }
+    }
+
     /**
      * A FTS query that matches all indexed documents (usually for debugging purposes).
      */
