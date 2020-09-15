@@ -1047,6 +1047,42 @@ namespace Couchbase {
         }
     }
 
+    interface EvictionPolicy
+    {
+        /**
+         * During ejection, everything (including key, metadata, and value) will be ejected.
+         *
+         * Full Ejection reduces the memory overhead requirement, at the cost of performance.
+         *
+         * This value is only valid for buckets of type COUCHBASE.
+         */
+        public const FULL = "fullEviction";
+
+        /**
+         * During ejection, only the value will be ejected (key and metadata will remain in memory).
+         *
+         * Value Ejection needs more system memory, but provides better performance than Full Ejection.
+         *
+         * This value is only valid for buckets of type COUCHBASE.
+         */
+        public const VALUE_ONLY = "valueOnly";
+
+        /**
+         * Couchbase Server keeps all data until explicitly deleted, but will reject
+         * any new data if you reach the quota (dedicated memory) you set for your bucket.
+         *
+         * This value is only valid for buckets of type EPHEMERAL.
+         */
+        public const NO_EVICTION = "noEviction";
+
+        /**
+         * When the memory quota is reached, Couchbase Server ejects data that has not been used recently.
+         *
+         * This value is only valid for buckets of type EPHEMERAL.
+         */
+        public const NOT_RECENTLY_USED = "nruEviction";
+    }
+
     class BucketSettings
     {
         public function name(): string
@@ -1073,7 +1109,7 @@ namespace Couchbase {
         {
         }
 
-        public function ejectionMethod(): string
+        public function evictionPolicy(): string
         {
         }
 
@@ -1109,7 +1145,18 @@ namespace Couchbase {
         {
         }
 
-        public function setEjectionMethod(string $method): BucketSettings
+        /**
+         * Configures eviction policy for the bucket.
+         *
+         * @param string $policy eviction policy. Use constants FULL, VALUE_ONLY,
+         *   NO_EVICTION, NOT_RECENTLY_USED.
+         *
+         * @see \EvictionPolicy::FULL
+         * @see \EvictionPolicy::VALUE_ONLY
+         * @see \EvictionPolicy::NO_EVICTION
+         * @see \EvictionPolicy::NOT_RECENTLY_USED
+         */
+        public function setEvictionPolicy(string $policy): BucketSettings
         {
         }
 

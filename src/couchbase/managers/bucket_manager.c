@@ -48,7 +48,7 @@ static void httpcb_getBucket(void *ctx, zval *return_value, zval *response)
     }
     mval = zend_symtable_str_find(marr, ZEND_STRL("evictionPolicy"));
     if (mval && Z_TYPE_P(mval) == IS_STRING) {
-        zend_update_property(pcbc_bucket_settings_ce, return_value, ZEND_STRL("ejection_method"), mval TSRMLS_CC);
+        zend_update_property(pcbc_bucket_settings_ce, return_value, ZEND_STRL("eviction_policy"), mval TSRMLS_CC);
     }
     mval = zend_symtable_str_find(marr, ZEND_STRL("maxTTL"));
     if (mval && Z_TYPE_P(mval) == IS_LONG) {
@@ -183,7 +183,7 @@ PHP_METHOD(BucketManager, createBucket)
         if (Z_TYPE_P(prop) == IS_LONG) {
             add_assoc_zval(&payload, "replicaNumber", prop);
         }
-        prop = zend_read_property(pcbc_bucket_settings_ce, settings, ZEND_STRL("ejection_method"), 0, &ret);
+        prop = zend_read_property(pcbc_bucket_settings_ce, settings, ZEND_STRL("eviction_policy"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_STRING) {
             add_assoc_zval(&payload, "evictionPolicy", prop);
         }
@@ -358,12 +358,12 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_BucketSettings_setBucketType, 0, 1, Co
 ZEND_ARG_TYPE_INFO(0, type, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-PHP_METHOD(BucketSettings, ejectionMethod);
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_BucketSettings_ejectionMethod, IS_STRING, 0)
+PHP_METHOD(BucketSettings, evictionPolicy);
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_BucketSettings_evictionPolicy, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-PHP_METHOD(BucketSettings, setEjectionMethod);
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_BucketSettings_setEjectionMethod, 0, 1, Couchbase\\BucketSettings, 0)
+PHP_METHOD(BucketSettings, setEvictionPolicy);
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_BucketSettings_setEvictionPolicy, 0, 1, Couchbase\\BucketSettings, 0)
 ZEND_ARG_TYPE_INFO(0, method, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
@@ -399,15 +399,21 @@ zend_function_entry bucket_settings_methods[] = {
     PHP_ME(BucketSettings, enableReplicaIndexes, ai_BucketSettings_enableReplicaIndexes, ZEND_ACC_PUBLIC)
     PHP_ME(BucketSettings, bucketType, ai_BucketSettings_bucketType, ZEND_ACC_PUBLIC)
     PHP_ME(BucketSettings, setBucketType, ai_BucketSettings_setBucketType, ZEND_ACC_PUBLIC)
-    PHP_ME(BucketSettings, ejectionMethod, ai_BucketSettings_ejectionMethod, ZEND_ACC_PUBLIC)
-    PHP_ME(BucketSettings, setEjectionMethod, ai_BucketSettings_setEjectionMethod, ZEND_ACC_PUBLIC)
+    PHP_ME(BucketSettings, evictionPolicy, ai_BucketSettings_evictionPolicy, ZEND_ACC_PUBLIC)
+    PHP_ME(BucketSettings, setEvictionPolicy, ai_BucketSettings_setEvictionPolicy, ZEND_ACC_PUBLIC)
     PHP_ME(BucketSettings, maxTtl, ai_BucketSettings_maxTtl, ZEND_ACC_PUBLIC)
     PHP_ME(BucketSettings, setMaxTtl, ai_BucketSettings_setMaxTtl, ZEND_ACC_PUBLIC)
     PHP_ME(BucketSettings, compressionMode, ai_BucketSettings_compressionMode, ZEND_ACC_PUBLIC)
     PHP_ME(BucketSettings, setCompressionMode, ai_BucketSettings_setCompressionMode, ZEND_ACC_PUBLIC)
+
+    PHP_MALIAS(BucketSettings, ejectionMethod, evictionPolicy, ai_BucketSettings_evictionPolicy, ZEND_ACC_PUBLIC|ZEND_ACC_DEPRECATED)
+    PHP_MALIAS(BucketSettings, setEjectionMethod, setEvictionPolicy, ai_BucketSettings_setEvictionPolicy, ZEND_ACC_PUBLIC|ZEND_ACC_DEPRECATED)
     PHP_FE_END
 };
 // clang-format on
+
+zend_class_entry *pcbc_eviction_policy_ce;
+static const zend_function_entry pcbc_eviction_policy_methods[] = {PHP_FE_END};
 
 PHP_MINIT_FUNCTION(BucketManager)
 {
@@ -425,9 +431,16 @@ PHP_MINIT_FUNCTION(BucketManager)
     zend_declare_property_null(pcbc_bucket_settings_ce, ZEND_STRL("num_replicas"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_bucket_settings_ce, ZEND_STRL("replica_indexes"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_bucket_settings_ce, ZEND_STRL("bucket_type"), ZEND_ACC_PRIVATE TSRMLS_CC);
-    zend_declare_property_null(pcbc_bucket_settings_ce, ZEND_STRL("ejection_method"), ZEND_ACC_PRIVATE TSRMLS_CC);
+    zend_declare_property_null(pcbc_bucket_settings_ce, ZEND_STRL("eviction_policy"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_bucket_settings_ce, ZEND_STRL("max_ttl"), ZEND_ACC_PRIVATE TSRMLS_CC);
     zend_declare_property_null(pcbc_bucket_settings_ce, ZEND_STRL("compression_mode"), ZEND_ACC_PRIVATE TSRMLS_CC);
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "EvictionPolicy", pcbc_eviction_policy_methods);
+    pcbc_eviction_policy_ce = zend_register_internal_interface(&ce TSRMLS_CC);
+    zend_declare_class_constant_stringl(pcbc_eviction_policy_ce, ZEND_STRL("FULL"), ZEND_STRL("fullEviction") TSRMLS_CC);
+    zend_declare_class_constant_stringl(pcbc_eviction_policy_ce, ZEND_STRL("VALUE_ONLY"), ZEND_STRL("valueOnly") TSRMLS_CC);
+    zend_declare_class_constant_stringl(pcbc_eviction_policy_ce, ZEND_STRL("NO_EVICTION"), ZEND_STRL("noEviction") TSRMLS_CC);
+    zend_declare_class_constant_stringl(pcbc_eviction_policy_ce, ZEND_STRL("NOT_RECENTLY_USED"), ZEND_STRL("nruEviction") TSRMLS_CC);
     return SUCCESS;
 }
 
@@ -563,25 +576,25 @@ PHP_METHOD(BucketSettings, setBucketType)
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
-PHP_METHOD(BucketSettings, ejectionMethod)
+PHP_METHOD(BucketSettings, evictionPolicy)
 {
     if (zend_parse_parameters_none_throw() == FAILURE) {
         RETURN_NULL();
     }
 
     zval *prop, rv;
-    prop = zend_read_property(pcbc_bucket_settings_ce, getThis(), ZEND_STRL("ejection_method"), 0, &rv);
+    prop = zend_read_property(pcbc_bucket_settings_ce, getThis(), ZEND_STRL("eviction_policy"), 0, &rv);
     ZVAL_COPY(return_value, prop);
 }
 
-PHP_METHOD(BucketSettings, setEjectionMethod)
+PHP_METHOD(BucketSettings, setEvictionPolicy)
 {
     zend_string *val;
     if (zend_parse_parameters_throw(ZEND_NUM_ARGS() TSRMLS_CC, "S", &val) == FAILURE) {
         RETURN_NULL();
     }
 
-    zend_update_property_str(pcbc_bucket_settings_ce, getThis(), ZEND_STRL("ejection_method"), val TSRMLS_CC);
+    zend_update_property_str(pcbc_bucket_settings_ce, getThis(), ZEND_STRL("eviction_policy"), val TSRMLS_CC);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
