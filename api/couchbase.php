@@ -2335,26 +2335,26 @@ namespace Couchbase {
         }
 
         /**
-         * @param SearchQuery ...$queries
+         * @param ConjunctionSearchQuery $query
          * @return BooleanSearchQuery
          */
-        public function must(SearchQuery ...$queries): BooleanSearchQuery
+        public function must(ConjunctionSearchQuery $query): BooleanSearchQuery
         {
         }
 
         /**
-         * @param SearchQuery ...$queries
+         * @param DisjunctionSearchQuery $query
          * @return BooleanSearchQuery
          */
-        public function mustNot(SearchQuery ...$queries): BooleanSearchQuery
+        public function mustNot(DisjunctionSearchQuery $query): BooleanSearchQuery
         {
         }
 
         /**
-         * @param SearchQuery ...$queries
+         * @param DisjunctionSearchQuery $query
          * @return BooleanSearchQuery
          */
-        public function should(SearchQuery ...$queries): BooleanSearchQuery
+        public function should(DisjunctionSearchQuery $query): BooleanSearchQuery
         {
         }
     }

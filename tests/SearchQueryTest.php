@@ -27,9 +27,12 @@ class SearchQueryTest extends CouchbaseTestCase {
                         ->either(new \Couchbase\NumericRangeSearchQuery(3, 42.5))
                         ->either((new \Couchbase\WildcardSearchQuery('user*'))->field('type'))
                     )
-                    ->mustNot((new \Couchbase\PhraseSearchQuery('foo', 'bar', 'baz'))->field('description'))
-                    ->mustNot((new \Couchbase\RegexpSearchQuery('user.*'))->field('_class_name'))
-                    ;
+                    ->mustNot(
+                        new \Couchbase\DisjunctionSearchQuery([
+                            (new \Couchbase\PhraseSearchQuery('foo', 'bar', 'baz'))->field('description'),
+                            (new \Couchbase\RegexpSearchQuery('user.*'))->field('_class_name')
+                        ])
+                    );
         $result = json_encode($query);
         $this->assertNotNull($result);
         $this->assertEquals(JSON_ERROR_NONE, json_last_error());
