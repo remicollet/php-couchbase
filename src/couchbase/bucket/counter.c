@@ -16,6 +16,8 @@
 
 #include "couchbase.h"
 
+#include "expiry_util.h"
+
 #define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/counter", __FILE__, __LINE__
 
 extern zend_class_entry *pcbc_counter_result_impl_ce;
@@ -60,23 +62,19 @@ void counter_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPCOUNTER 
                 zval val;
                 object_init_ex(&val, pcbc_mutation_token_impl_ce);
 
-                pcbc_update_property_long(pcbc_mutation_token_impl_ce, &val, ("partition_id"),
-                                          token.vbid_);
+                pcbc_update_property_long(pcbc_mutation_token_impl_ce, &val, ("partition_id"), token.vbid_);
                 b64 = php_base64_encode((unsigned char *)&token.uuid_, sizeof(token.uuid_));
                 pcbc_update_property_str(pcbc_mutation_token_impl_ce, &val, ("partition_uuid"), b64);
                 zend_string_release(b64);
                 b64 = php_base64_encode((unsigned char *)&token.seqno_, sizeof(token.seqno_));
-                pcbc_update_property_str(pcbc_mutation_token_impl_ce, &val, ("sequence_number"),
-                                         b64);
+                pcbc_update_property_str(pcbc_mutation_token_impl_ce, &val, ("sequence_number"), b64);
                 zend_string_release(b64);
 
                 const char *bucket;
                 lcb_cntl(instance, LCB_CNTL_GET, LCB_CNTL_BUCKETNAME, &bucket);
-                pcbc_update_property_string(pcbc_mutation_token_impl_ce, &val, ("bucket_name"),
-                                            bucket);
+                pcbc_update_property_string(pcbc_mutation_token_impl_ce, &val, ("bucket_name"), bucket);
 
-                pcbc_update_property(pcbc_counter_result_impl_ce, return_value, ("mutation_token"),
-                                     &val);
+                pcbc_update_property(pcbc_counter_result_impl_ce, return_value, ("mutation_token"), &val);
                 zval_ptr_dtor(&val);
             }
         }
@@ -87,12 +85,12 @@ zend_class_entry *pcbc_increment_options_ce;
 
 PHP_METHOD(IncrementOptions, expiry)
 {
-    zend_long arg;
-    int rv = zend_parse_parameters(ZEND_NUM_ARGS(), "l", &arg);
+    zval *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS(), "z", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    pcbc_update_property_long(pcbc_increment_options_ce, getThis(), ("expiry"), arg);
+    pcbc_update_property_long(pcbc_increment_options_ce, getThis(), ("expiry"), pcbc_extract_expiry_time(arg));
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
@@ -269,12 +267,12 @@ zend_class_entry *pcbc_decrement_options_ce;
 
 PHP_METHOD(DecrementOptions, expiry)
 {
-    zend_long arg;
-    int rv = zend_parse_parameters(ZEND_NUM_ARGS(), "l", &arg);
+    zval *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS(), "z", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    pcbc_update_property_long(pcbc_decrement_options_ce, getThis(), ("expiry"), arg);
+    pcbc_update_property_long(pcbc_decrement_options_ce, getThis(), ("expiry"), pcbc_extract_expiry_time(arg));
     RETURN_ZVAL(getThis(), 1, 0);
 }
 

@@ -45,4 +45,24 @@ class ExpiryTest extends CouchbaseTestCase {
         $this->assertGreaterThan(0, $diff->s);
         $this->assertLessThanOrEqual(10, $diff->s);
     }
+
+    function testExpirationForStoreOperations() {
+        if ($this->usingMock()) {
+            $this->markTestSkipped('Subdocument request to fetch time is not supported by CouchbaseMock.jar');
+        }
+        $c = $this->defaultCollection();
+        $key = $this->makeKey('documentWithExpiry');
+
+        $future = new DateTimeImmutable("2035-01-01");
+
+        $options = new \Couchbase\UpsertOptions();
+        $options->expiry($future);
+        $res = $c->upsert($key, ['foo' => 42], $options);
+        $this->assertNotNull($res->cas());
+
+        $options = new \Couchbase\GetOptions();
+        $options->withExpiry(true);
+        $res = $c->get($key, $options);
+        $this->assertEquals($future, $res->expiryTime());
+    }
 }

@@ -16,6 +16,8 @@
 
 #include "couchbase.h"
 
+#include "expiry_util.h"
+
 #define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/store", __FILE__, __LINE__
 
 zend_class_entry *pcbc_durability_level_ce;
@@ -59,23 +61,19 @@ void store_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPSTORE *res
                 zval val;
                 object_init_ex(&val, pcbc_mutation_token_impl_ce);
 
-                pcbc_update_property_long(pcbc_mutation_token_impl_ce, &val, ("partition_id"),
-                                          token.vbid_);
+                pcbc_update_property_long(pcbc_mutation_token_impl_ce, &val, ("partition_id"), token.vbid_);
                 b64 = php_base64_encode((unsigned char *)&token.uuid_, sizeof(token.uuid_));
                 pcbc_update_property_str(pcbc_mutation_token_impl_ce, &val, ("partition_uuid"), b64);
                 zend_string_release(b64);
                 b64 = php_base64_encode((unsigned char *)&token.seqno_, sizeof(token.seqno_));
-                pcbc_update_property_str(pcbc_mutation_token_impl_ce, &val, ("sequence_number"),
-                                         b64);
+                pcbc_update_property_str(pcbc_mutation_token_impl_ce, &val, ("sequence_number"), b64);
                 zend_string_release(b64);
 
                 const char *bucket;
                 lcb_cntl(instance, LCB_CNTL_GET, LCB_CNTL_BUCKETNAME, &bucket);
-                pcbc_update_property_string(pcbc_mutation_token_impl_ce, &val, ("bucket_name"),
-                                            bucket);
+                pcbc_update_property_string(pcbc_mutation_token_impl_ce, &val, ("bucket_name"), bucket);
 
-                pcbc_update_property(pcbc_store_result_impl_ce, return_value, ("mutation_token"),
-                                     &val);
+                pcbc_update_property(pcbc_store_result_impl_ce, return_value, ("mutation_token"), &val);
                 zval_ptr_dtor(&val);
             }
         }
@@ -107,12 +105,12 @@ PHP_METHOD(InsertOptions, timeout)
 
 PHP_METHOD(InsertOptions, expiry)
 {
-    zend_long arg;
-    int rv = zend_parse_parameters(ZEND_NUM_ARGS(), "l", &arg);
+    zval *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS(), "z", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    pcbc_update_property_long(pcbc_insert_options_ce, getThis(), ("expiry"), arg);
+    pcbc_update_property_long(pcbc_insert_options_ce, getThis(), ("expiry"), pcbc_extract_expiry_time(arg));
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
@@ -132,7 +130,7 @@ ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_InsertOptions_expiry, 0, 1, Couchbase\\InsertOptions, 0)
-ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_ARG_INFO(0, arg)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_InsertOptions_durabilityLevel, 0, 1, Couchbase\\InsertOptions, 0)
@@ -265,12 +263,12 @@ PHP_METHOD(UpsertOptions, timeout)
 
 PHP_METHOD(UpsertOptions, expiry)
 {
-    zend_long arg;
-    int rv = zend_parse_parameters(ZEND_NUM_ARGS(), "l", &arg);
+    zval *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS(), "z", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    pcbc_update_property_long(pcbc_upsert_options_ce, getThis(), ("expiry"), arg);
+    pcbc_update_property_long(pcbc_upsert_options_ce, getThis(), ("expiry"), pcbc_extract_expiry_time(arg));
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
@@ -294,7 +292,7 @@ ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_UpsertOptions_expiry, 0, 1, Couchbase\\UpsertOptions, 0)
-ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_ARG_INFO(0, arg)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_UpsertOptions_durabilityLevel, 0, 1, Couchbase\\UpsertOptions, 0)
@@ -439,12 +437,12 @@ PHP_METHOD(ReplaceOptions, timeout)
 
 PHP_METHOD(ReplaceOptions, expiry)
 {
-    zend_long arg;
-    int rv = zend_parse_parameters(ZEND_NUM_ARGS(), "l", &arg);
+    zval *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS(), "z", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    pcbc_update_property_long(pcbc_replace_options_ce, getThis(), ("expiry"), arg);
+    pcbc_update_property_long(pcbc_replace_options_ce, getThis(), ("expiry"), pcbc_extract_expiry_time(arg));
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
@@ -468,7 +466,7 @@ ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ReplaceOptions_expiry, 0, 1, Couchbase\\ReplaceOptions, 0)
-ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_ARG_INFO(0, arg)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_ReplaceOptions_durabilityLevel, 0, 1, Couchbase\\ReplaceOptions, 0)
@@ -873,8 +871,7 @@ PHP_MINIT_FUNCTION(CollectionStore)
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "DurabilityLevel", pcbc_durability_level_methods);
     pcbc_durability_level_ce = zend_register_internal_interface(&ce);
     zend_declare_class_constant_long(pcbc_durability_level_ce, ZEND_STRL("NONE"), LCB_DURABILITYLEVEL_NONE);
-    zend_declare_class_constant_long(pcbc_durability_level_ce, ZEND_STRL("MAJORITY"),
-                                     LCB_DURABILITYLEVEL_MAJORITY);
+    zend_declare_class_constant_long(pcbc_durability_level_ce, ZEND_STRL("MAJORITY"), LCB_DURABILITYLEVEL_MAJORITY);
     zend_declare_class_constant_long(pcbc_durability_level_ce, ZEND_STRL("MAJORITY_AND_PERSIST_TO_ACTIVE"),
                                      LCB_DURABILITYLEVEL_MAJORITY_AND_PERSIST_TO_ACTIVE);
     zend_declare_class_constant_long(pcbc_durability_level_ce, ZEND_STRL("PERSIST_TO_MAJORITY"),

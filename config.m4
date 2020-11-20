@@ -85,6 +85,7 @@ COUCHBASE_FILES=" \
     src/couchbase/bucket/cbft.c \
     src/couchbase/bucket/counter.c \
     src/couchbase/bucket/exists.c \
+    src/couchbase/bucket/expiry_util.c \
     src/couchbase/bucket/get.c \
     src/couchbase/bucket/get_replica.c \
     src/couchbase/bucket/health.c \

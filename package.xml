@@ -77,6 +77,8 @@
             <file role="src" name="src/couchbase/bucket/cbft.c" />
             <file role="src" name="src/couchbase/bucket/counter.c" />
             <file role="src" name="src/couchbase/bucket/exists.c" />
+            <file role="src" name="src/couchbase/bucket/expiry_util.c" />
+            <file role="src" name="src/couchbase/bucket/expiry_util.h" />
             <file role="src" name="src/couchbase/bucket/get.c" />
             <file role="src" name="src/couchbase/bucket/get_replica.c" />
             <file role="src" name="src/couchbase/bucket/health.c" />

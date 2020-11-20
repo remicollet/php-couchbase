@@ -15,6 +15,7 @@
  */
 
 #include "couchbase.h"
+#include "expiry_util.h"
 #include "subdoc_cookie.h"
 
 #define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/subdoc", __FILE__, __LINE__
@@ -356,12 +357,12 @@ PHP_METHOD(MutateInOptions, timeout)
 
 PHP_METHOD(MutateInOptions, expiry)
 {
-    zend_long arg;
-    int rv = zend_parse_parameters(ZEND_NUM_ARGS(), "l", &arg);
+    zval *arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS(), "z", &arg);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
-    pcbc_update_property_long(pcbc_mutate_in_options_ce, getThis(), ("expiry"), arg);
+    pcbc_update_property_long(pcbc_mutate_in_options_ce, getThis(), ("expiry"), pcbc_extract_expiry_time(arg));
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
@@ -396,7 +397,7 @@ ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_MutateInOptions_expiry, 0, 1, Couchbase\\MutateInOptions, 0)
-ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
+ZEND_ARG_INFO(0, arg)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_MutateInOptions_durabilityLevel, 0, 1, Couchbase\\MutateInOptions, 0)

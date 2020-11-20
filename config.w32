@@ -39,6 +39,7 @@ if (PHP_COUCHBASE != "no") {
             "cbft.c " +
             "counter.c " +
             "exists.c " +
+            "expiry_util.c " +
             "get.c " +
             "get_replica.c " +
             "health.c " +

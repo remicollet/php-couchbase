@@ -3482,10 +3482,10 @@ namespace Couchbase {
         /**
          * Sets the expiry time for the document.
          *
-         * @param int $arg the expiry time in ms
+         * @param int|DateTimeInterface $arg the relative expiry time in seconds or DateTimeInterface object for absolute point in time
          * @return UpsertOptions
          */
-        public function expiry(int $arg): UpsertOptions
+        public function expiry(mixed $arg): UpsertOptions
         {
         }
 
@@ -3525,10 +3525,10 @@ namespace Couchbase {
         /**
          * Sets the expiry time for the document.
          *
-         * @param int $arg the expiry time in ms
+         * @param int|DateTimeInterface $arg the relative expiry time in seconds or DateTimeInterface object for absolute point in time
          * @return ReplaceOptions
          */
-        public function expiry(int $arg): ReplaceOptions
+        public function expiry(mixed $arg): UpsertOptions
         {
         }
 
@@ -3566,16 +3566,6 @@ namespace Couchbase {
         }
 
         /**
-         * Sets the expiry time for the document.
-         *
-         * @param int $arg the expiry time in ms
-         * @return AppendOptions
-         */
-        public function expiry(int $arg): AppendOptions
-        {
-        }
-
-        /**
          * Sets the durability level to enforce when writing the document.
          *
          * @param int $arg the durability level to enforce
@@ -3595,16 +3585,6 @@ namespace Couchbase {
          * @return PrependOptions
          */
         public function timeout(int $arg): PrependOptions
-        {
-        }
-
-        /**
-         * Sets the expiry time for the document.
-         *
-         * @param int $arg the expiry time in ms
-         * @return PrependOptions
-         */
-        public function expiry(int $arg): PrependOptions
         {
         }
 
@@ -3678,10 +3658,10 @@ namespace Couchbase {
         /**
          * Sets the expiry time for the document.
          *
-         * @param int $arg the expiry time in ms
+         * @param int|DateTimeInterface $arg the relative expiry time in seconds or DateTimeInterface object for absolute point in time
          * @return IncrementOptions
          */
-        public function expiry(int $arg): IncrementOptions
+        public function expiry(mixed $arg): UpsertOptions
         {
         }
 
@@ -3732,10 +3712,10 @@ namespace Couchbase {
         /**
          * Sets the expiry time for the document.
          *
-         * @param int $arg the expiry time in ms
+         * @param int|DateTimeInterface $arg the relative expiry time in seconds or DateTimeInterface object for absolute point in time
          * @return DecrementOptions
          */
-        public function expiry(int $arg): DecrementOptions
+        public function expiry(mixed $arg): UpsertOptions
         {
         }
 
@@ -3857,10 +3837,10 @@ namespace Couchbase {
         /**
          * Sets the expiry time for the document.
          *
-         * @param int $arg the expiry time in ms
+         * @param int|DateTimeInterface $arg the relative expiry time in seconds or DateTimeInterface object for absolute point in time
          * @return MutateInOptions
          */
-        public function expiry(int $arg): MutateInOptions
+        public function expiry(mixed $arg): UpsertOptions
         {
         }
 
