@@ -10,19 +10,19 @@ It supports 5.x and 7.x releases of PHP interpreter.
 
 ## Useful Links
 
-* Source - https://github.com/couchbaselabs/php-couchbase
+* Source - https://github.com/couchbase/php-couchbase
 * Bug Tracker - https://www.couchbase.com/issues/browse/PCBC
 * Couchbase PHP Community - https://forums.couchbase.com/c/php-sdk
-* Documentation - https://developer.couchbase.com/documentation/server/current/sdk/php/start-using-sdk.html
+* Documentation - https://docs.couchbase.com/php-sdk/current/hello-world/start-using-sdk.html
 * PECL - https://pecl.php.net/package/couchbase
-* Packages - https://developer.couchbase.com/server/other-products/release-notes-archives/php-sdk
-* Snapshots - http://sdkbuilds.sc.couchbase.com/job/php-sdk-package/lastSuccessfulBuild/artifact/packages/
+* Packages - https://docs.couchbase.com/php-sdk/current/project-docs/sdk-release-notes.html
+* Snapshots - http://sdk.jenkins.couchbase.com/job/php/job/sdk/job/php-win-scripted-build-pipeline/lastSuccessfulBuild/artifact/
 
 
 ## Installing
 
 The target system should have libcouchbase installed. Detailed guide and links to the most recent versions
-located here: https://developer.couchbase.com/server/other-products/release-notes-archives/c-sdk.
+located here: https://docs.couchbase.com/c-sdk/current/project-docs/sdk-release-notes.html
 
 ### PECL
 
@@ -148,10 +148,19 @@ which is not supported by `CB_VERSION`, will be skipped automatically.
 
 
 ## License
-Copyright 2016-2019 Couchbase Inc.
 
-Licensed under the Apache License, Version 2.0.
+The library is available as open source under the terms of the [Apache2 License](https://opensource.org/licenses/Apache-2.0).
 
-See
-[LICENSE](https://github.com/couchbaselabs/php-couchbase/blob/master/LICENSE)
-for further details.
+    Copyright 2016-2020 Couchbase, Inc.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
