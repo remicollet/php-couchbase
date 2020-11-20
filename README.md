@@ -1,4 +1,7 @@
-# Couchbase PHP Client [![Build Status](http://sdkbuilds.sc.couchbase.com/buildStatus/icon?job=builds-php)](http://sdkbuilds.sc.couchbase.com/job/builds-php)
+# Couchbase PHP Client
+
+[![license](https://img.shields.io/github/license/couchbase/php-couchbase?color=brightgreen)](https://opensource.org/licenses/Apache-2.0)
+[![jenkins](https://img.shields.io/jenkins/build?jobUrl=http%3A%2F%2Fsdk.jenkins.couchbase.com%2Fjob%2Fphp%2Fjob%2Fsdk%2Fjob%2Fphp-nightly%2F&label=jenkins)](http://sdk.jenkins.couchbase.com/job/php/job/sdk/job/php-nightly/)
 
 This library allows you to connect to a Couchbase cluster from PHP.
 It is a native PHP extension and uses the very fast libcouchbase library to
