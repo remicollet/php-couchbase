@@ -1189,6 +1189,33 @@ namespace Couchbase {
         public function setCompressionMode(string $mode): BucketSettings
         {
         }
+
+        /**
+         * Retrieves minimal durability level configured for the bucket
+         *
+         * @see \DurabilityLevel::NONE
+         * @see \DurabilityLevel::MAJORITY
+         * @see \DurabilityLevel::MAJORITY_AND_PERSIST_TO_ACTIVE
+         * @see \DurabilityLevel::PERSIST_TO_MAJORITY
+         */
+        public function minimalDurabilityLevel(): int
+        {
+        }
+
+        /**
+         * Configures minimal durability level for the bucket
+         *
+         * @param int $durabilityLevel durability level.
+         *
+         * @see \DurabilityLevel::NONE
+         * @see \DurabilityLevel::MAJORITY
+         * @see \DurabilityLevel::MAJORITY_AND_PERSIST_TO_ACTIVE
+         * @see \DurabilityLevel::PERSIST_TO_MAJORITY
+         */
+        public function setMinimalDurabilityLevel(int $durabilityLevel): BucketSettings
+        {
+        }
+
     }
 
     class BucketManager

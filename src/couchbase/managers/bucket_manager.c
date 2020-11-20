@@ -40,8 +40,7 @@ static void httpcb_getBucket(void *ctx, zval *return_value, zval *response)
         pcbc_update_property(pcbc_bucket_settings_ce, return_value, ("num_replicas"), mval);
     }
     mval = zend_symtable_str_find(marr, ZEND_STRL("replicaIndex"));
-    pcbc_update_property_bool(pcbc_bucket_settings_ce, return_value, ("replica_indexes"),
-                              mval != NULL);
+    pcbc_update_property_bool(pcbc_bucket_settings_ce, return_value, ("replica_indexes"), mval != NULL);
     mval = zend_symtable_str_find(marr, ZEND_STRL("bucketType"));
     if (mval && Z_TYPE_P(mval) == IS_STRING) {
         pcbc_update_property(pcbc_bucket_settings_ce, return_value, ("bucket_type"), mval);
@@ -57,6 +56,22 @@ static void httpcb_getBucket(void *ctx, zval *return_value, zval *response)
     mval = zend_symtable_str_find(marr, ZEND_STRL("compressionMode"));
     if (mval && Z_TYPE_P(mval) == IS_STRING) {
         pcbc_update_property(pcbc_bucket_settings_ce, return_value, ("compression_mode"), mval);
+    }
+    mval = zend_symtable_str_find(marr, ZEND_STRL("durabilityMinLevel"));
+    if (mval && Z_TYPE_P(mval) == IS_STRING) {
+        if (strncmp("none", Z_STRVAL_P(mval), Z_STRLEN_P(mval)) == 0) {
+            pcbc_update_property_long(pcbc_bucket_settings_ce, return_value, ("minimal_durability_level"),
+                                      LCB_DURABILITYLEVEL_NONE);
+        } else if (strncmp("majority", Z_STRVAL_P(mval), Z_STRLEN_P(mval)) == 0) {
+            pcbc_update_property_long(pcbc_bucket_settings_ce, return_value, ("minimal_durability_level"),
+                                      LCB_DURABILITYLEVEL_MAJORITY);
+        } else if (strncmp("majorityAndPersistActive", Z_STRVAL_P(mval), Z_STRLEN_P(mval)) == 0) {
+            pcbc_update_property_long(pcbc_bucket_settings_ce, return_value, ("minimal_durability_level"),
+                                      LCB_DURABILITYLEVEL_MAJORITY_AND_PERSIST_TO_ACTIVE);
+        } else if (strncmp("persistToMajority", Z_STRVAL_P(mval), Z_STRLEN_P(mval)) == 0) {
+            pcbc_update_property_long(pcbc_bucket_settings_ce, return_value, ("minimal_durability_level"),
+                                      LCB_DURABILITYLEVEL_PERSIST_TO_MAJORITY);
+        }
     }
 
     {
@@ -191,6 +206,23 @@ PHP_METHOD(BucketManager, createBucket)
         if (Z_TYPE_P(prop) == IS_STRING) {
             add_assoc_zval(&payload, "compressionMode", prop);
         }
+        prop = pcbc_read_property(pcbc_bucket_settings_ce, settings, ("minimal_durability_level"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            switch (Z_LVAL_P(prop)) {
+            case LCB_DURABILITYLEVEL_NONE:
+                add_assoc_string(&payload, "durabilityMinLevel", "none");
+                break;
+            case LCB_DURABILITYLEVEL_MAJORITY:
+                add_assoc_string(&payload, "durabilityMinLevel", "majority");
+                break;
+            case LCB_DURABILITYLEVEL_MAJORITY_AND_PERSIST_TO_ACTIVE:
+                add_assoc_string(&payload, "durabilityMinLevel", "majorityAndPersistActive");
+                break;
+            case LCB_DURABILITYLEVEL_PERSIST_TO_MAJORITY:
+                add_assoc_string(&payload, "durabilityMinLevel", "persistToMajority");
+                break;
+            }
+        }
         prop = pcbc_read_property(pcbc_bucket_settings_ce, settings, ("max_ttl"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
             add_assoc_zval(&payload, "maxTTL", prop);
@@ -200,8 +232,7 @@ PHP_METHOD(BucketManager, createBucket)
         prop = pcbc_read_property(pcbc_bucket_settings_ce, settings, ("replica_indexes"), 0, &ret);
         add_assoc_bool(&payload, "replicaIndex", Z_TYPE_P(prop) == IS_TRUE);
 
-        php_url_encode_hash_ex(HASH_OF(&payload), &buf, NULL, 0, NULL, 0, NULL, 0, NULL, NULL,
-                                    PHP_QUERY_RFC1738);
+        php_url_encode_hash_ex(HASH_OF(&payload), &buf, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, PHP_QUERY_RFC1738);
         zval_ptr_dtor(&payload);
         if (rv == FAILURE) {
             smart_str_free(&buf);
@@ -385,6 +416,15 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_BucketSettings_setCompressionMode, 0, 
 ZEND_ARG_TYPE_INFO(0, mode, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
+PHP_METHOD(BucketSettings, minimalDurabilityLevel);
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_BucketSettings_minimalDurabilityLevel, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+PHP_METHOD(BucketSettings, setMinimalDurabilityLevel);
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_BucketSettings_setMinimalDurabilityLevel, 0, 1, Couchbase\\BucketSettings, 0)
+ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
 // clang-format off
 zend_function_entry bucket_settings_methods[] = {
     PHP_ME(BucketSettings, name, ai_BucketSettings_name, ZEND_ACC_PUBLIC)
@@ -405,6 +445,8 @@ zend_function_entry bucket_settings_methods[] = {
     PHP_ME(BucketSettings, setMaxTtl, ai_BucketSettings_setMaxTtl, ZEND_ACC_PUBLIC)
     PHP_ME(BucketSettings, compressionMode, ai_BucketSettings_compressionMode, ZEND_ACC_PUBLIC)
     PHP_ME(BucketSettings, setCompressionMode, ai_BucketSettings_setCompressionMode, ZEND_ACC_PUBLIC)
+    PHP_ME(BucketSettings, minimalDurabilityLevel, ai_BucketSettings_minimalDurabilityLevel, ZEND_ACC_PUBLIC)
+    PHP_ME(BucketSettings, setMinimalDurabilityLevel, ai_BucketSettings_setMinimalDurabilityLevel, ZEND_ACC_PUBLIC)
 
     PHP_MALIAS(BucketSettings, ejectionMethod, evictionPolicy, ai_BucketSettings_evictionPolicy, ZEND_ACC_PUBLIC|ZEND_ACC_DEPRECATED)
     PHP_MALIAS(BucketSettings, setEjectionMethod, setEvictionPolicy, ai_BucketSettings_setEvictionPolicy, ZEND_ACC_PUBLIC|ZEND_ACC_DEPRECATED)
@@ -434,13 +476,15 @@ PHP_MINIT_FUNCTION(BucketManager)
     zend_declare_property_null(pcbc_bucket_settings_ce, ZEND_STRL("eviction_policy"), ZEND_ACC_PRIVATE);
     zend_declare_property_null(pcbc_bucket_settings_ce, ZEND_STRL("max_ttl"), ZEND_ACC_PRIVATE);
     zend_declare_property_null(pcbc_bucket_settings_ce, ZEND_STRL("compression_mode"), ZEND_ACC_PRIVATE);
+    zend_declare_property_null(pcbc_bucket_settings_ce, ZEND_STRL("minimal_durability_level"), ZEND_ACC_PRIVATE);
 
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "EvictionPolicy", pcbc_eviction_policy_methods);
     pcbc_eviction_policy_ce = zend_register_internal_interface(&ce);
     zend_declare_class_constant_stringl(pcbc_eviction_policy_ce, ZEND_STRL("FULL"), ZEND_STRL("fullEviction"));
     zend_declare_class_constant_stringl(pcbc_eviction_policy_ce, ZEND_STRL("VALUE_ONLY"), ZEND_STRL("valueOnly"));
     zend_declare_class_constant_stringl(pcbc_eviction_policy_ce, ZEND_STRL("NO_EVICTION"), ZEND_STRL("noEviction"));
-    zend_declare_class_constant_stringl(pcbc_eviction_policy_ce, ZEND_STRL("NOT_RECENTLY_USED"), ZEND_STRL("nruEviction"));
+    zend_declare_class_constant_stringl(pcbc_eviction_policy_ce, ZEND_STRL("NOT_RECENTLY_USED"),
+                                        ZEND_STRL("nruEviction"));
     return SUCCESS;
 }
 
@@ -639,6 +683,28 @@ PHP_METHOD(BucketSettings, setCompressionMode)
     }
 
     pcbc_update_property_str(pcbc_bucket_settings_ce, getThis(), ("compression_mode"), val);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+PHP_METHOD(BucketSettings, minimalDurabilityLevel)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        RETURN_NULL();
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_bucket_settings_ce, getThis(), ("minimal_durability_level"), 0, &rv);
+    ZVAL_COPY(return_value, prop);
+}
+
+PHP_METHOD(BucketSettings, setMinimalDurabilityLevel)
+{
+    zend_long val = LCB_DURABILITYLEVEL_NONE;
+    if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "l", &val) == FAILURE) {
+        RETURN_NULL();
+    }
+
+    pcbc_update_property_long(pcbc_bucket_settings_ce, getThis(), ("minimal_durability_level"), val);
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
