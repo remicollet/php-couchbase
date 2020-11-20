@@ -16,6 +16,8 @@
 
 #include "couchbase.h"
 
+#include <ext/date/php_date.h>
+
 // clang-format off
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_MutationToken_partitionId, IS_LONG, 1)
 ZEND_END_ARG_INFO()
@@ -205,20 +207,26 @@ static const zend_function_entry pcbc_result_impl_methods[] = {
 ZEND_BEGIN_ARG_INFO(ai_GetResult_content, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_GetResult_expiryTime, 0, 0, DateTimeImmutable, 1)
+ZEND_END_ARG_INFO()
+
 zend_class_entry *pcbc_get_result_ce;
 static const zend_function_entry pcbc_get_result_methods[] = {
     PHP_ABSTRACT_ME(GetResult, content, ai_GetResult_content)
+    PHP_ABSTRACT_ME(GetResult, expiryTime, ai_GetResult_expiryTime)
     PHP_FE_END
 };
 
 PHP_METHOD(GetResultImpl, cas);
 PHP_METHOD(GetResultImpl, expiry);
+PHP_METHOD(GetResultImpl, expiryTime);
 PHP_METHOD(GetResultImpl, content);
 
 zend_class_entry *pcbc_get_result_impl_ce;
 static const zend_function_entry pcbc_get_result_impl_methods[] = {
     PHP_ME(GetResultImpl, cas, ai_Result_cas, ZEND_ACC_PUBLIC)
-    PHP_ME(GetResultImpl, expiry, ai_Result_expiry, ZEND_ACC_PUBLIC)
+    PHP_ME(GetResultImpl, expiry, ai_Result_expiry, ZEND_ACC_PUBLIC|ZEND_ACC_DEPRECATED)
+    PHP_ME(GetResultImpl, expiryTime, ai_GetResult_expiryTime, ZEND_ACC_PUBLIC)
     PHP_ME(GetResultImpl, content, ai_GetResult_content, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
@@ -244,7 +252,7 @@ PHP_METHOD(GetReplicaResultImpl, isReplica);
 zend_class_entry *pcbc_get_replica_result_impl_ce;
 static const zend_function_entry pcbc_get_replica_result_impl_methods[] = {
     PHP_ME(GetReplicaResultImpl, cas, ai_Result_cas, ZEND_ACC_PUBLIC)
-    PHP_ME(GetReplicaResultImpl, expiry, ai_Result_expiry, ZEND_ACC_PUBLIC)
+    PHP_ME(GetReplicaResultImpl, expiry, ai_Result_expiry, ZEND_ACC_PUBLIC|ZEND_ACC_DEPRECATED)
     PHP_ME(GetReplicaResultImpl, content, ai_GetReplicaResult_content, ZEND_ACC_PUBLIC)
     PHP_ME(GetReplicaResultImpl, isReplica, ai_GetReplicaResult_isReplica, ZEND_ACC_PUBLIC)
     PHP_FE_END
@@ -327,6 +335,9 @@ static const zend_function_entry pcbc_counter_result_impl_methods[] = {
     PHP_FE_END
 };
 
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_LookupInResult_expiryTime, 0, 0, DateTimeImmutable, 1)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(ai_LookupInResult_content, 0, 0, 1)
 ZEND_ARG_TYPE_INFO(0, index, IS_LONG, 0)
 ZEND_END_ARG_INFO()
@@ -341,6 +352,7 @@ ZEND_END_ARG_INFO()
 
 zend_class_entry *pcbc_lookup_in_result_ce;
 static const zend_function_entry pcbc_lookup_in_result_methods[] = {
+    PHP_ABSTRACT_ME(LookupInResult, expiryTime, ai_LookupInResult_expiryTime)
     PHP_ABSTRACT_ME(LookupInResult, content, ai_LookupInResult_content)
     PHP_ABSTRACT_ME(LookupInResult, exists, ai_LookupInResult_exists)
     PHP_ABSTRACT_ME(LookupInResult, status, ai_LookupInResult_status)
@@ -349,6 +361,7 @@ static const zend_function_entry pcbc_lookup_in_result_methods[] = {
 
 PHP_METHOD(LookupInResultImpl, cas);
 PHP_METHOD(LookupInResultImpl, expiry);
+PHP_METHOD(LookupInResultImpl, expiryTime);
 PHP_METHOD(LookupInResultImpl, content);
 PHP_METHOD(LookupInResultImpl, exists);
 PHP_METHOD(LookupInResultImpl, status);
@@ -356,7 +369,8 @@ PHP_METHOD(LookupInResultImpl, status);
 zend_class_entry *pcbc_lookup_in_result_impl_ce;
 static const zend_function_entry pcbc_lookup_in_result_impl_methods[] = {
     PHP_ME(LookupInResultImpl, cas, ai_Result_cas, ZEND_ACC_PUBLIC)
-    PHP_ME(LookupInResultImpl, expiry, ai_Result_expiry, ZEND_ACC_PUBLIC)
+    PHP_ME(LookupInResultImpl, expiry, ai_Result_expiry, ZEND_ACC_PUBLIC|ZEND_ACC_DEPRECATED)
+    PHP_ME(LookupInResultImpl, expiryTime, ai_LookupInResult_expiryTime, ZEND_ACC_PUBLIC)
     PHP_ME(LookupInResultImpl, content, ai_LookupInResult_content, ZEND_ACC_PUBLIC)
     PHP_ME(LookupInResultImpl, exists, ai_LookupInResult_exists, ZEND_ACC_PUBLIC)
     PHP_ME(LookupInResultImpl, status, ai_LookupInResult_status, ZEND_ACC_PUBLIC)
@@ -552,8 +566,7 @@ PHP_MINIT_FUNCTION(Result)
     zend_class_implements(pcbc_query_meta_data_impl_ce, 1, pcbc_query_meta_data_ce);
     zend_declare_property_null(pcbc_query_meta_data_impl_ce, ZEND_STRL("status"), ZEND_ACC_PRIVATE);
     zend_declare_property_null(pcbc_query_meta_data_impl_ce, ZEND_STRL("request_id"), ZEND_ACC_PRIVATE);
-    zend_declare_property_null(pcbc_query_meta_data_impl_ce, ZEND_STRL("client_context_id"),
-                               ZEND_ACC_PRIVATE);
+    zend_declare_property_null(pcbc_query_meta_data_impl_ce, ZEND_STRL("client_context_id"), ZEND_ACC_PRIVATE);
     zend_declare_property_null(pcbc_query_meta_data_impl_ce, ZEND_STRL("signature"), ZEND_ACC_PRIVATE);
     zend_declare_property_null(pcbc_query_meta_data_impl_ce, ZEND_STRL("errors"), ZEND_ACC_PRIVATE);
     zend_declare_property_null(pcbc_query_meta_data_impl_ce, ZEND_STRL("warnings"), ZEND_ACC_PRIVATE);
@@ -858,6 +871,29 @@ PHP_METHOD(GetResultImpl, expiry)
     ZVAL_COPY(return_value, prop);
 }
 
+PHP_METHOD(GetResultImpl, expiryTime)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_get_result_impl_ce, getThis(), ("expiry"), 0, &rv);
+
+    if (prop && Z_TYPE_P(prop) == IS_LONG) {
+        zend_long expiry = Z_LVAL_P(prop);
+        if (expiry > 0) {
+            smart_str buf = {0};
+            smart_str_append_printf(&buf, "@%lu", expiry);
+            php_date_instantiate(php_date_get_immutable_ce(), return_value);
+            php_date_initialize(Z_PHPDATE_P(return_value), ZSTR_VAL(buf.s), ZSTR_LEN(buf.s), NULL, NULL, 0);
+            smart_str_free(&buf);
+            return;
+        }
+    }
+    RETURN_NULL();
+}
+
 PHP_METHOD(GetResultImpl, content)
 {
     if (zend_parse_parameters_none_throw() == FAILURE) {
@@ -1081,6 +1117,30 @@ PHP_METHOD(LookupInResultImpl, expiry)
     prop = pcbc_read_property(pcbc_lookup_in_result_impl_ce, getThis(), ("expiry"), 0, &rv);
     ZVAL_COPY(return_value, prop);
 }
+
+PHP_METHOD(LookupInResultImpl, expiryTime)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_lookup_in_result_impl_ce, getThis(), ("expiry"), 0, &rv);
+
+    if (prop && Z_TYPE_P(prop) == IS_LONG) {
+        zend_long expiry = Z_LVAL_P(prop);
+        if (expiry > 0) {
+            smart_str buf = {0};
+            smart_str_append_printf(&buf, "@%lu", expiry);
+            php_date_instantiate(php_date_get_immutable_ce(), return_value);
+            php_date_initialize(Z_PHPDATE_P(return_value), ZSTR_VAL(buf.s), ZSTR_LEN(buf.s), NULL, NULL, 0);
+            smart_str_free(&buf);
+            return;
+        }
+    }
+    RETURN_NULL();
+}
+
 
 PHP_METHOD(LookupInResultImpl, content)
 {

@@ -15,6 +15,7 @@
  */
 
 #include "couchbase.h"
+#include "subdoc_cookie.h"
 
 #define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/subdoc", __FILE__, __LINE__
 
@@ -39,10 +40,7 @@ extern zend_class_entry *pcbc_mutate_in_result_impl_ce;
 extern zend_class_entry *pcbc_mutate_in_result_entry_ce;
 extern zend_class_entry *pcbc_mutation_token_impl_ce;
 
-struct subdoc_cookie {
-    lcb_STATUS rc;
-    zval *return_value;
-};
+void subdoc_get_with_expiry_callback(lcb_INSTANCE *instance, struct subdoc_cookie *cookie, const lcb_RESPSUBDOC *resp);
 
 void subdoc_lookup_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPSUBDOC *resp)
 {
@@ -51,6 +49,10 @@ void subdoc_lookup_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPSU
     lcb_respsubdoc_cookie(resp, (void **)&cookie);
     zval *return_value = cookie->return_value;
     cookie->rc = lcb_respsubdoc_status(resp);
+    if (cookie->is_get) {
+        return subdoc_get_with_expiry_callback(instance, cookie, resp);
+    }
+
     pcbc_update_property_long(pcbc_lookup_in_result_impl_ce, return_value, ("status"), cookie->rc);
 
     lcb_respsubdoc_error_context(resp, &ectx);
@@ -66,14 +68,20 @@ void subdoc_lookup_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPSU
         zend_string_release(b64);
     }
     size_t num_results = lcb_respsubdoc_result_size(resp);
-    size_t idx;
+    size_t idx = 0;
     zval data;
     array_init(&data);
     pcbc_update_property(pcbc_lookup_in_result_impl_ce, return_value, ("data"), &data);
     Z_DELREF(data);
-    for (idx = 0; idx < num_results; idx++) {
+    if (cookie->with_expiry) {
+        const char *buf;
+        size_t buf_len;
+        lcb_respsubdoc_result_value(resp, 0, &buf, &buf_len);
+        pcbc_update_property_long(pcbc_lookup_in_result_impl_ce, return_value, "expiry", zend_atol(buf, buf_len));
+        idx++;
+    }
+    for (; idx < num_results; idx++) {
         zval entry;
-        array_init(&entry);
         object_init_ex(&entry, pcbc_lookup_in_result_entry_ce);
 
         pcbc_update_property_long(pcbc_lookup_in_result_entry_ce, &entry, ("code"),
@@ -94,7 +102,6 @@ void subdoc_lookup_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPSU
         }
         pcbc_update_property(pcbc_lookup_in_result_entry_ce, &entry, ("value"), &value);
         add_index_zval(&data, idx, &entry);
-        Z_TRY_ADDREF(entry);
     }
 }
 
@@ -126,23 +133,19 @@ void subdoc_mutate_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPSU
                 zval val;
                 object_init_ex(&val, pcbc_mutation_token_impl_ce);
 
-                pcbc_update_property_long(pcbc_mutation_token_impl_ce, &val, ("partition_id"),
-                                          token.vbid_);
+                pcbc_update_property_long(pcbc_mutation_token_impl_ce, &val, ("partition_id"), token.vbid_);
                 b64 = php_base64_encode((unsigned char *)&token.uuid_, sizeof(token.uuid_));
                 pcbc_update_property_str(pcbc_mutation_token_impl_ce, &val, ("partition_uuid"), b64);
                 zend_string_release(b64);
                 b64 = php_base64_encode((unsigned char *)&token.seqno_, sizeof(token.seqno_));
-                pcbc_update_property_str(pcbc_mutation_token_impl_ce, &val, ("sequence_number"),
-                                         b64);
+                pcbc_update_property_str(pcbc_mutation_token_impl_ce, &val, ("sequence_number"), b64);
                 zend_string_release(b64);
 
                 const char *bucket;
                 lcb_cntl(instance, LCB_CNTL_GET, LCB_CNTL_BUCKETNAME, &bucket);
-                pcbc_update_property_string(pcbc_mutation_token_impl_ce, &val, ("bucket_name"),
-                                            bucket);
+                pcbc_update_property_string(pcbc_mutation_token_impl_ce, &val, ("bucket_name"), bucket);
 
-                pcbc_update_property(pcbc_mutate_in_result_impl_ce, return_value, ("mutation_token"),
-                                     &val);
+                pcbc_update_property(pcbc_mutate_in_result_impl_ce, return_value, ("mutation_token"), &val);
                 zval_ptr_dtor(&val);
             }
         }
@@ -155,7 +158,6 @@ void subdoc_mutate_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPSU
     Z_DELREF(data);
     for (idx = 0; idx < num_results; idx++) {
         zval entry;
-        array_init(&entry);
         object_init_ex(&entry, pcbc_mutate_in_result_entry_ce);
 
         pcbc_update_property_long(pcbc_mutate_in_result_entry_ce, &entry, ("code"),
@@ -176,7 +178,6 @@ void subdoc_mutate_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPSU
         }
         pcbc_update_property(pcbc_mutate_in_result_entry_ce, &entry, ("value"), &value);
         add_index_zval(&data, idx, &entry);
-        Z_TRY_ADDREF(entry);
     }
 }
 
@@ -227,18 +228,36 @@ PHP_METHOD(Collection, lookupIn)
     HashTable *spec = NULL;
     int rv;
 
-    rv =
-        zend_parse_parameters_throw(ZEND_NUM_ARGS(), "Sh|O!", &id, &spec, &options, pcbc_lookup_in_options_ce);
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS(), "Sh|O!", &id, &spec, &options, pcbc_lookup_in_options_ce);
     if (rv == FAILURE) {
         return;
     }
     PCBC_RESOLVE_COLLECTION;
 
+    const char *expiry_path = "$document.exptime";
+    zend_long with_expiry = 0;
+    zend_long timeout = 0;
+    if (options) {
+        zval *prop, ret;
+        prop = pcbc_read_property(pcbc_lookup_in_options_ce, options, ("timeout"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_LONG) {
+            timeout = Z_LVAL_P(prop);
+        }
+        prop = pcbc_read_property(pcbc_lookup_in_options_ce, options, ("with_expiry"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_TRUE) {
+            with_expiry = 1;
+        }
+    }
+
     lcb_SUBDOCSPECS *operations;
-    lcb_subdocspecs_create(&operations, zend_hash_num_elements(spec));
+    lcb_subdocspecs_create(&operations, with_expiry + zend_hash_num_elements(spec));
     zval *val, *prop, tmp;
     int idx = 0;
     uint32_t flags;
+    if (with_expiry > 0) {
+        lcb_subdocspecs_get(operations, 0, LCB_SUBDOCSPECS_F_XATTRPATH, expiry_path, strlen(expiry_path));
+        idx++;
+    }
     ZEND_HASH_FOREACH_VAL(spec, val)
     {
         flags = 0;
@@ -249,15 +268,13 @@ PHP_METHOD(Collection, lookupIn)
             prop = pcbc_read_property(pcbc_lookup_get_spec_ce, val, ("path"), 0, &tmp);
             lcb_subdocspecs_get(operations, idx, flags, Z_STRVAL_P(prop), Z_STRLEN_P(prop));
         } else if (Z_OBJCE_P(val) == pcbc_lookup_count_spec_ce) {
-            if (Z_TYPE_P(pcbc_read_property(pcbc_lookup_count_spec_ce, val, ("is_xattr"), 0, &tmp)) ==
-                IS_TRUE) {
+            if (Z_TYPE_P(pcbc_read_property(pcbc_lookup_count_spec_ce, val, ("is_xattr"), 0, &tmp)) == IS_TRUE) {
                 flags |= LCB_SUBDOCSPECS_F_XATTRPATH;
             }
             prop = pcbc_read_property(pcbc_lookup_count_spec_ce, val, ("path"), 0, &tmp);
             lcb_subdocspecs_get_count(operations, idx, flags, Z_STRVAL_P(prop), Z_STRLEN_P(prop));
         } else if (Z_OBJCE_P(val) == pcbc_lookup_exists_spec_ce) {
-            if (Z_TYPE_P(pcbc_read_property(pcbc_lookup_exists_spec_ce, val, ("is_xattr"), 0, &tmp)) ==
-                IS_TRUE) {
+            if (Z_TYPE_P(pcbc_read_property(pcbc_lookup_exists_spec_ce, val, ("is_xattr"), 0, &tmp)) == IS_TRUE) {
                 flags |= LCB_SUBDOCSPECS_F_XATTRPATH;
             }
             prop = pcbc_read_property(pcbc_lookup_exists_spec_ce, val, ("path"), 0, &tmp);
@@ -275,16 +292,12 @@ PHP_METHOD(Collection, lookupIn)
     lcb_cmdsubdoc_create(&cmd);
     lcb_cmdsubdoc_collection(cmd, scope_str, scope_len, collection_str, collection_len);
     lcb_cmdsubdoc_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
-    if (options) {
-        zval *prop, ret;
-        prop = pcbc_read_property(pcbc_lookup_in_options_ce, options, ("timeout"), 0, &ret);
-        if (Z_TYPE_P(prop) == IS_LONG) {
-            lcb_cmdsubdoc_timeout(cmd, Z_LVAL_P(prop));
-        }
+    if (timeout > 0) {
+        lcb_cmdsubdoc_timeout(cmd, timeout);
     }
 
     object_init_ex(return_value, pcbc_lookup_in_result_impl_ce);
-    struct subdoc_cookie cookie = {LCB_SUCCESS, return_value};
+    struct subdoc_cookie cookie = {LCB_SUCCESS, return_value, 0, with_expiry};
     lcbtrace_SPAN *span = NULL;
     lcbtrace_TRACER *tracer = lcb_get_tracer(bucket->conn->lcb);
     if (tracer) {
@@ -412,8 +425,7 @@ PHP_METHOD(Collection, mutateIn)
     HashTable *spec = NULL;
     int rv;
 
-    rv =
-        zend_parse_parameters_throw(ZEND_NUM_ARGS(), "Sh|O!", &id, &spec, &options, pcbc_mutate_in_options_ce);
+    rv = zend_parse_parameters_throw(ZEND_NUM_ARGS(), "Sh|O!", &id, &spec, &options, pcbc_mutate_in_options_ce);
     if (rv == FAILURE) {
         return;
     }

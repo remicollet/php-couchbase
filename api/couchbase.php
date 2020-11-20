@@ -249,6 +249,17 @@ namespace Couchbase {
         * @return array|null
         */
         public function content(): ?array;
+
+        /**
+         * Returns the document expiration time or null if the document does not expire.
+         *
+         * Note, that this function will return expiry only when GetOptions had withExpiry set to true.
+         *
+         * @return DateTimeInterface|null
+         */
+        public function expiryTime(): ?DateTimeInterface
+        {
+        }
     }
 
     /**
@@ -338,6 +349,17 @@ namespace Couchbase {
         * @return int
         */
         public function status(int $index): int;
+
+        /**
+         * Returns the document expiration time or null if the document does not expire.
+         *
+         * Note, that this function will return expiry only when LookupInOptions had withExpiry set to true.
+         *
+         * @return DateTimeInterface|null
+         */
+        public function expiryTime(): ?DateTimeInterface
+        {
+        }
     }
 
     /**

@@ -85,6 +85,7 @@
             <file role="src" name="src/couchbase/bucket/remove.c" />
             <file role="src" name="src/couchbase/bucket/store.c" />
             <file role="src" name="src/couchbase/bucket/subdoc.c" />
+            <file role="src" name="src/couchbase/bucket/subdoc_cookie.h" />
             <file role="src" name="src/couchbase/bucket/touch.c" />
             <file role="src" name="src/couchbase/bucket/unlock.c" />
             <file role="src" name="src/couchbase/bucket/view.c" />

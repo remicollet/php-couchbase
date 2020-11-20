@@ -15,6 +15,7 @@
  */
 
 #include "couchbase.h"
+#include "subdoc_cookie.h"
 
 #define LOGARGS(instance, lvl) LCB_LOG_##lvl, instance, "pcbc/get", __FILE__, __LINE__
 
@@ -45,6 +46,42 @@ void get_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPGET *resp)
         {
             uint64_t data;
             lcb_respget_cas(resp, &data);
+            zend_string *b64;
+            b64 = php_base64_encode((unsigned char *)&data, sizeof(data));
+            pcbc_update_property_str(pcbc_get_result_impl_ce, return_value, ("cas"), b64);
+            zend_string_release(b64);
+        }
+    }
+}
+
+void subdoc_get_with_expiry_callback(lcb_INSTANCE *instance, struct subdoc_cookie *cookie, const lcb_RESPSUBDOC *resp)
+{
+    const lcb_KEY_VALUE_ERROR_CONTEXT *ectx = NULL;
+    lcb_respsubdoc_cookie(resp, (void **)&cookie);
+    zval *return_value = cookie->return_value;
+    cookie->rc = lcb_respsubdoc_status(resp);
+    pcbc_update_property_long(pcbc_get_result_impl_ce, return_value, ("status"), cookie->rc);
+    lcb_respsubdoc_error_context(resp, &ectx);
+
+    set_property_str(ectx, lcb_errctx_kv_context, pcbc_get_result_impl_ce, "err_ctx");
+    set_property_str(ectx, lcb_errctx_kv_ref, pcbc_get_result_impl_ce, "err_ref");
+    set_property_str(ectx, lcb_errctx_kv_key, pcbc_get_result_impl_ce, "key");
+    if (cookie->rc == LCB_SUCCESS) {
+        if (lcb_respsubdoc_result_size(resp) == 4) {
+            const char *buf;
+            size_t buf_len;
+            lcb_respsubdoc_result_value(resp, 0, &buf, &buf_len);
+            pcbc_update_property_long(pcbc_get_result_impl_ce, return_value, "expiry", zend_atol(buf, buf_len));
+            lcb_respsubdoc_result_value(resp, 1, &buf, &buf_len);
+            pcbc_update_property_long(pcbc_get_result_impl_ce, return_value, "flags", zend_atol(buf, buf_len));
+            lcb_respsubdoc_result_value(resp, 2, &buf, &buf_len);
+            pcbc_update_property_long(pcbc_get_result_impl_ce, return_value, "datatype", zend_atol(buf, buf_len));
+            lcb_respsubdoc_result_value(resp, 3, &buf, &buf_len);
+            pcbc_update_property_stringl(pcbc_get_result_impl_ce, return_value, "data", buf, buf_len);
+        }
+        {
+            uint64_t data;
+            lcb_respsubdoc_cas(resp, &data);
             zend_string *b64;
             b64 = php_base64_encode((unsigned char *)&data, sizeof(data));
             pcbc_update_property_str(pcbc_get_result_impl_ce, return_value, ("cas"), b64);
@@ -121,17 +158,21 @@ PHP_METHOD(Collection, get)
     }
     PCBC_RESOLVE_COLLECTION;
 
-    lcb_CMDGET *cmd;
-    lcb_cmdget_create(&cmd);
-    lcb_cmdget_collection(cmd, scope_str, scope_len, collection_str, collection_len);
-    lcb_cmdget_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
+    zend_bool with_expiry = 0;
+    zend_long timeout = 0;
     if (options) {
         zval *prop, ret;
         prop = pcbc_read_property(pcbc_get_options_ce, options, ("timeout"), 0, &ret);
         if (Z_TYPE_P(prop) == IS_LONG) {
-            lcb_cmdget_timeout(cmd, Z_LVAL_P(prop));
+            timeout = Z_LVAL_P(prop);
+        }
+        prop = pcbc_read_property(pcbc_get_options_ce, options, ("with_expiry"), 0, &ret);
+        if (Z_TYPE_P(prop) == IS_TRUE) {
+            with_expiry = 1;
         }
     }
+
+    object_init_ex(return_value, pcbc_get_result_impl_ce);
 
     lcbtrace_SPAN *span = NULL;
     lcbtrace_TRACER *tracer = lcb_get_tracer(bucket->conn->lcb);
@@ -139,18 +180,57 @@ PHP_METHOD(Collection, get)
         span = lcbtrace_span_start(tracer, "php/" LCBTRACE_OP_GET, 0, NULL);
         lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_COMPONENT, pcbc_client_string);
         lcbtrace_span_add_tag_str(span, LCBTRACE_TAG_SERVICE, LCBTRACE_TAG_SERVICE_KV);
-        lcb_cmdget_parent_span(cmd, span);
     }
 
-    object_init_ex(return_value, pcbc_get_result_impl_ce);
-    struct get_cookie cookie = {LCB_SUCCESS, return_value};
-    err = lcb_get(bucket->conn->lcb, &cookie, cmd);
-    lcb_cmdget_destroy(cmd);
-
-    if (err == LCB_SUCCESS) {
-        lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
-        err = cookie.rc;
+    if (with_expiry) {
+        struct subdoc_cookie cookie = {LCB_SUCCESS, return_value, 1, 1};
+        const char *expiry_path = "$document.exptime";
+        const char *flags_path = "$document.flags";
+        const char *datatype_path = "$document.datatype";
+        lcb_SUBDOCSPECS *specs;
+        lcb_subdocspecs_create(&specs, 4);
+        lcb_subdocspecs_get(specs, 0, LCB_SUBDOCSPECS_F_XATTRPATH, expiry_path, strlen(expiry_path));
+        lcb_subdocspecs_get(specs, 1, LCB_SUBDOCSPECS_F_XATTRPATH, flags_path, strlen(flags_path));
+        lcb_subdocspecs_get(specs, 2, LCB_SUBDOCSPECS_F_XATTRPATH, datatype_path, strlen(datatype_path));
+        lcb_subdocspecs_get(specs, 3, 0, NULL, 0);
+        lcb_CMDSUBDOC *cmd;
+        lcb_cmdsubdoc_create(&cmd);
+        lcb_cmdsubdoc_collection(cmd, scope_str, scope_len, collection_str, collection_len);
+        lcb_cmdsubdoc_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
+        lcb_cmdsubdoc_specs(cmd, specs);
+        if (timeout > 0) {
+            lcb_cmdsubdoc_timeout(cmd, timeout);
+        }
+        if (span) {
+            lcb_cmdsubdoc_parent_span(cmd, span);
+        }
+        err = lcb_subdoc(bucket->conn->lcb, &cookie, cmd);
+        lcb_cmdsubdoc_destroy(cmd);
+        lcb_subdocspecs_destroy(specs);
+        if (err == LCB_SUCCESS) {
+            lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
+            err = cookie.rc;
+        }
+    } else {
+        struct get_cookie cookie = {LCB_SUCCESS, return_value};
+        lcb_CMDGET *cmd;
+        lcb_cmdget_create(&cmd);
+        lcb_cmdget_collection(cmd, scope_str, scope_len, collection_str, collection_len);
+        lcb_cmdget_key(cmd, ZSTR_VAL(id), ZSTR_LEN(id));
+        if (timeout > 0) {
+            lcb_cmdget_timeout(cmd, timeout);
+        }
+        if (span) {
+            lcb_cmdget_parent_span(cmd, span);
+        }
+        err = lcb_get(bucket->conn->lcb, &cookie, cmd);
+        lcb_cmdget_destroy(cmd);
+        if (err == LCB_SUCCESS) {
+            lcb_wait(bucket->conn->lcb, LCB_WAIT_DEFAULT);
+            err = cookie.rc;
+        }
     }
+
     if (span) {
         lcbtrace_span_finish(span, LCBTRACE_NOW);
     }
@@ -177,9 +257,7 @@ ZEND_ARG_TYPE_INFO(0, arg, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 static const zend_function_entry pcbc_get_and_lock_options_methods[] = {
-    PHP_ME(GetAndLockOptions, timeout, ai_GetAndLockOptions_timeout, ZEND_ACC_PUBLIC)
-    PHP_FE_END
-};
+    PHP_ME(GetAndLockOptions, timeout, ai_GetAndLockOptions_timeout, ZEND_ACC_PUBLIC) PHP_FE_END};
 
 PHP_METHOD(Collection, getAndLock)
 {
@@ -188,8 +266,8 @@ PHP_METHOD(Collection, getAndLock)
     zend_long expiry;
     lcb_STATUS err;
 
-    int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS(), "Sl|O!", &id, &expiry, &options,
-                                         pcbc_get_and_lock_options_ce);
+    int rv =
+        zend_parse_parameters_throw(ZEND_NUM_ARGS(), "Sl|O!", &id, &expiry, &options, pcbc_get_and_lock_options_ce);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
@@ -264,8 +342,8 @@ PHP_METHOD(Collection, getAndTouch)
     zend_long expiry;
     lcb_STATUS err;
 
-    int rv = zend_parse_parameters_throw(ZEND_NUM_ARGS(), "Sl|O!", &id, &expiry, &options,
-                                         pcbc_get_and_touch_options_ce);
+    int rv =
+        zend_parse_parameters_throw(ZEND_NUM_ARGS(), "Sl|O!", &id, &expiry, &options, pcbc_get_and_touch_options_ce);
     if (rv == FAILURE) {
         RETURN_NULL();
     }
