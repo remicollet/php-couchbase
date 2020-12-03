@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 // vim: et ts=4 sw=4 sts=4
 
 class CouchbaseMock {

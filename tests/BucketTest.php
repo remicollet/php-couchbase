@@ -1,5 +1,8 @@
-<?php
+<?php declare(strict_types=1);
 require_once('CouchbaseTestCase.php');
+
+use \Couchbase\Cluster;
+use \Couchbase\ClusterOptions;
 
 class BucketTest extends CouchbaseTestCase {
 
@@ -8,10 +11,10 @@ class BucketTest extends CouchbaseTestCase {
      */
     function testBadPass() {
         ini_set('couchbase.log_level', 'FATAL');
-        $options = new \Couchbase\ClusterOptions();
+        $options = new ClusterOptions();
         $options->credentials($this->testUser, 'bad_pass');
         $this->wrapException(function() use($options) {
-            new \Couchbase\Cluster($this->testDsn, $options);
+            new Cluster($this->testDsn, $options);
         }, '\Couchbase\NetworkException', COUCHBASE_ERR_CONNECT_ERROR);
     }
 
@@ -20,9 +23,9 @@ class BucketTest extends CouchbaseTestCase {
      */
     function testBadBucket() {
         ini_set('couchbase.log_level', 'FATAL');
-        $options = new \Couchbase\ClusterOptions();
+        $options = new ClusterOptions();
         $options->credentials($this->testUser, $this->testPassword);
-        $h = new \Couchbase\Cluster($this->testDsn, $options);
+        $h = new Cluster($this->testDsn, $options);
 
         $exceptionClass = '\Couchbase\BucketMissingException';
         if ($this->usingMock()) {
@@ -39,10 +42,11 @@ class BucketTest extends CouchbaseTestCase {
      */
     function testConnect() {
         ini_set('couchbase.log_level', 'WARN');
-        $options = new \Couchbase\ClusterOptions();
+        $options = new ClusterOptions();
         $options->credentials($this->testUser, $this->testPassword);
-        $h = new \Couchbase\Cluster($this->testDsn, $options);
+        $h = new Cluster($this->testDsn, $options);
         $b = $h->bucket($this->testBucket);
+        $this->assertNotNull($b);
         $this->setTimeouts($b);
         return $b->defaultCollection();
     }
@@ -242,9 +246,9 @@ class BucketTest extends CouchbaseTestCase {
      * so that the lcb_t won't be reused from the pool
      */
     function testOptionVals() {
-        $options = new \Couchbase\ClusterOptions();
+        $options = new ClusterOptions();
         $options->credentials($this->testUser, $this->testPassword);
-        $h = new \Couchbase\Cluster($this->testDsn . "?console_log_level=42", $options);
+        $h = new Cluster($this->testDsn . "?console_log_level=42", $options);
         $b = $h->bucket($this->testBucket);
 
         $checkVal = 50243;
@@ -367,13 +371,13 @@ class BucketTest extends CouchbaseTestCase {
     }
 
     /**
-     * @expectedException Couchbase\BadInputException
      * @depends testConnect
      */
     function testLookupInWithEmptyPath($c) {
         $key = $this->makeKey('lookup_in_with_empty_path');
         $c->upsert($key, array('path1' => 'value1'));
 
+        $this->expectException(\Couchbase\BadInputException::class);
         $c->lookupIn($key, [
             new \Couchbase\LookupExistsSpec(''),
         ]);
@@ -547,13 +551,13 @@ class BucketTest extends CouchbaseTestCase {
     }
 
     /**
-     * @expectedException \Couchbase\BadInputException
      * @depends testConnect
      */
     function testMutationInWithEmptyPath($c) {
         $key = $this->makeKey('lookup_in_with_empty_path');
         $c->upsert($key, ['path1' => 'value1']);
 
+        $this->expectException(\Couchbase\BadInputException::class);
         $result = $c->mutateIn($key, [new \Couchbase\MutateUpsertSpec('', 'value')]);
     }
 

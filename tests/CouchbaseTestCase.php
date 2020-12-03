@@ -1,8 +1,10 @@
-<?php
+<?php declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
 
 require_once('CouchbaseMock.php');
 
-class CouchbaseTestCase extends \PHPUnit_Framework_TestCase {
+class CouchbaseTestCase extends TestCase {
     public $testDsn;
     public $testBucket;
     public $testAdminUser;
@@ -11,7 +13,7 @@ class CouchbaseTestCase extends \PHPUnit_Framework_TestCase {
     public $testPassword;
     public $mock = null;
 
-    protected function setUp() {
+    public function setUp(): void {
         if (getenv('CB_MOCK')) {
             $this->mock = \CouchbaseMock::get();
             $this->mock->start();
@@ -144,14 +146,12 @@ class CouchbaseTestCase extends \PHPUnit_Framework_TestCase {
     }
 
     function wrapException($cb, $type = NULL, $code = NULL, $message = NULL) {
-        PHPUnit_Framework_Error_Notice::$enabled = false;
         $exOut = NULL;
         try {
             $cb();
         } catch (Exception $ex) {
             $exOut = $ex;
         }
-        PHPUnit_Framework_Error_Notice::$enabled = true;
 
         if ($type !== NULL) {
             $this->assertErrorType($type, $exOut);

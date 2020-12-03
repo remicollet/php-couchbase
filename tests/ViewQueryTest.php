@@ -1,8 +1,9 @@
-<?php
+<?php declare(strict_types=1);
+
 require_once('CouchbaseTestCase.php');
 
 class ViewQueryTest extends CouchbaseTestCase {
-    protected function setUp() {
+    public function setUp(): void {
         parent::setUp();
         $options = new \Couchbase\ClusterOptions();
         $options->credentials($this->testUser, $this->testPassword);

@@ -1,10 +1,11 @@
-<?php
+<?php declare(strict_types=1);
+
 require_once('CouchbaseTestCase.php');
 
 class N1qlQueryTest extends CouchbaseTestCase {
     private $cluster;
 
-    protected function setUp() {
+    public function setUp(): void {
         parent::setUp();
         $options = new \Couchbase\ClusterOptions();
         $options->credentials($this->testUser, $this->testPassword);

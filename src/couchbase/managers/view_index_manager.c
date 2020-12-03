@@ -274,7 +274,6 @@ PHP_METHOD(DesignDocument, jsonSerialize)
     zval views;
     array_init(&views);
     add_assoc_zval(return_value, "views", &views);
-    zval_delref_p(&views);
 
     zval *prop, ret;
     prop = pcbc_read_property(pcbc_design_document_ce, getThis(), ("views"), 0, &ret);
