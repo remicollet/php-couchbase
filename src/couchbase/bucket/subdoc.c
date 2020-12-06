@@ -51,7 +51,8 @@ void subdoc_lookup_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPSU
     zval *return_value = cookie->return_value;
     cookie->rc = lcb_respsubdoc_status(resp);
     if (cookie->is_get) {
-        return subdoc_get_with_expiry_callback(instance, cookie, resp);
+        subdoc_get_with_expiry_callback(instance, cookie, resp);
+        return;
     }
 
     pcbc_update_property_long(pcbc_lookup_in_result_impl_ce, return_value, ("status"), cookie->rc);
@@ -142,7 +143,7 @@ void subdoc_mutate_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPSU
                 pcbc_update_property_str(pcbc_mutation_token_impl_ce, &val, ("sequence_number"), b64);
                 zend_string_release(b64);
 
-                const char *bucket;
+                char *bucket;
                 lcb_cntl(instance, LCB_CNTL_GET, LCB_CNTL_BUCKETNAME, &bucket);
                 pcbc_update_property_string(pcbc_mutation_token_impl_ce, &val, ("bucket_name"), bucket);
 

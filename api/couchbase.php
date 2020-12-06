@@ -416,9 +416,135 @@ namespace Couchbase {
         public function rows(): ?array;
     }
 
+
     /**
-    * Interface for retrieving results from search queries.
-    */
+     * A range (or bucket) for a term search facet result.
+     * Counts the number of occurrences of a given term.
+     */
+    interface TermFacetResult
+    {
+        /**
+         * @return string
+         */
+        public function term(): string;
+
+        /**
+         * @return int
+         */
+        public function count(): int;
+    }
+
+    /**
+     * A range (or bucket) for a numeric range facet result. Counts the number of matches
+     * that fall into the named range (which can overlap with other user-defined ranges).
+     */
+    interface NumericRangeFacetResult
+    {
+        /**
+         * @return string
+         */
+        public function name(): string;
+
+        /**
+         * @return int|float|null
+         */
+        public function min();
+
+        /**
+         * @return int|float|null
+         */
+        public function max();
+
+        /**
+         * @return int
+         */
+        public function count(): int;
+    }
+
+    /**
+     * A range (or bucket) for a date range facet result. Counts the number of matches
+     * that fall into the named range (which can overlap with other user-defined ranges).
+     */
+    interface DateRangeFacetResult
+    {
+        /**
+         * @return string
+         */
+        public function name(): string;
+
+        /**
+         * @return string|null
+         */
+        public function start(): ?string;
+
+        /**
+         * @return string|null
+         */
+        public function end(): ?string;
+
+        /**
+         * @return int
+         */
+        public function count(): int;
+    }
+
+    /**
+     * Interface representing facet results.
+     *
+     * Only one method might return non-null value among terms(), numericRanges() and dateRanges().
+     */
+    interface SearchFacetResult
+    {
+        /**
+         * The field the SearchFacet was targeting.
+         *
+         * @return string
+         */
+        public function field(): string;
+
+        /**
+         * The total number of *valued* facet results. Total = other() + terms (but doesn't include * missing()).
+         *
+         * @return int
+         */
+        public function total(): int;
+
+        /**
+         * The number of results that couldn't be faceted, missing the adequate value. Not matter how many more
+         * buckets are added to the original facet, these result won't ever be included in one.
+         *
+         * @return int
+         */
+        public function missing(): int;
+
+        /**
+         * The number of results that could have been faceted (because they have a value for the facet's field) but
+         * weren't, due to not having a bucket in which they belong. Adding a bucket can result in these results being
+         * faceted.
+         *
+         * @return int
+         */
+        public function other(): int;
+
+        /**
+         * @return array of pairs string name to TermFacetResult
+         */
+        public function terms(): ?array;
+
+        /**
+         * @return array of pairs string name to NumericRangeFacetResult
+         */
+        public function numericRanges(): ?array;
+
+        /**
+         * @return array of pairs string name to DateRangeFacetResult
+         */
+        public function dateRanges(): ?array;
+    }
+
+    /**
+     * Interface for retrieving results from search queries.
+     */
     interface SearchResult
     {
         /**
@@ -431,6 +557,7 @@ namespace Couchbase {
         /**
         * Returns any facets returned by the query
         *
+        * Array contains instances of SearchFacetResult
         * @return array|null
         */
         public function facets(): ?array;
@@ -2631,12 +2758,12 @@ namespace Couchbase {
     class Coordinate implements JsonSerializable
     {
         /**
-         * @param double $longitude
-         * @param double $latitude
+         * @param float $longitude
+         * @param float $latitude
          *
          * @see GeoPolygonQuery
          */
-        public function __construct(double $longitude, double $latitude)
+        public function __construct(float $longitude, float $latitude)
         {
         }
     }

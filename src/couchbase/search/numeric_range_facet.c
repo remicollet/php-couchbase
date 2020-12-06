@@ -65,7 +65,6 @@ PHP_METHOD(NumericRangeSearchFacet, addRange)
         add_assoc_double(&range, "max", max);
     }
     add_next_index_zval(ranges, &range);
-    Z_TRY_ADDREF(range);
 
     RETURN_ZVAL(getThis(), 1, 0);
 }

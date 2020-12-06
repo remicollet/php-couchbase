@@ -70,7 +70,7 @@ void counter_callback(lcb_INSTANCE *instance, int cbtype, const lcb_RESPCOUNTER 
                 pcbc_update_property_str(pcbc_mutation_token_impl_ce, &val, ("sequence_number"), b64);
                 zend_string_release(b64);
 
-                const char *bucket;
+                char *bucket;
                 lcb_cntl(instance, LCB_CNTL_GET, LCB_CNTL_BUCKETNAME, &bucket);
                 pcbc_update_property_string(pcbc_mutation_token_impl_ce, &val, ("bucket_name"), bucket);
 

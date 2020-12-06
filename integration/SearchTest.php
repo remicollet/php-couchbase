@@ -1,4 +1,22 @@
-<?php
+<?php declare(strict_types=1);
+
+use \PHPUnit\Framework\TestCase;
+
+use \Couchbase\ClusterOptions;
+use \Couchbase\Cluster;
+use \Couchbase\MutationState;
+use \Couchbase\SearchHighlightMode;
+use \Couchbase\SearchOptions;
+use \Couchbase\ConjunctionSearchQuery;
+use \Couchbase\DateRangeSearchQuery;
+use \Couchbase\DisjunctionSearchQuery;
+use \Couchbase\MatchPhraseSearchQuery;
+use \Couchbase\MatchSearchQuery;
+use \Couchbase\NumericRangeSearchFacet;
+use \Couchbase\NumericRangeSearchQuery;
+use \Couchbase\TermSearchQuery;
+use \Couchbase\TermSearchFacet;
+use \Couchbase\DateRangeSearchFacet;
 
 /**
  * The tests are relying on FTS index for beer-sample bucket exists with the following mapping for type 'beer':
@@ -12,26 +30,23 @@
  *
  * See JSON definition of this index in the end of this file.
  */
-class SearchTest extends PHPUnit_Framework_TestCase {
-    public function __construct() {
-        $this->testDsn = getenv('CB_DSN');
-        if ($this->testDsn === FALSE) {
-            $this->testDsn = 'couchbase://localhost/';
+class SearchTest extends TestCase {
+    public function setUp(): void {
+        $testDSN = getenv('CB_DSN');
+        if ($testDSN === FALSE) {
+            $testDSN = 'couchbase://localhost/';
         }
-    }
-
-    protected function setUp() {
-        $options = new \Couchbase\ClusterOptions();
+        $options = new ClusterOptions();
         $options->credentials(getenv('CB_USER'), getenv('CB_PASSWORD'));
-        $this->cluster = new \Couchbase\Cluster($this->testDsn, $options);
+        $this->cluster = new Cluster($testDSN, $options);
     }
-
-    function testSearchWithLimit() {
-        $query = new \Couchbase\MatchPhraseSearchQuery("hop beer");
-        $options = new \Couchbase\SearchOptions();
+/*
+    public function testSearchWithLimit() {
+        $query = new MatchPhraseSearchQuery("hop beer");
+        $options = new SearchOptions();
         $options->limit(3);
 
-        $result = $this->cluster->search("beer-search", $query, $options);
+        $result = $this->cluster->searchQuery("beer-search", $query, $options);
 
         $this->assertNotNull($result);
         $this->assertNotEmpty($result->rows());
@@ -46,11 +61,11 @@ class SearchTest extends PHPUnit_Framework_TestCase {
     }
 
     function testSearchWithNoHits() {
-        $query = new \Couchbase\MatchPhraseSearchQuery("doesnotexistintheindex");
-        $options = new \Couchbase\SearchOptions();
+        $query = new MatchPhraseSearchQuery("doesnotexistintheindex");
+        $options = new SearchOptions();
         $options->limit(3);
 
-        $result = $this->cluster->search("beer-search", $query, $options);
+        $result = $this->cluster->searchQuery("beer-search", $query, $options);
 
         $this->assertNotNull($result);
         $this->assertEmpty($result->rows());
@@ -60,11 +75,11 @@ class SearchTest extends PHPUnit_Framework_TestCase {
     function testSearchWithConsistency() {
 
         $id = uniqid('testSearchWithConsistency');
-        $query = new \Couchbase\MatchPhraseSearchQuery($id);
-        $options = new \Couchbase\SearchOptions();
+        $query = new MatchPhraseSearchQuery($id);
+        $options = new SearchOptions();
         $options->limit(3);
 
-        $result = $this->cluster->search("beer-search", $query, $options);
+        $result = $this->cluster->searchQuery("beer-search", $query, $options);
 
         $this->assertNotNull($result);
         $this->assertEmpty($result->rows());
@@ -72,11 +87,11 @@ class SearchTest extends PHPUnit_Framework_TestCase {
 
         $collection = $this->cluster->bucket('beer-sample')->defaultCollection();
         $result = $collection->upsert($id, ["type" => "beer", "name" => $id]);
-        $mutationState = new \Couchbase\MutationState();
+        $mutationState = new MutationState();
         $mutationState->add($result);
 
         $options->consistentWith("beer-search", $mutationState);
-        $result = $this->cluster->search("beer-search", $query, $options);
+        $result = $this->cluster->searchQuery("beer-search", $query, $options);
 
         $this->assertNotNull($result);
         $this->assertNotEmpty($result->rows());
@@ -85,11 +100,11 @@ class SearchTest extends PHPUnit_Framework_TestCase {
     }
 
     function testSearchWithFields() {
-        $query = new \Couchbase\MatchPhraseSearchQuery("hop beer");
-        $options = new \Couchbase\SearchOptions();
+        $query = new MatchPhraseSearchQuery("hop beer");
+        $options = new SearchOptions();
         $options->limit(3)->fields(["name"]);
 
-        $result = $this->cluster->search("beer-search", $query, $options);
+        $result = $this->cluster->searchQuery("beer-search", $query, $options);
 
         $this->assertNotNull($result);
         $this->assertNotEmpty($result->rows());
@@ -106,10 +121,10 @@ class SearchTest extends PHPUnit_Framework_TestCase {
     }
 
     function testSearchWithRanges() {
-        $query = (new \Couchbase\NumericRangeSearchQuery())->field("abv")->min(2.0)->max(3.2);
-        $options = new \Couchbase\SearchOptions();
+        $query = (new NumericRangeSearchQuery())->field("abv")->min(2.0)->max(3.2);
+        $options = new SearchOptions();
         $options->fields(["abv"]);
-        $result = $this->cluster->search("beer-search", $query, $options);
+        $result = $this->cluster->searchQuery("beer-search", $query, $options);
 
         $this->assertNotNull($result);
         $this->assertNotEmpty($result->rows());
@@ -127,20 +142,19 @@ class SearchTest extends PHPUnit_Framework_TestCase {
 
         $startDate = new DateTime('2010-11-01 10:00:00');
         $startStr = $startDate->format(DATE_RFC3339);
-        $endInt = mktime(20, 0, 0, 12, 1, 2010);
-        $endDate = DateTime::createFromFormat("U", $endInt);
-        $query = new \Couchbase\ConjunctionSearchQuery([
-            (new \Couchbase\TermSearchQuery("beer"))->field("type"),
-            (new \Couchbase\DateRangeSearchQuery())->field("updated")->start($startStr)->end($endInt)
+        $query = new ConjunctionSearchQuery([
+            (new TermSearchQuery("beer"))->field("type"),
+            (new DateRangeSearchQuery())->field("updated")->start($startStr)->end(mktime(20, 0, 0, 12, 1, 2010))
         ]);
-        $options = new \Couchbase\SearchOptions();
+        $options = new SearchOptions();
         $options->fields(["updated", "type"]);
-        $result = $this->cluster->search("beer-search", $query, $options);
+        $result = $this->cluster->searchQuery("beer-search", $query, $options);
 
         $this->assertNotNull($result);
         $this->assertNotEmpty($result->rows());
         $this->assertEquals(count($result->rows()), $result->metaData()->totalHits());
 
+        $endDate = new DateTime('2010-12-01 20:00:00');
         foreach ($result->rows() as $hit) {
             $this->assertNotNull($hit['id']);
             $this->assertStringStartsWith("beer-search", $hit['index']);
@@ -156,32 +170,32 @@ class SearchTest extends PHPUnit_Framework_TestCase {
     }
 
     function testCompoundSearchQueries() {
-        $nameQuery = (new \Couchbase\MatchSearchQuery("green"))->field("name")->boost(3.4);
-        $descriptionQuery = (new \Couchbase\MatchSearchQuery("hop"))->field("description")->fuzziness(1);
+        $nameQuery = (new MatchSearchQuery("green"))->field("name")->boost(3.4);
+        $descriptionQuery = (new MatchSearchQuery("hop"))->field("description")->fuzziness(1);
 
-        $disjunctionQuery = new \Couchbase\DisjunctionSearchQuery([$nameQuery, $descriptionQuery]);
-        $options = new \Couchbase\SearchOptions();
+        $disjunctionQuery = new DisjunctionSearchQuery([$nameQuery, $descriptionQuery]);
+        $options = new SearchOptions();
         $options->fields(["type", "name", "description"]);
-        $result = $this->cluster->search("beer-search", $disjunctionQuery, $options);
+        $result = $this->cluster->searchQuery("beer-search", $disjunctionQuery, $options);
         $this->assertGreaterThan(1000, $result->metaData()->totalHits());
         $this->assertNotEmpty($result->rows());
-        $this->assertRegexp('/green/i', $result->rows()[0]['fields']['name']);
-        $this->assertNotRegexp('/hop/i', $result->rows()[0]['fields']['name']);
-        $this->assertRegexp('/hop/i', $result->rows()[0]['fields']['description']);
-        $this->assertNotRegexp('/green/i', $result->rows()[0]['fields']['description']);
+        $this->assertMatchesRegularExpression('/green/i', $result->rows()[0]['fields']['name']);
+        $this->assertDoesNotMatchRegularExpression('/hop/i', $result->rows()[0]['fields']['name']);
+        $this->assertMatchesRegularExpression('/hop/i', $result->rows()[0]['fields']['description']);
+        $this->assertDoesNotMatchRegularExpression('/green/i', $result->rows()[0]['fields']['description']);
 
         $disjunctionQuery->min(2);
-        $options = new \Couchbase\SearchOptions();
+        $options = new SearchOptions();
         $options->fields(["type", "name", "description"]);
-        $result = $this->cluster->search("beer-search", $disjunctionQuery, $options);
+        $result = $this->cluster->searchQuery("beer-search", $disjunctionQuery, $options);
         $this->assertNotEmpty($result->rows());
         $this->assertLessThan(10, $result->metaData()->totalHits());
         $disjunction2Result = $result;
 
-        $conjunctionQuery = new \Couchbase\ConjunctionSearchQuery([$nameQuery, $descriptionQuery]);
-        $options = new \Couchbase\SearchOptions();
+        $conjunctionQuery = new ConjunctionSearchQuery([$nameQuery, $descriptionQuery]);
+        $options = new SearchOptions();
         $options->fields(["type", "name", "description"]);
-        $result = $this->cluster->search("beer-search", $conjunctionQuery, $options);
+        $result = $this->cluster->searchQuery("beer-search", $conjunctionQuery, $options);
         $this->assertNotEmpty($result->rows());
         $this->assertEquals(count($disjunction2Result->rows()), count($result->rows()));
         $this->assertEquals($disjunction2Result->rows()[0]['fields']['name'],
@@ -191,11 +205,11 @@ class SearchTest extends PHPUnit_Framework_TestCase {
     }
 
     function testSearchWithFragments() {
-        $query = new \Couchbase\MatchSearchQuery("hop beer");
-        $options = new \Couchbase\SearchOptions();
-        $options->limit(3)->highlight(\Couchbase\SearchHighlightMode::HTML, ["name"]);
+        $query = new MatchSearchQuery("hop beer");
+        $options = new SearchOptions();
+        $options->limit(3)->highlight(SearchHighlightMode::HTML, ["name"]);
 
-        $result = $this->cluster->search("beer-search", $query, $options);
+        $result = $this->cluster->searchQuery("beer-search", $query, $options);
         $this->assertNotEmpty($result->rows());
 
         foreach ($result->rows() as $hit) {
@@ -203,48 +217,52 @@ class SearchTest extends PHPUnit_Framework_TestCase {
             $this->assertNotEmpty($hit['fragments']);
             $this->assertNotNull($hit['fragments']['name']);
             foreach ($hit['fragments']['name'] as $fragment) {
-                $this->assertRegexp('/<mark>/', $fragment);
+                $this->assertMatchesRegularExpression('/<mark>/', $fragment);
             }
         }
     }
-
+*/
     function testSearchWithFacets() {
-        $query = (new \Couchbase\TermSearchQuery("beer"))->field("type");
-        $options = new \Couchbase\SearchOptions();
+        $this->assertTrue(true);
+
+        $query = (new TermSearchQuery("beer"))->field("type");
+        $options = new SearchOptions();
         $options->facets([
-            "foo" => new \Couchbase\TermSearchFacet("name", 3),
-            "bar" => (new \Couchbase\DateRangeSearchFacet("updated", 1))
+            "foo" => new TermSearchFacet("name", 3),
+            "bar" => (new DateRangeSearchFacet("updated", 1))
                         ->addRange("old", NULL,  mktime(0, 0, 0, 1, 1, 2014)), // "2014-01-01T00:00:00" also acceptable
-            "baz" => (new \Couchbase\NumericRangeSearchFacet("abv", 2))
+            "baz" => (new NumericRangeSearchFacet("abv", 2))
                         ->addRange("strong", 4.9, NULL)
                         ->addRange("light", NULL, 4.89)
         ]);
 
-        $result = $this->cluster->search("beer-search", $query, $options);
+        $result = $this->cluster->searchQuery("beer-search", $query, $options);
+
         $this->assertNotEmpty($result->rows());
         $this->assertNotEmpty($result->facets());
 
         $this->assertNotNull($result->facets()['foo']);
-        $this->assertEquals('name', $result->facets()['foo']['field']);
-        $this->assertEquals('ale', $result->facets()['foo']['terms'][0]['term']);
-        $this->assertGreaterThan(1000, $result->facets()['foo']['terms'][0]['count']);
+        $this->assertEquals('name', $result->facets()['foo']->field());
+        $this->assertEquals('ale', $result->facets()['foo']->terms()[0]->term());
+        $this->assertGreaterThan(1000, $result->facets()['foo']->terms()[0]->count());
 
         $this->assertNotNull($result->facets()['bar']);
-        $this->assertEquals('updated', $result->facets()['bar']['field']);
-        $this->assertEquals('old', $result->facets()['bar']['date_ranges'][0]['name']);
-        $this->assertGreaterThan(5000, $result->facets()['bar']['date_ranges'][0]['count']);
+        $this->assertEquals('updated', $result->facets()['bar']->field());
+        $this->assertEquals('old', $result->facets()['bar']->dateRanges()[0]->name());
+        $this->assertGreaterThan(5000, $result->facets()['bar']->dateRanges()[0]->count());
 
         $this->assertNotNull($result->facets()['baz']);
-        $this->assertEquals('abv', $result->facets()['baz']['field']);
-        $this->assertEquals('light', $result->facets()['baz']['numeric_ranges'][0]['name']);
-        $this->assertGreaterThan(100, $result->facets()['baz']['numeric_ranges'][0]['count']);
+        $this->assertEquals('abv', $result->facets()['baz']->field());
+        $this->assertEquals('light', $result->facets()['baz']->numericRanges()[0]->name());
+        $this->assertGreaterThan(0, $result->facets()['baz']->numericRanges()[0]->max());
+        $this->assertGreaterThan(100, $result->facets()['baz']->numericRanges()[0]->count());
     }
 }
 
 /*
 
 curl -XPUT -H "Content-Type: application/json" \
--u <username>:<password> http://<cluster>:8094/api/index/beer-search -d \
+-u Administrator:password http://localhost:8094/api/index/beer-search -d \
 '{
   "type": "fulltext-index",
   "name": "beer-search",

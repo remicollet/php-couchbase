@@ -19,32 +19,14 @@ PROJECT_ROOT="$( cd "$(dirname "$0"/..)" >/dev/null 2>&1 ; pwd -P )"
 set -x
 set -e
 
-CB_USE_MOCK=${CB_USE_MOCK:-yes}
 CB_PHP_PREFIX=${CB_PHP_PREFIX:-/usr}
 CB_LCB_PREFIX=${CB_LCB_PREFIX:-/usr}
 CB_USE_VALGRIND=${CB_USE_VALGRIND:-no}
-CB_TESTS=${CB_TESTS:-"${PROJECT_ROOT}/tests"}
-CB_USER=${CB_USER:-Administrator}
-CB_PASSWORD=${CB_PASSWORD:-password}
-
-CB_PHPUNIT_PHAR=${CB_PHPUNIT_PHAR:-"${PROJECT_ROOT}/build/phpunit.phar"}
-if [ ! -f "${CB_PHPUNIT_PHAR}" ]
-then
-    curl -o "${CB_PHPUNIT_PHAR}" https://phar.phpunit.de/phpunit-9.4.3.phar
-fi
-
-${CB_PHP_PREFIX}/bin/php --version
-${CB_PHP_PREFIX}/bin/php --ini
 
 cd ${PROJECT_ROOT}
 
 COUCHBASE_EXT=${PROJECT_ROOT}/modules/couchbase.so
-PHPUNIT_RESULT_CACHE=${PROJECT_ROOT}/phpunit.result.cache
 
-if [ "x${CB_USE_MOCK}" = "xyes" ]
-then
-    export CB_MOCK=1
-fi
 PHP_EXECUTABLE="${CB_PHP_PREFIX}/bin/php"
 if [ "x${CB_USE_VALGRIND}" = "xyes" ]
 then
@@ -55,9 +37,6 @@ then
     PHP_EXECUTABLE="valgrind ${CB_VALGRIND_ARGS} --log-file=${CB_VALGRIND_LOG} ${PHP_EXECUTABLE}"
 fi
 
-export CB_USER CB_PASSWORD
 ${PHP_EXECUTABLE} \
     -d extension=${COUCHBASE_EXT} \
-    ${CB_PHPUNIT_PHAR} \
-    --cache-result-file=${PHPUNIT_RESULT_CACHE} \
-    ${CB_TESTS}
+    $*

@@ -463,6 +463,152 @@ static const zend_function_entry pcbc_analytics_result_impl_methods[] = {
     PHP_FE_END
 };
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_SearchFacetResult_field, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_SearchFacetResult_total, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_SearchFacetResult_missing, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_SearchFacetResult_other, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_SearchFacetResult_terms, IS_ARRAY, 1)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_SearchFacetResult_numericRanges, IS_ARRAY, 1)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_SearchFacetResult_dateRanges, IS_ARRAY, 1)
+ZEND_END_ARG_INFO()
+
+zend_class_entry *pcbc_search_facet_result_ce;
+static const zend_function_entry pcbc_search_facet_result_methods[] = {
+    PHP_ABSTRACT_ME(SearchFacetResult, field, ai_SearchFacetResult_field)
+    PHP_ABSTRACT_ME(SearchFacetResult, total, ai_SearchFacetResult_total)
+    PHP_ABSTRACT_ME(SearchFacetResult, missing, ai_SearchFacetResult_missing)
+    PHP_ABSTRACT_ME(SearchFacetResult, other, ai_SearchFacetResult_other)
+    PHP_ABSTRACT_ME(SearchFacetResult, terms, ai_SearchFacetResult_terms)
+    PHP_ABSTRACT_ME(SearchFacetResult, numericRanges, ai_SearchFacetResult_numericRanges)
+    PHP_ABSTRACT_ME(SearchFacetResult, dateRanges, ai_SearchFacetResult_dateRanges)
+    PHP_FE_END
+};
+
+PHP_METHOD(SearchFacetImplResult, field);
+PHP_METHOD(SearchFacetImplResult, total);
+PHP_METHOD(SearchFacetImplResult, missing);
+PHP_METHOD(SearchFacetImplResult, other);
+PHP_METHOD(SearchFacetImplResult, terms);
+PHP_METHOD(SearchFacetImplResult, numericRanges);
+PHP_METHOD(SearchFacetImplResult, dateRanges);
+
+zend_class_entry *pcbc_search_facet_result_impl_ce;
+static const zend_function_entry pcbc_search_facet_result_impl_methods[] = {
+    PHP_ME(SearchFacetImplResult, field, ai_SearchFacetResult_field, ZEND_ACC_PUBLIC)
+    PHP_ME(SearchFacetImplResult, total, ai_SearchFacetResult_total, ZEND_ACC_PUBLIC)
+    PHP_ME(SearchFacetImplResult, missing, ai_SearchFacetResult_missing, ZEND_ACC_PUBLIC)
+    PHP_ME(SearchFacetImplResult, other, ai_SearchFacetResult_other, ZEND_ACC_PUBLIC)
+    PHP_ME(SearchFacetImplResult, terms, ai_SearchFacetResult_terms, ZEND_ACC_PUBLIC)
+    PHP_ME(SearchFacetImplResult, numericRanges, ai_SearchFacetResult_numericRanges, ZEND_ACC_PUBLIC)
+    PHP_ME(SearchFacetImplResult, dateRanges, ai_SearchFacetResult_dateRanges, ZEND_ACC_PUBLIC)
+    PHP_FE_END
+};
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_TermFacetResult_term, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_TermFacetResult_count, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+zend_class_entry *pcbc_term_facet_result_ce;
+static const zend_function_entry pcbc_term_facet_result_methods[] = {
+    PHP_ABSTRACT_ME(TermFacetResult, term, ai_TermFacetResult_term)
+    PHP_ABSTRACT_ME(TermFacetResult, count, ai_TermFacetResult_count)
+    PHP_FE_END
+};
+
+PHP_METHOD(TermFacetImplResult, term);
+PHP_METHOD(TermFacetImplResult, count);
+
+zend_class_entry *pcbc_term_facet_result_impl_ce;
+static const zend_function_entry pcbc_term_facet_result_impl_methods[] = {
+    PHP_ME(TermFacetImplResult, term, ai_TermFacetResult_term, ZEND_ACC_PUBLIC)
+    PHP_ME(TermFacetImplResult, count, ai_TermFacetResult_count, ZEND_ACC_PUBLIC)
+    PHP_FE_END
+};
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_NumericRangeFacetResult_name, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_NumericRangeFacetResult_min, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(ai_NumericRangeFacetResult_max, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_NumericRangeFacetResult_count, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+zend_class_entry *pcbc_numeric_range_facet_result_ce;
+static const zend_function_entry pcbc_numeric_range_facet_result_methods[] = {
+    PHP_ABSTRACT_ME(NumericRangeFacetResult, name, ai_NumericRangeFacetResult_name)
+    PHP_ABSTRACT_ME(NumericRangeFacetResult, min, ai_NumericRangeFacetResult_min)
+    PHP_ABSTRACT_ME(NumericRangeFacetResult, max, ai_NumericRangeFacetResult_max)
+    PHP_ABSTRACT_ME(NumericRangeFacetResult, count, ai_NumericRangeFacetResult_count)
+    PHP_FE_END
+};
+
+PHP_METHOD(NumericRangeFacetImplResult, name);
+PHP_METHOD(NumericRangeFacetImplResult, min);
+PHP_METHOD(NumericRangeFacetImplResult, max);
+PHP_METHOD(NumericRangeFacetImplResult, count);
+
+zend_class_entry *pcbc_numeric_range_facet_result_impl_ce;
+static const zend_function_entry pcbc_numeric_range_facet_result_impl_methods[] = {
+    PHP_ME(NumericRangeFacetImplResult, name, ai_NumericRangeFacetResult_name, ZEND_ACC_PUBLIC)
+    PHP_ME(NumericRangeFacetImplResult, min, ai_NumericRangeFacetResult_min, ZEND_ACC_PUBLIC)
+    PHP_ME(NumericRangeFacetImplResult, max, ai_NumericRangeFacetResult_max, ZEND_ACC_PUBLIC)
+    PHP_ME(NumericRangeFacetImplResult, count, ai_NumericRangeFacetResult_count, ZEND_ACC_PUBLIC)
+    PHP_FE_END
+};
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_DateRangeFacetResult_name, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_DateRangeFacetResult_start, IS_STRING, 1)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_DateRangeFacetResult_end, IS_STRING, 1)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_DateRangeFacetResult_count, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+zend_class_entry *pcbc_date_range_facet_result_ce;
+static const zend_function_entry pcbc_date_range_facet_result_methods[] = {
+    PHP_ABSTRACT_ME(DateRangeFacetResult, name, ai_DateRangeFacetResult_name)
+    PHP_ABSTRACT_ME(DateRangeFacetResult, start, ai_DateRangeFacetResult_start)
+    PHP_ABSTRACT_ME(DateRangeFacetResult, end, ai_DateRangeFacetResult_end)
+    PHP_ABSTRACT_ME(DateRangeFacetResult, count, ai_DateRangeFacetResult_count)
+    PHP_FE_END
+};
+
+PHP_METHOD(DateRangeFacetImplResult, name);
+PHP_METHOD(DateRangeFacetImplResult, start);
+PHP_METHOD(DateRangeFacetImplResult, end);
+PHP_METHOD(DateRangeFacetImplResult, count);
+
+zend_class_entry *pcbc_date_range_facet_result_impl_ce;
+static const zend_function_entry pcbc_date_range_facet_result_impl_methods[] = {
+    PHP_ME(DateRangeFacetImplResult, name, ai_DateRangeFacetResult_name, ZEND_ACC_PUBLIC)
+    PHP_ME(DateRangeFacetImplResult, start, ai_DateRangeFacetResult_start, ZEND_ACC_PUBLIC)
+    PHP_ME(DateRangeFacetImplResult, end, ai_DateRangeFacetResult_end, ZEND_ACC_PUBLIC)
+    PHP_ME(DateRangeFacetImplResult, count, ai_DateRangeFacetResult_count, ZEND_ACC_PUBLIC)
+    PHP_FE_END
+};
+
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO(ai_SearchResult_metaData, Couchbase\\SearchMetaData, 1)
 ZEND_END_ARG_INFO()
 
@@ -760,6 +906,52 @@ PHP_MINIT_FUNCTION(Result)
     zend_declare_property_null(pcbc_analytics_result_impl_ce, ZEND_STRL("meta"), ZEND_ACC_PRIVATE);
     zend_declare_property_null(pcbc_analytics_result_impl_ce, ZEND_STRL("rows"), ZEND_ACC_PRIVATE);
 
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "SearchFacetResult", pcbc_search_facet_result_methods);
+    pcbc_search_facet_result_ce = zend_register_internal_interface(&ce);
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "SearchFacetResultImpl", pcbc_search_facet_result_impl_methods);
+    pcbc_search_facet_result_impl_ce = zend_register_internal_class(&ce);
+    zend_class_implements(pcbc_search_facet_result_impl_ce, 1, pcbc_search_facet_result_ce);
+    zend_declare_property_null(pcbc_search_facet_result_impl_ce, ZEND_STRL("name"), ZEND_ACC_PRIVATE);
+    zend_declare_property_null(pcbc_search_facet_result_impl_ce, ZEND_STRL("field"), ZEND_ACC_PRIVATE);
+    zend_declare_property_long(pcbc_search_facet_result_impl_ce, ZEND_STRL("total"), 0, ZEND_ACC_PRIVATE);
+    zend_declare_property_long(pcbc_search_facet_result_impl_ce, ZEND_STRL("missing"), 0, ZEND_ACC_PRIVATE);
+    zend_declare_property_long(pcbc_search_facet_result_impl_ce, ZEND_STRL("other"), 0, ZEND_ACC_PRIVATE);
+    zend_declare_property_null(pcbc_search_facet_result_impl_ce, ZEND_STRL("terms"), ZEND_ACC_PRIVATE);
+    zend_declare_property_null(pcbc_search_facet_result_impl_ce, ZEND_STRL("numeric_ranges"), ZEND_ACC_PRIVATE);
+    zend_declare_property_null(pcbc_search_facet_result_impl_ce, ZEND_STRL("date_ranges"), ZEND_ACC_PRIVATE);
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "TermFacetResult", pcbc_term_facet_result_methods);
+    pcbc_term_facet_result_ce = zend_register_internal_interface(&ce);
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "TermFacetResultImpl", pcbc_term_facet_result_impl_methods);
+    pcbc_term_facet_result_impl_ce = zend_register_internal_class(&ce);
+    zend_class_implements(pcbc_term_facet_result_impl_ce, 1, pcbc_term_facet_result_ce);
+    zend_declare_property_null(pcbc_term_facet_result_impl_ce, ZEND_STRL("term"), ZEND_ACC_PRIVATE);
+    zend_declare_property_long(pcbc_term_facet_result_impl_ce, ZEND_STRL("count"), 0, ZEND_ACC_PRIVATE);
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "NumericRangeFacetResult", pcbc_numeric_range_facet_result_methods);
+    pcbc_numeric_range_facet_result_ce = zend_register_internal_interface(&ce);
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "NumericRangeFacetResultImpl", pcbc_numeric_range_facet_result_impl_methods);
+    pcbc_numeric_range_facet_result_impl_ce = zend_register_internal_class(&ce);
+    zend_class_implements(pcbc_numeric_range_facet_result_impl_ce, 1, pcbc_numeric_range_facet_result_ce);
+    zend_declare_property_null(pcbc_numeric_range_facet_result_impl_ce, ZEND_STRL("name"), ZEND_ACC_PRIVATE);
+    zend_declare_property_null(pcbc_numeric_range_facet_result_impl_ce, ZEND_STRL("min"), ZEND_ACC_PRIVATE);
+    zend_declare_property_null(pcbc_numeric_range_facet_result_impl_ce, ZEND_STRL("max"), ZEND_ACC_PRIVATE);
+    zend_declare_property_long(pcbc_numeric_range_facet_result_impl_ce, ZEND_STRL("count"), 0, ZEND_ACC_PRIVATE);
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "DateRangeFacetResult", pcbc_date_range_facet_result_methods);
+    pcbc_date_range_facet_result_ce = zend_register_internal_interface(&ce);
+
+    INIT_NS_CLASS_ENTRY(ce, "Couchbase", "DateRangeFacetResultImpl", pcbc_date_range_facet_result_impl_methods);
+    pcbc_date_range_facet_result_impl_ce = zend_register_internal_class(&ce);
+    zend_class_implements(pcbc_date_range_facet_result_impl_ce, 1, pcbc_date_range_facet_result_ce);
+    zend_declare_property_null(pcbc_date_range_facet_result_impl_ce, ZEND_STRL("name"), ZEND_ACC_PRIVATE);
+    zend_declare_property_null(pcbc_date_range_facet_result_impl_ce, ZEND_STRL("start"), ZEND_ACC_PRIVATE);
+    zend_declare_property_null(pcbc_date_range_facet_result_impl_ce, ZEND_STRL("end"), ZEND_ACC_PRIVATE);
+    zend_declare_property_long(pcbc_date_range_facet_result_impl_ce, ZEND_STRL("count"), 0, ZEND_ACC_PRIVATE);
+
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "SearchResult", pcbc_search_result_methods);
     pcbc_search_result_ce = zend_register_internal_interface(&ce);
 
@@ -802,7 +994,7 @@ PHP_METHOD(MutationTokenImpl, partitionId)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_mutation_token_impl_ce, getThis(), ("partition_id"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(MutationTokenImpl, partitionUuid)
@@ -813,7 +1005,7 @@ PHP_METHOD(MutationTokenImpl, partitionUuid)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_mutation_token_impl_ce, getThis(), ("partition_uuid"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(MutationTokenImpl, sequenceNumber)
@@ -824,7 +1016,7 @@ PHP_METHOD(MutationTokenImpl, sequenceNumber)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_mutation_token_impl_ce, getThis(), ("sequence_number"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(MutationTokenImpl, bucketName)
@@ -835,7 +1027,7 @@ PHP_METHOD(MutationTokenImpl, bucketName)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_mutation_token_impl_ce, getThis(), ("bucket_name"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(ResultImpl, cas)
@@ -846,7 +1038,7 @@ PHP_METHOD(ResultImpl, cas)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_result_impl_ce, getThis(), ("cas"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(GetResultImpl, cas)
@@ -857,7 +1049,7 @@ PHP_METHOD(GetResultImpl, cas)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_get_result_impl_ce, getThis(), ("cas"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(GetResultImpl, expiry)
@@ -868,7 +1060,7 @@ PHP_METHOD(GetResultImpl, expiry)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_get_result_impl_ce, getThis(), ("expiry"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(GetResultImpl, expiryTime)
@@ -905,7 +1097,7 @@ PHP_METHOD(GetResultImpl, content)
     PCBC_JSON_RESET_STATE;
     if (php_json_decode_ex(return_value, Z_STRVAL_P(prop), Z_STRLEN_P(prop), PHP_JSON_OBJECT_AS_ARRAY,
                            PHP_JSON_PARSER_DEFAULT_DEPTH)) {
-        ZVAL_COPY(return_value, prop);
+        ZVAL_COPY_DEREF(return_value, prop);
     }
 }
 
@@ -917,7 +1109,7 @@ PHP_METHOD(GetReplicaResultImpl, cas)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_get_replica_result_impl_ce, getThis(), ("cas"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(GetReplicaResultImpl, expiry)
@@ -928,7 +1120,7 @@ PHP_METHOD(GetReplicaResultImpl, expiry)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_get_replica_result_impl_ce, getThis(), ("expiry"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(GetReplicaResultImpl, content)
@@ -939,7 +1131,7 @@ PHP_METHOD(GetReplicaResultImpl, content)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_get_replica_result_impl_ce, getThis(), ("data"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(GetReplicaResultImpl, isReplica)
@@ -950,7 +1142,7 @@ PHP_METHOD(GetReplicaResultImpl, isReplica)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_get_replica_result_impl_ce, getThis(), ("is_replica"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(ExistsResultImpl, cas)
@@ -961,7 +1153,7 @@ PHP_METHOD(ExistsResultImpl, cas)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_exists_result_impl_ce, getThis(), ("cas"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(ExistsResultImpl, expiry)
@@ -972,7 +1164,7 @@ PHP_METHOD(ExistsResultImpl, expiry)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_exists_result_impl_ce, getThis(), ("expiry"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(ExistsResultImpl, exists)
@@ -983,7 +1175,7 @@ PHP_METHOD(ExistsResultImpl, exists)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_exists_result_impl_ce, getThis(), ("is_found"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(MutationResultImpl, cas)
@@ -994,7 +1186,7 @@ PHP_METHOD(MutationResultImpl, cas)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_mutation_result_impl_ce, getThis(), ("cas"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(MutationResultImpl, expiry)
@@ -1005,7 +1197,7 @@ PHP_METHOD(MutationResultImpl, expiry)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_mutation_result_impl_ce, getThis(), ("expiry"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(MutationResultImpl, mutationToken)
@@ -1016,7 +1208,7 @@ PHP_METHOD(MutationResultImpl, mutationToken)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_mutation_result_impl_ce, getThis(), ("mutation_token"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(StoreResultImpl, cas)
@@ -1027,7 +1219,7 @@ PHP_METHOD(StoreResultImpl, cas)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_store_result_impl_ce, getThis(), ("cas"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(StoreResultImpl, expiry)
@@ -1038,7 +1230,7 @@ PHP_METHOD(StoreResultImpl, expiry)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_store_result_impl_ce, getThis(), ("expiry"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(StoreResultImpl, mutationToken)
@@ -1049,7 +1241,7 @@ PHP_METHOD(StoreResultImpl, mutationToken)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_store_result_impl_ce, getThis(), ("mutation_token"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(CounterResultImpl, cas)
@@ -1060,7 +1252,7 @@ PHP_METHOD(CounterResultImpl, cas)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_counter_result_impl_ce, getThis(), ("cas"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(CounterResultImpl, expiry)
@@ -1071,7 +1263,7 @@ PHP_METHOD(CounterResultImpl, expiry)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_counter_result_impl_ce, getThis(), ("expiry"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(CounterResultImpl, mutationToken)
@@ -1082,7 +1274,7 @@ PHP_METHOD(CounterResultImpl, mutationToken)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_counter_result_impl_ce, getThis(), ("mutation_token"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(CounterResultImpl, content)
@@ -1093,7 +1285,7 @@ PHP_METHOD(CounterResultImpl, content)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_counter_result_impl_ce, getThis(), ("content"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(LookupInResultImpl, cas)
@@ -1104,7 +1296,7 @@ PHP_METHOD(LookupInResultImpl, cas)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_lookup_in_result_impl_ce, getThis(), ("cas"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(LookupInResultImpl, expiry)
@@ -1115,7 +1307,7 @@ PHP_METHOD(LookupInResultImpl, expiry)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_lookup_in_result_impl_ce, getThis(), ("expiry"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(LookupInResultImpl, expiryTime)
@@ -1141,7 +1333,6 @@ PHP_METHOD(LookupInResultImpl, expiryTime)
     RETURN_NULL();
 }
 
-
 PHP_METHOD(LookupInResultImpl, content)
 {
     zend_long idx;
@@ -1156,7 +1347,7 @@ PHP_METHOD(LookupInResultImpl, content)
         if (Z_OBJCE_P(entry) == pcbc_lookup_in_result_entry_ce) {
             zval *value = pcbc_read_property(pcbc_lookup_in_result_entry_ce, entry, ("value"), 0, &rv2);
             ZVAL_DEREF(value);
-            ZVAL_COPY(return_value, value);
+            ZVAL_COPY_DEREF(return_value, value);
             return;
         }
     }
@@ -1201,7 +1392,7 @@ PHP_METHOD(LookupInResultImpl, status)
         if (Z_OBJCE_P(entry) == pcbc_lookup_in_result_entry_ce) {
             zval *code = pcbc_read_property(pcbc_lookup_in_result_entry_ce, entry, ("code"), 0, &rv2);
             ZVAL_DEREF(code);
-            ZVAL_COPY(return_value, code);
+            ZVAL_COPY_DEREF(return_value, code);
             return;
         }
     }
@@ -1216,7 +1407,7 @@ PHP_METHOD(MutateInResultImpl, mutationToken)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_mutate_in_result_impl_ce, getThis(), ("mutation_token"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(MutateInResultImpl, cas)
@@ -1227,7 +1418,7 @@ PHP_METHOD(MutateInResultImpl, cas)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_mutate_in_result_impl_ce, getThis(), ("cas"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(MutateInResultImpl, expiry)
@@ -1238,7 +1429,7 @@ PHP_METHOD(MutateInResultImpl, expiry)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_mutate_in_result_impl_ce, getThis(), ("expiry"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(MutateInResultImpl, content)
@@ -1255,7 +1446,7 @@ PHP_METHOD(MutateInResultImpl, content)
         if (Z_OBJCE_P(entry) == pcbc_mutate_in_result_entry_ce) {
             zval *value = pcbc_read_property(pcbc_mutate_in_result_entry_ce, entry, ("value"), 0, &rv2);
             ZVAL_DEREF(value);
-            ZVAL_COPY(return_value, value);
+            ZVAL_COPY_DEREF(return_value, value);
             return;
         }
     }
@@ -1278,7 +1469,7 @@ PHP_METHOD(MutateInResultImpl, status)
         if (Z_OBJCE_P(entry) == pcbc_mutate_in_result_entry_ce) {
             zval *code = pcbc_read_property(pcbc_mutate_in_result_entry_ce, entry, ("code"), 0, &rv2);
             ZVAL_DEREF(code);
-            ZVAL_COPY(return_value, code);
+            ZVAL_COPY_DEREF(return_value, code);
             return;
         }
     }
@@ -1293,7 +1484,7 @@ PHP_METHOD(QueryResultImpl, metaData)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_query_result_impl_ce, getThis(), ("meta"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(QueryResultImpl, rows)
@@ -1304,7 +1495,7 @@ PHP_METHOD(QueryResultImpl, rows)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_query_result_impl_ce, getThis(), ("rows"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(QueryMetaDataImpl, status)
@@ -1315,7 +1506,7 @@ PHP_METHOD(QueryMetaDataImpl, status)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_query_meta_data_impl_ce, getThis(), ("status"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(QueryMetaDataImpl, requestId)
@@ -1326,7 +1517,7 @@ PHP_METHOD(QueryMetaDataImpl, requestId)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_query_meta_data_impl_ce, getThis(), ("request_id"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(QueryMetaDataImpl, clientContextId)
@@ -1337,7 +1528,7 @@ PHP_METHOD(QueryMetaDataImpl, clientContextId)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_query_meta_data_impl_ce, getThis(), ("client_context_id"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(QueryMetaDataImpl, signature)
@@ -1348,7 +1539,7 @@ PHP_METHOD(QueryMetaDataImpl, signature)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_query_meta_data_impl_ce, getThis(), ("signature"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(QueryMetaDataImpl, errors)
@@ -1359,7 +1550,7 @@ PHP_METHOD(QueryMetaDataImpl, errors)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_query_meta_data_impl_ce, getThis(), ("errors"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(QueryMetaDataImpl, warnings)
@@ -1370,7 +1561,7 @@ PHP_METHOD(QueryMetaDataImpl, warnings)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_query_meta_data_impl_ce, getThis(), ("warnings"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(QueryMetaDataImpl, metrics)
@@ -1381,7 +1572,7 @@ PHP_METHOD(QueryMetaDataImpl, metrics)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_query_meta_data_impl_ce, getThis(), ("metrics"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(QueryMetaDataImpl, profile)
@@ -1392,7 +1583,7 @@ PHP_METHOD(QueryMetaDataImpl, profile)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_query_meta_data_impl_ce, getThis(), ("profile"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(AnalyticsResultImpl, metaData)
@@ -1403,7 +1594,7 @@ PHP_METHOD(AnalyticsResultImpl, metaData)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_analytics_result_impl_ce, getThis(), ("meta"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(AnalyticsResultImpl, rows)
@@ -1414,7 +1605,7 @@ PHP_METHOD(AnalyticsResultImpl, rows)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_analytics_result_impl_ce, getThis(), ("rows"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(SearchMetaDataImpl, successCount)
@@ -1425,7 +1616,7 @@ PHP_METHOD(SearchMetaDataImpl, successCount)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_search_meta_data_impl_ce, getThis(), ("success_count"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(SearchMetaDataImpl, errorCount)
@@ -1436,7 +1627,7 @@ PHP_METHOD(SearchMetaDataImpl, errorCount)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_search_meta_data_impl_ce, getThis(), ("error_count"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(SearchMetaDataImpl, took)
@@ -1447,7 +1638,7 @@ PHP_METHOD(SearchMetaDataImpl, took)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_search_meta_data_impl_ce, getThis(), ("took"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(SearchMetaDataImpl, totalHits)
@@ -1458,7 +1649,7 @@ PHP_METHOD(SearchMetaDataImpl, totalHits)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_search_meta_data_impl_ce, getThis(), ("total_hits"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(SearchMetaDataImpl, maxScore)
@@ -1469,7 +1660,7 @@ PHP_METHOD(SearchMetaDataImpl, maxScore)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_search_meta_data_impl_ce, getThis(), ("max_score"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(SearchMetaDataImpl, metrics)
@@ -1480,7 +1671,7 @@ PHP_METHOD(SearchMetaDataImpl, metrics)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_search_meta_data_impl_ce, getThis(), ("metrics"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(SearchResultImpl, metaData)
@@ -1491,7 +1682,7 @@ PHP_METHOD(SearchResultImpl, metaData)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_search_result_impl_ce, getThis(), ("meta"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(SearchResultImpl, facets)
@@ -1502,7 +1693,7 @@ PHP_METHOD(SearchResultImpl, facets)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_search_result_impl_ce, getThis(), ("facets"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(SearchResultImpl, rows)
@@ -1513,7 +1704,7 @@ PHP_METHOD(SearchResultImpl, rows)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_search_result_impl_ce, getThis(), ("rows"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(ViewMetaDataImpl, totalRows)
@@ -1524,7 +1715,7 @@ PHP_METHOD(ViewMetaDataImpl, totalRows)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_view_meta_data_impl_ce, getThis(), ("total_rows"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(ViewMetaDataImpl, debug)
@@ -1535,7 +1726,7 @@ PHP_METHOD(ViewMetaDataImpl, debug)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_view_meta_data_impl_ce, getThis(), ("debug"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(ViewResultImpl, rows)
@@ -1546,7 +1737,7 @@ PHP_METHOD(ViewResultImpl, rows)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_view_result_impl_ce, getThis(), ("rows"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(ViewResultImpl, metaData)
@@ -1557,7 +1748,7 @@ PHP_METHOD(ViewResultImpl, metaData)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_view_result_impl_ce, getThis(), ("meta"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(ViewRow, id)
@@ -1568,7 +1759,7 @@ PHP_METHOD(ViewRow, id)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_view_result_entry_ce, getThis(), ("id"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(ViewRow, key)
@@ -1579,7 +1770,7 @@ PHP_METHOD(ViewRow, key)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_view_result_entry_ce, getThis(), ("key"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(ViewRow, value)
@@ -1590,7 +1781,7 @@ PHP_METHOD(ViewRow, value)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_view_result_entry_ce, getThis(), ("value"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 PHP_METHOD(ViewRow, document)
@@ -1601,7 +1792,194 @@ PHP_METHOD(ViewRow, document)
 
     zval *prop, rv;
     prop = pcbc_read_property(pcbc_view_result_entry_ce, getThis(), ("document"), 0, &rv);
-    ZVAL_COPY(return_value, prop);
+    ZVAL_COPY_DEREF(return_value, prop);
+}
+
+PHP_METHOD(SearchFacetImplResult, field)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_search_facet_result_impl_ce, getThis(), ("field"), 0, &rv);
+    ZVAL_COPY_DEREF(return_value, prop);
+}
+
+PHP_METHOD(SearchFacetImplResult, total)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_search_facet_result_impl_ce, getThis(), ("total"), 0, &rv);
+    ZVAL_COPY_DEREF(return_value, prop);
+}
+
+PHP_METHOD(SearchFacetImplResult, missing)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_search_facet_result_impl_ce, getThis(), ("missing"), 0, &rv);
+    ZVAL_COPY_DEREF(return_value, prop);
+}
+
+PHP_METHOD(SearchFacetImplResult, other)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_search_facet_result_impl_ce, getThis(), ("other"), 0, &rv);
+    ZVAL_COPY_DEREF(return_value, prop);
+}
+
+PHP_METHOD(SearchFacetImplResult, terms)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_search_facet_result_impl_ce, getThis(), ("terms"), 0, &rv);
+    ZVAL_COPY_DEREF(return_value, prop);
+}
+
+PHP_METHOD(SearchFacetImplResult, numericRanges)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_search_facet_result_impl_ce, getThis(), ("numeric_ranges"), 0, &rv);
+    ZVAL_COPY_DEREF(return_value, prop);
+}
+
+PHP_METHOD(SearchFacetImplResult, dateRanges)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_search_facet_result_impl_ce, getThis(), ("date_ranges"), 0, &rv);
+    ZVAL_COPY_DEREF(return_value, prop);
+}
+
+PHP_METHOD(TermFacetImplResult, term)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_term_facet_result_impl_ce, getThis(), ("term"), 0, &rv);
+    ZVAL_COPY_DEREF(return_value, prop);
+}
+
+PHP_METHOD(TermFacetImplResult, count)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_term_facet_result_impl_ce, getThis(), ("count"), 0, &rv);
+    ZVAL_COPY_DEREF(return_value, prop);
+}
+
+PHP_METHOD(NumericRangeFacetImplResult, name)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_numeric_range_facet_result_impl_ce, getThis(), ("name"), 0, &rv);
+    ZVAL_COPY_DEREF(return_value, prop);
+}
+
+PHP_METHOD(NumericRangeFacetImplResult, min)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_numeric_range_facet_result_impl_ce, getThis(), ("min"), 0, &rv);
+    ZVAL_COPY_DEREF(return_value, prop);
+}
+
+PHP_METHOD(NumericRangeFacetImplResult, max)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_numeric_range_facet_result_impl_ce, getThis(), ("max"), 0, &rv);
+    ZVAL_COPY_DEREF(return_value, prop);
+}
+
+PHP_METHOD(NumericRangeFacetImplResult, count)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_numeric_range_facet_result_impl_ce, getThis(), ("count"), 0, &rv);
+    ZVAL_COPY_DEREF(return_value, prop);
+}
+
+PHP_METHOD(DateRangeFacetImplResult, name)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_date_range_facet_result_impl_ce, getThis(), ("name"), 0, &rv);
+    ZVAL_COPY_DEREF(return_value, prop);
+}
+
+PHP_METHOD(DateRangeFacetImplResult, start)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_date_range_facet_result_impl_ce, getThis(), ("start"), 0, &rv);
+    ZVAL_COPY_DEREF(return_value, prop);
+}
+
+PHP_METHOD(DateRangeFacetImplResult, end)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_date_range_facet_result_impl_ce, getThis(), ("end"), 0, &rv);
+    ZVAL_COPY_DEREF(return_value, prop);
+}
+
+PHP_METHOD(DateRangeFacetImplResult, count)
+{
+    if (zend_parse_parameters_none_throw() == FAILURE) {
+        return;
+    }
+
+    zval *prop, rv;
+    prop = pcbc_read_property(pcbc_date_range_facet_result_impl_ce, getThis(), ("count"), 0, &rv);
+    ZVAL_COPY_DEREF(return_value, prop);
 }
 
 /*

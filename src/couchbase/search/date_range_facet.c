@@ -95,7 +95,6 @@ PHP_METHOD(DateRangeSearchFacet, addRange)
         }
     }
     add_next_index_zval(ranges, &range);
-    Z_TRY_ADDREF(range);
 
     RETURN_ZVAL(getThis(), 1, 0);
 }

@@ -274,6 +274,7 @@ PHP_METHOD(SearchOptions, jsonSerialize)
         array_init(&vectors);
         add_assoc_zval(&consistency, "vectors", &vectors);
         add_assoc_zval(&control, "consistency", &consistency);
+        Z_TRY_ADDREF(consistency);
 
         zend_string *index = NULL;
         zval *scan_vector;
@@ -289,7 +290,8 @@ PHP_METHOD(SearchOptions, jsonSerialize)
     }
     if (zend_hash_num_elements(Z_ARRVAL(control)) > 0) {
         add_assoc_zval(return_value, "ctl", &control);
-        Z_TRY_ADDREF(consistency);
+    } else {
+        zval_dtor(&control);
     }
 }
 
