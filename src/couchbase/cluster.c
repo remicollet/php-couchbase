@@ -63,11 +63,7 @@ static void pcbc_cluster_connection_init(zval *return_value, pcbc_cluster_t *clu
     if (PCBCG(allow_fallback_to_bucket)) {
         url = php_url_parse(cluster->connstr);
         if (url && url->path) {
-#if PHP_VERSION_ID < 70300
-            bucket = url->path;
-#else
             bucket = ZSTR_VAL(url->path);
-#endif
             while (*bucket == '/') {
                 bucket++;
             }

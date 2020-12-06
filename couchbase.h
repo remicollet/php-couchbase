@@ -46,61 +46,60 @@
 
 #if PHP_VERSION_ID < 80000
 
-#define pcbc_read_property(scope, object, name, silent, rv) \
-        zend_read_property((scope), (object), ZEND_STRL(name), (silent), (rv))
+#define pcbc_read_property(scope, object, name, silent, rv)                                                            \
+    zend_read_property((scope), (object), ZEND_STRL(name), (silent), (rv))
 
-#define pcbc_update_property(scope, object, name, value) \
-        zend_update_property((scope), (object), ZEND_STRL(name), (value))
+#define pcbc_update_property(scope, object, name, value)                                                               \
+    zend_update_property((scope), (object), ZEND_STRL(name), (value))
 
-#define pcbc_update_property_null(scope, object, name) \
-        zend_update_property_null((scope), (object), ZEND_STRL(name))
+#define pcbc_update_property_null(scope, object, name) zend_update_property_null((scope), (object), ZEND_STRL(name))
 
-#define pcbc_update_property_bool(scope, object, name, value) \
-        zend_update_property_bool((scope), (object), ZEND_STRL(name), (value))
+#define pcbc_update_property_bool(scope, object, name, value)                                                          \
+    zend_update_property_bool((scope), (object), ZEND_STRL(name), (value))
 
-#define pcbc_update_property_long(scope, object, name, value) \
-        zend_update_property_long((scope), (object), ZEND_STRL(name), (value))
+#define pcbc_update_property_long(scope, object, name, value)                                                          \
+    zend_update_property_long((scope), (object), ZEND_STRL(name), (value))
 
-#define pcbc_update_property_double(scope, object, name, value) \
-        zend_update_property_double((scope), (object), ZEND_STRL(name), (value))
+#define pcbc_update_property_double(scope, object, name, value)                                                        \
+    zend_update_property_double((scope), (object), ZEND_STRL(name), (value))
 
-#define pcbc_update_property_stringl(scope, object, name, value, value_len) \
-        zend_update_property_stringl((scope), (object), ZEND_STRL(name), (value), (value_len))
+#define pcbc_update_property_stringl(scope, object, name, value, value_len)                                            \
+    zend_update_property_stringl((scope), (object), ZEND_STRL(name), (value), (value_len))
 
-#define pcbc_update_property_string(scope, object, name, value) \
-        zend_update_property_string((scope), (object), ZEND_STRL(name), (value))
+#define pcbc_update_property_string(scope, object, name, value)                                                        \
+    zend_update_property_string((scope), (object), ZEND_STRL(name), (value))
 
-#define pcbc_update_property_str(scope, object, name, value) \
-        zend_update_property_str((scope), (object), ZEND_STRL(name), (value))
+#define pcbc_update_property_str(scope, object, name, value)                                                           \
+    zend_update_property_str((scope), (object), ZEND_STRL(name), (value))
 
 #else
 
-#define pcbc_read_property(scope, object, name, silent, rv) \
-        zend_read_property((scope), Z_OBJ_P(object), ZEND_STRL(name), (silent), (rv))
+#define pcbc_read_property(scope, object, name, silent, rv)                                                            \
+    zend_read_property((scope), Z_OBJ_P(object), ZEND_STRL(name), (silent), (rv))
 
-#define pcbc_update_property(scope, object, name, value) \
-        zend_update_property((scope), Z_OBJ_P(object), ZEND_STRL(name), (value))
+#define pcbc_update_property(scope, object, name, value)                                                               \
+    zend_update_property((scope), Z_OBJ_P(object), ZEND_STRL(name), (value))
 
-#define pcbc_update_property_null(scope, object, name) \
-        zend_update_property_null((scope), Z_OBJ_P(object), ZEND_STRL(name))
+#define pcbc_update_property_null(scope, object, name)                                                                 \
+    zend_update_property_null((scope), Z_OBJ_P(object), ZEND_STRL(name))
 
-#define pcbc_update_property_bool(scope, object, name, value) \
-        zend_update_property_bool((scope), Z_OBJ_P(object), ZEND_STRL(name), (value))
+#define pcbc_update_property_bool(scope, object, name, value)                                                          \
+    zend_update_property_bool((scope), Z_OBJ_P(object), ZEND_STRL(name), (value))
 
-#define pcbc_update_property_long(scope, object, name, value) \
-        zend_update_property_long((scope), Z_OBJ_P(object), ZEND_STRL(name), (value))
+#define pcbc_update_property_long(scope, object, name, value)                                                          \
+    zend_update_property_long((scope), Z_OBJ_P(object), ZEND_STRL(name), (value))
 
-#define pcbc_update_property_double(scope, object, name, value) \
-        zend_update_property_double((scope), Z_OBJ_P(object), ZEND_STRL(name), (value))
+#define pcbc_update_property_double(scope, object, name, value)                                                        \
+    zend_update_property_double((scope), Z_OBJ_P(object), ZEND_STRL(name), (value))
 
-#define pcbc_update_property_stringl(scope, object, name, value, value_len) \
-        zend_update_property_stringl((scope), Z_OBJ_P(object), ZEND_STRL(name), (value), (value_len))
+#define pcbc_update_property_stringl(scope, object, name, value, value_len)                                            \
+    zend_update_property_stringl((scope), Z_OBJ_P(object), ZEND_STRL(name), (value), (value_len))
 
-#define pcbc_update_property_string(scope, object, name, value) \
-        zend_update_property_string((scope), Z_OBJ_P(object), ZEND_STRL(name), (value))
+#define pcbc_update_property_string(scope, object, name, value)                                                        \
+    zend_update_property_string((scope), Z_OBJ_P(object), ZEND_STRL(name), (value))
 
-#define pcbc_update_property_str(scope, object, name, value) \
-        zend_update_property_str((scope), Z_OBJ_P(object), ZEND_STRL(name), (value))
+#define pcbc_update_property_str(scope, object, name, value)                                                           \
+    zend_update_property_str((scope), Z_OBJ_P(object), ZEND_STRL(name), (value))
 
 #endif
 
@@ -174,14 +173,14 @@ extern zend_class_entry *pcbc_binary_collection_ce;
     {                                                                                                                  \
         zval *prop, rv__;                                                                                              \
         zval *self = getThis();                                                                                        \
-        prop = pcbc_read_property((class_entry), self, ("bucket"), 0, &rv__);                                 \
+        prop = pcbc_read_property((class_entry), self, ("bucket"), 0, &rv__);                                          \
         bucket = Z_BUCKET_OBJ_P(prop);                                                                                 \
-        prop = pcbc_read_property((class_entry), self, ("scope"), 0, &rv__);                                  \
+        prop = pcbc_read_property((class_entry), self, ("scope"), 0, &rv__);                                           \
         if (Z_TYPE_P(prop) == IS_STRING) {                                                                             \
             scope_str = Z_STRVAL_P(prop);                                                                              \
             scope_len = Z_STRLEN_P(prop);                                                                              \
         }                                                                                                              \
-        prop = pcbc_read_property((class_entry), self, ("name"), 0, &rv__);                                   \
+        prop = pcbc_read_property((class_entry), self, ("name"), 0, &rv__);                                            \
         if (Z_TYPE_P(prop) == IS_STRING) {                                                                             \
             collection_str = Z_STRVAL_P(prop);                                                                         \
             collection_len = Z_STRLEN_P(prop);                                                                         \
@@ -204,8 +203,8 @@ void pcbc_exception_init(zval *return_value, long code, const char *message);
     do {                                                                                                               \
         zval __pcbc_error;                                                                                             \
         ZVAL_UNDEF(&__pcbc_error);                                                                                     \
-        pcbc_exception_init(&__pcbc_error, __pcbc_code, __pcbc_message);                                     \
-        zend_throw_exception_object(&__pcbc_error);                                                          \
+        pcbc_exception_init(&__pcbc_error, __pcbc_code, __pcbc_message);                                               \
+        zend_throw_exception_object(&__pcbc_error);                                                                    \
     } while (0)
 
 #define throw_lcb_exception_ex(code, opcode, result_ce)                                                                \
@@ -213,19 +212,19 @@ void pcbc_exception_init(zval *return_value, long code, const char *message);
         zend_string *ctx = NULL, *ref = NULL;                                                                          \
         zval *zref, __rv1, *zctx, __rv2;                                                                               \
         if (result_ce) {                                                                                               \
-            zref = pcbc_read_property(result_ce, return_value, ("err_ref"), 0, &__rv1);                       \
+            zref = pcbc_read_property(result_ce, return_value, ("err_ref"), 0, &__rv1);                                \
             if (Z_TYPE_P(zref) == IS_STRING) {                                                                         \
                 ref = Z_STR_P(zref);                                                                                   \
             }                                                                                                          \
-            zctx = pcbc_read_property(result_ce, return_value, ("err_ctx"), 0, &__rv2);                       \
+            zctx = pcbc_read_property(result_ce, return_value, ("err_ctx"), 0, &__rv2);                                \
             if (Z_TYPE_P(zctx) == IS_STRING) {                                                                         \
                 ctx = Z_STR_P(zctx);                                                                                   \
             }                                                                                                          \
         }                                                                                                              \
         zval __pcbc_error;                                                                                             \
         ZVAL_UNDEF(&__pcbc_error);                                                                                     \
-        pcbc_create_lcb_exception(&__pcbc_error, code, ctx, ref, 0, NULL, opcode);                           \
-        zend_throw_exception_object(&__pcbc_error);                                                          \
+        pcbc_create_lcb_exception(&__pcbc_error, code, ctx, ref, 0, NULL, opcode);                                     \
+        zend_throw_exception_object(&__pcbc_error);                                                                    \
     } while (0)
 
 #define throw_lcb_exception(code, result_ce) throw_lcb_exception_ex((code), PCBC_OPCODE_UNSPEC, (result_ce))
@@ -234,9 +233,8 @@ void pcbc_exception_init(zval *return_value, long code, const char *message);
     do {                                                                                                               \
         zval __pcbc_error;                                                                                             \
         ZVAL_UNDEF(&__pcbc_error);                                                                                     \
-        pcbc_create_lcb_exception(&__pcbc_error, code, NULL, NULL, query_code, query_msg,                              \
-                                  PCBC_OPCODE_UNSPEC);                                                       \
-        zend_throw_exception_object(&__pcbc_error);                                                          \
+        pcbc_create_lcb_exception(&__pcbc_error, code, NULL, NULL, query_code, query_msg, PCBC_OPCODE_UNSPEC);         \
+        zend_throw_exception_object(&__pcbc_error);                                                                    \
     } while (0)
 
 #define PCBC_CONTENT_TYPE_FORM "application/x-www-form-urlencoded"
@@ -275,7 +273,7 @@ void pcbc_exception_init(zval *return_value, long code, const char *message);
 #define PCBC_JSON_ENCODE(__pcbc_buf, __pcbc_value, __pcbc_flags, __pcbc_error_code)                                    \
     do {                                                                                                               \
         PCBC_JSON_RESET_STATE;                                                                                         \
-        php_json_encode((__pcbc_buf), (__pcbc_value), (__pcbc_flags));                                        \
+        php_json_encode((__pcbc_buf), (__pcbc_value), (__pcbc_flags));                                                 \
         (__pcbc_error_code) = JSON_G(error_code);                                                                      \
     } while (0)
 
@@ -283,8 +281,7 @@ void pcbc_exception_init(zval *return_value, long code, const char *message);
     do {                                                                                                               \
         char *__copy = estrndup((__pcbc_src), (__pcbc_len));                                                           \
         PCBC_JSON_RESET_STATE;                                                                                         \
-        php_json_decode_ex((__pcbc_zval), (__copy), (__pcbc_len), (__options),                                         \
-                           PHP_JSON_PARSER_DEFAULT_DEPTH);                                                   \
+        php_json_decode_ex((__pcbc_zval), (__copy), (__pcbc_len), (__options), PHP_JSON_PARSER_DEFAULT_DEPTH);         \
         efree(__copy);                                                                                                 \
         (__pcbc_error_code) = JSON_G(error_code);                                                                      \
     } while (0)
@@ -292,11 +289,6 @@ void pcbc_exception_init(zval *return_value, long code, const char *message);
 #define PCBC_SMARTSTR_DUP(__pcbc_smart_str, __pcbc_receiver_buf)                                                       \
     do {                                                                                                               \
         (__pcbc_receiver_buf) = estrndup(ZSTR_VAL((__pcbc_smart_str).s), ZSTR_LEN((__pcbc_smart_str).s));              \
-    } while (0)
-#define PCBC_SMARTSTR_SET(__pcbc_smart_str, __pcbc_receiver_buf, __pcbc_receiver_length)                               \
-    do {                                                                                                               \
-        (__pcbc_receiver_buf) = ZSTR_VAL((__pcbc_smart_str).s);                                                        \
-        (__pcbc_receiver_length) = ZSTR_LEN((__pcbc_smart_str).s);                                                     \
     } while (0)
 #define PCBC_SMARTSTR_VAL(__pcbc_smart_str) (char *)ZSTR_VAL((__pcbc_smart_str).s)
 #define PCBC_SMARTSTR_LEN(__pcbc_smart_str) ((__pcbc_smart_str).s ? (int)(ZSTR_LEN((__pcbc_smart_str).s)) : 0)
@@ -405,17 +397,13 @@ opcookie_res *opcookie_next_res(opcookie *cookie, opcookie_res *cur);
     Res = NULL;                                                                                                        \
     while ((Res = (Type *)opcookie_next_res(cookie, (opcookie_res *)Res)) != NULL)
 
-#define PCBC_ADDREF_P(__pcbc_zval) Z_TRY_ADDREF_P((__pcbc_zval))
-
-#define PCBC_DELREF_P(__pcbc_zval) Z_TRY_DELREF_P((__pcbc_zval))
-
 #define set_property_str(target, getter, class_entry, prop)                                                            \
     do {                                                                                                               \
         const char *data = NULL;                                                                                       \
         size_t ndata = 0;                                                                                              \
         getter(target, &data, &ndata);                                                                                 \
         if (ndata && data) {                                                                                           \
-            pcbc_update_property_stringl(class_entry, return_value, (prop), data, ndata);           \
+            pcbc_update_property_stringl(class_entry, return_value, (prop), data, ndata);                              \
         }                                                                                                              \
     } while (0);
 
@@ -423,7 +411,7 @@ opcookie_res *opcookie_next_res(opcookie *cookie, opcookie_res *cur);
     do {                                                                                                               \
         type data = 0;                                                                                                 \
         getter(resp, &data);                                                                                           \
-        pcbc_update_property_long(class_entry, return_value, (prop), data);                         \
+        pcbc_update_property_long(class_entry, return_value, (prop), data);                                            \
     } while (0);
 
 #endif /* COUCHBASE_H_ */

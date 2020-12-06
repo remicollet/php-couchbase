@@ -379,13 +379,13 @@ static HashTable *pcbc_bucket_get_debug_info(zend_object *object, int *is_temp)
     add_assoc_string(&retval, "username", obj->conn->username);
     if (!Z_ISUNDEF(obj->encoder)) {
         add_assoc_zval(&retval, "encoder", &obj->encoder);
-        PCBC_ADDREF_P(&obj->encoder);
+        Z_TRY_ADDREF_P(&obj->encoder);
     } else {
         add_assoc_null(&retval, "encoder");
     }
     if (!Z_ISUNDEF(obj->decoder)) {
         add_assoc_zval(&retval, "decoder", &obj->decoder);
-        PCBC_ADDREF_P(&obj->decoder);
+        Z_TRY_ADDREF_P(&obj->decoder);
     } else {
         add_assoc_null(&retval, "decoder");
     }

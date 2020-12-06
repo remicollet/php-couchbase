@@ -859,7 +859,7 @@ PHP_FUNCTION(passthruEncoder)
 
     array_init_size(return_value, 3);
     add_index_zval(return_value, 0, value);
-    PCBC_ADDREF_P(value);
+    Z_TRY_ADDREF_P(value);
     add_index_long(return_value, 1, 0);
     add_index_long(return_value, 2, 0);
 }
