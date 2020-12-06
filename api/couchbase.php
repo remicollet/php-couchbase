@@ -2389,7 +2389,7 @@ namespace Couchbase {
          * If empty, no field values are included. This drives the inclusion of the fields in each hit.
          * Note that to be highlighted, the fields must be stored in the FTS index.
          *
-         * @param string ...$fields
+         * @param string[] $fields
          * @return SearchOptions
          */
         public function fields(array $fields): SearchOptions
@@ -2404,7 +2404,7 @@ namespace Couchbase {
          *
          * Note that to be faceted, a field's value must be stored in the FTS index.
          *
-         * @param array[SearchFacet] $facet
+         * @param SearchFacet[] $facets
          * @return SearchOptions
          *
          * @see \SearchFacet

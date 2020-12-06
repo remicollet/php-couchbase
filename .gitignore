@@ -45,3 +45,4 @@
 /test.cache
 /tests/CouchbaseMock.jar
 /phpunit.result.cache
+.phpdoc
