@@ -18,9 +18,9 @@
         <active>yes</active>
     </lead>
 
-    <date>2020-11-11</date>
+    <date>2020-12-06</date>
     <version>
-        <release>3.0.4</release>
+        <release>3.0.5</release>
         <api>3.0.0</api>
     </version>
     <stability>
@@ -29,12 +29,16 @@
     </stability>
     <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2</license>
     <notes>
-        * PCBC-722: Fix boolean search query encoding
-        * PCBC-703: Add support for query with FlexIndex (FTS)
-        * PCBC-719: Enhance user management for collections
-        * PCBC-702: Implement geopolygon FTS query
-        * PCBC-705: Update eviction policy types. Now it covers ephemeral buckets
-        * PCBC-721: Allow to fallback to bucket connection for older servers
+        * PCBC-699: Add support for minimal durability settings for bucket manager
+        * PCBC-718: Deprecate expiry() on GetResult and LookupInResult. expiry() is deprecated in favour to expiryTime()
+          which returns DateTimeInterface
+        * PCBC-715: refactor document expiry duration
+            - allow to specify DateTimeInterface objects as expiry value in mutation options
+            - when expiration is set as long in seconds, treat the value as relative if it is less than 50 years in
+              seconds. In this case take current time and add to the expiration value
+        * PCBC-733: Add missing fields for SearchFacet results
+        * PCBC-720: allow to disable FTS scoring
+        * Support PHP 8. Drop support for PHP older than 7.2
     </notes>
     <contents>
         <dir name="/">
@@ -157,6 +161,26 @@
     <providesextension>couchbase</providesextension>
     <extsrcrelease/>
     <changelog>
+        <release>
+            <date>2020-11-11</date>
+            <version>
+                <release>3.0.4</release>
+                <api>3.0.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache V2</license>
+            <notes>
+                * PCBC-722: Fix boolean search query encoding
+                * PCBC-703: Add support for query with FlexIndex (FTS)
+                * PCBC-719: Enhance user management for collections
+                * PCBC-702: Implement geopolygon FTS query
+                * PCBC-705: Update eviction policy types. Now it covers ephemeral buckets
+                * PCBC-721: Allow to fallback to bucket connection for older servers
+            </notes>
+        </release>
         <release>
             <date>2020-06-17</date>
             <version>
