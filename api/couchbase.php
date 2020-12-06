@@ -2361,6 +2361,16 @@ namespace Couchbase {
         }
 
         /**
+         * If set to true, the server will not perform any scoring on the hits
+         *
+         * @param bool $disabled
+         * @return SearchOptions
+         */
+        public function disableScoring(bool $disabled): SearchOptions
+        {
+        }
+
+        /**
          * Sets the consistency to consider for this FTS query to AT_PLUS and
          * uses the MutationState to parameterize the consistency.
          *

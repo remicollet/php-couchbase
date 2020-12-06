@@ -65,6 +65,17 @@ PHP_METHOD(SearchOptions, explain)
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
+PHP_METHOD(SearchOptions, disableScoring)
+{
+    zend_bool arg;
+    int rv = zend_parse_parameters(ZEND_NUM_ARGS(), "b", &arg);
+    if (rv == FAILURE) {
+        RETURN_NULL();
+    }
+    pcbc_update_property_bool(pcbc_search_options_ce, getThis(), ("disable_scoring"), arg);
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
 PHP_METHOD(SearchOptions, consistentWith)
 {
     zend_string *index;
@@ -207,6 +218,11 @@ PHP_METHOD(SearchOptions, jsonSerialize)
 
     zval *prop, ret;
 
+    prop = pcbc_read_property(pcbc_search_options_ce, getThis(), ("disable_scoring"), 0, &ret);
+    if (Z_TYPE_P(prop) == IS_TRUE) {
+        add_assoc_string(return_value, "score", "none");
+    }
+
     prop = pcbc_read_property(pcbc_search_options_ce, getThis(), ("explain"), 0, &ret);
     if (Z_TYPE_P(prop) != IS_NULL) {
         add_assoc_zval(return_value, "explain", prop);
@@ -314,6 +330,10 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_SearchOptions_explain, 0, 1, Couchbase
 ZEND_ARG_TYPE_INFO(0, explain, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_SearchOptions_disableScoring, 0, 1, Couchbase\\SearchOptions, 0)
+ZEND_ARG_TYPE_INFO(0, disableScoring, _IS_BOOL, 0)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(ai_SearchOptions_consistentWith, 0, 1, Couchbase\\SearchOptions, 0)
 ZEND_ARG_TYPE_INFO(0, index, IS_STRING, 0)
 ZEND_ARG_OBJ_INFO(0, state, Couchbase\\MutationState, 0)
@@ -343,6 +363,7 @@ zend_function_entry search_options_methods[] = {
     PHP_ME(SearchOptions, limit, ai_SearchOptions_limit, ZEND_ACC_PUBLIC)
     PHP_ME(SearchOptions, skip, ai_SearchOptions_skip, ZEND_ACC_PUBLIC)
     PHP_ME(SearchOptions, explain, ai_SearchOptions_explain, ZEND_ACC_PUBLIC)
+    PHP_ME(SearchOptions, disableScoring, ai_SearchOptions_disableScoring, ZEND_ACC_PUBLIC)
     PHP_ME(SearchOptions, consistentWith, ai_SearchOptions_consistentWith, ZEND_ACC_PUBLIC)
     PHP_ME(SearchOptions, fields, ai_SearchOptions_fields, ZEND_ACC_PUBLIC)
     PHP_ME(SearchOptions, facets, ai_SearchOptions_facets, ZEND_ACC_PUBLIC)
@@ -373,6 +394,7 @@ PHP_MINIT_FUNCTION(SearchOptions)
     zend_declare_property_null(pcbc_search_options_ce, ZEND_STRL("facets"), ZEND_ACC_PRIVATE);
     zend_declare_property_null(pcbc_search_options_ce, ZEND_STRL("highlight_style"), ZEND_ACC_PRIVATE);
     zend_declare_property_null(pcbc_search_options_ce, ZEND_STRL("highlight_fields"), ZEND_ACC_PRIVATE);
+    zend_declare_property_null(pcbc_search_options_ce, ZEND_STRL("disable_scoring"), ZEND_ACC_PRIVATE);
 
     INIT_NS_CLASS_ENTRY(ce, "Couchbase", "SearchHighlightMode", pcbc_search_highlight_mode_methods);
     pcbc_search_highlight_mode_ce = zend_register_internal_interface(&ce);
