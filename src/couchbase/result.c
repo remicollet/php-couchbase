@@ -18,6 +18,14 @@
 
 #include <ext/date/php_date.h>
 
+/* PHP_VERSION_ID < 70300 */
+#ifndef ZVAL_COPY_DEREF
+#define ZVAL_COPY_DEREF(z,v) do { \
+        ZVAL_DEREF(v); \
+        ZVAL_COPY(z, v); \
+    } while (0)
+#endif
+
 // clang-format off
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ai_MutationToken_partitionId, IS_LONG, 1)
 ZEND_END_ARG_INFO()
